@@ -153,6 +153,23 @@ create table if not exists public.cities (
   owner     uuid references auth.users (id)       -- null = built-in/public
 );
 
+-- ---------------------------------------------------------------------------
+-- INVITES — invite a collaborator by email; they self-accept on sign-in.
+-- ---------------------------------------------------------------------------
+create table if not exists public.trip_invites (
+  id          uuid primary key default gen_random_uuid(),
+  trip_id     uuid not null references public.trips(id) on delete cascade,
+  email       text not null,
+  role        text not null default 'editor' check (role in ('editor','viewer')),
+  invited_by  uuid not null references auth.users(id),
+  status      text not null default 'pending' check (status in ('pending','accepted','revoked')),
+  created_at  timestamptz not null default now(),
+  accepted_at timestamptz,
+  accepted_by uuid references auth.users(id)
+);
+create index if not exists trip_invites_email_idx on public.trip_invites (lower(email), status);
+create index if not exists trip_invites_trip_idx  on public.trip_invites (trip_id);
+
 -- ============================================================================
 -- ROW LEVEL SECURITY
 -- Every row is reachable only by the trip's owner or its members.
@@ -161,6 +178,16 @@ create or replace function public.can_access_trip(t uuid)
 returns boolean language sql security definer stable as $$
   select exists (select 1 from public.trips        where id = t and owner = auth.uid())
       or exists (select 1 from public.trip_members  where trip_id = t and user_id = auth.uid());
+$$;
+
+-- does the signed-in user have a pending invite to this trip? (security definer: no RLS recursion)
+create or replace function public.has_pending_invite(t uuid)
+returns boolean language sql security definer stable as $$
+  select exists (
+    select 1 from public.trip_invites i
+    where i.trip_id = t and i.status = 'pending'
+      and lower(i.email) = lower(auth.jwt() ->> 'email')
+  );
 $$;
 
 alter table public.trips        enable row level security;
@@ -172,6 +199,7 @@ alter table public.extras       enable row level security;
 alter table public.notes        enable row level security;
 alter table public.ledger       enable row level security;
 alter table public.cities       enable row level security;
+alter table public.trip_invites enable row level security;
 
 -- trips: owner or member can read; owner manages membership/ownership
 drop policy if exists trips_select on public.trips;
@@ -185,10 +213,30 @@ create policy trips_update on public.trips for update using (public.can_access_t
 drop policy if exists trips_delete on public.trips;
 create policy trips_delete on public.trips for delete using (owner = auth.uid());
 
-drop policy if exists members_all on public.trip_members;
-create policy members_all on public.trip_members for all
-  using (public.can_access_trip(trip_id))
-  with check (exists (select 1 from public.trips where id = trip_id and owner = auth.uid()));
+-- members: readable by anyone on the trip; owner adds anyone, an invitee adds THEMSELVES
+drop policy if exists members_all    on public.trip_members;
+drop policy if exists members_select on public.trip_members;
+drop policy if exists members_insert on public.trip_members;
+drop policy if exists members_delete on public.trip_members;
+create policy members_select on public.trip_members for select using ( public.can_access_trip(trip_id) );
+create policy members_insert on public.trip_members for insert with check (
+  exists (select 1 from public.trips where id = trip_id and owner = auth.uid())
+  or ( user_id = auth.uid() and public.has_pending_invite(trip_id) )
+);
+create policy members_delete on public.trip_members for delete using (
+  exists (select 1 from public.trips where id = trip_id and owner = auth.uid()) or user_id = auth.uid()
+);
+
+-- invites: trip members + the addressed invitee can read; members create; revoke/accept via update
+drop policy if exists invites_select on public.trip_invites;
+create policy invites_select on public.trip_invites for select
+  using ( public.can_access_trip(trip_id) or lower(email) = lower(auth.jwt() ->> 'email') );
+drop policy if exists invites_insert on public.trip_invites;
+create policy invites_insert on public.trip_invites for insert
+  with check ( public.can_access_trip(trip_id) and invited_by = auth.uid() );
+drop policy if exists invites_update on public.trip_invites;
+create policy invites_update on public.trip_invites for update
+  using ( public.can_access_trip(trip_id) or lower(email) = lower(auth.jwt() ->> 'email') );
 
 -- child tables: full access if you can access the parent trip
 do $$

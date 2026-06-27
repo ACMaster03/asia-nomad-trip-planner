@@ -58,16 +58,19 @@ The app is a static site, so it only ever uses the **URL + anon key**. Row Level
 Security (set up by the schema) is what keeps each user's data private even though
 the anon key is public.
 
-## Step 5 — Invite your girlfriend (after she signs in once)
+## Step 5 — Invite your girlfriend (in-app, no SQL)
 
-1. She opens the app and logs in once (creates her `auth.users` row).
-2. Find her user id in **Authentication → Users**.
-3. **SQL Editor**, run (replace the ids):
-   ```sql
-   insert into trip_members (trip_id, user_id, role)
-   values ('<your-trip-id>', '<her-user-id>', 'editor');
-   ```
-   Now you both see and edit the same trip + ledger.
+Sharing is now built into the app — no manual SQL needed:
+
+1. You: open the **☁** dialog (top bar) → **Invite someone** → enter her email → **Send invite**.
+2. She: opens the site and signs in with **that same email** (magic link). A banner
+   appears in her ☁ dialog: **"You've been invited…"** → **Accept & switch**.
+3. Done — you both edit the same trip + ledger. The ☁ dialog also lists all trips you
+   can access, so you can switch between "your" trip and a shared one.
+
+> Under the hood this uses a `trip_invites` table + RLS: the invite is recorded by email,
+> and when she signs in the app lets her add *herself* to the trip (and nothing else).
+> Requires **migration 02** below.
 
 ---
 
@@ -87,7 +90,10 @@ drop policy if exists trips_update on public.trips;
 create policy trips_update on public.trips for update using (public.can_access_trip(id));
 ```
 
-(If you run the latest `schema.sql` fresh instead, it already includes these.)
+Then run [`supabase/migrations/02-invites.sql`](supabase/migrations/02-invites.sql) too —
+it adds the `trip_invites` table + policies that power the in-app **Invite** flow (Step 5).
+
+(If you run the latest `schema.sql` fresh instead, it already includes everything.)
 
 Also double-check **Authentication → URL Configuration → Redirect URLs** contains the
 URL you actually open the app from — `http://localhost:4321` for local and your Vercel
