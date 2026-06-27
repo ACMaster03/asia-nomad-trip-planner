@@ -1,0 +1,4864 @@
+{
+  "meta": {
+    "version": 1,
+    "generated": "2026-06-27",
+    "note": "Costs are approximate mid-2026 estimates in USD (accom per night; dailyLiving = food+local transport+activities for 2, excl. accommodation; rentMonthly = furnished 1-BR). Weather = climate normals: avg daily high/low C and monthly rainfall mm. Verify visas and live advisories before booking."
+  },
+  "countries": {
+    "Thailand": {
+      "visa": "Visa-free 30 days (cut from 60 in 2026). Free TDAC arrival card <=72h at tdac.immigration.go.th. Extend +30d (~$55). Longer: DTV visa.",
+      "bestTime": "Nov-Feb (cool, dry). Avoid Mar-Apr heat; Chiang Mai haze Feb-Apr; monsoon Jun-Oct.",
+      "safety": "Very safe (L1). Tuk-tuk gem/tailor scams, fake closed-attraction touts. Avoid deep south + Cambodia border. Tourist Police 1155."
+    },
+    "Vietnam": {
+      "visa": "Visa-free 45 days (Hungary, to Aug 2028). Or e-visa 90d multi ~$25-50 at evisa.gov.vn.",
+      "bestTime": "Oct-Apr overall. Central (Da Nang/Hoi An) avoid Sep-Nov (typhoon/flood). North best Mar-Apr & Oct-Nov.",
+      "safety": "Very safe (L1). Use Grab app; watch taxi-meter & Ha Long cruise scams."
+    },
+    "Indonesia": {
+      "visa": "VOA/e-VOA ~$35, 30d, extend +30. Long-term: E33G remote-worker visa (1yr). Pay Bali tourist levy ~$10pp at lovebali.baliprov.go.id.",
+      "bestTime": "Dry Apr-Oct (best May/Jun/Sep/Oct). Wet Nov-Mar (cheaper, greener).",
+      "safety": "Stable. #1 risk = scooter accidents - ride only with licence + IDP. Scooter-damage & money-changer scams."
+    },
+    "Malaysia": {
+      "visa": "Visa-free 90 days. Free MDAC >=3 days before arrival at imigresen-online.imi.gov.my. Long-term: DE Rantau nomad pass.",
+      "bestTime": "KL/Penang driest Dec-Apr. Haze season Aug-Oct (Sumatra fires).",
+      "safety": "Among SE Asia's safest. Bag-snatch/phone theft; use Grab."
+    },
+    "Cambodia": {
+      "visa": "e-Visa ~$36 (evisa.gov.kh) or VOA ~$30, 30d, extend +30. USD used everywhere.",
+      "bestTime": "Nov-Feb best (Angkor sunrise, peak crowds). Mar-Apr very hot. Flood risk Sep-Oct.",
+      "safety": "Generally safe. Buy Angkor pass ONLY at angkorenterprise.gov.kh. Pub St drink-spiking; bag-snatch."
+    },
+    "Laos": {
+      "visa": "30-day visa exemption currently in effect for Hungary/EU (temporary, ~to 2028 - VERIFY live). Else e-visa ~$50 or VOA ~$30-40, 30d. Exemption non-extendable (border hop).",
+      "bestTime": "Nov-Feb (cool, dry). AVOID Mar-Apr burning/haze season (esp. Luang Prabang). May-Oct monsoon.",
+      "safety": "Generally safe, low violent crime. Petty theft, road accidents; tuk-tuk overcharging (no ride-hail, negotiate)."
+    },
+    "Singapore": {
+      "visa": "Visa-free 90 days. Free SG Arrival Card <=72h at ica.gov.sg.",
+      "bestTime": "Feb-Apr driest. Hot/humid year-round. Haze risk Jun-Oct.",
+      "safety": "Among world's safest BUT strict: drugs=death penalty, vapes banned (even transit), fines for gum/jaywalk/litter."
+    },
+    "Japan": {
+      "visa": "Visa-free 90 days. Pre-register Visit Japan Web.",
+      "bestTime": "Apr-May & Oct-Nov best. Cherry blossom late Mar-early Apr; avoid Golden Week; rainy Jun-mid-Jul; typhoons Aug-Sep.",
+      "safety": "Very safe. Rare nightlife bar scams in Kabukicho/Roppongi - never follow touts."
+    },
+    "South Korea": {
+      "visa": "Visa-free 90 days. No K-ETA for Hungary (to end-2026). Free e-Arrival Card.",
+      "bestTime": "Apr-May & mid-Oct-early Nov. Monsoon mid-Jun-Jul; typhoons Aug-Sep; spring yellow dust.",
+      "safety": "Very safe. Use Kakao T for taxis; beware K-pop ticket fraud."
+    },
+    "Taiwan": {
+      "visa": "Visa-free 90 days. Online arrival card <=72h.",
+      "bestTime": "Oct-Nov & April. Plum rain May-Jun; typhoons Jul-Sep; hot humid summers.",
+      "safety": "Very safe. No meat imports (ASF fines). Traffic + quakes/typhoons are the main risks."
+    },
+    "Hong Kong": {
+      "visa": "Visa-free 90 days.",
+      "bestTime": "Oct-early Dec (cool, dry). Typhoons May-Nov (T8 shuts the city); humid summers.",
+      "safety": "Among safest cities. Kowloon electronics/jewelry bait-and-switch; taxi steering."
+    },
+    "China": {
+      "visa": "CHANGES OFTEN - verify with Embassy. Unilateral visa-free up to 30 days for Hungary (to Dec 31 2026), free. Else 240h transit. Excludes Tibet/Xinjiang.",
+      "bestTime": "Apr-May & Sep-Oct (avoid Oct 1-7). Shanghai plum rains mid-Jun-Jul; Chengdu often grey.",
+      "safety": "Safe for crime; risk is scams (infamous tea-house scam - never follow strangers). Google/WhatsApp/Booking blocked - use foreign eSIM + Alipay/WeChat/Trip.com/Didi."
+    },
+    "India": {
+      "visa": "e-Tourist Visa online only (no VOA). 30d $10-25 / 1yr multi $40 (+3% fee), max 180d/yr. indianvisaonline.gov.in.",
+      "bestTime": "Oct-Mar. Avoid Apr-Jun heat & Jul-Sep monsoon. Delhi smog late Oct-Jan (bring N95).",
+      "safety": "Moderate. Meter/closed-hotel/gem scams. Women: dress modestly, Uber/Ola at night."
+    },
+    "Nepal": {
+      "visa": "Visa on arrival: 15d $30 / 30d $50 / 90d $125 (cash). Max 150d/yr. Solo trekking banned - guide + TIMS required.",
+      "bestTime": "Oct-Nov & Mar-May. Avoid Jun-Sep monsoon (landslides).",
+      "safety": "Very safe. Trek-agency & taxi overcharging - agree fares up front."
+    },
+    "Sri Lanka": {
+      "visa": "ETA required online ~$50, 30d double-entry (verify free-ETA list at eta.gov.lk - Hungary not confirmed). Extend to 90-180d.",
+      "bestTime": "Dec-Mar (south/west + hills). Two monsoons - opposite coast is always dry.",
+      "safety": "Safe, friendly. Tuk-tuk & gem scams; drink-spiking reported. Use PickMe app."
+    },
+    "Bangladesh": {
+      "visa": "Visa required. VOA ~$51pp cash (USD/EUR), 30d, extend +30, at officer discretion - safer to pre-arrange. e-visa announced but unreliable (verify visa.gov.bd).",
+      "bestTime": "Nov-Feb (cool, dry). Apr-May very hot; Jun-Oct monsoon/flooding. Cox's Bazar beach Nov-early Mar.",
+      "safety": "US advisory Level 3 (Reconsider Travel) - crime, unrest; avoid demos. DO NOT travel Chittagong Hill Tracts. Dress conservatively; use Pathao/Uber. Check travel.state.gov."
+    }
+  },
+  "cities": [
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Thailand",
+      "city": "Bangkok",
+      "costs": {
+        "allInDayMid": [
+          70,
+          110
+        ],
+        "accomPerNight": {
+          "budget": 25,
+          "mid": 55,
+          "nice": 150
+        },
+        "rentMonthly": 600,
+        "dailyLiving": {
+          "low": 25,
+          "mid": 40,
+          "high": 65
+        }
+      },
+      "food": "Street meal $1.5-3 / Casual for 2 $10-18 / Mid dinner $35-60 / Beer $2.5-3.5 / Coffee $2.5-3.5",
+      "transport": "BTS/MRT $0.5-1.75 / BTS 1-day $4 / No city pass / Grab $2.3-5.7",
+      "internet": "eSIM $8-35/mo / Coworking $5-14/day (abundant)",
+      "landmarks": [
+        {
+          "name": "Grand Palace & Wat Phra Kaew",
+          "why": "#1 royal/religious icon",
+          "when": "Nov-Feb, 08:30 open",
+          "how": "MRT Sanam Chai or river boat",
+          "cost": "~$14",
+          "time": "2-3h (dress code)"
+        },
+        {
+          "name": "Wat Pho",
+          "why": "46m Reclining Buddha + massage school",
+          "when": "Mornings",
+          "how": "Walk from Grand Palace",
+          "cost": "~$2.8",
+          "time": "1-1.5h"
+        },
+        {
+          "name": "Wat Arun",
+          "why": "Riverside porcelain spire",
+          "when": "08:00-10:00 or sunset",
+          "how": "Cross-river ferry",
+          "cost": "~$5.7",
+          "time": "1h"
+        }
+      ],
+      "weather": {
+        "hazard": "Tropical monsoon; wettest Sep-Oct with flood risk, hot/dry Mar-May (peak heat Apr ~35C+), occasional March haze; best months Nov-Feb (cool, dry).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 32,
+            "lo": 21,
+            "rain": 15
+          },
+          {
+            "m": "Feb",
+            "hi": 33,
+            "lo": 23,
+            "rain": 20
+          },
+          {
+            "m": "Mar",
+            "hi": 34,
+            "lo": 25,
+            "rain": 40
+          },
+          {
+            "m": "Apr",
+            "hi": 35,
+            "lo": 26,
+            "rain": 85
+          },
+          {
+            "m": "May",
+            "hi": 34,
+            "lo": 26,
+            "rain": 250
+          },
+          {
+            "m": "Jun",
+            "hi": 33,
+            "lo": 25,
+            "rain": 160
+          },
+          {
+            "m": "Jul",
+            "hi": 33,
+            "lo": 25,
+            "rain": 160
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 25,
+            "rain": 175
+          },
+          {
+            "m": "Sep",
+            "hi": 32,
+            "lo": 24,
+            "rain": 320
+          },
+          {
+            "m": "Oct",
+            "hi": 32,
+            "lo": 24,
+            "rain": 290
+          },
+          {
+            "m": "Nov",
+            "hi": 32,
+            "lo": 23,
+            "rain": 55
+          },
+          {
+            "m": "Dec",
+            "hi": 31,
+            "lo": 21,
+            "rain": 10
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Thailand",
+      "city": "Chiang Mai",
+      "costs": {
+        "allInDayMid": [
+          55,
+          90
+        ],
+        "accomPerNight": {
+          "budget": 18,
+          "mid": 55,
+          "nice": 100
+        },
+        "rentMonthly": 450,
+        "dailyLiving": {
+          "low": 20,
+          "mid": 30,
+          "high": 50
+        }
+      },
+      "food": "Local meal $1.1-2.2 / Casual for 2 $8-14 / Mid dinner $25-45 / Beer $2.3-3 / Coffee $2-3 (cafe capital)",
+      "transport": "Red songthaew $0.6-1.15/hop / No metro, no pass / Grab $1.5-3.5",
+      "internet": "eSIM $8-35/mo, fibre ~$15/mo / Coworking $5-12/day (top nomad hub)",
+      "landmarks": [
+        {
+          "name": "Wat Phra That Doi Suthep",
+          "why": "Gold chedi + city views",
+          "when": "06:00-08:00 or sunset",
+          "how": "Songthaew/Grab",
+          "cost": "~$1 + funicular",
+          "time": "2-3h"
+        },
+        {
+          "name": "Old City temple circuit",
+          "why": "Walkable Lanna temples",
+          "when": "Cool morning",
+          "how": "On foot",
+          "cost": "~$0.6-1.15 each",
+          "time": "Half day"
+        },
+        {
+          "name": "Elephant Nature Park (ethical)",
+          "why": "100+ rescued elephants, no riding",
+          "when": "Avoid hazy Mar-Apr",
+          "how": "Hotel pickup, book 2-4 wks ahead",
+          "cost": "~$77-130",
+          "time": "Full day"
+        }
+      ],
+      "weather": {
+        "hazard": "Monsoon rains Jun-Sep (wettest Aug-Sep); severe burning-season haze Feb-Apr (worst air Mar); intense heat Apr; best months Nov-Feb (cool, dry, clear).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 29,
+            "lo": 14,
+            "rain": 10
+          },
+          {
+            "m": "Feb",
+            "hi": 32,
+            "lo": 15,
+            "rain": 5
+          },
+          {
+            "m": "Mar",
+            "hi": 35,
+            "lo": 18,
+            "rain": 15
+          },
+          {
+            "m": "Apr",
+            "hi": 36,
+            "lo": 22,
+            "rain": 50
+          },
+          {
+            "m": "May",
+            "hi": 34,
+            "lo": 23,
+            "rain": 160
+          },
+          {
+            "m": "Jun",
+            "hi": 33,
+            "lo": 23,
+            "rain": 130
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 23,
+            "rain": 160
+          },
+          {
+            "m": "Aug",
+            "hi": 31,
+            "lo": 23,
+            "rain": 210
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 23,
+            "rain": 200
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 21,
+            "rain": 110
+          },
+          {
+            "m": "Nov",
+            "hi": 30,
+            "lo": 18,
+            "rain": 40
+          },
+          {
+            "m": "Dec",
+            "hi": 28,
+            "lo": 15,
+            "rain": 15
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Vietnam",
+      "city": "Hanoi",
+      "costs": {
+        "allInDayMid": [
+          70,
+          110
+        ],
+        "accomPerNight": {
+          "budget": 22,
+          "mid": 40,
+          "nice": 80
+        },
+        "rentMonthly": 475,
+        "dailyLiving": {
+          "low": 20,
+          "mid": 32,
+          "high": 55
+        }
+      },
+      "food": "Street $1.5-3 (pho ~$1.5) / Casual for 2 $10-15 / Mid dinner $20-28 / Bia hoi $0.2-0.6 / Coffee $1.6-3",
+      "transport": "Metro $0.35-0.72, day pass $1.5 / Bus $0.30 / No city pass / Grab $1.25-3",
+      "internet": "eSIM $15-31/mo (local cheaper) / Coworking $10-16/day",
+      "landmarks": [
+        {
+          "name": "Ha Long Bay day cruise",
+          "why": "UNESCO karst seascape, kayaking",
+          "when": "Oct-Apr",
+          "how": "Agency/GetYourGuide, ~3h transfer",
+          "cost": "~$65-120pp",
+          "time": "Full day"
+        },
+        {
+          "name": "Old Quarter & Hoan Kiem Lake",
+          "why": "Historic core, street food",
+          "when": "Early AM / dusk",
+          "how": "Walk",
+          "cost": "Free",
+          "time": "2-4h"
+        },
+        {
+          "name": "Temple of Literature",
+          "why": "1,000-yr first university",
+          "when": "Morning",
+          "how": "Grab/walk",
+          "cost": "~$2.7",
+          "time": "1h"
+        }
+      ],
+      "weather": {
+        "hazard": "Humid subtropical; rainy May-Sep (wettest Jul-Aug) with typhoon/flood risk; cool grey drizzle Jan-Mar; best months Oct-Nov and Mar-Apr (mild, dry).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 20,
+            "lo": 14,
+            "rain": 20
+          },
+          {
+            "m": "Feb",
+            "hi": 21,
+            "lo": 16,
+            "rain": 30
+          },
+          {
+            "m": "Mar",
+            "hi": 23,
+            "lo": 18,
+            "rain": 40
+          },
+          {
+            "m": "Apr",
+            "hi": 28,
+            "lo": 21,
+            "rain": 90
+          },
+          {
+            "m": "May",
+            "hi": 32,
+            "lo": 24,
+            "rain": 190
+          },
+          {
+            "m": "Jun",
+            "hi": 33,
+            "lo": 26,
+            "rain": 240
+          },
+          {
+            "m": "Jul",
+            "hi": 33,
+            "lo": 26,
+            "rain": 290
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 26,
+            "rain": 320
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 24,
+            "rain": 260
+          },
+          {
+            "m": "Oct",
+            "hi": 29,
+            "lo": 22,
+            "rain": 130
+          },
+          {
+            "m": "Nov",
+            "hi": 26,
+            "lo": 18,
+            "rain": 45
+          },
+          {
+            "m": "Dec",
+            "hi": 22,
+            "lo": 15,
+            "rain": 20
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Vietnam",
+      "city": "Da Nang",
+      "costs": {
+        "allInDayMid": [
+          80,
+          150
+        ],
+        "accomPerNight": {
+          "budget": 22,
+          "mid": 55,
+          "nice": 110
+        },
+        "rentMonthly": 400,
+        "dailyLiving": {
+          "low": 20,
+          "mid": 32,
+          "high": 55
+        }
+      },
+      "food": "Street $1.5-3 / Casual for 2 $10-15 / Mid dinner $20-30 / Beer $0.4-1 / Coffee $1.6-2.5",
+      "transport": "No metro / Grab car $2-4, bike $1-2 / Scooter $5-8/day / No city pass",
+      "internet": "eSIM $15-31/mo / Coworking $5-12/day (strong scene)",
+      "landmarks": [
+        {
+          "name": "Ba Na Hills & Golden Bridge",
+          "why": "Mountaintop park, stone-hands bridge",
+          "when": "Clear morning",
+          "how": "Grab/tour",
+          "cost": "~$35-39",
+          "time": "Full day"
+        },
+        {
+          "name": "Hoi An Ancient Town",
+          "why": "UNESCO lantern town, tailors",
+          "when": "Dry season, dusk (avoid Sep-Nov floods)",
+          "how": "~45min Grab",
+          "cost": "~$4.7",
+          "time": "Half/full day"
+        },
+        {
+          "name": "Marble Mountains",
+          "why": "Caves, pagodas, sea views",
+          "when": "Morning",
+          "how": "Grab",
+          "cost": "~$1.55 + lift",
+          "time": "2-3h"
+        }
+      ],
+      "weather": {
+        "hazard": "Central coast monsoon; extremely wet Oct-Nov (peak Oct ~600mm) with typhoon and severe flood risk Sep-Nov; best months Feb-May (warm, dry, beach).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 25,
+            "lo": 19,
+            "rain": 95
+          },
+          {
+            "m": "Feb",
+            "hi": 26,
+            "lo": 20,
+            "rain": 35
+          },
+          {
+            "m": "Mar",
+            "hi": 28,
+            "lo": 21,
+            "rain": 25
+          },
+          {
+            "m": "Apr",
+            "hi": 31,
+            "lo": 23,
+            "rain": 30
+          },
+          {
+            "m": "May",
+            "hi": 34,
+            "lo": 25,
+            "rain": 65
+          },
+          {
+            "m": "Jun",
+            "hi": 34,
+            "lo": 26,
+            "rain": 85
+          },
+          {
+            "m": "Jul",
+            "hi": 34,
+            "lo": 26,
+            "rain": 90
+          },
+          {
+            "m": "Aug",
+            "hi": 34,
+            "lo": 26,
+            "rain": 120
+          },
+          {
+            "m": "Sep",
+            "hi": 32,
+            "lo": 24,
+            "rain": 350
+          },
+          {
+            "m": "Oct",
+            "hi": 29,
+            "lo": 23,
+            "rain": 610
+          },
+          {
+            "m": "Nov",
+            "hi": 27,
+            "lo": 22,
+            "rain": 370
+          },
+          {
+            "m": "Dec",
+            "hi": 25,
+            "lo": 20,
+            "rain": 210
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Vietnam",
+      "city": "Ho Chi Minh City",
+      "costs": {
+        "allInDayMid": [
+          80,
+          130
+        ],
+        "accomPerNight": {
+          "budget": 18,
+          "mid": 45,
+          "nice": 95
+        },
+        "rentMonthly": 600,
+        "dailyLiving": {
+          "low": 22,
+          "mid": 35,
+          "high": 60
+        }
+      },
+      "food": "Street $0.8-3 / Casual for 2 $8-14 / Mid dinner $22-30 / Beer $0.5-1 / Coffee $1.7-2.8",
+      "transport": "Metro L1 $0.27-0.79, day pass $1.55 / No city pass / Grab $1.25-3",
+      "internet": "eSIM $15-31/mo / Coworking $8-18/day",
+      "landmarks": [
+        {
+          "name": "War Remnants Museum",
+          "why": "Essential war history",
+          "when": "Daytime",
+          "how": "Grab/walk",
+          "cost": "~$1.55",
+          "time": "2-3h"
+        },
+        {
+          "name": "Cu Chi Tunnels",
+          "why": "Wartime tunnel network",
+          "when": "Morning, dry season",
+          "how": "Half-day tour",
+          "cost": "~$17-25",
+          "time": "Half day"
+        },
+        {
+          "name": "Ben Thanh & District 1",
+          "why": "Market, Notre-Dame, Post Office",
+          "when": "Day + evening",
+          "how": "Walk/metro",
+          "cost": "Free",
+          "time": "2-4h"
+        }
+      ],
+      "weather": {
+        "hazard": "Tropical monsoon; rainy May-Oct (wettest Sep) with afternoon downpours/urban flooding; hot/dry peak Mar-Apr; best months Dec-Mar (dry, warm).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 32,
+            "lo": 21,
+            "rain": 15
+          },
+          {
+            "m": "Feb",
+            "hi": 33,
+            "lo": 22,
+            "rain": 5
+          },
+          {
+            "m": "Mar",
+            "hi": 34,
+            "lo": 24,
+            "rain": 15
+          },
+          {
+            "m": "Apr",
+            "hi": 35,
+            "lo": 25,
+            "rain": 50
+          },
+          {
+            "m": "May",
+            "hi": 34,
+            "lo": 25,
+            "rain": 220
+          },
+          {
+            "m": "Jun",
+            "hi": 32,
+            "lo": 24,
+            "rain": 310
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 24,
+            "rain": 295
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 24,
+            "rain": 270
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 24,
+            "rain": 330
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 24,
+            "rain": 270
+          },
+          {
+            "m": "Nov",
+            "hi": 31,
+            "lo": 23,
+            "rain": 120
+          },
+          {
+            "m": "Dec",
+            "hi": 31,
+            "lo": 22,
+            "rain": 50
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Indonesia",
+      "city": "Canggu",
+      "costs": {
+        "allInDayMid": [
+          80,
+          130
+        ],
+        "accomPerNight": {
+          "budget": 22,
+          "mid": 55,
+          "nice": 135
+        },
+        "rentMonthly": 950,
+        "dailyLiving": {
+          "low": 30,
+          "mid": 45,
+          "high": 70
+        }
+      },
+      "food": "Warung $1.5-3 / Casual for 2 $15-25 / Mid dinner $30-50 / Bintang $2.5-4 / Coffee $2.5-3.5",
+      "transport": "No metro / Scooter $4-10/day / Grab-Gojek bike $1-2, car $3-6 / Airport ~$10-15",
+      "internet": "Local SIM ~$9.5/mo, Airalo $24-42 / Coworking $10-20/day (Dojo, Tropical Nomad, BWork)",
+      "landmarks": [
+        {
+          "name": "Tanah Lot Temple",
+          "why": "Dramatic sea temple, classic sunset",
+          "when": "60-90min before sunset",
+          "how": "30-50min Grab",
+          "cost": "~$4.5",
+          "time": "2-3h"
+        },
+        {
+          "name": "Echo / Batu Bolong Beach",
+          "why": "Surf beach + cliff cafes",
+          "when": "Dry season, late afternoon",
+          "how": "Walk/scooter",
+          "cost": "Free",
+          "time": "2-4h"
+        },
+        {
+          "name": "Beach clubs (Finns/Atlas)",
+          "why": "Pools, DJs, day-to-night",
+          "when": "Afternoon to sunset",
+          "how": "Walk/scooter",
+          "cost": "Min spend $15-40",
+          "time": "3-5h"
+        }
+      ],
+      "weather": {
+        "hazard": "Bali tropical; wet Nov-Mar (wettest Jan) with humidity/flood risk; dry Apr-Oct; best months May-Sep (dry, peak surf/travel).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 30,
+            "lo": 24,
+            "rain": 340
+          },
+          {
+            "m": "Feb",
+            "hi": 30,
+            "lo": 24,
+            "rain": 275
+          },
+          {
+            "m": "Mar",
+            "hi": 31,
+            "lo": 24,
+            "rain": 230
+          },
+          {
+            "m": "Apr",
+            "hi": 31,
+            "lo": 24,
+            "rain": 85
+          },
+          {
+            "m": "May",
+            "hi": 31,
+            "lo": 23,
+            "rain": 80
+          },
+          {
+            "m": "Jun",
+            "hi": 30,
+            "lo": 23,
+            "rain": 70
+          },
+          {
+            "m": "Jul",
+            "hi": 29,
+            "lo": 22,
+            "rain": 55
+          },
+          {
+            "m": "Aug",
+            "hi": 29,
+            "lo": 22,
+            "rain": 30
+          },
+          {
+            "m": "Sep",
+            "hi": 30,
+            "lo": 22,
+            "rain": 50
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 23,
+            "rain": 70
+          },
+          {
+            "m": "Nov",
+            "hi": 31,
+            "lo": 23,
+            "rain": 150
+          },
+          {
+            "m": "Dec",
+            "hi": 31,
+            "lo": 24,
+            "rain": 290
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Indonesia",
+      "city": "Ubud",
+      "costs": {
+        "allInDayMid": [
+          75,
+          120
+        ],
+        "accomPerNight": {
+          "budget": 18,
+          "mid": 50,
+          "nice": 125
+        },
+        "rentMonthly": 700,
+        "dailyLiving": {
+          "low": 28,
+          "mid": 42,
+          "high": 65
+        }
+      },
+      "food": "Warung $1.5-3 / Casual for 2 $14-24 / Mid dinner $28-45 / Bintang $2.5-4 / Coffee $2.5-3.5",
+      "transport": "No metro / Scooter $4-10/day / Grab-Gojek bike $1-2, car $3-6 / Airport ~$13-20",
+      "internet": "Local SIM ~$9.5/mo / Coworking $10-20/day (Outpost Ubud)",
+      "landmarks": [
+        {
+          "name": "Tegallalang Rice Terraces",
+          "why": "Iconic terraces + jungle swings",
+          "when": "8am / sunrise, dry season",
+          "how": "15-20min scooter/Grab",
+          "cost": "~$3",
+          "time": "1.5-2h"
+        },
+        {
+          "name": "Sacred Monkey Forest",
+          "why": "600+ macaques + mossy temples",
+          "when": "Morning",
+          "how": "Walk",
+          "cost": "~$6-7.5",
+          "time": "1.5h"
+        },
+        {
+          "name": "Tirta Empul Water Temple",
+          "why": "Sacred purification springs",
+          "when": "Early morning",
+          "how": "30min Grab",
+          "cost": "~$3 + sarong",
+          "time": "1.5-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Bali inland tropical (cooler nights, more cloud); wet Nov-Mar (wettest Jan); dry Apr-Oct; best months May-Sep (dry, lush).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 30,
+            "lo": 24,
+            "rain": 340
+          },
+          {
+            "m": "Feb",
+            "hi": 30,
+            "lo": 24,
+            "rain": 275
+          },
+          {
+            "m": "Mar",
+            "hi": 31,
+            "lo": 24,
+            "rain": 230
+          },
+          {
+            "m": "Apr",
+            "hi": 31,
+            "lo": 24,
+            "rain": 85
+          },
+          {
+            "m": "May",
+            "hi": 31,
+            "lo": 23,
+            "rain": 80
+          },
+          {
+            "m": "Jun",
+            "hi": 30,
+            "lo": 23,
+            "rain": 70
+          },
+          {
+            "m": "Jul",
+            "hi": 29,
+            "lo": 22,
+            "rain": 55
+          },
+          {
+            "m": "Aug",
+            "hi": 29,
+            "lo": 22,
+            "rain": 30
+          },
+          {
+            "m": "Sep",
+            "hi": 30,
+            "lo": 22,
+            "rain": 50
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 23,
+            "rain": 70
+          },
+          {
+            "m": "Nov",
+            "hi": 31,
+            "lo": 23,
+            "rain": 150
+          },
+          {
+            "m": "Dec",
+            "hi": 31,
+            "lo": 24,
+            "rain": 290
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Malaysia",
+      "city": "Kuala Lumpur",
+      "costs": {
+        "allInDayMid": [
+          80,
+          130
+        ],
+        "accomPerNight": {
+          "budget": 18,
+          "mid": 50,
+          "nice": 115
+        },
+        "rentMonthly": 635,
+        "dailyLiving": {
+          "low": 28,
+          "mid": 40,
+          "high": 65
+        }
+      },
+      "food": "Hawker $2.5-4 / Casual for 2 $15-23 / Mid dinner $23-35 / Beer $4 (taxed) / Coffee $3.3",
+      "transport": "LRT/MRT $0.25-1.85 / MY50 monthly pass ~$11 / KL Hop-On ~$22 / Grab $1.85-3.5",
+      "internet": "Airalo ~$20/10GB, local $10-20/mo / Coworking $9-16/day (WORQ, Common Ground)",
+      "landmarks": [
+        {
+          "name": "Petronas Twin Towers",
+          "why": "KL icon, skybridge + deck 86",
+          "when": "Dusk, Tue-Sun, book ahead",
+          "how": "MRT KLCC",
+          "cost": "~$36-46",
+          "time": "1.5-2h"
+        },
+        {
+          "name": "Batu Caves",
+          "why": "Limestone Hindu temple, 272 steps",
+          "when": "Early morning",
+          "how": "Free KTM from KL Sentral",
+          "cost": "Free (Cave Villa extra)",
+          "time": "2-3h"
+        },
+        {
+          "name": "KL Tower SkyDeck",
+          "why": "Glass skybox (see the towers)",
+          "when": "Sunset",
+          "how": "Grab",
+          "cost": "~$13-21",
+          "time": "1-1.5h"
+        }
+      ],
+      "weather": {
+        "hazard": "Equatorial, hot/humid year-round; rain peaks Mar-Apr and Oct-Nov (wettest Nov), thunderstorms/flash floods; haze risk Jun-Sep; best months May-Jul (drier).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 32,
+            "lo": 23,
+            "rain": 170
+          },
+          {
+            "m": "Feb",
+            "hi": 33,
+            "lo": 23,
+            "rain": 165
+          },
+          {
+            "m": "Mar",
+            "hi": 33,
+            "lo": 24,
+            "rain": 240
+          },
+          {
+            "m": "Apr",
+            "hi": 33,
+            "lo": 24,
+            "rain": 280
+          },
+          {
+            "m": "May",
+            "hi": 33,
+            "lo": 24,
+            "rain": 210
+          },
+          {
+            "m": "Jun",
+            "hi": 33,
+            "lo": 24,
+            "rain": 130
+          },
+          {
+            "m": "Jul",
+            "hi": 33,
+            "lo": 23,
+            "rain": 130
+          },
+          {
+            "m": "Aug",
+            "hi": 33,
+            "lo": 23,
+            "rain": 170
+          },
+          {
+            "m": "Sep",
+            "hi": 32,
+            "lo": 23,
+            "rain": 200
+          },
+          {
+            "m": "Oct",
+            "hi": 32,
+            "lo": 23,
+            "rain": 290
+          },
+          {
+            "m": "Nov",
+            "hi": 32,
+            "lo": 23,
+            "rain": 300
+          },
+          {
+            "m": "Dec",
+            "hi": 32,
+            "lo": 23,
+            "rain": 230
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Malaysia",
+      "city": "George Town (Penang)",
+      "costs": {
+        "allInDayMid": [
+          70,
+          110
+        ],
+        "accomPerNight": {
+          "budget": 18,
+          "mid": 55,
+          "nice": 115
+        },
+        "rentMonthly": 365,
+        "dailyLiving": {
+          "low": 24,
+          "mid": 35,
+          "high": 55
+        }
+      },
+      "food": "Hawker $1.5-3 (food capital) / Mid dinner $20-30 / Beer $4-5.5 / Coffee $3",
+      "transport": "Rapid bus $0.3-1.15 / Free CAT shuttle in core / Hop-On ~$15-25 / Grab $1.85-3.5",
+      "internet": "Airalo ~$20/10GB / Coworking $6-11/day (@CAT, The Venture)",
+      "landmarks": [
+        {
+          "name": "George Town street art (UNESCO)",
+          "why": "Zacharevic murals, shophouses",
+          "when": "Early AM / late afternoon",
+          "how": "Self-guided walk",
+          "cost": "Free",
+          "time": "2-4h"
+        },
+        {
+          "name": "Kek Lok Si Temple",
+          "why": "Largest Buddhist temple, 7-tier pagoda",
+          "when": "Late afternoon",
+          "how": "Grab/bus to Air Itam",
+          "cost": "Free (pagoda/lift extra)",
+          "time": "2h"
+        },
+        {
+          "name": "Penang Hill",
+          "why": "Funicular to cool hilltop + views",
+          "when": "Clear morning/sunset",
+          "how": "Funicular",
+          "cost": "~$6.5 return",
+          "time": "3-4h"
+        }
+      ],
+      "weather": {
+        "hazard": "Equatorial island; wettest Sep-Oct (peak Oct), thunderstorms/flooding; drier Dec-Feb; haze risk Jun-Sep; best months Dec-Mar (driest).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 32,
+            "lo": 24,
+            "rain": 70
+          },
+          {
+            "m": "Feb",
+            "hi": 33,
+            "lo": 24,
+            "rain": 90
+          },
+          {
+            "m": "Mar",
+            "hi": 33,
+            "lo": 24,
+            "rain": 140
+          },
+          {
+            "m": "Apr",
+            "hi": 33,
+            "lo": 25,
+            "rain": 220
+          },
+          {
+            "m": "May",
+            "hi": 33,
+            "lo": 25,
+            "rain": 240
+          },
+          {
+            "m": "Jun",
+            "hi": 32,
+            "lo": 24,
+            "rain": 180
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 24,
+            "rain": 200
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 24,
+            "rain": 240
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 24,
+            "rain": 350
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 24,
+            "rain": 380
+          },
+          {
+            "m": "Nov",
+            "hi": 31,
+            "lo": 24,
+            "rain": 240
+          },
+          {
+            "m": "Dec",
+            "hi": 31,
+            "lo": 24,
+            "rain": 120
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Cambodia",
+      "city": "Siem Reap",
+      "costs": {
+        "allInDayMid": [
+          70,
+          110
+        ],
+        "accomPerNight": {
+          "budget": 15,
+          "mid": 38,
+          "nice": 75
+        },
+        "rentMonthly": 350,
+        "dailyLiving": {
+          "low": 25,
+          "mid": 38,
+          "high": 60
+        }
+      },
+      "food": "Local $1.5-3 / Casual for 2 $10-16 / Mid dinner $23-35 / Angkor draft $0.5-1 / Coffee $1.4-2.5",
+      "transport": "Tuk-tuk $1.5-3, full-day temple ~$18-25 / Angkor Pass: 1-day $37 / 3-day $62 / 7-day $72",
+      "internet": "Local SIM $5-15/mo / Coworking $5-25/day (AngkorHUB, The Hub)",
+      "landmarks": [
+        {
+          "name": "Angkor Wat (sunrise)",
+          "why": "Largest religious monument",
+          "when": "Nov-Feb, leave ~4:30am",
+          "how": "Tuk-tuk, buy pass day before",
+          "cost": "Angkor Pass",
+          "time": "3-4h"
+        },
+        {
+          "name": "Angkor Thom & Bayon",
+          "why": "Walled city, smiling stone faces",
+          "when": "Morning",
+          "how": "Same circuit",
+          "cost": "Angkor Pass",
+          "time": "1.5-2h"
+        },
+        {
+          "name": "Ta Prohm",
+          "why": "Jungle temple, giant tree roots",
+          "when": "Early/late",
+          "how": "Small Circuit (~$18-25 tuk-tuk)",
+          "cost": "Angkor Pass",
+          "time": "1.5h"
+        }
+      ],
+      "weather": {
+        "hazard": "Tropical savanna; rainy May-Oct (wettest Sep-Oct) with flooding around Angkor/Tonle Sap; intense heat Mar-May (Apr ~37C); best months Nov-Feb (cool, dry).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 32,
+            "lo": 20,
+            "rain": 5
+          },
+          {
+            "m": "Feb",
+            "hi": 34,
+            "lo": 21,
+            "rain": 10
+          },
+          {
+            "m": "Mar",
+            "hi": 36,
+            "lo": 24,
+            "rain": 35
+          },
+          {
+            "m": "Apr",
+            "hi": 37,
+            "lo": 26,
+            "rain": 75
+          },
+          {
+            "m": "May",
+            "hi": 36,
+            "lo": 26,
+            "rain": 160
+          },
+          {
+            "m": "Jun",
+            "hi": 34,
+            "lo": 26,
+            "rain": 170
+          },
+          {
+            "m": "Jul",
+            "hi": 33,
+            "lo": 25,
+            "rain": 180
+          },
+          {
+            "m": "Aug",
+            "hi": 33,
+            "lo": 25,
+            "rain": 190
+          },
+          {
+            "m": "Sep",
+            "hi": 32,
+            "lo": 25,
+            "rain": 270
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 24,
+            "rain": 250
+          },
+          {
+            "m": "Nov",
+            "hi": 31,
+            "lo": 22,
+            "rain": 75
+          },
+          {
+            "m": "Dec",
+            "hi": 31,
+            "lo": 20,
+            "rain": 15
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Cambodia",
+      "city": "Phnom Penh",
+      "costs": {
+        "allInDayMid": [
+          80,
+          120
+        ],
+        "accomPerNight": {
+          "budget": 12,
+          "mid": 45,
+          "nice": 120
+        },
+        "rentMonthly": 420,
+        "dailyLiving": {
+          "low": 28,
+          "mid": 40,
+          "high": 65
+        }
+      },
+      "food": "Local $2-4 / Casual for 2 $8-14 / Mid dinner $25-45 / Draft beer $0.75-1.50 / Coffee $3-4",
+      "transport": "Tuk-tuk (Grab/PassApp) short ~$1 / Strong ride-hail / Killing Fields return ~$15-20",
+      "internet": "Smart SIM $5/30GB / Coworking good (SmallWorld $7/day, $70-150/mo). Most workable Indochina base outside TH/VN",
+      "landmarks": [
+        {
+          "name": "Royal Palace & Silver Pagoda",
+          "why": "Ornate royal compound",
+          "when": "Early morning (dress modestly)",
+          "how": "Tuk-tuk",
+          "cost": "~$10",
+          "time": "2h"
+        },
+        {
+          "name": "Tuol Sleng (S-21) & Killing Fields",
+          "why": "Essential Khmer Rouge history",
+          "when": "Morning, combined",
+          "how": "Tuk-tuk",
+          "cost": "S-21 ~$5, Choeung Ek ~$6",
+          "time": "Half day"
+        },
+        {
+          "name": "Riverside (Sisowath Quay) & Wat Phnom",
+          "why": "Mekong promenade + hilltop temple",
+          "when": "Late afternoon/evening",
+          "how": "Walk/tuk-tuk",
+          "cost": "Wat Phnom ~$1",
+          "time": "1-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Tropical monsoon; rainy May-Oct (wettest Sep-Oct) with urban flooding; hot/dry peak Mar-Apr (Apr ~36C); best months Nov-Feb (dry, cooler).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 32,
+            "lo": 22,
+            "rain": 10
+          },
+          {
+            "m": "Feb",
+            "hi": 34,
+            "lo": 23,
+            "rain": 10
+          },
+          {
+            "m": "Mar",
+            "hi": 35,
+            "lo": 24,
+            "rain": 40
+          },
+          {
+            "m": "Apr",
+            "hi": 36,
+            "lo": 26,
+            "rain": 80
+          },
+          {
+            "m": "May",
+            "hi": 35,
+            "lo": 26,
+            "rain": 120
+          },
+          {
+            "m": "Jun",
+            "hi": 34,
+            "lo": 26,
+            "rain": 150
+          },
+          {
+            "m": "Jul",
+            "hi": 33,
+            "lo": 25,
+            "rain": 150
+          },
+          {
+            "m": "Aug",
+            "hi": 33,
+            "lo": 25,
+            "rain": 160
+          },
+          {
+            "m": "Sep",
+            "hi": 32,
+            "lo": 25,
+            "rain": 250
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 24,
+            "rain": 260
+          },
+          {
+            "m": "Nov",
+            "hi": 31,
+            "lo": 23,
+            "rain": 120
+          },
+          {
+            "m": "Dec",
+            "hi": 31,
+            "lo": 22,
+            "rain": 40
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Laos",
+      "city": "Luang Prabang",
+      "costs": {
+        "allInDayMid": [
+          70,
+          110
+        ],
+        "accomPerNight": {
+          "budget": 15,
+          "mid": 45,
+          "nice": 100
+        },
+        "rentMonthly": 375,
+        "dailyLiving": {
+          "low": 25,
+          "mid": 38,
+          "high": 60
+        }
+      },
+      "food": "Local $1.5-3 (noodle soup $1.6) / Casual for 2 $6-10 / Mid dinner $25-40 / Beer Lao $1.5 / Coffee $2.5-3.5",
+      "transport": "Tuk-tuk $1-4 (negotiate, no ride-hail) / Bicycle $1/day / Scooter $8-12/day",
+      "internet": "Unitel SIM $13-21/10-20GB / Coworking: none (cafes only). Best as a 1-2 week scenic stop, not a work base",
+      "landmarks": [
+        {
+          "name": "Kuang Si Falls",
+          "why": "Turquoise tiered pools, swimming",
+          "when": "Dry-season mornings",
+          "how": "Tuk-tuk/scooter ~30min",
+          "cost": "~$2.70",
+          "time": "Half day"
+        },
+        {
+          "name": "Morning Alms-Giving (Tak Bat)",
+          "why": "Dawn monk procession",
+          "when": "~5:30-6:30am daily",
+          "how": "Walk the peninsula",
+          "cost": "Free (rice ~$2-3)",
+          "time": "1h"
+        },
+        {
+          "name": "Mount Phousi sunset",
+          "why": "329 steps, town & Mekong panorama",
+          "when": "Late afternoon",
+          "how": "Walk/climb",
+          "cost": "~$1.35",
+          "time": "1-1.5h"
+        }
+      ],
+      "weather": {
+        "hazard": "Tropical river valley; rainy May-Sep (wettest Jul-Aug) with flood/landslide risk; burning-season haze Mar-Apr; best months Nov-Feb (cool, dry, clear).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 28,
+            "lo": 15,
+            "rain": 15
+          },
+          {
+            "m": "Feb",
+            "hi": 31,
+            "lo": 16,
+            "rain": 20
+          },
+          {
+            "m": "Mar",
+            "hi": 34,
+            "lo": 19,
+            "rain": 35
+          },
+          {
+            "m": "Apr",
+            "hi": 36,
+            "lo": 22,
+            "rain": 105
+          },
+          {
+            "m": "May",
+            "hi": 35,
+            "lo": 24,
+            "rain": 160
+          },
+          {
+            "m": "Jun",
+            "hi": 34,
+            "lo": 25,
+            "rain": 175
+          },
+          {
+            "m": "Jul",
+            "hi": 33,
+            "lo": 24,
+            "rain": 230
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 24,
+            "rain": 250
+          },
+          {
+            "m": "Sep",
+            "hi": 32,
+            "lo": 24,
+            "rain": 160
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 22,
+            "rain": 90
+          },
+          {
+            "m": "Nov",
+            "hi": 29,
+            "lo": 19,
+            "rain": 35
+          },
+          {
+            "m": "Dec",
+            "hi": 27,
+            "lo": 16,
+            "rain": 15
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Laos",
+      "city": "Vientiane",
+      "costs": {
+        "allInDayMid": [
+          60,
+          95
+        ],
+        "accomPerNight": {
+          "budget": 12,
+          "mid": 45,
+          "nice": 100
+        },
+        "rentMonthly": 350,
+        "dailyLiving": {
+          "low": 22,
+          "mid": 32,
+          "high": 55
+        }
+      },
+      "food": "Street $2-3 / Casual for 2 $6-12 / Mid dinner $25-35 / Beer Lao $1.2-1.5 / Coffee $2.5-3.5",
+      "transport": "Tuk-tuk $1.5-4 (negotiate) / Bus $0.50 / Scooter $8-12/day / No reliable ride-hail",
+      "internet": "Unitel/LaoTel SIM $13-21 / Coworking: TohLao ~$6/day (limited). Workable but below Thai/Viet hubs",
+      "landmarks": [
+        {
+          "name": "Pha That Luang",
+          "why": "Golden national stupa, top monument",
+          "when": "Morning or late afternoon",
+          "how": "Tuk-tuk",
+          "cost": "~$1.35",
+          "time": "1h"
+        },
+        {
+          "name": "Buddha Park (Xieng Khuan)",
+          "why": "200+ surreal statues, 40m Buddha",
+          "when": "Morning",
+          "how": "Bus #14 ~45-60min",
+          "cost": "~$1-2",
+          "time": "Half day"
+        },
+        {
+          "name": "COPE Centre & Patuxai",
+          "why": "UXO/Secret War exhibit + victory arch",
+          "when": "Daytime",
+          "how": "Walk/tuk-tuk",
+          "cost": "COPE free, Patuxai $1.35",
+          "time": "1-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Tropical savanna; rainy May-Sep (wettest Aug) with Mekong flood risk; burning-season haze Mar-Apr; best months Nov-Feb (cool, dry).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 29,
+            "lo": 17,
+            "rain": 10
+          },
+          {
+            "m": "Feb",
+            "hi": 31,
+            "lo": 19,
+            "rain": 15
+          },
+          {
+            "m": "Mar",
+            "hi": 33,
+            "lo": 22,
+            "rain": 35
+          },
+          {
+            "m": "Apr",
+            "hi": 35,
+            "lo": 24,
+            "rain": 90
+          },
+          {
+            "m": "May",
+            "hi": 34,
+            "lo": 25,
+            "rain": 250
+          },
+          {
+            "m": "Jun",
+            "hi": 33,
+            "lo": 25,
+            "rain": 280
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 25,
+            "rain": 270
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 25,
+            "rain": 340
+          },
+          {
+            "m": "Sep",
+            "hi": 32,
+            "lo": 24,
+            "rain": 300
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 22,
+            "rain": 110
+          },
+          {
+            "m": "Nov",
+            "hi": 29,
+            "lo": 19,
+            "rain": 20
+          },
+          {
+            "m": "Dec",
+            "hi": 28,
+            "lo": 17,
+            "rain": 5
+          }
+        ]
+      }
+    },
+    {
+      "region": "SE",
+      "regionName": "Southeast Asia",
+      "country": "Singapore",
+      "city": "Singapore",
+      "costs": {
+        "allInDayMid": [
+          200,
+          320
+        ],
+        "accomPerNight": {
+          "budget": 110,
+          "mid": 135,
+          "nice": 300
+        },
+        "rentMonthly": 3000,
+        "dailyLiving": {
+          "low": 60,
+          "mid": 90,
+          "high": 140
+        }
+      },
+      "food": "Hawker $3-6 / Casual for 2 $30-45 / Mid dinner $60-110 / Beer $8-11 (taxed) / Coffee $4.5-6",
+      "transport": "MRT/bus $0.85-1.7 / Tourist Pass 1-day $12.5 / 3-day $21.5 / Grab $7-13",
+      "internet": "eSIM $13-22/mo / Coworking $18-48/day",
+      "landmarks": [
+        {
+          "name": "Gardens by the Bay",
+          "why": "Supertrees + conservatories",
+          "when": "Evening (free light show)",
+          "how": "MRT Bayfront",
+          "cost": "Outdoor free; domes ~$22",
+          "time": "3-4h"
+        },
+        {
+          "name": "Marina Bay Sands SkyPark",
+          "why": "200m skyline views",
+          "when": "Sunset/dusk",
+          "how": "MRT Bayfront",
+          "cost": "~$26",
+          "time": "1-1.5h"
+        },
+        {
+          "name": "Sentosa Island",
+          "why": "Beaches, Universal, cable car",
+          "when": "Full day",
+          "how": "Sentosa Express",
+          "cost": "Attractions separate",
+          "time": "Full day"
+        }
+      ],
+      "weather": {
+        "hazard": "Equatorial, hot/humid/wet year-round; NE monsoon wettest Nov-Jan (peak Dec); daily thunderstorms; haze risk Aug-Oct; best months Feb-Apr (drier).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 30,
+            "lo": 24,
+            "rain": 240
+          },
+          {
+            "m": "Feb",
+            "hi": 31,
+            "lo": 24,
+            "rain": 160
+          },
+          {
+            "m": "Mar",
+            "hi": 32,
+            "lo": 25,
+            "rain": 190
+          },
+          {
+            "m": "Apr",
+            "hi": 32,
+            "lo": 25,
+            "rain": 180
+          },
+          {
+            "m": "May",
+            "hi": 32,
+            "lo": 26,
+            "rain": 170
+          },
+          {
+            "m": "Jun",
+            "hi": 32,
+            "lo": 26,
+            "rain": 160
+          },
+          {
+            "m": "Jul",
+            "hi": 31,
+            "lo": 25,
+            "rain": 160
+          },
+          {
+            "m": "Aug",
+            "hi": 31,
+            "lo": 25,
+            "rain": 175
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 25,
+            "rain": 170
+          },
+          {
+            "m": "Oct",
+            "hi": 32,
+            "lo": 25,
+            "rain": 200
+          },
+          {
+            "m": "Nov",
+            "hi": 31,
+            "lo": 24,
+            "rain": 255
+          },
+          {
+            "m": "Dec",
+            "hi": 30,
+            "lo": 24,
+            "rain": 290
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Japan",
+      "city": "Tokyo",
+      "costs": {
+        "allInDayMid": [
+          200,
+          300
+        ],
+        "accomPerNight": {
+          "budget": 35,
+          "mid": 125,
+          "nice": 230
+        },
+        "rentMonthly": 740,
+        "dailyLiving": {
+          "low": 55,
+          "mid": 80,
+          "high": 120
+        }
+      },
+      "food": "Cheap meal $5-8 / Casual for 2 $25-40 / Mid dinner $60-90 / Beer $3.5-5 / Coffee $3",
+      "transport": "Metro $1.2-2.5 / Tokyo Subway Ticket 24h $6.25 / 72h $12.5 / IC: Suica/PASMO / Taxi $3.5-7",
+      "internet": "eSIM unltd $39-50/mo / Coworking $3-14/day",
+      "landmarks": [
+        {
+          "name": "Senso-ji (Asakusa)",
+          "why": "Oldest temple, iconic gate",
+          "when": "Early AM",
+          "how": "Train to Asakusa",
+          "cost": "Free",
+          "time": "1-1.5h"
+        },
+        {
+          "name": "teamLab Planets",
+          "why": "Immersive digital art (book ahead)",
+          "when": "Year-round, sells out",
+          "how": "Near Toyosu",
+          "cost": "~$25-28",
+          "time": "2h"
+        },
+        {
+          "name": "Shibuya Sky",
+          "why": "Open-air rooftop over the crossing",
+          "when": "Sunset/dusk, pre-book",
+          "how": "Shibuya Stn",
+          "cost": "~$12.5",
+          "time": "1h"
+        }
+      ],
+      "weather": {
+        "hazard": "Plum rain mid-Jun to mid-Jul; typhoon season Aug-Oct (peak Sep); hot/humid summers; cool dry winters; best months Mar-May and Oct-Nov.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 10,
+            "lo": 2,
+            "rain": 55
+          },
+          {
+            "m": "Feb",
+            "hi": 10,
+            "lo": 2,
+            "rain": 55
+          },
+          {
+            "m": "Mar",
+            "hi": 14,
+            "lo": 5,
+            "rain": 120
+          },
+          {
+            "m": "Apr",
+            "hi": 19,
+            "lo": 10,
+            "rain": 125
+          },
+          {
+            "m": "May",
+            "hi": 23,
+            "lo": 15,
+            "rain": 140
+          },
+          {
+            "m": "Jun",
+            "hi": 26,
+            "lo": 18,
+            "rain": 170
+          },
+          {
+            "m": "Jul",
+            "hi": 30,
+            "lo": 22,
+            "rain": 155
+          },
+          {
+            "m": "Aug",
+            "hi": 31,
+            "lo": 24,
+            "rain": 170
+          },
+          {
+            "m": "Sep",
+            "hi": 27,
+            "lo": 20,
+            "rain": 225
+          },
+          {
+            "m": "Oct",
+            "hi": 22,
+            "lo": 15,
+            "rain": 235
+          },
+          {
+            "m": "Nov",
+            "hi": 17,
+            "lo": 9,
+            "rain": 95
+          },
+          {
+            "m": "Dec",
+            "hi": 12,
+            "lo": 4,
+            "rain": 60
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Japan",
+      "city": "Osaka",
+      "costs": {
+        "allInDayMid": [
+          170,
+          260
+        ],
+        "accomPerNight": {
+          "budget": 30,
+          "mid": 100,
+          "nice": 180
+        },
+        "rentMonthly": 520,
+        "dailyLiving": {
+          "low": 48,
+          "mid": 70,
+          "high": 105
+        }
+      },
+      "food": "Cheap $4-7 / Casual for 2 $22-35 / Mid dinner $50-80 / Beer $3.5-5 / Coffee $3",
+      "transport": "Metro $1.2-2.5 / Osaka Amazing Pass 1-day ~$22 (40+ sights) / IC: ICOCA / Taxi $3.5-6",
+      "internet": "eSIM unltd $39-50/mo / Coworking $3-14/day",
+      "landmarks": [
+        {
+          "name": "Dotonbori",
+          "why": "Neon canal, street food, Glico sign",
+          "when": "Night",
+          "how": "Namba Stn",
+          "cost": "Free",
+          "time": "2-3h"
+        },
+        {
+          "name": "Osaka Castle",
+          "why": "Landmark + park",
+          "when": "Spring/daytime",
+          "how": "Tanimachi 4-chome",
+          "cost": "~$3.75 (free w/ pass)",
+          "time": "1.5-2h"
+        },
+        {
+          "name": "Kuromon Ichiba Market",
+          "why": "Seafood + street eats",
+          "when": "Morning-midday",
+          "how": "Nipponbashi",
+          "cost": "Free",
+          "time": "1-1.5h"
+        }
+      ],
+      "weather": {
+        "hazard": "Plum rain mid-Jun to mid-Jul; typhoon risk Aug-Sep; very hot/humid summers; mild dry winters; best months Mar-May and Oct-Nov.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 9,
+            "lo": 3,
+            "rain": 45
+          },
+          {
+            "m": "Feb",
+            "hi": 10,
+            "lo": 3,
+            "rain": 60
+          },
+          {
+            "m": "Mar",
+            "hi": 14,
+            "lo": 6,
+            "rain": 100
+          },
+          {
+            "m": "Apr",
+            "hi": 20,
+            "lo": 11,
+            "rain": 100
+          },
+          {
+            "m": "May",
+            "hi": 25,
+            "lo": 16,
+            "rain": 150
+          },
+          {
+            "m": "Jun",
+            "hi": 28,
+            "lo": 20,
+            "rain": 185
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 24,
+            "rain": 175
+          },
+          {
+            "m": "Aug",
+            "hi": 33,
+            "lo": 25,
+            "rain": 110
+          },
+          {
+            "m": "Sep",
+            "hi": 29,
+            "lo": 22,
+            "rain": 175
+          },
+          {
+            "m": "Oct",
+            "hi": 23,
+            "lo": 16,
+            "rain": 120
+          },
+          {
+            "m": "Nov",
+            "hi": 17,
+            "lo": 10,
+            "rain": 70
+          },
+          {
+            "m": "Dec",
+            "hi": 12,
+            "lo": 5,
+            "rain": 45
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Japan",
+      "city": "Kyoto",
+      "costs": {
+        "allInDayMid": [
+          200,
+          290
+        ],
+        "accomPerNight": {
+          "budget": 38,
+          "mid": 150,
+          "nice": 250
+        },
+        "rentMonthly": 540,
+        "dailyLiving": {
+          "low": 52,
+          "mid": 75,
+          "high": 110
+        }
+      },
+      "food": "Cheap $5-8 / Casual for 2 $25-40 / Mid dinner $60-95 / Beer $3.5-5 / Coffee $2.7",
+      "transport": "Flat fare ~$1.45 / Subway+Bus 1-Day Pass ~$6.9 (best value) / IC: ICOCA",
+      "internet": "eSIM unltd $39-50/mo / Coworking $3-14/day (new lodging tax Mar 2026)",
+      "landmarks": [
+        {
+          "name": "Fushimi Inari Taisha",
+          "why": "Thousands of torii gates",
+          "when": "Before 7am or after 6pm",
+          "how": "JR Inari Stn",
+          "cost": "Free",
+          "time": "2-3h"
+        },
+        {
+          "name": "Kinkaku-ji (Golden Pavilion)",
+          "why": "Gold-leaf temple",
+          "when": "Weekday AM / snowy winter",
+          "how": "Bus from Kyoto Stn",
+          "cost": "~$3",
+          "time": "45-60min"
+        },
+        {
+          "name": "Arashiyama Bamboo Grove",
+          "why": "Towering bamboo path",
+          "when": "Early AM",
+          "how": "JR/Randen to Arashiyama",
+          "cost": "Free",
+          "time": "1h"
+        }
+      ],
+      "weather": {
+        "hazard": "Plum rain mid-Jun to mid-Jul; typhoon risk Aug-Sep; hot humid basin summers; cold winters w/ occasional snow; best months Mar-May (blossom) and Oct-Nov (foliage).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 9,
+            "lo": 1,
+            "rain": 50
+          },
+          {
+            "m": "Feb",
+            "hi": 10,
+            "lo": 1,
+            "rain": 65
+          },
+          {
+            "m": "Mar",
+            "hi": 14,
+            "lo": 4,
+            "rain": 105
+          },
+          {
+            "m": "Apr",
+            "hi": 20,
+            "lo": 9,
+            "rain": 115
+          },
+          {
+            "m": "May",
+            "hi": 25,
+            "lo": 14,
+            "rain": 160
+          },
+          {
+            "m": "Jun",
+            "hi": 28,
+            "lo": 19,
+            "rain": 215
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 23,
+            "rain": 220
+          },
+          {
+            "m": "Aug",
+            "hi": 33,
+            "lo": 24,
+            "rain": 130
+          },
+          {
+            "m": "Sep",
+            "hi": 29,
+            "lo": 20,
+            "rain": 175
+          },
+          {
+            "m": "Oct",
+            "hi": 23,
+            "lo": 13,
+            "rain": 120
+          },
+          {
+            "m": "Nov",
+            "hi": 17,
+            "lo": 7,
+            "rain": 70
+          },
+          {
+            "m": "Dec",
+            "hi": 12,
+            "lo": 3,
+            "rain": 50
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Japan",
+      "city": "Fukuoka",
+      "costs": {
+        "allInDayMid": [
+          130,
+          175
+        ],
+        "accomPerNight": {
+          "budget": 25,
+          "mid": 55,
+          "nice": 110
+        },
+        "rentMonthly": 625,
+        "dailyLiving": {
+          "low": 40,
+          "mid": 55,
+          "high": 80
+        }
+      },
+      "food": "Hakata ramen $4-7 / Casual for 2 $20-27 / Mid dinner $40 / Beer $4-5 / Coffee $3.5-4.5",
+      "transport": "Subway $1.75 / 1-day pass $4.30 / Tourist City Pass $13/day / IC card / Airport taxi $13",
+      "internet": "eSIM $26-32/mo / Coworking $4-10/day - VERY strong (official digital-nomad program)",
+      "landmarks": [
+        {
+          "name": "Yatai food stalls (Tenjin/Nakasu)",
+          "why": "Iconic open-air ramen/yakitori stalls",
+          "when": "Evening, year-round",
+          "how": "Walk from Tenjin/Hakata",
+          "cost": "~$10-20/person",
+          "time": "1-2h"
+        },
+        {
+          "name": "Dazaifu Tenmangu Shrine",
+          "why": "Learning shrine, 6,000 plum trees",
+          "when": "Late Feb-Mar or autumn",
+          "how": "Nishitetsu train ~30min",
+          "cost": "Free grounds",
+          "time": "Half day"
+        },
+        {
+          "name": "Ohori Park & Japanese Garden",
+          "why": "Lakeside park on old castle moat",
+          "when": "Spring/autumn mornings",
+          "how": "Subway to Ohori Park",
+          "cost": "~$1.70 garden",
+          "time": "1-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Rainy season Jun-Jul; typhoon season Aug-Sep; hot humid summers; mild winters; spring yellow-dust/AQI; best months Apr-May and Oct-Nov.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 10,
+            "lo": 4,
+            "rain": 70
+          },
+          {
+            "m": "Feb",
+            "hi": 11,
+            "lo": 4,
+            "rain": 70
+          },
+          {
+            "m": "Mar",
+            "hi": 14,
+            "lo": 7,
+            "rain": 105
+          },
+          {
+            "m": "Apr",
+            "hi": 19,
+            "lo": 11,
+            "rain": 120
+          },
+          {
+            "m": "May",
+            "hi": 23,
+            "lo": 16,
+            "rain": 135
+          },
+          {
+            "m": "Jun",
+            "hi": 27,
+            "lo": 20,
+            "rain": 250
+          },
+          {
+            "m": "Jul",
+            "hi": 31,
+            "lo": 24,
+            "rain": 280
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 25,
+            "rain": 185
+          },
+          {
+            "m": "Sep",
+            "hi": 28,
+            "lo": 21,
+            "rain": 175
+          },
+          {
+            "m": "Oct",
+            "hi": 23,
+            "lo": 15,
+            "rain": 90
+          },
+          {
+            "m": "Nov",
+            "hi": 18,
+            "lo": 10,
+            "rain": 85
+          },
+          {
+            "m": "Dec",
+            "hi": 12,
+            "lo": 6,
+            "rain": 60
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Japan",
+      "city": "Naha (Okinawa)",
+      "costs": {
+        "allInDayMid": [
+          175,
+          235
+        ],
+        "accomPerNight": {
+          "budget": 20,
+          "mid": 50,
+          "nice": 120
+        },
+        "rentMonthly": 455,
+        "dailyLiving": {
+          "low": 50,
+          "mid": 70,
+          "high": 100
+        }
+      },
+      "food": "Okinawa soba $4-6 / Casual for 2 $22-27 / Mid dinner $45 / Orion beer $4-5 / Coffee $4",
+      "transport": "Yui monorail $1.70-2.60 / 1-day pass $5.30 / bus flat $1.60 / IC OK / Taxi start $3.70",
+      "internet": "eSIM $26-32/mo / Coworking fewer (~$10-20/day). SUBTROPICAL - warmest Japan base year-round",
+      "landmarks": [
+        {
+          "name": "Shuri Castle",
+          "why": "Ryukyu Kingdom royal site (UNESCO, rebuilding)",
+          "when": "Year-round, mild winter",
+          "how": "Yui Rail to Shuri + walk",
+          "cost": "~$2.50-5",
+          "time": "2h"
+        },
+        {
+          "name": "Kokusai-dori & Makishi Market",
+          "why": "Main street + buy-and-cook seafood market",
+          "when": "Anytime, lively evenings",
+          "how": "Yui Rail Makishi",
+          "cost": "Free to walk",
+          "time": "2-3h"
+        },
+        {
+          "name": "Naminoue Beach & Shrine",
+          "why": "Urban beach walkable from downtown",
+          "when": "Warm months; mild winter sun",
+          "how": "Walk/short taxi",
+          "cost": "Free",
+          "time": "1-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Subtropical; rainy May-Jun; typhoon season Jul-Oct (peak Aug-Sep, high risk); mild winters; best months Mar-Apr and Oct-Nov.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 19,
+            "lo": 14,
+            "rain": 105
+          },
+          {
+            "m": "Feb",
+            "hi": 19,
+            "lo": 14,
+            "rain": 120
+          },
+          {
+            "m": "Mar",
+            "hi": 22,
+            "lo": 16,
+            "rain": 160
+          },
+          {
+            "m": "Apr",
+            "hi": 24,
+            "lo": 19,
+            "rain": 165
+          },
+          {
+            "m": "May",
+            "hi": 27,
+            "lo": 22,
+            "rain": 230
+          },
+          {
+            "m": "Jun",
+            "hi": 30,
+            "lo": 25,
+            "rain": 250
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 26,
+            "rain": 140
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 26,
+            "rain": 240
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 25,
+            "rain": 260
+          },
+          {
+            "m": "Oct",
+            "hi": 28,
+            "lo": 23,
+            "rain": 150
+          },
+          {
+            "m": "Nov",
+            "hi": 25,
+            "lo": 19,
+            "rain": 110
+          },
+          {
+            "m": "Dec",
+            "hi": 21,
+            "lo": 16,
+            "rain": 100
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Japan",
+      "city": "Hiroshima",
+      "costs": {
+        "allInDayMid": [
+          130,
+          170
+        ],
+        "accomPerNight": {
+          "budget": 18,
+          "mid": 45,
+          "nice": 90
+        },
+        "rentMonthly": 327,
+        "dailyLiving": {
+          "low": 40,
+          "mid": 55,
+          "high": 80
+        }
+      },
+      "food": "Okonomiyaki $7.50 / Casual for 2 $18-24 / Mid dinner $45-56 / Beer $4-5 / Coffee $3.5-4.5",
+      "transport": "Tram flat $2 / 1-day tram pass $4.70 / tram+Miyajima ferry $6.70 / IC OK",
+      "internet": "eSIM $26-32/mo / Coworking $10-25/day (smaller scene). Cheapest rent of the cheaper Japan cities",
+      "landmarks": [
+        {
+          "name": "Peace Memorial Park & A-Bomb Dome",
+          "why": "Moving WWII memorial (UNESCO)",
+          "when": "Year-round; spring blossoms",
+          "how": "Tram to Genbaku Dome-mae",
+          "cost": "Park free, museum ~$1.30",
+          "time": "2-3h"
+        },
+        {
+          "name": "Miyajima / Itsukushima Shrine",
+          "why": "Famous floating torii gate (UNESCO)",
+          "when": "High tide; autumn foliage",
+          "how": "Tram/JR + ferry ~$2.70",
+          "cost": "Shrine ~$2.50",
+          "time": "Half/full day"
+        },
+        {
+          "name": "Shukkeien Garden & Hiroshima Castle",
+          "why": "Landscape garden + rebuilt castle",
+          "when": "Autumn/spring",
+          "how": "Central tram",
+          "cost": "~$2.50 each",
+          "time": "2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Rainy season Jun-Jul (flood risk); typhoon risk Aug-Sep; hot humid summers; cool dry winters; best months Mar-May and Oct-Nov.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 10,
+            "lo": 1,
+            "rain": 45
+          },
+          {
+            "m": "Feb",
+            "hi": 11,
+            "lo": 2,
+            "rain": 60
+          },
+          {
+            "m": "Mar",
+            "hi": 14,
+            "lo": 5,
+            "rain": 105
+          },
+          {
+            "m": "Apr",
+            "hi": 20,
+            "lo": 10,
+            "rain": 140
+          },
+          {
+            "m": "May",
+            "hi": 24,
+            "lo": 15,
+            "rain": 160
+          },
+          {
+            "m": "Jun",
+            "hi": 27,
+            "lo": 19,
+            "rain": 250
+          },
+          {
+            "m": "Jul",
+            "hi": 31,
+            "lo": 23,
+            "rain": 280
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 24,
+            "rain": 130
+          },
+          {
+            "m": "Sep",
+            "hi": 29,
+            "lo": 20,
+            "rain": 175
+          },
+          {
+            "m": "Oct",
+            "hi": 23,
+            "lo": 14,
+            "rain": 90
+          },
+          {
+            "m": "Nov",
+            "hi": 17,
+            "lo": 8,
+            "rain": 70
+          },
+          {
+            "m": "Dec",
+            "hi": 12,
+            "lo": 3,
+            "rain": 45
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Japan",
+      "city": "Sapporo",
+      "costs": {
+        "allInDayMid": [
+          150,
+          230
+        ],
+        "accomPerNight": {
+          "budget": 25,
+          "mid": 75,
+          "nice": 160
+        },
+        "rentMonthly": 600,
+        "dailyLiving": {
+          "low": 48,
+          "mid": 68,
+          "high": 100
+        }
+      },
+      "food": "Ramen/soup curry $6-9 / Casual for 2 $22-35 / Mid dinner $50-80 / Sapporo beer $4-5 / Coffee $3.5-4.5",
+      "transport": "Subway single $1.40-2.40 / 1-day pass ~$5.50 / IC: Sapica/Suica / Taxi start ~$5",
+      "internet": "eSIM $26-32/mo / Coworking $10-20/day. Crisp autumn (light layer by mid-Oct); near typhoon-free",
+      "landmarks": [
+        {
+          "name": "Odori Park & Sapporo TV Tower",
+          "why": "City-centre park spine, autumn colours",
+          "when": "Autumn, anytime",
+          "how": "Subway Odori",
+          "cost": "Park free, tower ~$7",
+          "time": "1-2h"
+        },
+        {
+          "name": "Otaru (day trip)",
+          "why": "Historic canal town, glasswork + seafood",
+          "when": "Daytime / dusk lanterns",
+          "how": "JR ~35min from Sapporo",
+          "cost": "Train ~$5",
+          "time": "Half/full day"
+        },
+        {
+          "name": "Mt Moiwa Ropeway",
+          "why": "One of Japan's top night views",
+          "when": "Clear evening",
+          "how": "Tram + ropeway",
+          "cost": "~$13",
+          "time": "2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Heavy snowfall Dec-Mar (very cold; snow festival Feb); mild low-humidity summers; minimal typhoon impact; best months Jun-Sep and Feb (snow festival).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": -1,
+            "lo": -7,
+            "rain": 110
+          },
+          {
+            "m": "Feb",
+            "hi": 0,
+            "lo": -7,
+            "rain": 95
+          },
+          {
+            "m": "Mar",
+            "hi": 4,
+            "lo": -3,
+            "rain": 80
+          },
+          {
+            "m": "Apr",
+            "hi": 11,
+            "lo": 3,
+            "rain": 55
+          },
+          {
+            "m": "May",
+            "hi": 17,
+            "lo": 8,
+            "rain": 55
+          },
+          {
+            "m": "Jun",
+            "hi": 22,
+            "lo": 13,
+            "rain": 60
+          },
+          {
+            "m": "Jul",
+            "hi": 25,
+            "lo": 17,
+            "rain": 90
+          },
+          {
+            "m": "Aug",
+            "hi": 26,
+            "lo": 19,
+            "rain": 125
+          },
+          {
+            "m": "Sep",
+            "hi": 22,
+            "lo": 14,
+            "rain": 140
+          },
+          {
+            "m": "Oct",
+            "hi": 16,
+            "lo": 7,
+            "rain": 110
+          },
+          {
+            "m": "Nov",
+            "hi": 8,
+            "lo": 1,
+            "rain": 115
+          },
+          {
+            "m": "Dec",
+            "hi": 2,
+            "lo": -4,
+            "rain": 105
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "South Korea",
+      "city": "Seoul",
+      "costs": {
+        "allInDayMid": [
+          200,
+          240
+        ],
+        "accomPerNight": {
+          "budget": 27,
+          "mid": 70,
+          "nice": 190
+        },
+        "rentMonthly": 900,
+        "dailyLiving": {
+          "low": 50,
+          "mid": 75,
+          "high": 110
+        }
+      },
+      "food": "Cheap $5-7 / Casual for 2 $20-28 / Mid dinner (BBQ) $45-80 / Beer $3-4 / Coffee $3.5-5",
+      "transport": "Metro ~$1.05 (T-money) / Climate Card 30-day ~$41 / Discover Seoul Pass ~$33/24h / Taxi $5-8",
+      "internet": "eSIM unltd $25-50/mo / Coworking $10-22/day",
+      "landmarks": [
+        {
+          "name": "Gyeongbokgung Palace",
+          "why": "Grand royal palace + guard ceremony",
+          "when": "Spring/autumn AM (closed Tue)",
+          "how": "Gyeongbokgung Stn",
+          "cost": "~$2 (free in hanbok)",
+          "time": "2-3h"
+        },
+        {
+          "name": "Bukchon Hanok Village",
+          "why": "Historic hanok lanes",
+          "when": "Early AM / golden hour",
+          "how": "Anguk Stn",
+          "cost": "Free",
+          "time": "1.5-2h"
+        },
+        {
+          "name": "N Seoul Tower",
+          "why": "Panoramic views",
+          "when": "Clear-day sunset",
+          "how": "Cable car from Myeong-dong",
+          "cost": "~$12-19",
+          "time": "2-3h"
+        }
+      ],
+      "weather": {
+        "hazard": "Monsoon (jangma) Jul-Aug (very heavy rain); typhoon influence Aug-Sep; hot humid summers; very cold dry winters; spring yellow-dust/AQI; best months Apr-May and Sep-Oct.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 2,
+            "lo": -6,
+            "rain": 20
+          },
+          {
+            "m": "Feb",
+            "hi": 4,
+            "lo": -4,
+            "rain": 25
+          },
+          {
+            "m": "Mar",
+            "hi": 10,
+            "lo": 1,
+            "rain": 45
+          },
+          {
+            "m": "Apr",
+            "hi": 17,
+            "lo": 7,
+            "rain": 65
+          },
+          {
+            "m": "May",
+            "hi": 23,
+            "lo": 13,
+            "rain": 105
+          },
+          {
+            "m": "Jun",
+            "hi": 27,
+            "lo": 18,
+            "rain": 135
+          },
+          {
+            "m": "Jul",
+            "hi": 29,
+            "lo": 22,
+            "rain": 415
+          },
+          {
+            "m": "Aug",
+            "hi": 30,
+            "lo": 22,
+            "rain": 350
+          },
+          {
+            "m": "Sep",
+            "hi": 26,
+            "lo": 16,
+            "rain": 140
+          },
+          {
+            "m": "Oct",
+            "hi": 20,
+            "lo": 9,
+            "rain": 50
+          },
+          {
+            "m": "Nov",
+            "hi": 11,
+            "lo": 2,
+            "rain": 50
+          },
+          {
+            "m": "Dec",
+            "hi": 4,
+            "lo": -4,
+            "rain": 25
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "South Korea",
+      "city": "Busan",
+      "costs": {
+        "allInDayMid": [
+          160,
+          210
+        ],
+        "accomPerNight": {
+          "budget": 22,
+          "mid": 62,
+          "nice": 170
+        },
+        "rentMonthly": 550,
+        "dailyLiving": {
+          "low": 45,
+          "mid": 65,
+          "high": 95
+        }
+      },
+      "food": "Cheap $5-6 / Casual for 2 $15-25 / Mid dinner $40-70 / Beer $3-4 / Coffee $3.5-4.5",
+      "transport": "Metro ~$0.9 / 30-day unltd metro+bus ~$30 / Visit Busan Pass ~$33/24h / Taxi $4-7",
+      "internet": "eSIM unltd $25-50/mo / Coworking $10-22/day",
+      "landmarks": [
+        {
+          "name": "Gamcheon Culture Village",
+          "why": "Pastel hillside murals/cafes",
+          "when": "Midday, weekday",
+          "how": "Toseong Stn + shuttle",
+          "cost": "Free",
+          "time": "2-3h"
+        },
+        {
+          "name": "Haeundae Beach",
+          "why": "Famous crescent beach + skyline",
+          "when": "Summer/sunrise",
+          "how": "Haeundae Stn",
+          "cost": "Free",
+          "time": "2-4h"
+        },
+        {
+          "name": "Haedong Yonggungsa",
+          "why": "Rare seaside cliff temple",
+          "when": "Sunrise",
+          "how": "~30min bus from Haeundae",
+          "cost": "Free",
+          "time": "1.5-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Monsoon Jun-Aug; typhoon season Aug-Sep (coastal exposure); hot humid summers; mild winters (milder than Seoul); spring AQI; best months Apr-May and Sep-Oct.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 8,
+            "lo": 1,
+            "rain": 35
+          },
+          {
+            "m": "Feb",
+            "hi": 10,
+            "lo": 2,
+            "rain": 45
+          },
+          {
+            "m": "Mar",
+            "hi": 13,
+            "lo": 6,
+            "rain": 85
+          },
+          {
+            "m": "Apr",
+            "hi": 18,
+            "lo": 10,
+            "rain": 140
+          },
+          {
+            "m": "May",
+            "hi": 22,
+            "lo": 15,
+            "rain": 155
+          },
+          {
+            "m": "Jun",
+            "hi": 24,
+            "lo": 18,
+            "rain": 225
+          },
+          {
+            "m": "Jul",
+            "hi": 27,
+            "lo": 22,
+            "rain": 310
+          },
+          {
+            "m": "Aug",
+            "hi": 30,
+            "lo": 24,
+            "rain": 270
+          },
+          {
+            "m": "Sep",
+            "hi": 27,
+            "lo": 20,
+            "rain": 175
+          },
+          {
+            "m": "Oct",
+            "hi": 23,
+            "lo": 15,
+            "rain": 70
+          },
+          {
+            "m": "Nov",
+            "hi": 17,
+            "lo": 9,
+            "rain": 50
+          },
+          {
+            "m": "Dec",
+            "hi": 11,
+            "lo": 3,
+            "rain": 30
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Taiwan",
+      "city": "Taipei",
+      "costs": {
+        "allInDayMid": [
+          160,
+          220
+        ],
+        "accomPerNight": {
+          "budget": 42,
+          "mid": 95,
+          "nice": 230
+        },
+        "rentMonthly": 700,
+        "dailyLiving": {
+          "low": 38,
+          "mid": 55,
+          "high": 85
+        }
+      },
+      "food": "Cheap $3-6 / Casual for 2 $15-25 / Mid dinner $40-65 / Beer $2-3.5 / Coffee $3.6",
+      "transport": "MRT $0.65-1.1 (EasyCard) / Monthly TPASS ~$38 / Fun Pass ~$35-60 / Taxi $4-6",
+      "internet": "Unltd SIM ~$33/mo, eSIM from $4 / Coworking $7-20/day",
+      "landmarks": [
+        {
+          "name": "Taipei 101 Observatory",
+          "why": "Iconic skyline deck",
+          "when": "Clear day/sunset",
+          "how": "MRT Taipei 101, book Klook",
+          "cost": "~$19",
+          "time": "1.5-2h"
+        },
+        {
+          "name": "National Palace Museum",
+          "why": "World-class imperial art",
+          "when": "Weekday AM",
+          "how": "MRT Shilin + bus",
+          "cost": "~$11",
+          "time": "2-3h"
+        },
+        {
+          "name": "Jiufen Old Street",
+          "why": "Lantern-lit hillside town",
+          "when": "Late afternoon to dusk",
+          "how": "~45min bus 1062/965",
+          "cost": "Free",
+          "time": "Half day"
+        }
+      ],
+      "weather": {
+        "hazard": "Subtropical; plum rain May-Jun; typhoon season Jul-Oct (peak Aug-Sep, high risk); very hot humid summers; mild damp winters; best months Oct-Nov and Mar-Apr.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 19,
+            "lo": 14,
+            "rain": 85
+          },
+          {
+            "m": "Feb",
+            "hi": 19,
+            "lo": 14,
+            "rain": 135
+          },
+          {
+            "m": "Mar",
+            "hi": 22,
+            "lo": 15,
+            "rain": 180
+          },
+          {
+            "m": "Apr",
+            "hi": 26,
+            "lo": 19,
+            "rain": 175
+          },
+          {
+            "m": "May",
+            "hi": 29,
+            "lo": 22,
+            "rain": 235
+          },
+          {
+            "m": "Jun",
+            "hi": 32,
+            "lo": 24,
+            "rain": 325
+          },
+          {
+            "m": "Jul",
+            "hi": 34,
+            "lo": 26,
+            "rain": 245
+          },
+          {
+            "m": "Aug",
+            "hi": 34,
+            "lo": 26,
+            "rain": 320
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 24,
+            "rain": 360
+          },
+          {
+            "m": "Oct",
+            "hi": 28,
+            "lo": 22,
+            "rain": 150
+          },
+          {
+            "m": "Nov",
+            "hi": 24,
+            "lo": 19,
+            "rain": 95
+          },
+          {
+            "m": "Dec",
+            "hi": 21,
+            "lo": 15,
+            "rain": 80
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "Hong Kong",
+      "city": "Hong Kong",
+      "costs": {
+        "allInDayMid": [
+          240,
+          360
+        ],
+        "accomPerNight": {
+          "budget": 70,
+          "mid": 125,
+          "nice": 260
+        },
+        "rentMonthly": 2500,
+        "dailyLiving": {
+          "low": 60,
+          "mid": 85,
+          "high": 130
+        }
+      },
+      "food": "Cheap $4-8 / Casual for 2 $20-35 / Mid dinner $55-90 / Beer ~$6.8 / Coffee ~$5.35",
+      "transport": "MTR $0.5-2 (Octopus) / Airport Express pass ~$32-45 / Taxi $6-10",
+      "internet": "eSIM from $4, unltd $20-50/mo / Coworking $15-30/day",
+      "landmarks": [
+        {
+          "name": "Victoria Peak (Peak Tram)",
+          "why": "Best harbour panorama",
+          "when": "Clear evening, Oct-Apr",
+          "how": "Peak Tram from Central",
+          "cost": "~$8-10 + Sky Terrace",
+          "time": "2-3h"
+        },
+        {
+          "name": "Big Buddha & Ngong Ping 360",
+          "why": "Giant bronze Buddha + cable car",
+          "when": "Clear day, Oct-Apr",
+          "how": "MTR Tung Chung + cable car",
+          "cost": "Buddha free; cable ~$30",
+          "time": "Half day"
+        },
+        {
+          "name": "Star Ferry + Symphony of Lights",
+          "why": "Harbour crossing + 8pm light show",
+          "when": "Dusk",
+          "how": "Central/TST piers",
+          "cost": "~$0.4",
+          "time": "45min"
+        }
+      ],
+      "weather": {
+        "hazard": "Subtropical; wet May-Sep (very heavy rain); typhoon season Jul-Oct (peak Aug-Sep, T8 risk); hot humid summers; mild dry winters; best months Oct-Dec and Mar.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 19,
+            "lo": 14,
+            "rain": 25
+          },
+          {
+            "m": "Feb",
+            "hi": 19,
+            "lo": 15,
+            "rain": 50
+          },
+          {
+            "m": "Mar",
+            "hi": 22,
+            "lo": 17,
+            "rain": 75
+          },
+          {
+            "m": "Apr",
+            "hi": 26,
+            "lo": 21,
+            "rain": 160
+          },
+          {
+            "m": "May",
+            "hi": 29,
+            "lo": 24,
+            "rain": 290
+          },
+          {
+            "m": "Jun",
+            "hi": 31,
+            "lo": 26,
+            "rain": 400
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 26,
+            "rain": 380
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 26,
+            "rain": 450
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 25,
+            "rain": 330
+          },
+          {
+            "m": "Oct",
+            "hi": 28,
+            "lo": 23,
+            "rain": 100
+          },
+          {
+            "m": "Nov",
+            "hi": 24,
+            "lo": 19,
+            "rain": 40
+          },
+          {
+            "m": "Dec",
+            "hi": 21,
+            "lo": 15,
+            "rain": 25
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "China",
+      "city": "Beijing",
+      "costs": {
+        "allInDayMid": [
+          180,
+          260
+        ],
+        "accomPerNight": {
+          "budget": 30,
+          "mid": 80,
+          "nice": 200
+        },
+        "rentMonthly": 800,
+        "dailyLiving": {
+          "low": 42,
+          "mid": 62,
+          "high": 100
+        }
+      },
+      "food": "Cheap $2-5 / Casual for 2 $14-24 / Mid dinner (Peking duck) $40-70 / Beer $3-5 / Coffee $3.5-5",
+      "transport": "Metro flat $0.4-1.4 (Yikatong/QR) / Didi $3-6 / Airport Express ~$3.5",
+      "internet": "Foreign eSIM $20-40/mo (bypasses firewall) / Coworking $10-25/day. Google/WhatsApp/Booking blocked.",
+      "landmarks": [
+        {
+          "name": "Forbidden City (Palace Museum)",
+          "why": "World's largest imperial palace",
+          "when": "Spring/autumn, book ahead, closed Mon",
+          "how": "Metro Tiananmen East, passport required",
+          "cost": "~$8-14",
+          "time": "3-4h"
+        },
+        {
+          "name": "Great Wall (Mutianyu)",
+          "why": "Iconic wall, cable car + toboggan",
+          "when": "Clear morning (avoid Oct 1-7)",
+          "how": "Day tour/bus ~1.5h",
+          "cost": "~$6 + cable",
+          "time": "Full day"
+        },
+        {
+          "name": "Temple of Heaven & Tiananmen Sq",
+          "why": "Ming altar park + vast square",
+          "when": "Morning (ID/security checks)",
+          "how": "Metro",
+          "cost": "Temple ~$5",
+          "time": "2-3h"
+        }
+      ],
+      "weather": {
+        "hazard": "Continental; monsoon rains Jul-Aug; very cold dry winters; hot summers; spring dust storms; frequent winter smog/AQI; best months Apr-May and Sep-Oct.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 2,
+            "lo": -8,
+            "rain": 5
+          },
+          {
+            "m": "Feb",
+            "hi": 5,
+            "lo": -6,
+            "rain": 5
+          },
+          {
+            "m": "Mar",
+            "hi": 12,
+            "lo": 0,
+            "rain": 10
+          },
+          {
+            "m": "Apr",
+            "hi": 20,
+            "lo": 7,
+            "rain": 25
+          },
+          {
+            "m": "May",
+            "hi": 26,
+            "lo": 13,
+            "rain": 35
+          },
+          {
+            "m": "Jun",
+            "hi": 30,
+            "lo": 18,
+            "rain": 75
+          },
+          {
+            "m": "Jul",
+            "hi": 31,
+            "lo": 22,
+            "rain": 175
+          },
+          {
+            "m": "Aug",
+            "hi": 30,
+            "lo": 21,
+            "rain": 160
+          },
+          {
+            "m": "Sep",
+            "hi": 26,
+            "lo": 14,
+            "rain": 50
+          },
+          {
+            "m": "Oct",
+            "hi": 19,
+            "lo": 7,
+            "rain": 30
+          },
+          {
+            "m": "Nov",
+            "hi": 10,
+            "lo": -1,
+            "rain": 10
+          },
+          {
+            "m": "Dec",
+            "hi": 3,
+            "lo": -6,
+            "rain": 5
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "China",
+      "city": "Shanghai",
+      "costs": {
+        "allInDayMid": [
+          220,
+          300
+        ],
+        "accomPerNight": {
+          "budget": 40,
+          "mid": 105,
+          "nice": 275
+        },
+        "rentMonthly": 1100,
+        "dailyLiving": {
+          "low": 48,
+          "mid": 70,
+          "high": 110
+        }
+      },
+      "food": "Cheap $2-5 / Casual for 2 $15-25 / Mid dinner $40-70 / Beer $5-6.5 / Coffee $3.5-5",
+      "transport": "Metro $0.45-0.6 (Alipay/WeChat QR) / Day pass ~$2.65 / Didi $3-5",
+      "internet": "Foreign eSIM $20-40/mo (bypasses firewall) / Coworking $10-25/day. Google/WhatsApp/Booking blocked.",
+      "landmarks": [
+        {
+          "name": "The Bund",
+          "why": "Colonial waterfront + Pudong skyline",
+          "when": "Evening 19:00-20:00",
+          "how": "Metro E. Nanjing Rd",
+          "cost": "Free",
+          "time": "1-2h"
+        },
+        {
+          "name": "Yu Garden",
+          "why": "Ming classical garden + bazaar",
+          "when": "Spring/autumn AM (book ahead)",
+          "how": "Passport required",
+          "cost": "~$6",
+          "time": "2h"
+        },
+        {
+          "name": "Shanghai Tower 118F",
+          "why": "World's 2nd-tallest",
+          "when": "Clear evenings",
+          "how": "Book Klook/Trip.com",
+          "cost": "~$26-39",
+          "time": "1-1.5h"
+        }
+      ],
+      "weather": {
+        "hazard": "Plum rain mid-Jun to early Jul; typhoon influence Aug-Sep; hot humid summers; chilly damp winters; winter AQI; best months Mar-May and Oct-Nov.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 9,
+            "lo": 1,
+            "rain": 75
+          },
+          {
+            "m": "Feb",
+            "hi": 10,
+            "lo": 2,
+            "rain": 60
+          },
+          {
+            "m": "Mar",
+            "hi": 14,
+            "lo": 6,
+            "rain": 95
+          },
+          {
+            "m": "Apr",
+            "hi": 20,
+            "lo": 11,
+            "rain": 90
+          },
+          {
+            "m": "May",
+            "hi": 25,
+            "lo": 16,
+            "rain": 105
+          },
+          {
+            "m": "Jun",
+            "hi": 28,
+            "lo": 21,
+            "rain": 165
+          },
+          {
+            "m": "Jul",
+            "hi": 32,
+            "lo": 25,
+            "rain": 160
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 25,
+            "rain": 175
+          },
+          {
+            "m": "Sep",
+            "hi": 28,
+            "lo": 21,
+            "rain": 155
+          },
+          {
+            "m": "Oct",
+            "hi": 23,
+            "lo": 15,
+            "rain": 60
+          },
+          {
+            "m": "Nov",
+            "hi": 18,
+            "lo": 9,
+            "rain": 55
+          },
+          {
+            "m": "Dec",
+            "hi": 12,
+            "lo": 3,
+            "rain": 40
+          }
+        ]
+      }
+    },
+    {
+      "region": "EA",
+      "regionName": "East Asia",
+      "country": "China",
+      "city": "Chengdu",
+      "costs": {
+        "allInDayMid": [
+          140,
+          200
+        ],
+        "accomPerNight": {
+          "budget": 20,
+          "mid": 55,
+          "nice": 150
+        },
+        "rentMonthly": 460,
+        "dailyLiving": {
+          "low": 35,
+          "mid": 50,
+          "high": 80
+        }
+      },
+      "food": "Cheap $2-4 / Casual for 2 $10-18 / Mid dinner (hotpot) $25-45 / Beer $3-5 / Coffee $3.4",
+      "transport": "Metro from $0.28 (QR/Tianfutong) / Day pass ~$2.95 / Didi $2-4",
+      "internet": "Foreign eSIM $20-40/mo / Coworking varies (Regus/Spaces + cafes)",
+      "landmarks": [
+        {
+          "name": "Chengdu Panda Base",
+          "why": "Giant + red pandas (the must-do)",
+          "when": "Early AM 7:30-9:30, book online",
+          "how": "Passport + advance booking",
+          "cost": "~$8-9",
+          "time": "3-4h"
+        },
+        {
+          "name": "Leshan Giant Buddha",
+          "why": "World's largest stone Buddha (day trip)",
+          "when": "Spring/autumn AM",
+          "how": "High-speed train to Leshan",
+          "cost": "~$13 (+boat)",
+          "time": "Full day"
+        },
+        {
+          "name": "People's Park & Heming Teahouse",
+          "why": "Teahouse culture, mahjong",
+          "when": "Afternoon",
+          "how": "Metro",
+          "cost": "Tea $2-4",
+          "time": "1-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Basin climate; rainy Jul-Aug; hot humid summers; mild damp grey winters; minimal typhoon; frequent low sun and winter AQI; best months Mar-Apr and Sep-Oct.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 10,
+            "lo": 3,
+            "rain": 10
+          },
+          {
+            "m": "Feb",
+            "hi": 12,
+            "lo": 5,
+            "rain": 15
+          },
+          {
+            "m": "Mar",
+            "hi": 17,
+            "lo": 9,
+            "rain": 25
+          },
+          {
+            "m": "Apr",
+            "hi": 22,
+            "lo": 13,
+            "rain": 50
+          },
+          {
+            "m": "May",
+            "hi": 27,
+            "lo": 18,
+            "rain": 85
+          },
+          {
+            "m": "Jun",
+            "hi": 29,
+            "lo": 21,
+            "rain": 110
+          },
+          {
+            "m": "Jul",
+            "hi": 30,
+            "lo": 22,
+            "rain": 230
+          },
+          {
+            "m": "Aug",
+            "hi": 30,
+            "lo": 22,
+            "rain": 225
+          },
+          {
+            "m": "Sep",
+            "hi": 25,
+            "lo": 19,
+            "rain": 120
+          },
+          {
+            "m": "Oct",
+            "hi": 21,
+            "lo": 15,
+            "rain": 45
+          },
+          {
+            "m": "Nov",
+            "hi": 16,
+            "lo": 10,
+            "rain": 20
+          },
+          {
+            "m": "Dec",
+            "hi": 11,
+            "lo": 5,
+            "rain": 10
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "India",
+      "city": "Delhi",
+      "costs": {
+        "allInDayMid": [
+          70,
+          110
+        ],
+        "accomPerNight": {
+          "budget": 17,
+          "mid": 60,
+          "nice": 110
+        },
+        "rentMonthly": 425,
+        "dailyLiving": {
+          "low": 20,
+          "mid": 32,
+          "high": 55
+        }
+      },
+      "food": "Local $1-3 / Casual for 2 $10-16 / Mid dinner $25-40 / Beer $3-6 / Coffee $2-3",
+      "transport": "Metro $0.15-0.8 / Tourist card 1-day ~$2.4 / 3-day ~$6 / Auto $1-2, Uber $1.5-3",
+      "internet": "Local SIM $4-6/mo (1GB/day) / Coworking $5-8/day",
+      "landmarks": [
+        {
+          "name": "Red Fort",
+          "why": "Mughal icon + sound-light show",
+          "when": "Oct-Mar morning",
+          "how": "Metro Lal Qila",
+          "cost": "~$6.6",
+          "time": "1.5-2h"
+        },
+        {
+          "name": "Qutub Minar",
+          "why": "Tallest brick minaret, UNESCO",
+          "when": "Oct-Mar golden hour",
+          "how": "Yellow Line",
+          "cost": "~$6.6",
+          "time": "1-1.5h"
+        },
+        {
+          "name": "Humayun's Tomb",
+          "why": "Taj precursor garden tomb",
+          "when": "Late afternoon",
+          "how": "Metro JLN Stadium",
+          "cost": "~$6.6",
+          "time": "1.5h"
+        }
+      ],
+      "weather": {
+        "hazard": "Monsoon Jul-Sep; extreme heat Apr-Jun (40C+); severe winter smog/AQI Nov-Jan; best months Oct-Nov and Feb-Mar.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 20,
+            "lo": 7,
+            "rain": 20
+          },
+          {
+            "m": "Feb",
+            "hi": 24,
+            "lo": 10,
+            "rain": 20
+          },
+          {
+            "m": "Mar",
+            "hi": 30,
+            "lo": 15,
+            "rain": 15
+          },
+          {
+            "m": "Apr",
+            "hi": 37,
+            "lo": 21,
+            "rain": 10
+          },
+          {
+            "m": "May",
+            "hi": 40,
+            "lo": 26,
+            "rain": 15
+          },
+          {
+            "m": "Jun",
+            "hi": 39,
+            "lo": 28,
+            "rain": 55
+          },
+          {
+            "m": "Jul",
+            "hi": 35,
+            "lo": 27,
+            "rain": 210
+          },
+          {
+            "m": "Aug",
+            "hi": 34,
+            "lo": 26,
+            "rain": 250
+          },
+          {
+            "m": "Sep",
+            "hi": 34,
+            "lo": 24,
+            "rain": 130
+          },
+          {
+            "m": "Oct",
+            "hi": 33,
+            "lo": 19,
+            "rain": 15
+          },
+          {
+            "m": "Nov",
+            "hi": 28,
+            "lo": 12,
+            "rain": 5
+          },
+          {
+            "m": "Dec",
+            "hi": 22,
+            "lo": 8,
+            "rain": 10
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "India",
+      "city": "Goa",
+      "costs": {
+        "allInDayMid": [
+          80,
+          130
+        ],
+        "accomPerNight": {
+          "budget": 17,
+          "mid": 65,
+          "nice": 200
+        },
+        "rentMonthly": 425,
+        "dailyLiving": {
+          "low": 24,
+          "mid": 38,
+          "high": 60
+        }
+      },
+      "food": "Local $2-4 / Beach-shack for 2 $12-18 / Mid dinner $25-40 / Beer $2-4 (cheap) / Coffee $2-3",
+      "transport": "Local bus $0.15-0.5 / No metro/pass / Scooter $4-10/day / Taxi $8-15 (cartel)",
+      "internet": "India SIM $4-6/mo / Coworking $6-10/day (NomadGao, Jungle Work)",
+      "landmarks": [
+        {
+          "name": "Fort Aguada & Lighthouse",
+          "why": "Portuguese fort + sea views",
+          "when": "Nov-Mar sunset",
+          "how": "Taxi/scooter from Candolim",
+          "cost": "Free",
+          "time": "1h"
+        },
+        {
+          "name": "Old Goa churches",
+          "why": "UNESCO baroque, St Francis Xavier",
+          "when": "Morning",
+          "how": "Bus/scooter from Panjim",
+          "cost": "Free",
+          "time": "1.5h"
+        },
+        {
+          "name": "Anjuna Beach + Wed flea market",
+          "why": "Hippie coves, sunset shacks",
+          "when": "Nov-Mar, Wed afternoon",
+          "how": "Scooter",
+          "cost": "Free",
+          "time": "Half day"
+        }
+      ],
+      "weather": {
+        "hazard": "Heavy SW monsoon Jun-Sep (very wet, rough seas); humid year-round; best months Nov-Feb (dry, warm beach season).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 32,
+            "lo": 19,
+            "rain": 0
+          },
+          {
+            "m": "Feb",
+            "hi": 32,
+            "lo": 20,
+            "rain": 0
+          },
+          {
+            "m": "Mar",
+            "hi": 33,
+            "lo": 23,
+            "rain": 5
+          },
+          {
+            "m": "Apr",
+            "hi": 33,
+            "lo": 25,
+            "rain": 15
+          },
+          {
+            "m": "May",
+            "hi": 33,
+            "lo": 26,
+            "rain": 60
+          },
+          {
+            "m": "Jun",
+            "hi": 31,
+            "lo": 25,
+            "rain": 580
+          },
+          {
+            "m": "Jul",
+            "hi": 29,
+            "lo": 24,
+            "rain": 900
+          },
+          {
+            "m": "Aug",
+            "hi": 29,
+            "lo": 24,
+            "rain": 560
+          },
+          {
+            "m": "Sep",
+            "hi": 30,
+            "lo": 24,
+            "rain": 300
+          },
+          {
+            "m": "Oct",
+            "hi": 32,
+            "lo": 23,
+            "rain": 120
+          },
+          {
+            "m": "Nov",
+            "hi": 33,
+            "lo": 22,
+            "rain": 30
+          },
+          {
+            "m": "Dec",
+            "hi": 33,
+            "lo": 20,
+            "rain": 15
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "India",
+      "city": "Bengaluru",
+      "costs": {
+        "allInDayMid": [
+          80,
+          120
+        ],
+        "accomPerNight": {
+          "budget": 20,
+          "mid": 60,
+          "nice": 110
+        },
+        "rentMonthly": 235,
+        "dailyLiving": {
+          "low": 22,
+          "mid": 35,
+          "high": 58
+        }
+      },
+      "food": "Local $2-4 / Casual for 2 $7-16 / Mid dinner $25-40 / Beer $3-5 / Coffee $2-3.5 (cafe scene)",
+      "transport": "Metro $0.12-1.1 / Day pass ~$2.4-4.8 / Auto/Uber $1.5-4",
+      "internet": "India SIM $4-6/mo / Coworking $5-10/day (dense)",
+      "landmarks": [
+        {
+          "name": "Lalbagh Botanical Garden",
+          "why": "240-acre garden + glasshouse",
+          "when": "Early morning",
+          "how": "Metro Lalbagh",
+          "cost": "~$0.3 (free 6-9am)",
+          "time": "1.5h"
+        },
+        {
+          "name": "Bangalore Palace",
+          "why": "Tudor-style royal palace",
+          "when": "Daytime",
+          "how": "Auto/Uber",
+          "cost": "~$5.5",
+          "time": "1h"
+        },
+        {
+          "name": "Nandi Hills (day trip)",
+          "why": "Sunrise sea of clouds, hill fort",
+          "when": "Nov-Feb pre-dawn",
+          "how": "Drive ~60km",
+          "cost": "Small fee",
+          "time": "Half day"
+        }
+      ],
+      "weather": {
+        "hazard": "Mild plateau climate year-round; two rain peaks (May and Sep-Oct); no extreme heat; best months Oct-Feb (pleasant).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 28,
+            "lo": 15,
+            "rain": 5
+          },
+          {
+            "m": "Feb",
+            "hi": 31,
+            "lo": 17,
+            "rain": 5
+          },
+          {
+            "m": "Mar",
+            "hi": 33,
+            "lo": 19,
+            "rain": 10
+          },
+          {
+            "m": "Apr",
+            "hi": 34,
+            "lo": 21,
+            "rain": 45
+          },
+          {
+            "m": "May",
+            "hi": 33,
+            "lo": 21,
+            "rain": 110
+          },
+          {
+            "m": "Jun",
+            "hi": 29,
+            "lo": 20,
+            "rain": 80
+          },
+          {
+            "m": "Jul",
+            "hi": 28,
+            "lo": 19,
+            "rain": 110
+          },
+          {
+            "m": "Aug",
+            "hi": 28,
+            "lo": 19,
+            "rain": 135
+          },
+          {
+            "m": "Sep",
+            "hi": 28,
+            "lo": 19,
+            "rain": 195
+          },
+          {
+            "m": "Oct",
+            "hi": 28,
+            "lo": 19,
+            "rain": 180
+          },
+          {
+            "m": "Nov",
+            "hi": 27,
+            "lo": 17,
+            "rain": 60
+          },
+          {
+            "m": "Dec",
+            "hi": 27,
+            "lo": 15,
+            "rain": 15
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "Nepal",
+      "city": "Kathmandu",
+      "costs": {
+        "allInDayMid": [
+          70,
+          100
+        ],
+        "accomPerNight": {
+          "budget": 13,
+          "mid": 30,
+          "nice": 70
+        },
+        "rentMonthly": 250,
+        "dailyLiving": {
+          "low": 18,
+          "mid": 30,
+          "high": 50
+        }
+      },
+      "food": "Dal bhat $2-4 / Tourist (Thamel) for 2 $12-18 / Mid dinner $20-35 / Beer $3-5 / Coffee $1.5-3",
+      "transport": "Bus/microbus $0.15-0.4 / No metro/pass / Taxi $2-4 (negotiate), Pathao cheaper",
+      "internet": "Ncell SIM $3.6-16 / Coworking $3-6/day (limited)",
+      "landmarks": [
+        {
+          "name": "Boudhanath Stupa",
+          "why": "Giant Tibetan-Buddhist stupa",
+          "when": "Late afternoon (kora at dusk)",
+          "how": "Taxi",
+          "cost": "~$2.9",
+          "time": "1h"
+        },
+        {
+          "name": "Pashupatinath",
+          "why": "Sacred Hindu cremation temple",
+          "when": "Morning/evening aarti",
+          "how": "Taxi",
+          "cost": "~$7.3",
+          "time": "1.5h"
+        },
+        {
+          "name": "Swayambhunath (Monkey Temple)",
+          "why": "Hilltop stupa + city views",
+          "when": "Sunrise/sunset",
+          "how": "Taxi + steps",
+          "cost": "~$1.5",
+          "time": "1h"
+        }
+      ],
+      "weather": {
+        "hazard": "Monsoon Jun-Sep (clouds hide mountains); cold clear winters; trekking seasons Oct-Nov (best) and Mar-Apr.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 19,
+            "lo": 3,
+            "rain": 15
+          },
+          {
+            "m": "Feb",
+            "hi": 21,
+            "lo": 4,
+            "rain": 20
+          },
+          {
+            "m": "Mar",
+            "hi": 25,
+            "lo": 8,
+            "rain": 35
+          },
+          {
+            "m": "Apr",
+            "hi": 28,
+            "lo": 12,
+            "rain": 60
+          },
+          {
+            "m": "May",
+            "hi": 29,
+            "lo": 16,
+            "rain": 120
+          },
+          {
+            "m": "Jun",
+            "hi": 29,
+            "lo": 19,
+            "rain": 240
+          },
+          {
+            "m": "Jul",
+            "hi": 28,
+            "lo": 20,
+            "rain": 370
+          },
+          {
+            "m": "Aug",
+            "hi": 28,
+            "lo": 20,
+            "rain": 345
+          },
+          {
+            "m": "Sep",
+            "hi": 28,
+            "lo": 19,
+            "rain": 200
+          },
+          {
+            "m": "Oct",
+            "hi": 27,
+            "lo": 13,
+            "rain": 60
+          },
+          {
+            "m": "Nov",
+            "hi": 23,
+            "lo": 7,
+            "rain": 10
+          },
+          {
+            "m": "Dec",
+            "hi": 20,
+            "lo": 3,
+            "rain": 10
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "Nepal",
+      "city": "Pokhara",
+      "costs": {
+        "allInDayMid": [
+          70,
+          100
+        ],
+        "accomPerNight": {
+          "budget": 17,
+          "mid": 45,
+          "nice": 90
+        },
+        "rentMonthly": 225,
+        "dailyLiving": {
+          "low": 18,
+          "mid": 30,
+          "high": 48
+        }
+      },
+      "food": "Local $2-5 / Lakeside for 2 $12-18 / Mid dinner $20-35 / Beer $3-5 / Coffee $1.5-3",
+      "transport": "Bus $0.15-0.4 / No metro/pass / Taxi $2-4 / Phewa boat ~$3.6",
+      "internet": "Ncell SIM $4-16 / Coworking from $2/day",
+      "landmarks": [
+        {
+          "name": "Sarangkot sunrise",
+          "why": "Annapurna & Machhapuchhre panorama",
+          "when": "Pre-dawn",
+          "how": "Taxi/cable car",
+          "cost": "Small fee",
+          "time": "Half-morning"
+        },
+        {
+          "name": "Paragliding over Phewa",
+          "why": "Bucket-list tandem flight",
+          "when": "Sep-Nov/Mar-Apr morning",
+          "how": "Lakeside operators",
+          "cost": "~$75-100",
+          "time": "2-3h"
+        },
+        {
+          "name": "World Peace Pagoda",
+          "why": "White stupa, lake + mountain views",
+          "when": "Sunset",
+          "how": "Boat + 20-30min hike",
+          "cost": "Free",
+          "time": "2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Wettest city in Nepal; intense monsoon Jun-Sep; gateway to Annapurna; trekking seasons Oct-Nov (best) and Mar-Apr.",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 20,
+            "lo": 7,
+            "rain": 25
+          },
+          {
+            "m": "Feb",
+            "hi": 22,
+            "lo": 8,
+            "rain": 30
+          },
+          {
+            "m": "Mar",
+            "hi": 27,
+            "lo": 12,
+            "rain": 50
+          },
+          {
+            "m": "Apr",
+            "hi": 30,
+            "lo": 16,
+            "rain": 110
+          },
+          {
+            "m": "May",
+            "hi": 30,
+            "lo": 19,
+            "rain": 290
+          },
+          {
+            "m": "Jun",
+            "hi": 30,
+            "lo": 21,
+            "rain": 640
+          },
+          {
+            "m": "Jul",
+            "hi": 29,
+            "lo": 21,
+            "rain": 900
+          },
+          {
+            "m": "Aug",
+            "hi": 29,
+            "lo": 21,
+            "rain": 810
+          },
+          {
+            "m": "Sep",
+            "hi": 29,
+            "lo": 20,
+            "rain": 540
+          },
+          {
+            "m": "Oct",
+            "hi": 27,
+            "lo": 16,
+            "rain": 180
+          },
+          {
+            "m": "Nov",
+            "hi": 24,
+            "lo": 11,
+            "rain": 15
+          },
+          {
+            "m": "Dec",
+            "hi": 21,
+            "lo": 7,
+            "rain": 15
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "Sri Lanka",
+      "city": "Colombo",
+      "costs": {
+        "allInDayMid": [
+          80,
+          120
+        ],
+        "accomPerNight": {
+          "budget": 17,
+          "mid": 52,
+          "nice": 100
+        },
+        "rentMonthly": 325,
+        "dailyLiving": {
+          "low": 24,
+          "mid": 38,
+          "high": 60
+        }
+      },
+      "food": "Street $1-3 / Casual for 2 $10-20 / Mid dinner $25-45 / Lion Lager $2-4 / Coffee $2-3",
+      "transport": "City bus $0.1-0.2 / Bus monthly ~$6 / No tourist pass / Tuk-tuk $0.5-2 (PickMe)",
+      "internet": "Dialog/Mobitel SIM $4-7 / Coworking $5-10/day (strong)",
+      "landmarks": [
+        {
+          "name": "Gangaramaya Temple",
+          "why": "Eclectic Buddhist temple + museum",
+          "when": "Daily 6am-10pm",
+          "how": "Tuk-tuk",
+          "cost": "~$1-2",
+          "time": "1h"
+        },
+        {
+          "name": "Galle Face Green",
+          "why": "Seafront promenade, kites, street food",
+          "when": "Evening sunset",
+          "how": "Walk/tuk-tuk",
+          "cost": "Free",
+          "time": "1h"
+        },
+        {
+          "name": "Colombo National Museum",
+          "why": "Cultural showcase since 1877",
+          "when": "Daytime",
+          "how": "Tuk-tuk",
+          "cost": "~$3",
+          "time": "1.5h"
+        }
+      ],
+      "weather": {
+        "hazard": "Hot humid year-round; SW monsoon May-Sep, second peak Oct-Nov; best months Dec-Mar (west/south coast dry).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 31,
+            "lo": 23,
+            "rain": 60
+          },
+          {
+            "m": "Feb",
+            "hi": 31,
+            "lo": 23,
+            "rain": 70
+          },
+          {
+            "m": "Mar",
+            "hi": 32,
+            "lo": 24,
+            "rain": 130
+          },
+          {
+            "m": "Apr",
+            "hi": 32,
+            "lo": 25,
+            "rain": 250
+          },
+          {
+            "m": "May",
+            "hi": 32,
+            "lo": 26,
+            "rain": 340
+          },
+          {
+            "m": "Jun",
+            "hi": 30,
+            "lo": 25,
+            "rain": 200
+          },
+          {
+            "m": "Jul",
+            "hi": 30,
+            "lo": 25,
+            "rain": 135
+          },
+          {
+            "m": "Aug",
+            "hi": 30,
+            "lo": 25,
+            "rain": 120
+          },
+          {
+            "m": "Sep",
+            "hi": 30,
+            "lo": 25,
+            "rain": 225
+          },
+          {
+            "m": "Oct",
+            "hi": 30,
+            "lo": 24,
+            "rain": 350
+          },
+          {
+            "m": "Nov",
+            "hi": 30,
+            "lo": 23,
+            "rain": 315
+          },
+          {
+            "m": "Dec",
+            "hi": 31,
+            "lo": 23,
+            "rain": 150
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "Sri Lanka",
+      "city": "Kandy & Ella",
+      "costs": {
+        "allInDayMid": [
+          70,
+          110
+        ],
+        "accomPerNight": {
+          "budget": 17,
+          "mid": 45,
+          "nice": 90
+        },
+        "rentMonthly": 250,
+        "dailyLiving": {
+          "low": 22,
+          "mid": 34,
+          "high": 55
+        }
+      },
+      "food": "Rice & curry $2-4 / Casual for 2 $10-18 / Mid dinner $22-40 / Beer $2.5-4.5 / Coffee $2-3",
+      "transport": "Scenic train Kandy-Ella $0.5-23 by class / Short hops $1-3 / Tuk-tuk $1-3",
+      "internet": "Dialog/Mobitel SIM $4-7 / Coworking sparse (guesthouse Wi-Fi + cafes)",
+      "landmarks": [
+        {
+          "name": "Temple of the Sacred Tooth (Kandy)",
+          "why": "Holiest Buddhist site, evening puja",
+          "when": "Dec-Mar puja times",
+          "how": "Walk in Kandy",
+          "cost": "~$6.6",
+          "time": "1.5h"
+        },
+        {
+          "name": "Kandy to Ella train",
+          "why": "World-famous tea-country rail",
+          "when": "Daytime (book 30+ days ahead)",
+          "how": "12go/station",
+          "cost": "$0.5-23",
+          "time": "6-7h"
+        },
+        {
+          "name": "Nine Arch Bridge (Ella)",
+          "why": "Iconic colonial viaduct",
+          "when": "Early morning golden hour",
+          "how": "20-min walk from Ella",
+          "cost": "Free",
+          "time": "1-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Cool hill country (cooler nights at altitude); wettest Oct-Nov (NE monsoon) and Apr; best months Jan-Mar (driest, clear hill views).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 28,
+            "lo": 16,
+            "rain": 75
+          },
+          {
+            "m": "Feb",
+            "hi": 29,
+            "lo": 16,
+            "rain": 65
+          },
+          {
+            "m": "Mar",
+            "hi": 30,
+            "lo": 17,
+            "rain": 105
+          },
+          {
+            "m": "Apr",
+            "hi": 30,
+            "lo": 18,
+            "rain": 185
+          },
+          {
+            "m": "May",
+            "hi": 30,
+            "lo": 19,
+            "rain": 160
+          },
+          {
+            "m": "Jun",
+            "hi": 28,
+            "lo": 19,
+            "rain": 135
+          },
+          {
+            "m": "Jul",
+            "hi": 28,
+            "lo": 19,
+            "rain": 130
+          },
+          {
+            "m": "Aug",
+            "hi": 28,
+            "lo": 18,
+            "rain": 125
+          },
+          {
+            "m": "Sep",
+            "hi": 28,
+            "lo": 18,
+            "rain": 150
+          },
+          {
+            "m": "Oct",
+            "hi": 28,
+            "lo": 18,
+            "rain": 250
+          },
+          {
+            "m": "Nov",
+            "hi": 27,
+            "lo": 17,
+            "rain": 215
+          },
+          {
+            "m": "Dec",
+            "hi": 27,
+            "lo": 16,
+            "rain": 150
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "Bangladesh",
+      "city": "Dhaka",
+      "costs": {
+        "allInDayMid": [
+          55,
+          85
+        ],
+        "accomPerNight": {
+          "budget": 12,
+          "mid": 45,
+          "nice": 120
+        },
+        "rentMonthly": 200,
+        "dailyLiving": {
+          "low": 22,
+          "mid": 35,
+          "high": 55
+        }
+      },
+      "food": "Local $1.5-3 / Casual for 2 $6-10 / Mid dinner $20-35 / Tea $0.2-0.5 / Coffee $2.5-4",
+      "transport": "CNG/rickshaw $0.30-3 (negotiate) / Pathao+Uber ~$3-4 / Brutal traffic - allow extra time",
+      "internet": "eSIM $15-28/10-20GB / Coworking sparse (Moar). Power cuts - bring backup. Light/async work only",
+      "landmarks": [
+        {
+          "name": "Lalbagh Fort",
+          "why": "17th-c Mughal fort, Old Dhaka",
+          "when": "Early AM (closed Sun AM)",
+          "how": "CNG/Pathao",
+          "cost": "~$2",
+          "time": "1.5-2h"
+        },
+        {
+          "name": "Ahsan Manzil (Pink Palace)",
+          "why": "Nawab riverside palace museum",
+          "when": "Late morning (closed Wed)",
+          "how": "Walk from Sadarghat",
+          "cost": "~$4",
+          "time": "1-1.5h"
+        },
+        {
+          "name": "Sadarghat River Port",
+          "why": "Asia's busiest river port, raw Dhaka",
+          "when": "Sunrise/late afternoon",
+          "how": "CNG/Pathao",
+          "cost": "Boat ~$3-8",
+          "time": "1-2h"
+        }
+      ],
+      "weather": {
+        "hazard": "Monsoon Jun-Sep (flooding common); pre-monsoon storms Apr-May; hot humid summer; best months Nov-Feb (cool, dry).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 25,
+            "lo": 12,
+            "rain": 5
+          },
+          {
+            "m": "Feb",
+            "hi": 28,
+            "lo": 15,
+            "rain": 25
+          },
+          {
+            "m": "Mar",
+            "hi": 32,
+            "lo": 20,
+            "rain": 55
+          },
+          {
+            "m": "Apr",
+            "hi": 34,
+            "lo": 24,
+            "rain": 135
+          },
+          {
+            "m": "May",
+            "hi": 33,
+            "lo": 25,
+            "rain": 270
+          },
+          {
+            "m": "Jun",
+            "hi": 32,
+            "lo": 26,
+            "rain": 360
+          },
+          {
+            "m": "Jul",
+            "hi": 31,
+            "lo": 26,
+            "rain": 375
+          },
+          {
+            "m": "Aug",
+            "hi": 32,
+            "lo": 26,
+            "rain": 315
+          },
+          {
+            "m": "Sep",
+            "hi": 32,
+            "lo": 26,
+            "rain": 300
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 24,
+            "rain": 170
+          },
+          {
+            "m": "Nov",
+            "hi": 29,
+            "lo": 18,
+            "rain": 30
+          },
+          {
+            "m": "Dec",
+            "hi": 26,
+            "lo": 13,
+            "rain": 5
+          }
+        ]
+      }
+    },
+    {
+      "region": "SA",
+      "regionName": "South Asia",
+      "country": "Bangladesh",
+      "city": "Cox's Bazar",
+      "costs": {
+        "allInDayMid": [
+          50,
+          80
+        ],
+        "accomPerNight": {
+          "budget": 10,
+          "mid": 35,
+          "nice": 110
+        },
+        "rentMonthly": 130,
+        "dailyLiving": {
+          "low": 20,
+          "mid": 32,
+          "high": 50
+        }
+      },
+      "food": "Local $1.6-3.2 / Casual for 2 $6-10 / Mid seafood dinner $15-30 / Tea $0.2-0.5 / Coffee $2.5-4",
+      "transport": "CNG/tomtom $0.50-2 / Rickshaw $0.50-1.50 / Weak ride-hail - use local autos",
+      "internet": "Good 4G/eSIM / Coworking: none (work from hotel). Workation for light work only",
+      "landmarks": [
+        {
+          "name": "Cox's Bazar Beach",
+          "why": "World's longest sea beach (~120km)",
+          "when": "Sunrise/sunset, Nov-Mar",
+          "how": "Walk from town",
+          "cost": "Free",
+          "time": "Half day+"
+        },
+        {
+          "name": "Inani Beach",
+          "why": "Golden sand, coral rocks, calm water",
+          "when": "Low tide, morning",
+          "how": "CNG/tomtom ~12km",
+          "cost": "Free",
+          "time": "2-4h"
+        },
+        {
+          "name": "Himchari hill & waterfall",
+          "why": "Bay-of-Bengal panorama viewpoint",
+          "when": "Late afternoon",
+          "how": "CNG",
+          "cost": "~$1",
+          "time": "2-3h"
+        }
+      ],
+      "weather": {
+        "hazard": "Very heavy coastal monsoon Jun-Sep; cyclone risk Apr-May and Oct-Nov (Bay of Bengal); best months Nov-Mar (dry beach season).",
+        "months": [
+          {
+            "m": "Jan",
+            "hi": 27,
+            "lo": 15,
+            "rain": 5
+          },
+          {
+            "m": "Feb",
+            "hi": 29,
+            "lo": 17,
+            "rain": 15
+          },
+          {
+            "m": "Mar",
+            "hi": 31,
+            "lo": 21,
+            "rain": 25
+          },
+          {
+            "m": "Apr",
+            "hi": 32,
+            "lo": 24,
+            "rain": 80
+          },
+          {
+            "m": "May",
+            "hi": 32,
+            "lo": 25,
+            "rain": 300
+          },
+          {
+            "m": "Jun",
+            "hi": 31,
+            "lo": 25,
+            "rain": 830
+          },
+          {
+            "m": "Jul",
+            "hi": 30,
+            "lo": 25,
+            "rain": 870
+          },
+          {
+            "m": "Aug",
+            "hi": 30,
+            "lo": 25,
+            "rain": 680
+          },
+          {
+            "m": "Sep",
+            "hi": 31,
+            "lo": 25,
+            "rain": 410
+          },
+          {
+            "m": "Oct",
+            "hi": 31,
+            "lo": 23,
+            "rain": 210
+          },
+          {
+            "m": "Nov",
+            "hi": 30,
+            "lo": 19,
+            "rain": 60
+          },
+          {
+            "m": "Dec",
+            "hi": 28,
+            "lo": 15,
+            "rain": 10
+          }
+        ]
+      }
+    }
+  ]
+}
