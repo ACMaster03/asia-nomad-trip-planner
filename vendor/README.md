@@ -1,7 +1,8 @@
 # vendor/
 
-Third-party assets vendored locally so the app works **offline** (double-click `index.html`)
-with no CDN and no API key. These are committed on purpose — do not add to `.gitignore`.
+Third-party assets vendored locally so the app **doesn't depend on a CDN at runtime**
+(no CDN outage can break it, no API key needed). These are committed on purpose — do not
+add to `.gitignore`.
 
 | File | What | Version | Source |
 |------|------|---------|--------|

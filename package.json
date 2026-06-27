@@ -4,9 +4,7 @@
   "private": true,
   "description": "Self-contained Asia nomad trip planner — static site, no build step.",
   "scripts": {
-    "embed": "node tools/embed.js",
     "coords": "node tools/add-coords.mjs",
-    "sync": "node tools/add-coords.mjs && node tools/embed.js",
     "serve": "npx --yes serve ."
   }
 }

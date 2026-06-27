@@ -8,14 +8,18 @@ weather**, and **coordinates**.
 
 ## Files
 
+> **Deployment:** this app is **served-only** (Vercel). `cities.json` is fetched live at
+> load — there's no embedded snapshot to maintain. (Editing happens via the deployed
+> project / repo, not by double-clicking the file.)
+
 | File | What it is |
 |------|------------|
-| `index.html` | The whole app (HTML + CSS + JS, no build step). Works **offline** (double-click) and **served** (Vercel / local server). |
-| `cities.json` | The **single source of truth** for reference data — all 37 cities + 16 countries: costs, food, transport, landmarks, visas, 12-month climate, lat/lng. Edit this, then run `npm run embed`. |
-| `vendor/` | Vendored, offline-safe assets (the 3D globe library + earth texture). Committed on purpose — see `vendor/README.md`. |
-| `tools/` | Maintenance scripts: `embed.js` (sync the offline data snapshot) and `add-coords.mjs` (city coordinates). |
-| `supabase/schema.sql` | Forward-looking database schema for the optional sync/multi-user upgrade. |
-| `DATABASE.md` | Step-by-step Supabase setup (only needed if/when you want cross-device sync). |
+| `index.html` | The whole app (HTML + CSS + JS, no build step). Fetches `cities.json` at load. |
+| `cities.json` | The **single source of truth** for reference data — all 37 cities + 16 countries: costs, food, transport, landmarks, visas, 12-month climate, lat/lng. Edit this and redeploy. |
+| `vendor/` | Vendored assets (3D globe library + earth texture, Supabase client). Committed on purpose so the app doesn't depend on a CDN — see `vendor/README.md`. |
+| `tools/` | `add-coords.mjs` — manages city coordinates in `cities.json`. |
+| `supabase/` | `schema.sql` + `migrations/` + `config.js` (public keys) for cloud sync. |
+| `DATABASE.md` | Supabase setup steps. |
 | `README.md` | This file. |
 
 ## Tabs
@@ -34,33 +38,26 @@ to your planned spend. Stored separately from the trip — its own browser stora
 own `income.json` (Export/Import), plus CSV export. The row shape matches the Supabase
 `ledger` table, so it migrates cleanly later.
 
-## Maintaining the data (one source of truth)
+## Maintaining the data
 
-`cities.json` is the source of truth. `index.html` carries an **embedded copy** so the
-offline (double-click) file works with no server. Keep them in sync with one command —
-never hand-edit the embedded copy:
+`cities.json` is the single source of truth and is **fetched live** at page load — edit
+it and redeploy (push to GitHub → Vercel rebuilds). No snapshot to regenerate.
 
 ```bash
-npm run embed     # regenerate the embedded snapshot in index.html from cities.json
-npm run coords    # (re)apply city coordinates to cities.json
-npm run sync      # coords + embed in one go
+npm run coords    # (re)apply city coordinates to cities.json (e.g. after adding a city)
 ```
 
-## How the data loads (offline vs served)
+When you add a new city, also add its coordinates to `tools/add-coords.mjs` and run the
+command above.
 
-`index.html` ships with an **embedded snapshot** of the data, so opening the file
-directly (no server) always works — great on the road with no internet.
+## How the data loads
 
-When the page is **served over http(s)** (local server or Vercel) it additionally
-does `fetch('cities.json')` and uses that, so the deployed site always reflects the
-latest store. In short:
+The deployed page does `fetch('cities.json')` on startup and renders from it, so the live
+site always reflects the latest `cities.json`.
 
-- **Offline (double-click `index.html`)** → uses the embedded snapshot.
-- **Served (Vercel / local server)** → uses `cities.json` (live, editable without touching the app).
-
-> Your **itinerary/trip data** (stops, stays, flights, budget toggles) is saved in the
-> browser's `localStorage`, not in `cities.json`. Use the in-app **Export / Import**
-> buttons to back it up or move it between devices / between you and your travel partner.
+> Your **itinerary/trip data** (stops, stays, flights, budget toggles) and the **income
+> ledger** live in `localStorage`, and — when signed in — sync to Supabase (see
+> `DATABASE.md`). The in-app **Export / Import** buttons make manual backups.
 
 ## Run locally (served, picks up cities.json edits)
 
@@ -113,11 +110,9 @@ All money is approximate **USD** (mid-2026 estimates); the app converts to HUF u
 editable rates in **Settings**. Weather is climate normals: average daily high/low °C and
 monthly rainfall in mm.
 
-> Note: the offline `index.html` carries an embedded snapshot of this data. After editing
-> `cities.json`, the **served** site updates immediately; to refresh the **offline** file's
-> embedded copy, run **`npm run embed`** (it rewrites the `EMBEDDED_DATA` block for you — no
-> hand-editing). New cities also need coordinates: add them to `tools/add-coords.mjs` and
-> run `npm run sync`.
+> Note: edit `cities.json` and redeploy — the live site fetches it on load, so changes
+> show up immediately after the Vercel rebuild. New cities also need coordinates: add them
+> to `tools/add-coords.mjs` and run `npm run coords`.
 
 ## Roadmap ideas
 
