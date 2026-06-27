@@ -71,35 +71,46 @@ the anon key is public.
 
 ---
 
-## Step 6 (later) — Point the app at the database
+## Step 6 — Run the sync migration (required, 1 min)
 
-This is the only code change, and it's small because the app already isolates
-its storage. Today these functions are the seam:
+The app is **already wired** to Supabase (vendored client + `supabase/config.js`). It
+uses a simple, reliable **document model**: your whole trip `state` and the income
+`ledger` are stored as JSON on one row in the `trips` table. That needs two columns
+and one policy tweak. In **SQL Editor**, run
+[`supabase/migrations/01-document-sync.sql`](supabase/migrations/01-document-sync.sql)
+(or paste it):
 
-| App function (in `index.html`) | Today | After Supabase |
-|--------------------------------|-------|----------------|
-| `load()` / `save()` | read/write `localStorage` (trip) | read/write the `trips` + itinerary tables |
-| `loadLedger()` / `saveLedger()` | read/write `localStorage` (ledger) | read/write the `ledger` table |
+```sql
+alter table public.trips add column if not exists state  jsonb not null default '{}'::jsonb;
+alter table public.trips add column if not exists ledger jsonb not null default '[]'::jsonb;
+drop policy if exists trips_update on public.trips;
+create policy trips_update on public.trips for update using (public.can_access_trip(id));
+```
 
-The table columns were chosen to match the JSON the app already produces, so the
-mapping is direct (e.g. an `income.json` entry → one `ledger` row). Rough plan:
+(If you run the latest `schema.sql` fresh instead, it already includes these.)
 
-1. Add the client (no build step needed):
-   ```html
-   <script type="module">
-     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-     window.db = createClient('https://xxxx.supabase.co', 'YOUR_ANON_KEY');
-   </script>
-   ```
-   > Note: an `esm.sh` import needs internet, so it breaks pure-offline
-   > double-click use. Keep the localStorage path as the offline fallback, or
-   > vendor supabase-js into `vendor/` like we did with globe.gl. The clean
-   > design is **localStorage as the offline cache, Supabase as the sync layer.**
-2. On login, load the trip + ledger from the DB into `state` / `ledger`.
-3. On `save()` / `saveLedger()`, also upsert to the DB (debounced).
-4. Keep Export/Import as the manual backup it already is.
+Also double-check **Authentication → URL Configuration → Redirect URLs** contains the
+URL you actually open the app from — `http://localhost:4321` for local and your Vercel
+URL for production — or the magic-link won't return you to the app.
 
-When you're ready for Step 6, hand me this file and I'll wire it up.
+## How sync works now
+
+- Click **☁ Sign in** (top bar) → enter email → open the magic link on that device.
+- On sign-in the app **loads your trip + ledger from the cloud**. First time (empty
+  cloud) it seeds the cloud from whatever is in your browser.
+- Every change saves locally **and** pushes to the cloud (debounced ~1s). The button
+  shows `✓` synced, `⟳` syncing, or `⚠` error.
+- **Offline / double-clicked file:** no cloud, app works local-only — sign-in is only
+  available on the served site.
+- **Sharing:** see Step 5 — your partner signs in once, you add them as a `trip_member`,
+  and you both edit the same trip. Their ids are shown in the ☁ dialog for convenience.
+
+### Known limitation (v1)
+Sync is **last-write-wins on the whole document**, and the cloud copy loads when you
+open the app. Fine for two people coordinating loosely; but if you edit **offline** and
+then open the app **online**, the cloud version can overwrite those offline edits. Use
+**Export** for a safety backup before big offline sessions. (A future pass can add live
+realtime updates + smarter merging.)
 
 ---
 

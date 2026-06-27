@@ -100,6 +100,7 @@
   <div class="htop">
     <div class="brand">🧭 Asia Nomad Trip Planner <small id="tripNameLbl"></small></div>
     <div class="grow"></div>
+    <button class="btn sm" id="cloudBtn" onclick="openCloud()" title="Cloud sync">☁ Sign in</button>
     <button class="btn sm" onclick="doExport()">⬇ Export</button>
     <button class="btn sm" onclick="document.getElementById('importFile').click()">⬆ Import</button>
     <input type="file" id="importFile" accept="application/json" style="display:none" onchange="doImport(event)">
@@ -113,6 +114,9 @@
   <div class="modal" id="modal"></div>
 </div>
 
+<!-- Cloud sync (optional): vendored Supabase client + public config. Absent/offline => app runs local-only. -->
+<script src="vendor/supabase.js"></script>
+<script src="supabase/config.js"></script>
 <script>
 /* ===================== KNOWLEDGE BASE DATA (from cities.json; embedded copy = offline fallback) ===================== */
 var EMBEDDED_DATA = {
@@ -5111,7 +5115,7 @@ var LS_KEY="asiaNomadPlanner_v1";
 var state, activeTab="overview";
 
 function load(){ try{var s=localStorage.getItem(LS_KEY); if(s) return JSON.parse(s);}catch(e){} return null; }
-function save(){ try{localStorage.setItem(LS_KEY, JSON.stringify(state));}catch(e){} }
+function save(){ try{localStorage.setItem(LS_KEY, JSON.stringify(state));}catch(e){} if(typeof cloudPushDebounced==="function") cloudPushDebounced(); }
 function uid(p){ return (p||"id")+Math.random().toString(36).slice(2,8); }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
 function kb(city){ return CITIES.find(function(c){return c.city===city;}); }
@@ -5594,6 +5598,113 @@ function fldI(label,type,id,val){ return '<div class="field"><label>'+label+'</l
 function modalBtns(saveCall){ return '<div class="row" style="margin-top:8px"><button class="btn acc" onclick="'+saveCall+'">Save</button><button class="btn" onclick="closeModal()">Cancel</button></div>'; }
 function val(id){ var el=document.getElementById(id); return el?el.value:""; }
 
+/* ============================ CLOUD SYNC (Supabase, optional) ============================ */
+/* Document model: the whole trip `state` and the `ledger` are stored as JSON on one
+   row in the `trips` table (columns state jsonb, ledger jsonb). localStorage stays the
+   working/offline store; the cloud is the sync layer between devices/people. If the
+   Supabase client or config is missing (e.g. offline file://), everything below no-ops
+   and the app runs exactly as the local-only version. */
+var cloud = { client:null, user:null, tripId:null, pushTimer:null, applyingRemote:false, status:"local" };
+function cloudReady(){ return !!(cloud.client && cloud.user); }
+function cloudInit(){
+  if(typeof supabase==="undefined" || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY){ updateCloudBtn(); return; }
+  try{ cloud.client = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY); }
+  catch(e){ cloud.client=null; updateCloudBtn(); return; }
+  cloud.status="signed-out";
+  cloud.client.auth.onAuthStateChange(function(_evt, session){
+    cloud.user = session ? session.user : null;
+    cloud.status = cloud.user ? "syncing" : "signed-out";
+    updateCloudBtn();
+    if(cloud.user) cloudLoad();
+  });
+  cloud.client.auth.getSession().then(function(res){
+    cloud.user = (res.data && res.data.session) ? res.data.session.user : null;
+    cloud.status = cloud.user ? "syncing" : "signed-out";
+    updateCloudBtn();
+    if(cloud.user) cloudLoad();
+  }).catch(function(){ updateCloudBtn(); });
+}
+function cloudLoad(){
+  if(!cloudReady()) return;
+  cloud.status="syncing"; updateCloudBtn();
+  cloud.client.from("trips").select("id,state,ledger,updated_at").order("updated_at",{ascending:false}).limit(1)
+    .then(function(res){
+      if(res.error){ cloud.status="error"; updateCloudBtn(); console.warn("cloud load:", res.error.message); return; }
+      var rows=res.data||[];
+      if(rows.length){
+        var row=rows[0]; cloud.tripId=row.id;
+        var hasState = row.state && row.state.meta;
+        if(hasState){
+          cloud.applyingRemote=true;
+          state=row.state; if(!state.notes) state.notes={}; if(!state.rates) state.rates=JSON.parse(JSON.stringify(DEFAULT_STATE.rates)); save();
+          ledger=Array.isArray(row.ledger)?row.ledger:[]; saveLedger();
+          cloud.applyingRemote=false;
+          render();
+        } else {
+          cloudPush(true); // cloud row is empty -> seed it from local
+        }
+      } else {
+        cloudPush(true); // no trip yet -> create from local
+      }
+      cloud.status="synced"; updateCloudBtn();
+    }, function(err){ cloud.status="error"; updateCloudBtn(); console.warn("cloud load failed:", err); });
+}
+function cloudPush(immediate){
+  if(!cloudReady() || cloud.applyingRemote) return;
+  function doPush(){
+    var payload={ state:state, ledger:ledger, name:(state.meta&&state.meta.tripName)||"Trip", updated_at:new Date().toISOString() };
+    var done=function(res){ if(res&&res.error){ cloud.status="error"; console.warn("cloud push:", res.error.message); } else { cloud.status="synced"; } updateCloudBtn(); };
+    if(cloud.tripId){
+      cloud.client.from("trips").update(payload).eq("id",cloud.tripId).then(done,done);
+    } else {
+      payload.owner=cloud.user.id;
+      cloud.client.from("trips").insert(payload).select("id").then(function(res){ if(res.data&&res.data[0]) cloud.tripId=res.data[0].id; done(res); }, done);
+    }
+  }
+  cloud.status="syncing"; updateCloudBtn();
+  if(cloud.pushTimer){ clearTimeout(cloud.pushTimer); cloud.pushTimer=null; }
+  if(immediate) doPush(); else cloud.pushTimer=setTimeout(doPush, 1200);
+}
+function cloudPushDebounced(){ cloudPush(false); }
+function updateCloudBtn(){
+  var b=document.getElementById("cloudBtn"); if(!b) return;
+  if(!cloud.client){ b.textContent="☁ Local"; b.title="Cloud not configured — running local-only"; return; }
+  if(!cloud.user){ b.textContent="☁ Sign in"; b.title="Sign in to sync across devices"; return; }
+  var icon = cloud.status==="error"?"⚠":(cloud.status==="syncing"?"⟳":"✓");
+  b.textContent="☁ "+icon+" "+(cloud.user.email||"Synced");
+  b.title = cloud.status==="error"?"Sync error — see console; your data is safe locally":(cloud.status==="syncing"?"Syncing…":"Synced");
+}
+function openCloud(){
+  if(!cloud.client){
+    openModal('<h3>Cloud sync</h3><p class="muted">Cloud sync isn\'t available here. This happens when you open the file directly (offline) or the Supabase config is missing. The app works fully local-only — open the <b>served</b> site (localhost or your Vercel URL) to sign in and sync.</p><div class="row" style="margin-top:8px"><button class="btn" onclick="closeModal()">Close</button></div>');
+    return;
+  }
+  if(!cloud.user){
+    openModal('<h3>Sign in to sync</h3><p class="sub">Enter your email — we\'ll send a one-time <b>magic link</b> (no password). Open it on this device to sign in. Your trip and money ledger then sync automatically.</p>'
+      +'<div class="field"><label>Email</label><input id="cl_email" type="email" placeholder="you@example.com"></div>'
+      +'<div id="cl_msg" class="muted" style="min-height:16px"></div>'
+      +'<div class="row" style="margin-top:8px"><button class="btn acc" onclick="cloudSendLink()">Send magic link</button><button class="btn" onclick="closeModal()">Cancel</button></div>');
+    setTimeout(function(){ var el=document.getElementById("cl_email"); if(el) el.focus(); },0);
+  } else {
+    openModal('<h3>Cloud sync</h3><p class="sub">Signed in as <b>'+esc(cloud.user.email||"")+'</b> · status: <b>'+esc(cloud.status)+'</b>. Your trip + money ledger sync automatically; localStorage is the offline cache.</p>'
+      +'<div class="note" style="margin-bottom:10px"><b>Share this trip with your partner:</b> have them sign in once on their own device, then add them to this trip (see DATABASE.md). Handy ids:<br>Trip&nbsp;ID: <code>'+esc(cloud.tripId||"(creating…)")+'</code><br>Your&nbsp;user&nbsp;ID: <code>'+esc(cloud.user.id)+'</code></div>'
+      +'<div class="row"><button class="btn acc" onclick="cloudLoad();closeModal()">↺ Pull latest</button><button class="btn" onclick="cloudSignOut()">Sign out</button><button class="btn" onclick="closeModal()">Close</button></div>');
+  }
+}
+function cloudSendLink(){
+  var email=((val("cl_email")||"").trim()); var m=document.getElementById("cl_msg");
+  if(!email){ if(m) m.textContent="Enter your email first."; return; }
+  if(m) m.textContent="Sending…";
+  var redirect=location.href.split("#")[0];
+  cloud.client.auth.signInWithOtp({ email:email, options:{ emailRedirectTo:redirect } }).then(function(r){
+    if(m) m.textContent = r.error ? ("Error: "+r.error.message) : "✓ Check your email for the sign-in link.";
+  }, function(e){ if(m) m.textContent="Error: "+e; });
+}
+function cloudSignOut(){
+  if(!cloud.client) return;
+  cloud.client.auth.signOut().then(function(){ cloud.user=null; cloud.tripId=null; cloud.status="signed-out"; updateCloudBtn(); closeModal(); });
+}
+
 /* ============================ MAP (3D GLOBE) ============================ */
 /* globe.gl is vendored in vendor/ and loaded on demand (only when the Map tab is
    first opened) so it never slows the rest of the app. Works offline. */
@@ -5674,7 +5785,7 @@ function buildGlobe(){
 var LEDGER_KEY="asiaNomadLedger_v1";
 var ledger=[];
 function loadLedger(){ try{ var s=localStorage.getItem(LEDGER_KEY); if(s){ var d=JSON.parse(s); return Array.isArray(d)?d:(d.entries||[]); } }catch(e){} return []; }
-function saveLedger(){ try{ localStorage.setItem(LEDGER_KEY, JSON.stringify(ledger)); }catch(e){} }
+function saveLedger(){ try{ localStorage.setItem(LEDGER_KEY, JSON.stringify(ledger)); }catch(e){} if(typeof cloudPushDebounced==="function") cloudPushDebounced(); }
 ledger=loadLedger();
 function ledgerByMonth(){
   var M={},order=[];
@@ -6037,6 +6148,7 @@ function resetAll(){ if(!confirm("Replace everything with the sample trip? Expor
     state.meta._sh_hotel=true; save();
   }
   render();
+  cloudInit();
 })();
 
 /* refresh KB from cities.json when served (Vercel); offline uses embedded copy */

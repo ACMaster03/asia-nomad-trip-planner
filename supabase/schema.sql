@@ -26,6 +26,12 @@ create table if not exists public.trips (
   travelers     int  not null default 2,
   rates         jsonb not null default '{}'::jsonb,   -- { "USD": 311, ... }
   meta          jsonb not null default '{}'::jsonb,    -- migration flags etc.
+  -- DOCUMENT MODEL (what the app uses today): the whole app `state` and the income
+  -- `ledger` are stored as JSON here. Simple + reliable to sync. The normalized
+  -- child tables below (segments/stays/…) are reserved for a future richer model
+  -- and are not written by the app yet.
+  state         jsonb not null default '{}'::jsonb,
+  ledger        jsonb not null default '[]'::jsonb,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
@@ -174,7 +180,8 @@ create policy trips_select on public.trips for select
 drop policy if exists trips_insert on public.trips;
 create policy trips_insert on public.trips for insert with check (owner = auth.uid());
 drop policy if exists trips_update on public.trips;
-create policy trips_update on public.trips for update using (owner = auth.uid());
+-- members (e.g. your partner) can update the shared trip doc too, not just the owner
+create policy trips_update on public.trips for update using (public.can_access_trip(id));
 drop policy if exists trips_delete on public.trips;
 create policy trips_delete on public.trips for delete using (owner = auth.uid());
 
