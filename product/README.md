@@ -39,9 +39,15 @@ service_role key in any `NEXT_PUBLIC_` var or committed file.
    update public.profiles set is_admin = true
    where id = (select id from auth.users where email = 'you@example.com');
    ```
-4. Auth → URL Configuration: add redirect URLs `http://localhost:3000/auth/confirm` (and `/auth/callback`),
-   plus your deployed URLs. Point the magic-link email template at
-   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type={{ .Type }}&next=/knowledge`.
+4. Auth → URL Configuration: add redirect URLs `http://localhost:3000/auth/callback` and
+   `http://localhost:3000/auth/confirm`, plus your deployed URLs. The default magic-link template works
+   as-is — the browser client uses PKCE, so the link arrives as `?code=` and `/auth/callback` exchanges it.
+   (Only if you switch the email template to the OTP/`token_hash` flow do you point it at
+   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type={{ .Type }}&next=/knowledge` instead.)
+
+> Open registration: `/login` uses `signInWithOtp`, which creates an account for any email entered — the
+> intended behaviour for a product people sign up to. To make it invite-only later, pass
+> `shouldCreateUser: false` in `login/page.tsx`.
 
 ## Extending the catalogue (admin, zero code change)
 - **Add a city:** one `cities` INSERT (structured columns + the rest in `attributes`). It appears immediately.

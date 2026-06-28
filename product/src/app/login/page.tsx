@@ -14,8 +14,11 @@ export default function Login() {
     setMsg('Sending…')
     const sb = createClient()
     const { error } = await sb.auth.signInWithOtp({
+      // PKCE (browser client default) delivers the link as ?code= → /auth/callback
+      // exchanges it. /auth/confirm (token_hash) stays available for templates that
+      // use the OTP flow instead.
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
     setSending(false)
     setMsg(error ? `Error: ${error.message}` : '✓ Check your email for the sign-in link.')

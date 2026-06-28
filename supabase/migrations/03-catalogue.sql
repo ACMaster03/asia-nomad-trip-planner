@@ -283,6 +283,10 @@ create trigger profiles_guard_admin
   before update on public.profiles
   for each row execute function public.guard_profile_admin_flag();
 
+-- Defense-in-depth: even if a policy were ever loosened, a normal user still
+-- cannot write the is_admin column at all (the trigger is the primary guard).
+revoke update (is_admin) on public.profiles from authenticated;
+
 -- ---- shared catalogue: read = any signed-in user, write = admins only ----
 do $$
 declare tbl text;

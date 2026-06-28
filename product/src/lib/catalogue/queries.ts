@@ -2,10 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CatalogueField, City, Country } from './types'
 
 export async function fetchFields(sb: SupabaseClient): Promise<CatalogueField[]> {
+  // order by sort_order only: the seed assigns contiguous ranges per group
+  // (Overview 10s, Map 20s, Costs 30s, …), so groups come out in intended order
+  // AND stay contiguous for arrival-order grouping in CityCard.
   const { data, error } = await sb
     .from('catalogue_fields')
     .select('*')
-    .order('field_group')
     .order('sort_order')
   if (error) throw error
   return data as CatalogueField[]

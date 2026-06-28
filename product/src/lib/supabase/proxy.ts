@@ -23,8 +23,11 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  // IMPORTANT: do not run code between createServerClient and getClaims().
-  await supabase.auth.getClaims()
+  // IMPORTANT: do not run code between createServerClient and this call.
+  // getUser() always hits the Auth server, so it refreshes an expiring session
+  // and writes the rotated cookies via setAll (getClaims() can verify locally on
+  // asymmetric-key projects and skip the refresh).
+  await supabase.auth.getUser()
 
   return supabaseResponse
 }

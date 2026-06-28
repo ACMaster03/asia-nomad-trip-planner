@@ -1,10 +1,9 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-let _client: ReturnType<typeof createBrowserClient> | undefined
-
+// createBrowserClient is internally memoized, so this is safe to call per-render.
 export function createClient() {
-  return (_client ??= createBrowserClient(
+  return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  ))
+  )
 }
