@@ -28,12 +28,11 @@ service_role key in any `NEXT_PUBLIC_` var or committed file.
 1. In Supabase SQL Editor, run [`../supabase/migrations/03-catalogue.sql`](../supabase/migrations/03-catalogue.sql)
    — creates `profiles` (+`is_admin`), `countries`, `cities`, `catalogue_fields`, RLS (catalogue readable by
    any signed-in user, writable only by admins via `is_admin()`), and seeds the field metadata. Idempotent.
-2. Seed the catalogue from `cities.json`:
-   ```bash
-   SUPABASE_URL=https://wvmnudcwcqktcugouqoe.supabase.co \
-   SUPABASE_SERVICE_ROLE_KEY=eyJ...service_role... \
-   node ../tools/seed-catalogue.mjs        # upserts 16 countries + 37 cities
-   ```
+2. Seed the catalogue (16 countries + 37 cities). **Easiest:** paste
+   [`../supabase/migrations/04-seed-catalogue.sql`](../supabase/migrations/04-seed-catalogue.sql)
+   into the **SQL Editor** → Run (same place as the migrations; no terminal, no service_role key —
+   the SQL Editor runs privileged so it bypasses the admin-only write RLS).
+   *Alternative (terminal):* `SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node ../tools/seed-catalogue.mjs`.
 3. Make yourself an admin:
    ```sql
    update public.profiles set is_admin = true
