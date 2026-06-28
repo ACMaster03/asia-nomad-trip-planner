@@ -37,13 +37,21 @@ A 3D globe (no API key, no Google Maps) of your whole trip:
 - **Click a country** → a panel with its flag, currency, visa policy, best time/safety,
   and its cities sorted cheapest→priciest by daily cost.
 - **Rich city hover** — daily living, accommodation, rent, Wi-Fi, landmarks, weather.
-- **Hazards toggle (⚡)** — live earthquakes (USGS, CORS-open feed) + seasonal
-  monsoon/typhoon risk for your cities in the current month, as pulsing rings.
-- **Toggles:** spin, day/night texture, country borders, hazards — all remembered.
+- **Hazards toggle (⚡)** — live earthquakes (USGS, CORS-open feed; marker size = magnitude)
+  + seasonal monsoon/typhoon risk for your cities this month, as pulsing rings. **Click any
+  hazard** for details (magnitude/place/time + a safety note, or the rainfall/season note);
+  an on-globe **legend** explains every marker.
+- **Fullscreen** — the globe fills the page below the header; controls float on top and
+  collapse into a **⚙ menu** on mobile. **Toggles** (spin, day/night, borders, hazards) are
+  all remembered.
 
 Globe library, textures and borders are vendored in `vendor/` and loaded on demand.
 *Note: Hong Kong & Singapore are too small for the 110m borders dataset, so they aren't
 separately clickable as countries.*
+
+### Linkable tabs
+Each tab has a URL hash — `…/#map`, `…/#budget`, `…/#money` — so you can bookmark or share
+a specific view, and the browser back/forward buttons work.
 
 ### Money
 Log what you actually **earn** and **spend** to see a month-by-month **profit/loss** next

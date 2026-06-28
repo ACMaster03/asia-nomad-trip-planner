@@ -93,6 +93,23 @@
   .tag{font-size:11px;color:var(--mut)}
   .seg-edit{font-size:11px;color:var(--acc);cursor:pointer}
   @media print{header nav,.noprint{display:none}body{background:#fff;color:#000}}
+  /* ---- fullscreen map ---- */
+  .map-full{position:fixed;left:0;right:0;bottom:0;background:#0b0f14;z-index:30;overflow:hidden}
+  .map-overlay{position:absolute;z-index:5}
+  .map-ctrls{top:10px;left:10px;display:flex;gap:6px;align-items:flex-start}
+  .map-toggles{display:flex;gap:6px;flex-wrap:wrap;background:rgba(15,20,25,.74);border:1px solid var(--line);border-radius:10px;padding:6px;backdrop-filter:blur(4px)}
+  .map-gear{display:none}
+  .map-hazinfo{top:10px;right:10px;background:rgba(15,20,25,.74);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12px;backdrop-filter:blur(4px)}
+  .map-legend{bottom:10px;left:10px;max-width:280px;background:rgba(15,20,25,.8);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:11.5px;line-height:1.6;backdrop-filter:blur(4px)}
+  .map-legend .pill{width:9px;height:9px}
+  @media(max-width:640px){
+    .map-gear{display:inline-block}
+    .map-ctrls{flex-direction:column}
+    .map-toggles{display:none;flex-direction:column}
+    .map-ctrls.open .map-toggles{display:flex}
+    .map-legend{max-width:46vw;font-size:10.5px;padding:6px 8px}
+    .map-hazinfo{font-size:10.5px;max-width:42vw}
+  }
 </style>
 </head>
 <body>
@@ -238,7 +255,8 @@ function render(){
   else if(activeTab==="settings") v.innerHTML=viewSettings();
   try{ window.scrollTo(0,0); }catch(e){}
 }
-function go(t){ activeTab=t; render(); }
+function go(t){ activeTab=t; try{ if(location.hash!=="#"+t) location.hash=t; }catch(e){} render(); }
+function _hashTab(){ var t=(typeof location!=="undefined"?(location.hash||""):"").replace(/^#\/?/,""); return (t&&TABS.some(function(x){return x[0]===t;}))?t:null; }
 
 function toggleInc(kind,id){
   var arr = kind==="seg"?state.segments : kind==="stay"?state.stays : kind==="trip"?state.transport : state.extras;
@@ -879,7 +897,7 @@ function cloudSignOut(){
 /* ============================ MAP (3D GLOBE) ============================ */
 /* globe.gl is vendored in vendor/ and loaded on demand (only when the Map tab is
    first opened) so it never slows the rest of the app. Works offline. */
-var _globeLib=false,_globeLoading=null,_globeInst=null,_globeBound=false;
+var _globeLib=false,_globeLoading=null,_globeInst=null,_globeBound=false,_basePoints=[];
 var GLOBE_NIGHT="vendor/earth-night.jpg", GLOBE_DAY="vendor/earth-day.jpg";
 var mapOpts=(function(){ try{ var s=localStorage.getItem("anp_map_opts"); if(s){ var o=JSON.parse(s); return {rotate:o.rotate!==false, day:!!o.day, borders:!!o.borders, hazards:!!o.hazards}; } }catch(e){} return {rotate:true, day:false, borders:false, hazards:false}; })();
 function saveMapOpts(){ try{ localStorage.setItem("anp_map_opts", JSON.stringify(mapOpts)); }catch(e){} }
@@ -958,39 +976,84 @@ function openCountry(feat){
   h+='<div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Close</button></div>';
   openModal(h);
 }
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function monthName(){ return MONTHS[new Date().getMonth()]; }
+function qColor(m){ return m>=6?"#ff4d4d":(m>=5?"#ff7a45":"#ffa270"); }
+function quakeSafetyNote(m){
+  if(m>=6.5) return "Strong quake — capable of serious damage near the epicentre. If this is on your route, check local news and authorities before travelling there.";
+  if(m>=5.5) return "Moderate–strong — can cause damage close to the epicentre; usually localised.";
+  if(m>=4.5) return "Light–moderate — widely felt but rarely damaging.";
+  return "Minor — generally not damaging.";
+}
 /* seasonal weather hazards for trip cities in the CURRENT month (heavy-rain/monsoon) */
 function seasonalHazards(){
   var mi=new Date().getMonth(), seen={}, out=[];
   state.segments.filter(function(s){return s.include!==false;}).forEach(function(s){
     var k=kb(s.city); if(!k||k.lat==null||!k.weather||!k.weather.months||seen[s.city]) return;
-    var m=k.weather.months[mi]; if(m && m.rain>=250){ seen[s.city]=true; out.push({lat:k.lat,lng:k.lng,kind:"season",city:s.city,rain:m.rain,maxR:5,speed:2,period:1400}); }
+    var m=k.weather.months[mi]; if(m && m.rain>=250){ seen[s.city]=true;
+      out.push({lat:k.lat,lng:k.lng,kind:"season",haz:true,city:s.city,rain:m.rain,
+        hazardText:(k.weather.hazard||""),
+        color:"#f0a83c", radius:0.5+Math.min(0.5,(m.rain-250)/700), alt:0.02,
+        maxR: m.rain>=400?6:5, speed:2, period:1400});
+    }
   });
   return out;
 }
+function quakesFromFeed(j){
+  return ((j&&j.features)||[]).map(function(f){
+    var c=f.geometry&&f.geometry.coordinates, p=f.properties||{}, mag=p.mag||0;
+    return c?{lat:c[1],lng:c[0],kind:"quake",haz:true,mag:mag,place:p.place||"",time:p.time,url:p.url,
+      color:qColor(mag), radius:Math.min(1.2,0.42+mag*0.11), alt:0.02,
+      maxR:Math.min(9,1.5+mag), speed:3, period:900}:null;
+  }).filter(Boolean);
+}
 function setHazInfo(total,quakes){
   var el=document.getElementById("hazInfo"); if(!el) return;
-  if(!mapOpts.hazards){ el.textContent=""; return; }
-  el.textContent="⚡ "+total+" hazard marker"+(total===1?"":"s")+(quakes!=null?(" · "+quakes+" live quake"+(quakes===1?"":"s")):"");
+  if(!mapOpts.hazards){ el.style.display="none"; el.textContent=""; return; }
+  el.style.display="block";
+  el.innerHTML="⚡ "+total+" hazard"+(total===1?"":"s")+(quakes!=null?(' · <span style="color:#ff7a45">'+quakes+" live quake"+(quakes===1?"":"s")+'</span>'):"");
+}
+function paintHazards(hazards,quakeCount){
+  if(!_globeInst) return;
+  _globeInst.ringsData(hazards.slice());
+  _globeInst.pointsData(_basePoints.concat(hazards));
+  setHazInfo(hazards.length, quakeCount);
 }
 function applyHazards(){
   if(!_globeInst) return;
-  if(!mapOpts.hazards){ _globeInst.ringsData([]); setHazInfo(0); return; }
-  var rings=seasonalHazards();
-  _globeInst.ringsData(rings.slice());
-  setHazInfo(rings.length);
+  if(!mapOpts.hazards){ _globeInst.ringsData([]); _globeInst.pointsData(_basePoints); setHazInfo(0); return; }
+  var seasonal=seasonalHazards();
+  paintHazards(seasonal);              // instant, offline
   // live earthquakes (USGS feed is CORS-open; fails gracefully offline)
   fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson")
     .then(function(r){ return r.json(); })
-    .then(function(j){
-      if(!mapOpts.hazards||!_globeInst) return;
-      var q=((j&&j.features)||[]).map(function(f){
-        var c=f.geometry&&f.geometry.coordinates, mag=(f.properties&&f.properties.mag)||0;
-        return c?{lat:c[1],lng:c[0],kind:"quake",mag:mag,place:(f.properties&&f.properties.place)||"",maxR:Math.min(9,1.5+mag),speed:3,period:900}:null;
-      }).filter(Boolean);
-      var all=rings.concat(q);
-      _globeInst.ringsData(all);
-      setHazInfo(all.length,q.length);
-    }).catch(function(){ /* offline or CORS: keep the seasonal layer only */ });
+    .then(function(j){ if(!mapOpts.hazards||!_globeInst) return; var q=quakesFromFeed(j); paintHazards(seasonal.concat(q), q.length); })
+    .catch(function(){ /* offline or CORS: keep the seasonal layer only */ });
+}
+function hazPointLabel(d){
+  var box='<div style="background:#171e26;border:1px solid #2a3642;border-radius:10px;padding:7px 10px;color:#e8edf2;font:12.5px -apple-system,sans-serif">';
+  if(d.kind==="quake") return box+'<b style="color:'+qColor(d.mag)+'">M'+(d.mag!=null?d.mag.toFixed(1):"?")+' earthquake</b><br><span style="color:#8fa0b0">'+esc(d.place||"")+'</span><br><span style="color:#37b3a4">click for details</span></div>';
+  return box+'<b style="color:#f0a83c">Heavy rain / monsoon</b><br><span style="color:#8fa0b0">'+esc(d.city)+' · ~'+d.rain+'mm this month</span><br><span style="color:#37b3a4">click for details</span></div>';
+}
+function openHazard(d){
+  var h;
+  if(d.kind==="quake"){
+    var when=d.time? new Date(d.time).toLocaleString() : "recently";
+    h='<h3>🔴 Magnitude '+(d.mag!=null?d.mag.toFixed(1):"?")+' earthquake</h3>'
+      +'<div class="sub">'+esc(d.place||"")+'</div>'
+      +'<div style="margin:6px 0">When: '+esc(when)+'</div>'
+      +'<div class="note">'+quakeSafetyNote(d.mag||0)+'</div>'
+      +(d.url?'<div style="margin-top:8px"><a href="'+esc(d.url)+'" target="_blank" rel="noopener">Full USGS report ↗</a></div>':"")
+      +'<div class="muted" style="font-size:11.5px;margin-top:6px">Live feed: M4.5+ quakes, past 7 days (USGS). This is recent seismic activity, not a forecast.</div>';
+  } else {
+    h='<h3>🟠 Heavy-rain / monsoon season</h3>'
+      +'<div class="sub">'+esc(d.city)+' — '+monthName()+'</div>'
+      +'<div style="margin:6px 0">~<b>'+d.rain+' mm</b> of rain expected this month — well into the wet season.</div>'
+      +(d.hazardText?'<div class="note">'+esc(d.hazardText)+'</div>':"")
+      +'<div class="muted" style="font-size:11.5px;margin-top:6px">From your city climate data — expect frequent downpours and possible flooding/transport disruption; check live forecasts close to your dates.</div>';
+  }
+  h+='<div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">Close</button></div>';
+  openModal(h);
 }
 function loadGlobeLib(){
   if(_globeLib) return Promise.resolve();
@@ -1003,28 +1066,38 @@ function loadGlobeLib(){
   });
   return _globeLoading;
 }
-function _globeResize(){ var box=document.getElementById("globeBox"); if(box&&_globeInst){ _globeInst.width(box.clientWidth); _globeInst.height(box.clientHeight); } }
+function sizeMapFull(){
+  var f=document.getElementById("mapFull"); if(!f) return;
+  var hdr=(document.querySelector?document.querySelector("header"):null);
+  f.style.top=((hdr&&hdr.offsetHeight)||56)+"px";
+}
+function _globeResize(){ sizeMapFull(); var box=document.getElementById("globeBox"); if(box&&_globeInst){ _globeInst.width(box.clientWidth); _globeInst.height(box.clientHeight); } }
 function viewMap(){
-  var h='<h2>Route map</h2><p class="sub">Your trip across Asia on a 3D globe. <b>Bright markers + arcs</b> are your itinerary in date order; <b>gold solid arcs</b> are booked flights; faint dots are the other cities. Drag to spin, scroll to zoom, hover a marker or arc for detail, click a marker to open its Knowledge Base.</p>';
-  h+='<div class="row" style="margin:0 0 8px">'
+  var h='<div id="mapFull" class="map-full">';
+  h+='<div id="globeBox" style="width:100%;height:100%"></div>';
+  h+='<div id="globeMsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px;pointer-events:none">Loading the globe…</div>';
+  h+='<div id="mapCtrls" class="map-overlay map-ctrls">'
+    +'<button class="btn sm map-gear" onclick="document.getElementById(\'mapCtrls\').classList.toggle(\'open\')">⚙ Map</button>'
+    +'<div class="map-toggles">'
     +'<button class="btn sm" id="mapRotate" onclick="toggleMapRotate()"></button>'
     +'<button class="btn sm" id="mapDay" onclick="toggleMapDay()"></button>'
     +'<button class="btn sm" id="mapBorders" onclick="toggleMapBorders()"></button>'
     +'<button class="btn sm" id="mapHaz" onclick="toggleMapHazards()"></button>'
-    +'<button class="btn sm" onclick="resetMapView()">⟲ Reset view</button>'
-    +'<span id="hazInfo" class="muted right" style="font-size:12px"></span></div>';
-  h+='<div id="globeWrap" style="height:70vh;min-height:430px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0b0f14;position:relative">';
-  h+='<div id="globeBox" style="width:100%;height:100%"></div>';
-  h+='<div id="globeMsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px;pointer-events:none">Loading the globe…</div>';
+    +'<button class="btn sm" onclick="resetMapView()">⟲ Reset</button>'
+    +'</div></div>';
+  h+='<div id="hazInfo" class="map-overlay map-hazinfo" style="display:none"></div>';
+  h+='<div class="map-overlay map-legend">'+mapLegendHTML()+'</div>';
   h+='</div>';
-  h+='<div class="row" style="margin-top:10px;font-size:12.5px">'
-    +'<span><span class="pill" style="background:var(--se)"></span>Southeast Asia</span>'
-    +'<span><span class="pill" style="background:#6c8ccf"></span>East Asia</span>'
-    +'<span><span class="pill" style="background:#cf8a6c"></span>South Asia</span>'
-    +'<span><span class="pill" style="background:#f0a83c"></span>Booked flight</span>'
-    +'<span>⌂ Home base</span>'
-    +'<span class="muted right">Click a country for visa/currency/cities · numbers = stop order</span></div>';
   return h;
+}
+function mapLegendHTML(){
+  return '<div style="font-weight:700;margin-bottom:3px">Legend</div>'
+    +'<div><span class="pill" style="background:var(--se)"></span>SE · <span class="pill" style="background:#6c8ccf"></span>E · <span class="pill" style="background:#cf8a6c"></span>S Asia · <span class="pill" style="background:#f0a83c"></span>booked flight</div>'
+    +'<div style="margin-top:2px">⌂ home base · <b>1·2·3…</b> = stop order</div>'
+    +'<div style="margin-top:5px;border-top:1px solid var(--line);padding-top:5px;font-weight:700">⚡ Hazards <span class="muted" style="font-weight:400">(toggle on)</span></div>'
+    +'<div><span class="pill" style="background:#ff5a4d"></span>Earthquake — <b>bigger = stronger</b> (past 7 days)</div>'
+    +'<div><span class="pill" style="background:#f0a83c"></span>Monsoon / heavy rain this month</div>'
+    +'<div class="muted" style="margin-top:3px">Tap any marker or country for details.</div>';
 }
 function setMapBtns(){
   var r=document.getElementById("mapRotate"); if(r) r.textContent="↻ Spin: "+(mapOpts.rotate?"on":"off");
@@ -1034,7 +1107,7 @@ function setMapBtns(){
 }
 function initGlobe(){
   var box=document.getElementById("globeBox"); if(!box) return;
-  setMapBtns();
+  sizeMapFull(); setMapBtns();
   loadGlobeLib().then(function(){
     var msg=document.getElementById("globeMsg"); if(msg) msg.style.display="none";
     buildGlobe();
@@ -1060,6 +1133,7 @@ function buildGlobe(){
       color: on?regColor(c.r):"rgba(178,196,212,0.9)", radius: on?0.6:0.36, alt: on?0.02:0.01};
   });
   if(origin) points.push({lat:origin.lat,lng:origin.lng,city:origin.city,country:origin.country,r:null,kb:null,home:true,color:"#ffffff",radius:0.72,alt:0.025});
+  _basePoints=points;
   var arcs=[];
   for(var i=0;i<route.length-1;i++){ var a=route[i],b=route[i+1];
     if(a.lat===b.lat&&a.lng===b.lng) continue;
@@ -1077,7 +1151,7 @@ function buildGlobe(){
     .showAtmosphere(true).atmosphereColor("#37b3a4").atmosphereAltitude(0.16)
     .pointsData(points).pointLat("lat").pointLng("lng").pointColor("color").pointAltitude("alt").pointRadius("radius")
     .pointLabel(mapPointLabel)
-    .onPointClick(function(d){ if(d&&d.home) return; go("kb"); })
+    .onPointClick(function(d){ if(d&&d.haz){ openHazard(d); return; } if(d&&d.home) return; go("kb"); })
     .arcsData(arcs).arcStartLat("startLat").arcStartLng("startLng").arcEndLat("endLat").arcEndLng("endLng")
     .arcColor("color").arcStroke("stroke").arcDashLength("dashLen").arcDashGap("dashGap")
     .arcDashAnimateTime(function(d){return d.anim;}).arcLabel(mapArcLabel)
@@ -1097,6 +1171,7 @@ function buildGlobe(){
   setMapBtns();
 }
 function mapPointLabel(d){
+  if(d&&d.haz) return hazPointLabel(d);
   var c=d.kb||{}, rows="";
   if(c.live) rows+='<div>Daily living: ~$'+c.live[0]+'–$'+c.live[2]+' /day (2 ppl)</div>';
   if(c.accom) rows+='<div>Stay (mid): ~$'+c.accom[1]+' /night</div>';
@@ -1501,6 +1576,8 @@ function init(){
     }
     state.meta._sh_hotel=true; save();
   }
+  var ht=_hashTab(); if(ht) activeTab=ht;
+  window.addEventListener("hashchange",function(){ var t=_hashTab(); if(t&&t!==activeTab){ activeTab=t; render(); } });
   render();
   cloudInit();
 }
