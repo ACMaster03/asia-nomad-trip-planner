@@ -138,6 +138,9 @@ monthly rainfall in mm.
 
 ## Roadmap ideas
 
+- **Multi-user product** (register, plan your own trip on a shared catalogue) — concrete
+  plan in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): **Next.js + Supabase + Vercel**,
+  shared vs per-user RLS, phased migration. Backend (schema/RLS/auth/invites) already built.
 - **Sync / multi-user** via Supabase (auth + Postgres) — schema and setup are ready in
   `supabase/schema.sql` + `DATABASE.md`; keep localStorage as the offline cache.
 - Split `cities.json` per region if it grows.
