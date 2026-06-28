@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import { computeBudget, ledgerByMonth, plannedByMonth } from '@/lib/trips/budget'
@@ -15,9 +15,11 @@ const BAD = 'text-red-600'
 
 export default function MoneyClient() {
   const { trip, cityIdx } = useTripScreen()
-  const tripId = trip.data?.id ?? ''
-  const mut = useLedgerMutation(tripId)
-  const [form, setForm] = useState({ date: todayISO(), type: 'income', cat: '', amount: '', cur: '', note: '' })
+  const mut = useLedgerMutation()
+  // date starts empty to avoid an SSR/hydration mismatch (todayISO is clock-dependent);
+  // filled on mount. add() also falls back to todayISO() so submission is always dated.
+  const [form, setForm] = useState({ date: '', type: 'income', cat: '', amount: '', cur: '', note: '' })
+  useEffect(() => { setForm((f) => (f.date ? f : { ...f, date: todayISO() })) }, [])
 
   const view = useMemo(() => {
     if (!trip.data) return null
@@ -50,7 +52,8 @@ export default function MoneyClient() {
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data || !view) return <CreateTripEmptyState />
   const v = view
-  const ledger = trip.data.ledger
+  const usd = v.rates.USD || 1
+  const baseCur = v.s.meta.baseCurrency || 'HUF'
 
   function add() {
     const amt = parseFloat(form.amount)
@@ -64,15 +67,15 @@ export default function MoneyClient() {
       type: form.type === 'expense' ? 'expense' : 'income',
       category: form.cat.trim() || '(uncategorised)',
       amount: amt,
-      currency: form.cur || v.s.meta.baseCurrency || 'HUF',
+      currency: form.cur || baseCur,
       note: form.note.trim(),
     }
-    mut.mutate([...ledger, entry])
+    mut.mutate((cur) => [...cur, entry])
     setForm({ date: todayISO(), type: 'income', cat: '', amount: '', cur: '', note: '' })
   }
   function del(id: string) {
     if (!confirm('Delete this entry?')) return
-    mut.mutate(ledger.filter((x) => x.id !== id))
+    mut.mutate((cur) => cur.filter((x) => x.id !== id))
   }
 
   const input = 'rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900'
@@ -85,28 +88,28 @@ export default function MoneyClient() {
       </p>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat k="Total income" v={fmtHUF(v.totalInc)} sub={'~$' + Math.round(v.totalInc / v.rates.USD)} />
-        <Stat k="Total spend" v={fmtHUF(v.totalExp)} sub={'~$' + Math.round(v.totalExp / v.rates.USD)} />
+        <Stat k="Total income" v={fmtHUF(v.totalInc)} sub={'~$' + Math.round(v.totalInc / usd)} />
+        <Stat k="Total spend" v={fmtHUF(v.totalExp)} sub={'~$' + Math.round(v.totalExp / usd)} />
         <Stat k="Net profit / loss" v={(v.net >= 0 ? '+' : '') + fmtHUF(v.net)} sub={v.net >= 0 ? 'surplus' : 'shortfall'} color={v.net >= 0 ? '#059669' : '#dc2626'} />
         <Stat k="Planned trip cost" v={fmtHUF(v.plan)} sub="your itinerary estimate" />
       </div>
 
       <h2 className="mb-2 mt-6 text-lg font-semibold">Add an entry</h2>
       <div className="flex flex-wrap items-end gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
-        <input type="date" className={input} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-        <select className={input} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+        <input aria-label="Date" type="date" className={input} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+        <select aria-label="Type" className={input} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
           <option value="income">Income</option>
           <option value="expense">Expense</option>
         </select>
-        <input className={input} placeholder="Category" value={form.cat} onChange={(e) => setForm({ ...form, cat: e.target.value })} />
-        <input className={input + ' w-24'} type="number" min="0" step="any" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-        <select className={input} value={form.cur} onChange={(e) => setForm({ ...form, cur: e.target.value })}>
-          <option value="">{v.s.meta.baseCurrency || 'HUF'}</option>
-          {Object.keys(v.rates).map((c) => (
+        <input aria-label="Category" className={input} placeholder="Category" value={form.cat} onChange={(e) => setForm({ ...form, cat: e.target.value })} />
+        <input aria-label="Amount" className={input + ' w-24'} type="number" min="0" step="any" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+        <select aria-label="Currency" className={input} value={form.cur} onChange={(e) => setForm({ ...form, cur: e.target.value })}>
+          <option value="">{baseCur}</option>
+          {Object.keys(v.rates).filter((c) => c !== baseCur).map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
-        <input className={input + ' flex-1'} placeholder="Note (optional)" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+        <input aria-label="Note" className={input + ' flex-1'} placeholder="Note (optional)" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
         <button onClick={add} disabled={mut.isPending} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
           + Add
         </button>

@@ -1,5 +1,5 @@
 'use client'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget, type CityCost } from '@/lib/trips/budget'
 import { fmtHUF, fmtUSD } from '@/lib/trips/format'
@@ -8,13 +8,18 @@ import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
 export default function OverviewClient() {
   const { trip, cityIdx } = useTripScreen()
+  // "next stop" depends on the current clock → compute only after mount to avoid an
+  // SSR/hydration mismatch (and the date-only-string UTC vs local off-by-one).
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const b = useMemo(
     () => (trip.data ? computeBudget(trip.data.state, cityIdx) : null),
     [trip.data, cityIdx],
   )
   const cheats = useMemo(() => {
     const arr = Object.entries(cityIdx)
-      .filter((e): e is [string, CityCost & { allIn: [number, number] }] => !!e[1].allIn)
+      .filter((e): e is [string, CityCost & { allIn: [number, number] }] =>
+        Array.isArray(e[1].allIn) && e[1].allIn.length >= 2)
       .map(([city, c]) => ({ city, lo: c.allIn[0], hi: c.allIn[1] }))
       .sort((a, x) => a.lo + a.hi - (x.lo + x.hi))
     return { cheap: arr.slice(0, 5), dear: arr.slice(-4).reverse() }
@@ -24,15 +29,17 @@ export default function OverviewClient() {
   if (!trip.data || !b) return <CreateTripEmptyState />
 
   const s = trip.data.state
+  const usd = s.rates.USD || 1
   const cap = s.meta.budgetCap || 0
   const pct = cap ? Math.min(100, (b.grand / cap) * 100) : 0
   const over = cap > 0 && b.grand > cap
   const inPlan = s.segments.filter((x) => x.include !== false)
-  const today = new Date()
-  const upcoming = inPlan
-    .slice()
-    .sort((a, c) => +new Date(a.arrive) - +new Date(c.arrive))
-    .find((seg) => new Date(seg.depart) >= today)
+  const upcoming = mounted
+    ? inPlan
+        .slice()
+        .sort((a, c) => +new Date(a.arrive) - +new Date(c.arrive))
+        .find((seg) => new Date(seg.depart) >= new Date())
+    : undefined
 
   return (
     <main className="mx-auto max-w-5xl p-6">
@@ -42,7 +49,7 @@ export default function OverviewClient() {
       </p>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat k="Grand total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / s.rates.USD)} />
+        <Stat k="Grand total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / usd)} />
         <Stat k="Per day" v={fmtHUF(b.perDay)} sub="across all in-plan nights" />
         <Stat k="Per person" v={fmtHUF(b.perPerson)} />
         <Stat k="Stops" v={String(inPlan.length)} sub={b.totalNights + ' nights total'} />
@@ -90,14 +97,18 @@ function CostList({ title, rows }: { title: string; rows: { city: string; lo: nu
   return (
     <div className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
       <h3 className="mb-2 text-sm font-bold text-neutral-400">{title}</h3>
-      <ul className="space-y-1 text-sm">
-        {rows.map((r) => (
-          <li key={r.city} className="flex justify-between">
-            <span>{r.city}</span>
-            <span className="text-neutral-500">${r.lo}–${r.hi}</span>
-          </li>
-        ))}
-      </ul>
+      {rows.length === 0 ? (
+        <p className="text-sm text-neutral-500">No catalogue cost data yet.</p>
+      ) : (
+        <ul className="space-y-1 text-sm">
+          {rows.map((r) => (
+            <li key={r.city} className="flex justify-between">
+              <span>{r.city}</span>
+              <span className="text-neutral-500">${r.lo}–${r.hi}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

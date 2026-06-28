@@ -63,7 +63,7 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
     .forEach((s) => {
       const k = cityIdx[s.city]
       const nn = segNights(s)
-      const tier = s.tier == null ? 1 : s.tier
+      const tier = Math.min(2, Math.max(0, Number(s.tier ?? 1) || 0)) // clamp DB-sourced tier (0..2)
       const inc = state.stays.filter((st) => st.segId === s.id && st.include)
       let aHUF: number
       let aSrc: PerSeg['accomSrc']
@@ -131,7 +131,7 @@ export function monthlyBuckets(state: TripState, cityIdx: Record<string, CityCos
       const nn = segNights(s)
       if (nn <= 0) return
       const k = cityIdx[s.city]
-      const tier = s.tier == null ? 1 : s.tier
+      const tier = Math.min(2, Math.max(0, Number(s.tier ?? 1) || 0)) // clamp DB-sourced tier (0..2)
       const chosen = state.stays.filter((st) => st.segId === s.id && st.include)
       const accomTotal = chosen.length
         ? chosen.reduce(

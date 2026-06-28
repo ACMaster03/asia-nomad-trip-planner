@@ -10,6 +10,7 @@ export async function fetchActiveTrip(sb: SupabaseClient): Promise<Trip | null> 
     .from('trips')
     .select(TRIP_COLS)
     .order('updated_at', { ascending: false })
+    .order('created_at', { ascending: false }) // stable tiebreaker when updated_at ties
     .limit(1)
     .maybeSingle()
   if (error) throw error

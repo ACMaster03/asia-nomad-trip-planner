@@ -32,6 +32,7 @@ export default function MonthlyClient() {
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data || !view) return <CreateTripEmptyState />
   const v = view
+  const usd = v.s.rates.USD || 1
 
   return (
     <main className="mx-auto max-w-5xl p-6">
@@ -42,8 +43,8 @@ export default function MonthlyClient() {
       </p>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Stat k="Earn target / month" v={fmtHUF(v.recMonthly)} sub={'~$' + Math.round(v.recMonthly / v.s.rates.USD) + ' — rent + daily living'} />
-        <Stat k="All-in / month" v={fmtHUF(v.allInMonthly)} sub={'~$' + Math.round(v.allInMonthly / v.s.rates.USD) + ' — incl. flights'} />
+        <Stat k="Earn target / month" v={fmtHUF(v.recMonthly)} sub={'~$' + Math.round(v.recMonthly / usd) + ' — rent + daily living'} />
+        <Stat k="All-in / month" v={fmtHUF(v.allInMonthly)} sub={'~$' + Math.round(v.allInMonthly / usd) + ' — incl. flights'} />
         <Stat k="One-off costs (upfront)" v={fmtHUF(v.extrasTotal)} sub="insurance, gear, visas" />
       </div>
 
@@ -109,7 +110,7 @@ export default function MonthlyClient() {
 
           <div className="mt-4 rounded-lg border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">
             <b>Earning target:</b> aim to earn at least <b>{fmtHUF(v.recMonthly)}/month</b> (~$
-            {Math.round(v.recMonthly / v.s.rates.USD)}) between you to cover day-to-day costs. The{' '}
+            {Math.round(v.recMonthly / usd)}) between you to cover day-to-day costs. The{' '}
             {fmtHUF(v.extrasTotal)} of one-off costs sit on top — ideally saved before you go, or ~
             {fmtHUF(v.order.length ? v.extrasTotal / v.order.length : 0)}/month.
           </div>

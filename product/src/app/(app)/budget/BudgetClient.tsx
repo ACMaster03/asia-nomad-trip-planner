@@ -15,6 +15,7 @@ export default function BudgetClient() {
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data || !b) return <CreateTripEmptyState />
   const rates = trip.data.state.rates
+  const usd = rates.USD || 1
   const parts: [string, number, string][] = [
     ['Accommodation', b.accom, '#37b3a4'],
     ['Daily living', b.live, '#6c8ccf'],
@@ -28,7 +29,7 @@ export default function BudgetClient() {
         Totalled in HUF at your trip&apos;s FX rates. Only items marked in-plan count.
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat k="Grand total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / rates.USD)} />
+        <Stat k="Grand total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / usd)} />
         <Stat k="Accommodation" v={fmtHUF(b.accom)} sub={Math.round((b.accom / b.grand) * 100 || 0) + '% of total'} />
         <Stat k="Daily living" v={fmtHUF(b.live)} sub="food · local transport · activities" />
         <Stat k="Transport" v={fmtHUF(b.transport)} sub="legs marked in-plan" />
