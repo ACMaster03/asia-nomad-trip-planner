@@ -28,13 +28,22 @@ Overview · Timeline · **Map** (3D globe of your route) · Stays · Transport �
 Monthly (earn-target) · **Money** (income/expense P&L) · Knowledge Base · Data · Settings.
 
 ### Map
-A 3D globe (no API key, no Google Maps) showing every knowledge-base city, with arcs
-tracing your itinerary in date order. **Booked flights** draw as bold gold solid arcs;
-estimates are dashed — hover any arc for the price (from your transport data). Hover a
-city for costs/Wi-Fi/weather; click it to open its Knowledge Base. Toggles: **spin**
-on/off, **day/night** texture, and **country borders** on/off (preferences are
-remembered). The globe library + textures + borders are vendored in `vendor/` and loaded
-on demand.
+A 3D globe (no API key, no Google Maps) of your whole trip:
+
+- **Numbered route** — your home base (⌂, the origin of the inbound flight, e.g. Budapest)
+  then each stop numbered in order (1, 2, 3…).
+- **Flight-aware arcs** — booked flights draw as bold gold solid arcs, estimates dashed;
+  hover an arc for the price (from your transport data).
+- **Click a country** → a panel with its flag, currency, visa policy, best time/safety,
+  and its cities sorted cheapest→priciest by daily cost.
+- **Rich city hover** — daily living, accommodation, rent, Wi-Fi, landmarks, weather.
+- **Hazards toggle (⚡)** — live earthquakes (USGS, CORS-open feed) + seasonal
+  monsoon/typhoon risk for your cities in the current month, as pulsing rings.
+- **Toggles:** spin, day/night texture, country borders, hazards — all remembered.
+
+Globe library, textures and borders are vendored in `vendor/` and loaded on demand.
+*Note: Hong Kong & Singapore are too small for the 110m borders dataset, so they aren't
+separately clickable as countries.*
 
 ### Money
 Log what you actually **earn** and **spend** to see a month-by-month **profit/loss** next
