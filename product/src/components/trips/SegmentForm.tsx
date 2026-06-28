@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { City } from '@/lib/catalogue/types'
 import type { Segment, Tier } from '@/lib/trips/types'
 import { Modal } from './Modal'
@@ -26,6 +26,7 @@ export function SegmentForm({
   const [arrive, setArrive] = useState(initial?.arrive ?? defaultArrive ?? '')
   const [depart, setDepart] = useState(initial?.depart ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
+  const dlId = useId()
 
   function onCityChange(v: string) {
     setCity(v)
@@ -36,6 +37,8 @@ export function SegmentForm({
   }
   function submit() {
     if (!city.trim()) { alert('Enter a city'); return }
+    if (!arrive || !depart) { alert('Enter arrive and depart dates'); return }
+    if (+new Date(depart) < +new Date(arrive)) { alert("Depart can't be before arrive"); return }
     const t = Math.min(2, Math.max(0, tier)) as Tier
     const seg: Segment = initial
       ? { ...initial, city: city.trim(), country: country.trim(), tier: t, arrive, depart, notes }
@@ -48,9 +51,9 @@ export function SegmentForm({
       <div className="space-y-3">
         <label className="block text-sm">
           City
-          <input className={input} list="cityDL" value={city} onChange={(e) => onCityChange(e.target.value)} />
+          <input className={input} list={dlId} value={city} onChange={(e) => onCityChange(e.target.value)} />
         </label>
-        <datalist id="cityDL">
+        <datalist id={dlId}>
           {cities.map((c) => <option key={c.id} value={c.city} />)}
         </datalist>
         <div className="grid grid-cols-2 gap-3">

@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchActiveTrip } from '@/lib/trips/queries'
@@ -22,9 +22,14 @@ export default function SettingsClient() {
   const [baseCurrency, setBaseCurrency] = useState('HUF')
   const [rates, setRates] = useState<Record<string, number>>({})
   const [saved, setSaved] = useState(false)
+  const loadedVer = useRef<string | null>(null)
 
   useEffect(() => {
     if (!trip.data) return
+    // hydrate the draft only when the server version actually changes — a background
+    // refetch (or post-save invalidate) must not overwrite in-progress keystrokes.
+    if (loadedVer.current === trip.data.updated_at) return
+    loadedVer.current = trip.data.updated_at
     const m = trip.data.state.meta
     setName(m.tripName)
     setTravelers(m.travelers)
@@ -38,13 +43,19 @@ export default function SettingsClient() {
   if (!trip.data) return <CreateTripEmptyState />
 
   function save() {
-    mut.mutate((s) => ({
-      ...s,
-      meta: { ...s.meta, tripName: name, travelers, budgetCap, startDate, baseCurrency },
-      rates: { ...rates, HUF: 1 }, // base currency is always 1
-    }))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1500)
+    mut.mutate(
+      (s) => ({
+        ...s,
+        meta: { ...s.meta, tripName: name, travelers, budgetCap, startDate, baseCurrency },
+        rates: { ...rates, HUF: 1 }, // base currency is always 1
+      }),
+      {
+        onSuccess: () => {
+          setSaved(true)
+          setTimeout(() => setSaved(false), 1500)
+        },
+      },
+    )
   }
 
   const curList = Object.keys(rates).sort((a, b) => (a === 'HUF' ? -1 : b === 'HUF' ? 1 : a.localeCompare(b)))
@@ -75,7 +86,7 @@ export default function SettingsClient() {
               type="number"
               step="any"
               className={input}
-              value={c === 'HUF' ? 1 : rates[c]}
+              value={c === 'HUF' ? 1 : (rates[c] ?? 0)}
               disabled={c === 'HUF'}
               onChange={(e) => setRates({ ...rates, [c]: Number(e.target.value) || 0 })}
             />

@@ -43,7 +43,15 @@ const DEFAULT_STATE: TripState = {
   notes: {},
 }
 
-// Deep clone per call (mirrors init.js JSON.parse(JSON.stringify(DEFAULT_STATE))).
+// Deep clone + backfill the `include` flags exactly like the static app's init.js
+// (segments default in-plan; stays/transport in-plan only if chosen/booked; extras
+// in-plan). Without this, a brand-new trip's chosen stays + extras would be dropped
+// from the budget total.
 export function makeDefaultState(): TripState {
-  return structuredClone(DEFAULT_STATE)
+  const s = structuredClone(DEFAULT_STATE)
+  s.segments.forEach((x) => { if (x.include === undefined) x.include = true })
+  s.stays.forEach((x) => { if (x.include === undefined) x.include = x.status === 'chosen' })
+  s.transport.forEach((x) => { if (x.include === undefined) x.include = x.status === 'booked' || x.status === 'chosen' })
+  s.extras.forEach((x) => { if (x.include === undefined) x.include = true })
+  return s
 }

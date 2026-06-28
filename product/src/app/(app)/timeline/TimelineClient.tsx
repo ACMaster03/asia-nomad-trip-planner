@@ -14,7 +14,8 @@ export default function TimelineClient() {
 
   const all = useMemo(() => {
     if (!trip.data) return []
-    return trip.data.state.segments.slice().sort((a, b) => +new Date(a.arrive) - +new Date(b.arrive))
+    const t = (d: string) => { const n = +new Date(d); return Number.isNaN(n) ? Infinity : n } // bad/empty dates sort last
+    return trip.data.state.segments.slice().sort((a, b) => t(a.arrive) - t(b.arrive))
   }, [trip.data])
   const planned = useMemo(() => all.filter((s) => s.include !== false), [all])
   const span = useMemo(() => {
@@ -56,6 +57,12 @@ export default function TimelineClient() {
         </button>
       </div>
       <p className="mb-4 text-sm text-neutral-500">Your stops in date order. Toggle the checkbox to include a stop in the plan &amp; budget.</p>
+
+      {mut.isError && (
+        <div className="mb-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40">
+          Couldn&apos;t save your change — it was rolled back. Please retry.
+        </div>
+      )}
 
       {span && (
         <div className="mb-6 space-y-1">
