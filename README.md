@@ -28,9 +28,13 @@ Overview · Timeline · **Map** (3D globe of your route) · Stays · Transport �
 Monthly (earn-target) · **Money** (income/expense P&L) · Knowledge Base · Data · Settings.
 
 ### Map
-A 3D globe (no API key, no internet, no Google Maps) showing every knowledge-base city,
-with glowing arcs tracing your itinerary in date order. The globe library is vendored in
-`vendor/` and loaded only when you open the Map tab.
+A 3D globe (no API key, no Google Maps) showing every knowledge-base city, with arcs
+tracing your itinerary in date order. **Booked flights** draw as bold gold solid arcs;
+estimates are dashed — hover any arc for the price (from your transport data). Hover a
+city for costs/Wi-Fi/weather; click it to open its Knowledge Base. Toggles: **spin**
+on/off, **day/night** texture, and **country borders** on/off (preferences are
+remembered). The globe library + textures + borders are vendored in `vendor/` and loaded
+on demand.
 
 ### Money
 Log what you actually **earn** and **spend** to see a month-by-month **profit/loss** next

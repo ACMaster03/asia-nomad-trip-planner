@@ -880,6 +880,26 @@ function cloudSignOut(){
 /* globe.gl is vendored in vendor/ and loaded on demand (only when the Map tab is
    first opened) so it never slows the rest of the app. Works offline. */
 var _globeLib=false,_globeLoading=null,_globeInst=null,_globeBound=false;
+var GLOBE_NIGHT="vendor/earth-night.jpg", GLOBE_DAY="vendor/earth-day.jpg";
+var mapOpts=(function(){ try{ var s=localStorage.getItem("anp_map_opts"); if(s){ var o=JSON.parse(s); return {rotate:o.rotate!==false, day:!!o.day, borders:!!o.borders}; } }catch(e){} return {rotate:true, day:false, borders:false}; })();
+function saveMapOpts(){ try{ localStorage.setItem("anp_map_opts", JSON.stringify(mapOpts)); }catch(e){} }
+var _countries=null,_countriesLoading=null;
+function loadCountries(){
+  if(_countries) return Promise.resolve(_countries);
+  if(_countriesLoading) return _countriesLoading;
+  _countriesLoading=fetch("vendor/countries.geojson").then(function(r){return r.json();})
+    .then(function(j){ _countries=(j&&j.features)||[]; return _countries; })
+    .catch(function(){ _countries=[]; return _countries; });
+  return _countriesLoading;
+}
+function _normCity(s){ return String(s||"").split(" (")[0].trim().toLowerCase(); }
+function _isBookedFlight(t){ return !!(t && (t.status==="booked"||t.status==="chosen")); }
+function _flightFor(aCity,bCity){
+  var na=_normCity(aCity), nb=_normCity(bCity);
+  var m=state.transport.filter(function(t){ return _normCity(t.from)===na && _normCity(t.to)===nb; });
+  if(!m.length) return null;
+  return m.find(_isBookedFlight) || m.find(function(t){return t.include;}) || m[0];
+}
 function loadGlobeLib(){
   if(_globeLib) return Promise.resolve();
   if(_globeLoading) return _globeLoading;
@@ -893,7 +913,12 @@ function loadGlobeLib(){
 }
 function _globeResize(){ var box=document.getElementById("globeBox"); if(box&&_globeInst){ _globeInst.width(box.clientWidth); _globeInst.height(box.clientHeight); } }
 function viewMap(){
-  var h='<h2>Route map</h2><p class="sub">Your trip across Asia on a 3D globe. <b>Bright markers + glowing arcs</b> are your itinerary in date order; faint dots are the other knowledge-base cities. Drag to spin, scroll to zoom, hover a marker for cost, click it to open the Knowledge Base. Fully offline.</p>';
+  var h='<h2>Route map</h2><p class="sub">Your trip across Asia on a 3D globe. <b>Bright markers + arcs</b> are your itinerary in date order; <b>gold solid arcs</b> are booked flights; faint dots are the other cities. Drag to spin, scroll to zoom, hover a marker or arc for detail, click a marker to open its Knowledge Base.</p>';
+  h+='<div class="row" style="margin:0 0 8px">'
+    +'<button class="btn sm" id="mapRotate" onclick="toggleMapRotate()"></button>'
+    +'<button class="btn sm" id="mapDay" onclick="toggleMapDay()"></button>'
+    +'<button class="btn sm" id="mapBorders" onclick="toggleMapBorders()"></button>'
+    +'<button class="btn sm" onclick="resetMapView()">⟲ Reset view</button></div>';
   h+='<div id="globeWrap" style="height:70vh;min-height:430px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0b0f14;position:relative">';
   h+='<div id="globeBox" style="width:100%;height:100%"></div>';
   h+='<div id="globeMsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px;pointer-events:none">Loading the globe…</div>';
@@ -902,11 +927,18 @@ function viewMap(){
     +'<span><span class="pill" style="background:var(--se)"></span>Southeast Asia</span>'
     +'<span><span class="pill" style="background:#6c8ccf"></span>East Asia</span>'
     +'<span><span class="pill" style="background:#cf8a6c"></span>South Asia</span>'
-    +'<span class="muted right">'+CITIES.filter(function(c){return c.lat!=null;}).length+' cities mapped · no API key · no internet needed</span></div>';
+    +'<span><span class="pill" style="background:#f0a83c"></span>Booked flight</span>'
+    +'<span class="muted right">'+CITIES.filter(function(c){return c.lat!=null;}).length+' cities mapped · no API key · offline-ready</span></div>';
   return h;
+}
+function setMapBtns(){
+  var r=document.getElementById("mapRotate"); if(r) r.textContent="↻ Spin: "+(mapOpts.rotate?"on":"off");
+  var d=document.getElementById("mapDay"); if(d) d.textContent=(mapOpts.day?"☀":"🌙")+" View: "+(mapOpts.day?"day":"night");
+  var b=document.getElementById("mapBorders"); if(b) b.textContent="🗺 Borders: "+(mapOpts.borders?"on":"off");
 }
 function initGlobe(){
   var box=document.getElementById("globeBox"); if(!box) return;
+  setMapBtns();
   loadGlobeLib().then(function(){
     var msg=document.getElementById("globeMsg"); if(msg) msg.style.display="none";
     buildGlobe();
@@ -918,36 +950,79 @@ function buildGlobe(){
   var box=document.getElementById("globeBox"); if(!box||typeof Globe!=="function") return;
   box.innerHTML="";
   var route=state.segments.filter(function(s){return s.include!==false;})
-    .map(function(s){ var k=kb(s.city); return (k&&k.lat!=null)?{city:s.city,country:s.country,r:k.r,lat:k.lat,lng:k.lng,arrive:s.arrive||"",live:k.live}:null; })
+    .map(function(s){ var k=kb(s.city); return (k&&k.lat!=null)?{city:s.city,country:s.country,r:k.r,lat:k.lat,lng:k.lng,arrive:s.arrive||""}:null; })
     .filter(Boolean)
     .sort(function(a,b){ return a.arrive<b.arrive?-1:(a.arrive>b.arrive?1:0); });
   var routeSet={}; route.forEach(function(s){ routeSet[s.city]=true; });
   var points=CITIES.filter(function(c){return c.lat!=null;}).map(function(c){
     var on=routeSet[c.city];
-    return {lat:c.lat,lng:c.lng,city:c.city,country:c.country,r:c.r,live:c.live,
-      color: on?regColor(c.r):"rgba(143,160,176,0.5)", radius: on?0.55:0.26, alt: on?0.02:0.004};
+    return {lat:c.lat,lng:c.lng,city:c.city,country:c.country,r:c.r,kb:c,
+      color: on?regColor(c.r):"rgba(178,196,212,0.9)", radius: on?0.6:0.36, alt: on?0.02:0.01};
   });
   var arcs=[];
   for(var i=0;i<route.length-1;i++){ var a=route[i],b=route[i+1];
     if(a.lat===b.lat&&a.lng===b.lng) continue;
-    arcs.push({startLat:a.lat,startLng:a.lng,endLat:b.lat,endLng:b.lng,color:[regColor(a.r),regColor(b.r)]});
+    var f=_flightFor(a.city,b.city), booked=_isBookedFlight(f);
+    arcs.push({startLat:a.lat,startLng:a.lng,endLat:b.lat,endLng:b.lng,
+      from:a.city,to:b.city,flight:f,booked:booked,
+      color: booked?["#f0a83c","#f6c46a"]:[regColor(a.r),regColor(b.r)],
+      stroke: booked?1.1:(f?0.6:0.4),
+      dashLen: booked?1:0.4, dashGap: booked?0:0.18, anim: booked?0:2500});
   }
   var g=Globe()(box)
-    .globeImageUrl("vendor/earth-night.jpg")
+    .globeImageUrl(mapOpts.day?GLOBE_DAY:GLOBE_NIGHT)
     .backgroundColor("rgba(0,0,0,0)")
     .showAtmosphere(true).atmosphereColor("#37b3a4").atmosphereAltitude(0.16)
     .pointsData(points).pointLat("lat").pointLng("lng").pointColor("color").pointAltitude("alt").pointRadius("radius")
-    .pointLabel(function(d){ return '<div style="background:#171e26;border:1px solid #2a3642;border-radius:8px;padding:6px 9px;color:#e8edf2;font:13px -apple-system,sans-serif"><b>'+esc(d.city)+'</b><br><span style="color:#8fa0b0">'+esc(d.country)+(d.live?" · ~$"+d.live[1]+"/day":"")+'</span></div>'; })
+    .pointLabel(mapPointLabel)
     .onPointClick(function(){ go("kb"); })
     .arcsData(arcs).arcStartLat("startLat").arcStartLng("startLng").arcEndLat("endLat").arcEndLng("endLng")
-    .arcColor("color").arcStroke(0.5).arcDashLength(0.4).arcDashGap(0.18).arcDashAnimateTime(2500)
+    .arcColor("color").arcStroke("stroke").arcDashLength("dashLen").arcDashGap("dashGap")
+    .arcDashAnimateTime(function(d){return d.anim;}).arcLabel(mapArcLabel)
+    .polygonsData([]).polygonCapColor(function(){return "rgba(0,0,0,0)";}).polygonSideColor(function(){return "rgba(0,0,0,0)";})
+    .polygonStrokeColor(function(){return "rgba(170,190,210,0.55)";}).polygonAltitude(0.004)
     .labelsData(route).labelLat("lat").labelLng("lng").labelText("city").labelSize(0.85).labelDotRadius(0.32).labelColor(function(){return "#e8edf2";}).labelResolution(2);
   _globeInst=g;
   g.pointOfView({lat:20,lng:108,altitude:2.1},0);
   setTimeout(_globeResize,0);
   if(!_globeBound){ window.addEventListener("resize",_globeResize); _globeBound=true; }
-  try{ var ctl=g.controls(); if(ctl){ ctl.autoRotate=true; ctl.autoRotateSpeed=0.55; ctl.enableDamping=true; } }catch(e){}
+  try{ var ctl=g.controls(); if(ctl){ ctl.autoRotate=mapOpts.rotate; ctl.autoRotateSpeed=0.55; ctl.enableDamping=true; } }catch(e){}
+  applyBorders();
+  setMapBtns();
 }
+function mapPointLabel(d){
+  var c=d.kb||{}, rows="";
+  if(c.live) rows+='<div>Daily living: ~$'+c.live[0]+'–$'+c.live[2]+' /day (2 ppl)</div>';
+  if(c.accom) rows+='<div>Stay (mid): ~$'+c.accom[1]+' /night</div>';
+  if(c.rent) rows+='<div>Rent: ~$'+c.rent+' /mo</div>';
+  if(c.net) rows+='<div style="color:#8fa0b0">Wi-Fi: '+esc(c.net)+'</div>';
+  if(c.land&&c.land.length) rows+='<div style="color:#8fa0b0">'+c.land.length+' landmark'+(c.land.length>1?"s":"")+' in KB</div>';
+  var wx=(c.weather&&c.weather.hazard)?('<div style="color:#8fa0b0;margin-top:3px">'+esc(c.weather.hazard)+'</div>'):"";
+  return '<div style="max-width:250px;background:#171e26;border:1px solid #2a3642;border-radius:10px;padding:8px 10px;color:#e8edf2;font:12.5px -apple-system,sans-serif;line-height:1.5">'
+    +'<div style="font-weight:700;font-size:13.5px">'+esc(d.city)+'</div>'
+    +'<div style="color:#8fa0b0;margin-bottom:4px">'+esc(d.country)+' · '+esc(regName(d.r))+'</div>'
+    +rows+wx
+    +'<div style="color:#37b3a4;margin-top:5px">Click → Knowledge Base</div></div>';
+}
+function mapArcLabel(d){
+  var head='<b>'+esc(d.from)+' → '+esc(d.to)+'</b>';
+  var body;
+  if(d.flight){
+    var f=d.flight;
+    body='<div>'+esc(f.type||"Flight")+' · '+esc(String(f.price))+' '+esc(f.cur)+' <span style="color:#8fa0b0">(~'+fmtHUF(toHUF(f.price,f.cur))+')</span></div>'
+      +'<div style="margin-top:2px">'+(d.booked?'<span style="color:#f0a83c">✅ booked</span>':'<span style="color:#8fa0b0">~ estimate</span>')+(f.provider?(' · '+esc(f.provider)):"")+'</div>';
+  } else { body='<div style="color:#8fa0b0">no flight logged for this hop</div>'; }
+  return '<div style="background:#171e26;border:1px solid #2a3642;border-radius:10px;padding:8px 10px;color:#e8edf2;font:12.5px -apple-system,sans-serif;line-height:1.5">'+head+body+'</div>';
+}
+function applyBorders(){
+  if(!_globeInst) return;
+  if(mapOpts.borders){ loadCountries().then(function(feats){ if(_globeInst&&mapOpts.borders) _globeInst.polygonsData(feats); }); }
+  else { _globeInst.polygonsData([]); }
+}
+function toggleMapRotate(){ mapOpts.rotate=!mapOpts.rotate; saveMapOpts(); try{ if(_globeInst) _globeInst.controls().autoRotate=mapOpts.rotate; }catch(e){} setMapBtns(); }
+function toggleMapDay(){ mapOpts.day=!mapOpts.day; saveMapOpts(); if(_globeInst) _globeInst.globeImageUrl(mapOpts.day?GLOBE_DAY:GLOBE_NIGHT); setMapBtns(); }
+function toggleMapBorders(){ mapOpts.borders=!mapOpts.borders; saveMapOpts(); applyBorders(); setMapBtns(); }
+function resetMapView(){ if(_globeInst) _globeInst.pointOfView({lat:20,lng:108,altitude:2.1},600); }
 
 /* ============================ MONEY / INCOME LEDGER ============================ */
 /* Stored separately from the trip (its own localStorage key + its own income.json),
