@@ -12,8 +12,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen">
-      <nav className="flex items-center gap-4 border-b border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
+      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
         <span className="font-semibold">🧭 Asia Nomad Planner</span>
+        <Link href="/overview" className="hover:underline">Overview</Link>
+        <Link href="/timeline" className="hover:underline">Timeline</Link>
+        <Link href="/budget" className="hover:underline">Budget</Link>
+        <Link href="/monthly" className="hover:underline">Monthly</Link>
+        <Link href="/money" className="hover:underline">Money</Link>
         <Link href="/knowledge" className="hover:underline">Knowledge</Link>
         <Link href="/map" className="hover:underline">Map</Link>
       </nav>
