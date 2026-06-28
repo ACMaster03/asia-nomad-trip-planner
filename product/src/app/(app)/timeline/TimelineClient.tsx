@@ -1,38 +1,65 @@
 'use client'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
+import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { segNights, regColor, TIER_LABELS } from '@/lib/trips/format'
+import { SegmentForm } from '@/components/trips/SegmentForm'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
+import type { Segment } from '@/lib/trips/types'
 
 export default function TimelineClient() {
-  const { trip, cityIdx } = useTripScreen()
+  const { trip, cities, cityIdx } = useTripScreen()
+  const mut = useTripMutation()
+  const [modal, setModal] = useState<{ seg: Segment | null } | null>(null)
 
-  const stops = useMemo(() => {
+  const all = useMemo(() => {
     if (!trip.data) return []
-    return trip.data.state.segments
-      .filter((s) => s.include !== false)
-      .slice()
-      .sort((a, b) => +new Date(a.arrive) - +new Date(b.arrive))
+    return trip.data.state.segments.slice().sort((a, b) => +new Date(a.arrive) - +new Date(b.arrive))
   }, [trip.data])
-
+  const planned = useMemo(() => all.filter((s) => s.include !== false), [all])
   const span = useMemo(() => {
-    if (!stops.length) return null
-    const min = Math.min(...stops.map((s) => +new Date(s.arrive)))
-    const max = Math.max(...stops.map((s) => +new Date(s.depart)))
+    if (!planned.length) return null
+    const min = Math.min(...planned.map((s) => +new Date(s.arrive)))
+    const max = Math.max(...planned.map((s) => +new Date(s.depart)))
     return { min, max, total: Math.max(1, max - min) }
-  }, [stops])
+  }, [planned])
 
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data) return <CreateTripEmptyState />
 
+  const upsert = (seg: Segment) => {
+    mut.mutate((s) => ({
+      ...s,
+      segments: s.segments.some((x) => x.id === seg.id)
+        ? s.segments.map((x) => (x.id === seg.id ? seg : x))
+        : [...s.segments, seg],
+    }))
+    setModal(null)
+  }
+  const del = (id: string) => {
+    if (!confirm('Delete this stop?')) return
+    mut.mutate((s) => ({ ...s, segments: s.segments.filter((x) => x.id !== id) }))
+  }
+  const toggle = (id: string) => {
+    mut.mutate((s) => ({
+      ...s,
+      segments: s.segments.map((x) => (x.id === id ? { ...x, include: x.include === false } : x)),
+    }))
+  }
+
   return (
     <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-1 text-2xl font-semibold">Timeline</h1>
-      <p className="mb-4 text-sm text-neutral-500">Your in-plan stops in date order.</p>
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Timeline</h1>
+        <button onClick={() => setModal({ seg: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">
+          + Add stop
+        </button>
+      </div>
+      <p className="mb-4 text-sm text-neutral-500">Your stops in date order. Toggle the checkbox to include a stop in the plan &amp; budget.</p>
 
       {span && (
         <div className="mb-6 space-y-1">
-          {stops.map((s) => {
+          {planned.map((s) => {
             const left = ((+new Date(s.arrive) - span.min) / span.total) * 100
             const width = Math.max(((+new Date(s.depart) - +new Date(s.arrive)) / span.total) * 100, 4)
             const color = s.color || regColor(cityIdx[s.city]?.r)
@@ -58,26 +85,51 @@ export default function TimelineClient() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-neutral-500">
-              <th className="py-1 pr-4">Stop</th>
+              <th className="py-1 pr-2">In plan</th>
+              <th className="pr-4">Stop</th>
               <th className="pr-4">Country</th>
               <th className="pr-4">Dates</th>
               <th className="pr-4">Nights</th>
-              <th>Tier</th>
+              <th className="pr-4">Tier</th>
+              <th />
             </tr>
           </thead>
           <tbody>
-            {stops.map((s) => (
-              <tr key={s.id} className="border-t border-neutral-200 dark:border-neutral-800">
-                <td className="py-1 pr-4 font-medium">{s.city}</td>
-                <td className="pr-4">{s.country}</td>
-                <td className="pr-4 whitespace-nowrap">{s.arrive} → {s.depart}</td>
-                <td className="pr-4">{segNights(s)}</td>
-                <td>{TIER_LABELS[s.tier ?? 1] ?? s.tier}</td>
-              </tr>
-            ))}
+            {all.map((s) => {
+              const inPlan = s.include !== false
+              return (
+                <tr key={s.id} className={'border-t border-neutral-200 dark:border-neutral-800 ' + (inPlan ? '' : 'opacity-50')}>
+                  <td className="py-1 pr-2">
+                    <input type="checkbox" aria-label="Include in plan" checked={inPlan} onChange={() => toggle(s.id)} />
+                  </td>
+                  <td className="pr-4 font-medium">{s.city}</td>
+                  <td className="pr-4">{s.country}</td>
+                  <td className="pr-4 whitespace-nowrap">{s.arrive} → {s.depart}</td>
+                  <td className="pr-4">{segNights(s)}</td>
+                  <td className="pr-4">{TIER_LABELS[s.tier ?? 1] ?? s.tier}</td>
+                  <td className="whitespace-nowrap">
+                    <button onClick={() => setModal({ seg: s })} className="text-xs text-teal-600 hover:underline">edit</button>
+                    <button onClick={() => del(s.id)} className="ml-3 text-xs text-red-600 hover:underline">delete</button>
+                  </td>
+                </tr>
+              )
+            })}
+            {!all.length && (
+              <tr><td colSpan={7} className="py-3 text-neutral-500">No stops yet — add your first one.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
+
+      {modal && (
+        <SegmentForm
+          initial={modal.seg}
+          cities={cities.data ?? []}
+          defaultArrive={trip.data.state.meta.startDate || ''}
+          onCancel={() => setModal(null)}
+          onSave={upsert}
+        />
+      )}
     </main>
   )
 }

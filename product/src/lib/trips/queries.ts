@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Trip, Ledger } from './types'
+import type { Trip, Ledger, TripState } from './types'
 import { makeDefaultState } from './defaultState'
 
 const TRIP_COLS = 'id,owner,name,state,ledger,updated_at,created_at'
@@ -33,13 +33,24 @@ export async function createTrip(sb: SupabaseClient): Promise<Trip> {
   return data as Trip
 }
 
-// Money edit: write ONLY the `ledger` column (+ updated_at). NEVER write `state`
-// here — the static app owns `state` writes; touching it would clobber the
-// segment/stay edits made there. Last-write-wins on the ledger array (faithful).
+// Money edit: write ONLY the `ledger` column (+ updated_at) — keeps ledger edits
+// independent of `state` edits so the two columns never clobber each other.
 export async function writeLedger(sb: SupabaseClient, tripId: string, ledger: Ledger): Promise<void> {
   const { error } = await sb
     .from('trips')
     .update({ ledger, updated_at: new Date().toISOString() })
+    .eq('id', tripId)
+  if (error) throw error
+}
+
+// Itinerary/settings edit: write ONLY the `state` column (+ name + updated_at).
+// Both this app and the static app write the whole `state` document, so the
+// semantics are last-write-wins per the `state` column (same as the static app
+// across two browsers). `ledger` is never touched here.
+export async function writeState(sb: SupabaseClient, tripId: string, state: TripState): Promise<void> {
+  const { error } = await sb
+    .from('trips')
+    .update({ state, name: state.meta?.tripName ?? 'Trip', updated_at: new Date().toISOString() })
     .eq('id', tripId)
   if (error) throw error
 }

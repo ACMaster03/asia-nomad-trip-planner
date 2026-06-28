@@ -21,6 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Link href="/money" className="hover:underline">Money</Link>
         <Link href="/knowledge" className="hover:underline">Knowledge</Link>
         <Link href="/map" className="hover:underline">Map</Link>
+        <Link href="/settings" className="ml-auto hover:underline">Settings</Link>
       </nav>
       {children}
     </div>
