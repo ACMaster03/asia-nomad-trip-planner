@@ -14,7 +14,8 @@ weather**, and **coordinates**.
 
 | File | What it is |
 |------|------------|
-| `index.html` | The whole app (HTML + CSS + JS, no build step). Fetches `cities.json` at load. |
+| `index.html` | App shell (markup + CSS). Loads `js/*.js` in order; fetches `cities.json` at load. No build step. |
+| `js/` | The app logic, split for maintainability — loaded as ordered plain scripts (shared global scope, so inline handlers keep working): `data` → `core` → `views` → `forms` → `cloud` → `map` → `money` → `io` → `init` (boot is last). |
 | `cities.json` | The **single source of truth** for reference data — all 37 cities + 16 countries: costs, food, transport, landmarks, visas, 12-month climate, lat/lng. Edit this and redeploy. |
 | `vendor/` | Vendored assets (3D globe library + earth texture, Supabase client). Committed on purpose so the app doesn't depend on a CDN — see `vendor/README.md`. |
 | `tools/` | `add-coords.mjs` — manages city coordinates in `cities.json`. |
