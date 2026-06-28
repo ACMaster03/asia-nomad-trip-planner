@@ -268,11 +268,17 @@ create policy profiles_update on public.profiles for update
 -- trigger and removed by the auth.users cascade. (No insert/delete policy ->
 -- denied for everyone under RLS.)
 
--- Anti-escalation: a non-admin cannot change their own is_admin flag.
+-- Anti-escalation: a signed-in end-user cannot change their own is_admin flag.
+-- We only constrain a REAL authenticated user (auth.uid() is not null). A privileged
+-- context — the SQL Editor / a migration / the service_role key — has auth.uid() null
+-- and is allowed to set admins (that's how you bootstrap the very first admin; those
+-- contexts already bypass RLS and are fully trusted).
 create or replace function public.guard_profile_admin_flag()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if new.is_admin is distinct from old.is_admin and not public.is_admin() then
+  if new.is_admin is distinct from old.is_admin
+     and auth.uid() is not null
+     and not public.is_admin() then
     raise exception 'not allowed to change is_admin';
   end if;
   return new;
