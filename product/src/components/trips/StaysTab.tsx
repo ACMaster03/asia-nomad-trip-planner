@@ -5,13 +5,15 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { fmtHUF, toHUF } from '@/lib/trips/format'
 import { StayForm } from './StayForm'
 import { SaveError } from './SaveError'
+import CreateTripEmptyState from './CreateTripEmptyState'
 import type { Stay } from '@/lib/trips/types'
 
 export function StaysTab() {
   const { trip } = useTripScreen()
   const mut = useTripMutation()
   const [modal, setModal] = useState<{ stay: Stay | null } | null>(null)
-  if (!trip.data) return null
+  if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
+  if (!trip.data) return <CreateTripEmptyState />
   const s = trip.data.state
   const currencies = Object.keys(s.rates)
   const cityOf = (segId: string) => s.segments.find((x) => x.id === segId)?.city ?? '—'

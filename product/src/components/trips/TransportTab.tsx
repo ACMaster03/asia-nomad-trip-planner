@@ -5,13 +5,15 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { fmtHUF, toHUF } from '@/lib/trips/format'
 import { TransportForm } from './TransportForm'
 import { SaveError } from './SaveError'
+import CreateTripEmptyState from './CreateTripEmptyState'
 import type { TransportLeg } from '@/lib/trips/types'
 
 export function TransportTab() {
   const { trip } = useTripScreen()
   const mut = useTripMutation()
   const [modal, setModal] = useState<{ leg: TransportLeg | null } | null>(null)
-  if (!trip.data) return null
+  if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
+  if (!trip.data) return <CreateTripEmptyState />
   const s = trip.data.state
   const currencies = Object.keys(s.rates)
 

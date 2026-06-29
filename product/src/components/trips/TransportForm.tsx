@@ -21,7 +21,7 @@ export function TransportForm({
   const [provider, setProvider] = useState(initial?.provider ?? 'Google Flights')
   const [status, setStatus] = useState(initial?.status ?? 'idea')
   const [url, setUrl] = useState(initial?.url ?? 'https://www.google.com/travel/flights')
-  const [price, setPrice] = useState(initial ? String(initial.price) : '')
+  const [price, setPrice] = useState(initial?.price != null ? String(initial.price) : '')
   const [cur, setCur] = useState(initial?.cur ?? 'USD')
   const [notes, setNotes] = useState(initial?.notes ?? '')
 

@@ -17,7 +17,7 @@ export function ExtraForm({
 }) {
   const [label, setLabel] = useState(initial?.label ?? '')
   const [category, setCategory] = useState(initial?.category ?? 'Visa')
-  const [amount, setAmount] = useState(initial ? String(initial.amount) : '')
+  const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount) : '')
   const [cur, setCur] = useState(initial?.cur ?? 'USD')
 
   function submit() {

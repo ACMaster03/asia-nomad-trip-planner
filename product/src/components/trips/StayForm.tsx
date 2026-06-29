@@ -19,9 +19,10 @@ export function StayForm({
   const [name, setName] = useState(initial?.name ?? '')
   const [platform, setPlatform] = useState(initial?.platform ?? 'Booking.com')
   const [url, setUrl] = useState(initial?.url ?? '')
-  const [ppn, setPpn] = useState(initial ? String(initial.ppn) : '')
+  const [ppn, setPpn] = useState(initial?.ppn != null ? String(initial.ppn) : '')
   const [cur, setCur] = useState(initial?.cur ?? 'USD')
   const [status, setStatus] = useState(initial?.status ?? 'idea')
+  const [rating, setRating] = useState(initial?.rating != null ? String(initial.rating) : '')
   const [nights, setNights] = useState(initial?.nights == null ? '' : String(initial.nights))
   const [notes, setNotes] = useState(initial?.notes ?? '')
 
@@ -32,7 +33,7 @@ export function StayForm({
       segId, name: name.trim(), platform, url, cur,
       ppn: Number(ppn) || 0,
       nights: nights === '' ? null : Number(nights),
-      rating: initial?.rating ?? 0, status,
+      rating: Number(rating) || 0, status,
       include: initial?.include ?? false,
       notes,
     }
@@ -48,13 +49,14 @@ export function StayForm({
           </select>
         </label>
         <label className="block text-sm">Name<input className={input} value={name} onChange={(e) => setName(e.target.value)} /></label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <label className="block text-sm">Platform<input className={input} value={platform} onChange={(e) => setPlatform(e.target.value)} /></label>
           <label className="block text-sm">Status
             <select className={input} value={status} onChange={(e) => setStatus(e.target.value)}>
               {['idea', 'shortlist', 'chosen'].map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </label>
+          <label className="block text-sm">Rating<input type="number" step="any" min="0" max="10" className={input} value={rating} onChange={(e) => setRating(e.target.value)} /></label>
         </div>
         <label className="block text-sm">Link<input className={input} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Booking / Airbnb URL" /></label>
         <div className="grid grid-cols-3 gap-3">

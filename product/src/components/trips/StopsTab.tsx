@@ -4,6 +4,7 @@ import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { segNights, regColor, TIER_LABELS } from '@/lib/trips/format'
 import { SegmentForm } from '@/components/trips/SegmentForm'
+import { SaveError } from '@/components/trips/SaveError'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import type { Segment } from '@/lib/trips/types'
 
@@ -58,11 +59,7 @@ export function StopsTab() {
       </div>
       <p className="mb-4 text-sm text-neutral-500">Your stops in date order. Toggle the checkbox to include a stop in the plan &amp; budget.</p>
 
-      {mut.isError && (
-        <div className="mb-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40">
-          Couldn&apos;t save your change — it was rolled back. Please retry.
-        </div>
-      )}
+      <SaveError show={mut.isError} />
 
       {span && (
         <div className="mb-6 space-y-1">
