@@ -36,6 +36,8 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
 
   const [opts, setOpts] = useState<MapOpts>(() => loadMapOpts())
   const optsRef = useRef(opts)
+  const ratesRef = useRef(rates) // arc tooltip reads this so a rates edit doesn't rebuild the globe
+  useEffect(() => { ratesRef.current = rates }, [rates])
   const [menuOpen, setMenuOpen] = useState(false)
   const [countryFeat, setCountryFeat] = useState<{ properties?: { name?: string; iso?: string } } | null>(null)
   const [hazard, setHazard] = useState<Hazard | null>(null)
@@ -73,7 +75,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     let body: string
     if (d.flight) {
       const f = d.flight
-      body = `<div>${esc(f.type || 'Flight')} · ${esc(String(f.price))} ${esc(f.cur)} <span style="color:#8fa0b0">(~${fmtHUF(toHUF(f.price, f.cur, rates))})</span></div>`
+      body = `<div>${esc(f.type || 'Flight')} · ${esc(String(f.price))} ${esc(f.cur)} <span style="color:#8fa0b0">(~${fmtHUF(toHUF(f.price, f.cur, ratesRef.current))})</span></div>`
         + `<div style="margin-top:2px">${d.booked ? '<span style="color:#f0a83c">✅ booked</span>' : '<span style="color:#8fa0b0">~ estimate</span>'}${f.provider ? ` · ${esc(f.provider)}` : ''}</div>`
     } else body = '<div style="color:#8fa0b0">no flight logged for this hop</div>'
     return box(head + body)
@@ -169,7 +171,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
       instRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cities, cityIdx, segments, transport, rates])
+  }, [cities, cityIdx, segments, transport]) // NOT rates — read via ratesRef so an FX edit doesn't rebuild the globe
 
   // ===== PATCH effects — mutate the live instance, no rebuild =====
   useEffect(() => { instRef.current?.globeImageUrl(opts.day ? '/vendor/earth-day.jpg' : '/vendor/earth-night.jpg') }, [opts.day])

@@ -75,7 +75,7 @@ export function buildRoute(segments: Segment[], cities: City[], cityIdx: Record<
     .filter((s) => s.include !== false)
     .map((s) => {
       const c = cities.find((x) => x.city === s.city)
-      if (!c || c.lat == null) return null
+      if (!c || c.lat == null || c.lng == null) return null
       return {
         city: s.city, country: s.country, r: cityIdx[s.city]?.r ?? c.region ?? null,
         lat: c.lat, lng: c.lng!, arrive: s.arrive || '',
@@ -116,7 +116,7 @@ export function seasonalHazards(segments: Segment[], cities: City[]): Hazard[] {
   for (const s of segments.filter((x) => x.include !== false)) {
     if (seen.has(s.city)) continue
     const c = cities.find((x) => x.city === s.city)
-    if (!c || c.lat == null) continue
+    if (!c || c.lat == null || c.lng == null) continue
     const months = getAtJsonPath(c.attributes, 'weather.months') as Array<{ rain?: number }> | undefined
     const m = Array.isArray(months) ? months[mi] : undefined
     if (m && (m.rain ?? 0) >= 250) {
