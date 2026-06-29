@@ -6,7 +6,7 @@ import { fmtHUF, fmtUSD, TIER_LABELS } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
-export default function BudgetClient() {
+export function BudgetTab() {
   const { trip, cityIdx } = useTripScreen()
   const b = useMemo(
     () => (trip.data ? computeBudget(trip.data.state, cityIdx) : null),

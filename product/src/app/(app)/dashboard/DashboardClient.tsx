@@ -6,7 +6,7 @@ import { fmtHUF, fmtUSD } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
-export default function OverviewClient() {
+export default function DashboardClient() {
   const { trip, cityIdx } = useTripScreen()
   // "next stop" depends on the current clock → compute only after mount to avoid an
   // SSR/hydration mismatch (and the date-only-string UTC vs local off-by-one).

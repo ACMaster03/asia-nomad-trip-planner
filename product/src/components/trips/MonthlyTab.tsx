@@ -6,7 +6,7 @@ import { fmtHUF, toHUF, monthLabel, monthShort } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
-export default function MonthlyClient() {
+export function MonthlyTab() {
   const { trip, cityIdx } = useTripScreen()
 
   const view = useMemo(() => {

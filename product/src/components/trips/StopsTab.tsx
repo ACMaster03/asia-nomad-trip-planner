@@ -7,7 +7,7 @@ import { SegmentForm } from '@/components/trips/SegmentForm'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import type { Segment } from '@/lib/trips/types'
 
-export default function TimelineClient() {
+export function StopsTab() {
   const { trip, cities, cityIdx } = useTripScreen()
   const mut = useTripMutation()
   const [modal, setModal] = useState<{ seg: Segment | null } | null>(null)
@@ -51,7 +51,7 @@ export default function TimelineClient() {
   return (
     <main className="mx-auto max-w-5xl p-6">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Timeline</h1>
+        <h1 className="text-2xl font-semibold">Stops</h1>
         <button onClick={() => setModal({ seg: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">
           + Add stop
         </button>

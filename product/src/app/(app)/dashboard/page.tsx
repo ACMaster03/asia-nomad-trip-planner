@@ -1,12 +1,12 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { prefetchTripScreen } from '@/lib/trips/prefetch'
-import TimelineClient from './TimelineClient'
+import DashboardClient from './DashboardClient'
 
-export default async function TimelinePage() {
+export default async function OverviewPage() {
   const qc = await prefetchTripScreen()
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <TimelineClient />
+      <DashboardClient />
     </HydrationBoundary>
   )
 }

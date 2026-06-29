@@ -13,7 +13,7 @@ const todayISO = () => new Date().toISOString().slice(0, 10)
 const GOOD = 'text-emerald-600'
 const BAD = 'text-red-600'
 
-export default function MoneyClient() {
+export function LedgerTab() {
   const { trip, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
   // date starts empty to avoid an SSR/hydration mismatch (todayISO is clock-dependent);
