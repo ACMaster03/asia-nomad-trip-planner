@@ -8,3 +8,4 @@ node_modules/
 # Raw Claude transcripts — may contain secrets, never push
 docs/archive/transcripts/
 supabase/.staging-conn
+supabase/backups/
