@@ -9,7 +9,7 @@ import { SaveError } from '@/components/trips/SaveError'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import type { LedgerEntry } from '@/lib/trips/types'
 
-const newId = (p: string) => p + Math.random().toString(36).slice(2, 8)
+const newId = (p: string) => p + crypto.randomUUID()
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const GOOD = 'text-emerald-600'
 const BAD = 'text-red-600'

@@ -1,17 +1,23 @@
 'use client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { createTrip } from '@/lib/trips/queries'
+import { createTrip, setSelectedTripId } from '@/lib/trips/queries'
 import { tk } from '@/lib/trips/keys'
+import { useTripScope } from '@/lib/trips/TripScope'
 
 export default function CreateTripEmptyState() {
   const sb = createClient()
   const qc = useQueryClient()
+  const { setTripId } = useTripScope()
   const m = useMutation({
     mutationFn: () => createTrip(sb),
-    onSuccess: (trip) => {
-      qc.setQueryData(tk.activeTrip, trip)
-      qc.invalidateQueries({ queryKey: tk.activeTrip })
+    onSuccess: async (trip) => {
+      qc.setQueryData(tk.trip(trip.id), trip)
+      qc.invalidateQueries({ queryKey: tk.trips })
+      // Persist the selection per account (migration 07). On a pre-07 DB the
+      // column doesn't exist — swallow the error; scope still switches locally.
+      await setSelectedTripId(sb, trip.id).catch(() => {})
+      setTripId(trip.id)
     },
   })
   return (

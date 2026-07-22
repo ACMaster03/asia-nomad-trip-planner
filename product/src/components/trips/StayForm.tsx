@@ -3,7 +3,7 @@ import { useState } from 'react'
 import type { Segment, Stay } from '@/lib/trips/types'
 import { Modal } from './Modal'
 
-const uid = (p: string) => p + Math.random().toString(36).slice(2, 8)
+const uid = (p: string) => p + crypto.randomUUID()
 const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
 
 export function StayForm({
@@ -24,6 +24,8 @@ export function StayForm({
   const [status, setStatus] = useState(initial?.status ?? 'idea')
   const [rating, setRating] = useState(initial?.rating != null ? String(initial.rating) : '')
   const [nights, setNights] = useState(initial?.nights == null ? '' : String(initial.nights))
+  const [cancelUntil, setCancelUntil] = useState(initial?.cancelUntil ?? '')
+  const [chargeDate, setChargeDate] = useState(initial?.chargeDate ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
 
   function submit() {
@@ -35,6 +37,7 @@ export function StayForm({
       nights: nights === '' ? null : Number(nights),
       rating: Number(rating) || 0, status,
       include: initial?.include ?? false,
+      cancelUntil, chargeDate,
       notes,
     }
     onSave(stay)
@@ -67,6 +70,10 @@ export function StayForm({
             </select>
           </label>
           <label className="block text-sm">Nights<input type="number" className={input} value={nights} onChange={(e) => setNights(e.target.value)} placeholder="auto" /></label>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block text-sm">Free cancel until<input type="date" className={input} value={cancelUntil} onChange={(e) => setCancelUntil(e.target.value)} /></label>
+          <label className="block text-sm">Card charged on<input type="date" className={input} value={chargeDate} onChange={(e) => setChargeDate(e.target.value)} /></label>
         </div>
         <label className="block text-sm">Notes<textarea rows={2} className={input} value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
         <div className="flex gap-2 pt-1">

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { ledgerUpsertEntry, ledgerDeleteEntry, writeLedger } from './queries'
 import { tk } from './keys'
+import { useTripScope } from './TripScope'
 import type { Ledger, LedgerEntry, Trip } from './types'
 
 // A ledger mutation is a single-entry operation, mirrored 1:1 by the merge RPCs
@@ -23,6 +24,8 @@ function applyOp(ledger: Ledger, op: LedgerOp): Ledger {
 export function useLedgerMutation() {
   const sb = createClient()
   const qc = useQueryClient()
+  const { tripId } = useTripScope()
+  const key = tk.trip(tripId ?? 'none')
   return useMutation({
     scope: { id: 'ledger-write' },
     mutationFn: async (op: LedgerOp) => {
@@ -30,7 +33,7 @@ export function useLedgerMutation() {
       // ledger, and `scope` serializes mutations — the cache is the truth here.
       // (applyOp happens to be idempotent, but we still don't re-apply it: the
       // state-mutation twin had a real double-apply bug from doing so.)
-      const trip = qc.getQueryData<Trip>(tk.activeTrip)
+      const trip = qc.getQueryData<Trip>(key)
       if (!trip) throw new Error('No active trip')
       // LEGACY FALLBACK: no ledger_rev column → migration 06 not applied yet →
       // the RPCs don't exist either. Keep the old whole-array last-write-wins
@@ -46,18 +49,18 @@ export function useLedgerMutation() {
           : await ledgerUpsertEntry(sb, trip.id, op.entry)
       // Sync the cached rev immediately — the next queued write reads it from
       // cache before the onSettled refetch has landed.
-      qc.setQueryData<Trip>(tk.activeTrip, (t) => (t ? { ...t, ledger_rev: newRev } : t))
+      qc.setQueryData<Trip>(key, (t) => (t ? { ...t, ledger_rev: newRev } : t))
       return trip.ledger
     },
     onMutate: async (op: LedgerOp) => {
-      await qc.cancelQueries({ queryKey: tk.activeTrip })
-      const prev = qc.getQueryData<Trip>(tk.activeTrip)
-      if (prev) qc.setQueryData<Trip>(tk.activeTrip, { ...prev, ledger: applyOp(prev.ledger, op) })
+      await qc.cancelQueries({ queryKey: key })
+      const prev = qc.getQueryData<Trip>(key)
+      if (prev) qc.setQueryData<Trip>(key, { ...prev, ledger: applyOp(prev.ledger, op) })
       return { prev }
     },
     onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(tk.activeTrip, ctx.prev)
+      if (ctx?.prev) qc.setQueryData(key, ctx.prev)
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: tk.activeTrip }),
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
   })
 }

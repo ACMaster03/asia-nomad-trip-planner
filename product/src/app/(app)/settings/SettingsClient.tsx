@@ -1,17 +1,90 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchActiveTrip, isRevConflict } from '@/lib/trips/queries'
+import { createTrip, fetchTrip, fetchTrips, isRevConflict, setSelectedTripId } from '@/lib/trips/queries'
 import { tk } from '@/lib/trips/keys'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
+import { useTripScope } from '@/lib/trips/TripScope'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
 const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
 
+// The active-trip switcher card (approved endframe: design/mocks/09-settings.html,
+// "Active trip" card). Selection is per ACCOUNT (profiles.active_trip_id,
+// migration 07) so phone and laptop always show the same trip; on a pre-07 DB
+// persisting fails silently and the switch is per-device for the session.
+function ActiveTripCard() {
+  const sb = createClient()
+  const qc = useQueryClient()
+  const { tripId, setTripId } = useTripScope()
+  const trips = useQuery({ queryKey: tk.trips, queryFn: () => fetchTrips(sb) })
+  const switchMut = useMutation({
+    mutationFn: async (id: string) => {
+      await setSelectedTripId(sb, id).catch(() => {}) // pre-07 DB: local-only switch
+      return id
+    },
+    onSuccess: (id) => setTripId(id),
+  })
+  const createMut = useMutation({
+    mutationFn: () => createTrip(sb),
+    onSuccess: async (trip) => {
+      qc.setQueryData(tk.trip(trip.id), trip)
+      qc.invalidateQueries({ queryKey: tk.trips })
+      await setSelectedTripId(sb, trip.id).catch(() => {})
+      setTripId(trip.id)
+    },
+  })
+  const list = trips.data ?? []
+  return (
+    <section className="mt-8">
+      <h2 className="mb-1 text-lg font-semibold">Active trip</h2>
+      <p className="mb-3 text-sm text-neutral-500">All screens are scoped to the active trip.</p>
+      <ul className="divide-y divide-neutral-200 rounded border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+        {list.map((t) => (
+          <li key={t.id} className="flex items-center gap-3 px-3 py-2.5">
+            <span aria-hidden>🧭</span>
+            <div className="min-w-0 grow">
+              <div className="truncate text-sm font-medium">{t.name}</div>
+              <div className="text-xs text-neutral-500">updated {new Date(t.updated_at).toLocaleDateString()}</div>
+            </div>
+            {t.id === tripId ? (
+              <span className="rounded-full bg-teal-600/10 px-2 py-0.5 text-xs font-medium text-teal-700 dark:text-teal-400">Active ✓</span>
+            ) : (
+              <button
+                onClick={() => switchMut.mutate(t.id)}
+                disabled={switchMut.isPending}
+                className="rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              >
+                Switch
+              </button>
+            )}
+          </li>
+        ))}
+        {trips.isPending && <li className="px-3 py-2.5 text-sm text-neutral-500">Loading trips…</li>}
+      </ul>
+      <div className="mt-3 flex items-center gap-3">
+        <button
+          onClick={() => createMut.mutate()}
+          disabled={createMut.isPending}
+          className="rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+        >
+          {createMut.isPending ? 'Creating…' : '＋ New trip'}
+        </button>
+        <span className="text-xs text-neutral-500">starts from the sample route for now — onboarding wizard coming</span>
+      </div>
+    </section>
+  )
+}
+
 export default function SettingsClient() {
   const sb = createClient()
-  const trip = useQuery({ queryKey: tk.activeTrip, queryFn: () => fetchActiveTrip(sb) })
+  const { tripId } = useTripScope()
+  const trip = useQuery({
+    queryKey: tk.trip(tripId ?? 'none'),
+    queryFn: () => fetchTrip(sb, tripId!),
+    enabled: tripId !== null,
+  })
   const mut = useTripMutation()
 
   // local draft, synced from the loaded trip; saved on demand (one write, not per keystroke)
@@ -39,6 +112,7 @@ export default function SettingsClient() {
     setRates(trip.data.state.rates)
   }, [trip.data])
 
+  if (tripId === null) return <CreateTripEmptyState />
   if (trip.isPending) return <main className="mx-auto max-w-3xl p-6">Loading…</main>
   if (!trip.data) return <CreateTripEmptyState />
 
@@ -107,6 +181,8 @@ export default function SettingsClient() {
           </span>
         )}
       </div>
+
+      <ActiveTripCard />
     </main>
   )
 }

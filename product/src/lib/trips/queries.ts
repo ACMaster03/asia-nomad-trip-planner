@@ -26,8 +26,60 @@ export function isRevConflict(e: unknown): e is RevConflictError {
 // SQLSTATE raised by public.write_state() on an expected_rev mismatch (migration 06).
 const REV_CONFLICT_CODE = 'REV01'
 
-// Active trip = the most recently updated RLS-visible trip. null → empty/create state.
-export async function fetchActiveTrip(sb: SupabaseClient): Promise<Trip | null> {
+// One trip by id. null → not visible (RLS) or deleted; callers fall back.
+export async function fetchTrip(sb: SupabaseClient, id: string): Promise<Trip | null> {
+  const { data, error } = await sb.from('trips').select(TRIP_COLS).eq('id', id).maybeSingle()
+  if (error) throw error
+  return (data as Trip | null) ?? null
+}
+
+// Lightweight list for the Settings switcher — no state/ledger payloads.
+export type TripListItem = { id: string; name: string; owner: string; updated_at: string; created_at: string }
+export async function fetchTrips(sb: SupabaseClient): Promise<TripListItem[]> {
+  const { data, error } = await sb
+    .from('trips')
+    .select('id,name,owner,updated_at,created_at')
+    .order('updated_at', { ascending: false })
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data as TripListItem[]) ?? []
+}
+
+// The user's per-ACCOUNT trip selection (profiles.active_trip_id, migration 07):
+// phone and laptop always show the same trip. select('*') keeps working on a
+// pre-migration-07 DB — the field is just undefined → callers fall back.
+// TODO(migration-07): switch to an explicit column list once 07 is applied.
+async function fetchSelectedTripId(sb: SupabaseClient): Promise<string | null> {
+  const { data: auth } = await sb.auth.getUser()
+  const uid = auth.user?.id
+  if (!uid) return null
+  const { data, error } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle()
+  if (error) throw error
+  return (data as { active_trip_id?: string | null } | null)?.active_trip_id ?? null
+}
+
+// Persist the selection. Errors are surfaced (the 07 guard trigger refuses
+// trips the user cannot see). No-ops harmlessly on a pre-migration-07 DB?
+// No — updating a missing column errors; callers only invoke this from the
+// switcher UI, which is only reachable when a selection exists (post-07) or
+// degrades to a local-only switch via the catch in SettingsClient.
+export async function setSelectedTripId(sb: SupabaseClient, tripId: string): Promise<void> {
+  const { data: auth } = await sb.auth.getUser()
+  const uid = auth.user?.id
+  if (!uid) throw new Error('Not signed in')
+  const { error } = await sb.from('profiles').update({ active_trip_id: tripId }).eq('id', uid)
+  if (error) throw error
+}
+
+// Resolve the working trip: profile selection first; if unset, invisible or
+// pre-migration-07, fall back to the newest RLS-visible trip (the pre-multi-trip
+// behaviour). null → user has no trips at all → empty/create state.
+export async function resolveActiveTrip(sb: SupabaseClient): Promise<Trip | null> {
+  const selectedId = await fetchSelectedTripId(sb).catch(() => null)
+  if (selectedId) {
+    const selected = await fetchTrip(sb, selectedId)
+    if (selected) return selected
+  }
   const { data, error } = await sb
     .from('trips')
     .select(TRIP_COLS)

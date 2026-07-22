@@ -3,7 +3,7 @@ import { useState } from 'react'
 import type { Extra } from '@/lib/trips/types'
 import { Modal } from './Modal'
 
-const uid = (p: string) => p + Math.random().toString(36).slice(2, 8)
+const uid = (p: string) => p + crypto.randomUUID()
 const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
 const CATS = ['Visa', 'Insurance', 'Vaccines', 'Gear', 'Flights (intl)', 'SIM/eSIM', 'Other']
 

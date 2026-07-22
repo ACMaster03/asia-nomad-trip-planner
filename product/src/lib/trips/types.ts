@@ -36,6 +36,8 @@ export interface Stay {
   status?: string
   include?: boolean
   notes?: string
+  cancelUntil?: string // ISO date — free-cancellation deadline
+  chargeDate?: string // ISO date — when the card is charged
 }
 export interface TransportLeg {
   id: string

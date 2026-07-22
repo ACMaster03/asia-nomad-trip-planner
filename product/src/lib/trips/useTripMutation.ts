@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { writeState } from './queries'
 import { tk } from './keys'
+import { useTripScope } from './TripScope'
 import type { TripState, Trip } from './types'
 
 type StateUpdater = (cur: TripState) => TripState
@@ -19,15 +20,19 @@ type StateUpdater = (cur: TripState) => TripState
 export function useTripMutation() {
   const sb = createClient()
   const qc = useQueryClient()
+  const { tripId } = useTripScope()
+  const key = tk.trip(tripId ?? 'none')
   return useMutation({
     scope: { id: 'state-write' },
+    // the param is unused (see comment below) but its type drives useMutation's
+    // TVariables inference — mutate(updater) stops compiling without it.
     mutationFn: async (_updater: StateUpdater) => {
       // onMutate (which runs first) has ALREADY applied this mutation's updater
       // to the cache, and `scope` guarantees mutations never interleave — so the
       // cached state IS the document to persist. Do NOT re-apply the updater
       // here: that would double-apply non-idempotent ops (the include-checkbox
       // toggles) and persist the wrong value.
-      const trip = qc.getQueryData<Trip>(tk.activeTrip)
+      const trip = qc.getQueryData<Trip>(key)
       if (!trip) throw new Error('No active trip')
       const next = trip.state
       // trip.state_rev is undefined on a pre-migration-06 DB → legacy direct write.
@@ -35,21 +40,21 @@ export function useTripMutation() {
       // Sync the cached rev immediately: the next queued write (scope-serialized)
       // reads it from cache before the onSettled refetch has landed.
       if (newRev !== undefined) {
-        qc.setQueryData<Trip>(tk.activeTrip, (t) => (t ? { ...t, state_rev: newRev } : t))
+        qc.setQueryData<Trip>(key, (t) => (t ? { ...t, state_rev: newRev } : t))
       }
       return next
     },
     onMutate: async (updater: StateUpdater) => {
-      await qc.cancelQueries({ queryKey: tk.activeTrip })
-      const prev = qc.getQueryData<Trip>(tk.activeTrip)
-      if (prev) qc.setQueryData<Trip>(tk.activeTrip, { ...prev, state: updater(prev.state) })
+      await qc.cancelQueries({ queryKey: key })
+      const prev = qc.getQueryData<Trip>(key)
+      if (prev) qc.setQueryData<Trip>(key, { ...prev, state: updater(prev.state) })
       return { prev }
     },
     onError: (_e, _v, ctx) => {
       // Roll back the optimistic update (incl. after a rev conflict); onSettled's
       // invalidate then refetches the authoritative document + fresh rev.
-      if (ctx?.prev) qc.setQueryData(tk.activeTrip, ctx.prev)
+      if (ctx?.prev) qc.setQueryData(key, ctx.prev)
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: tk.activeTrip }),
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
   })
 }

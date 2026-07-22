@@ -38,7 +38,7 @@ export function StaysTab() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="text-left text-neutral-500">
-            <th className="py-1 pr-2">In</th><th className="pr-4">Stop</th><th className="pr-4">Name</th><th className="pr-4">Platform</th><th className="pr-4">Price/night</th><th className="pr-4">Status</th><th /></tr></thead>
+            <th className="py-1 pr-2">In</th><th className="pr-4">Stop</th><th className="pr-4">Name</th><th className="pr-4">Platform</th><th className="pr-4">Price/night</th><th className="pr-4">Deadlines</th><th className="pr-4">Status</th><th /></tr></thead>
           <tbody>
             {s.stays.map((x) => (
               <tr key={x.id} className={'border-t border-neutral-200 dark:border-neutral-800 ' + (x.include ? '' : 'opacity-50')}>
@@ -47,6 +47,11 @@ export function StaysTab() {
                 <td className="pr-4 font-medium">{x.name}</td>
                 <td className="pr-4 text-neutral-500">{x.platform}</td>
                 <td className="pr-4 whitespace-nowrap">{x.ppn} {x.cur} <span className="text-xs text-neutral-500">({fmtHUF(toHUF(x.ppn, x.cur, s.rates))})</span></td>
+                <td className="pr-4 whitespace-nowrap text-xs text-neutral-500">
+                  {x.cancelUntil && <span>free-cancel {x.cancelUntil}</span>}
+                  {x.cancelUntil && x.chargeDate && ' · '}
+                  {x.chargeDate && <span>charged {x.chargeDate}</span>}
+                </td>
                 <td className="pr-4">{x.status}</td>
                 <td className="whitespace-nowrap">
                   <button onClick={() => setModal({ stay: x })} className="text-xs text-teal-600 hover:underline">edit</button>
@@ -54,7 +59,7 @@ export function StaysTab() {
                 </td>
               </tr>
             ))}
-            {!s.stays.length && <tr><td colSpan={7} className="py-3 text-neutral-500">No accommodation options yet.</td></tr>}
+            {!s.stays.length && <tr><td colSpan={8} className="py-3 text-neutral-500">No accommodation options yet.</td></tr>}
           </tbody>
         </table>
       </div>
