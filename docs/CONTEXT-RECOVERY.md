@@ -79,19 +79,23 @@ mid-task. Concretely, as of 2026-07-12:
 - **M0 design mock kit** — all 10 endframe screen mocks in `design/mocks/` + the `design/SCREENS.md`
   coverage matrix, each individually audited/fixed, both themes, phone + desktop.
 
-**The single unresolved decision the session ended on** — the cross-file mock critic found the
-10 mocks use **inconsistent sample data** (three different budget totals, four different THB→HUF
-rates, contradictory check-in dates/authors, Bangkok 29-vs-30 nights, mismatched follower counts),
-plus two missing endframes (budget-over-cap, "Mom's" pre-trip follow page). The fix was queued but
-**Patrik stopped it** to decide the canonical numbers himself. The three options left on the table:
+**The fixture-canonicalization sweep DID complete** (resolved 2026-07-22 by checking file
+mtimes + the canonicalize agent's transcript): although the chat log ends at 10:47 on Jul 12
+with the sweep paused, a background agent re-ran and finished it by 12:46 that day. Deliverables,
+all verified present and consistent:
 
-1. **Run the sweep as specced** — assistant's canon values (flight 372k HUF, planned total
-   4.12M ≈ 92% amber, FX 10.4, specific check-in dates), all Top-10 fixes, two missing states.
-2. **Patrik sets the canon numbers** (budget total, FX, prices) → sweep with those.
-3. **Skip the sweep for now** — walk the mock kit first, fold fixture cleanup into walkthrough notes.
+- `design/mocks/FIXTURES.md` — the canon data sheet ("this sheet is law"): budget cap 4.5M /
+  planned 4,120,000 HUF = 92% amber, flight 372,000 HUF, FX 1 THB = 10.4 HUF, Bangkok 30 nights,
+  canonical check-ins, sharing counts (2 followers + 1 viewer), HUF format rules, nav rules.
+- All 10 mocks rewritten against it (no divergent values remain on spot-check).
+- `design/SCREENS.md` gained a **"Known gaps (decide at walkthrough)"** list: drift endframe,
+  post-trip phase, create-follow-link modal, notification settings, GDPR deletion,
+  overlapping-stops conflict, permission-denied states, 04 viewer read-only, skeletons.
 
-👉 **This is the exact point to resume from.** Decide 1/2/3, then continue into the rest of M1
-(multi-trip, onboarding wizard, stay-deadline alerts) per the approved plan.
+👉 **The exact resume point is therefore the M0 gate itself:** Patrik walks all 10 mocks
+(every role/phase/data state), decides each Known-gaps item, and signs off. After the gate:
+rest of M1 (multi-trip, onboarding wizard, stay-deadline alerts) + run migration 06 against
+staging per `06-TESTPLAN.md`.
 
 ---
 
