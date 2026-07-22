@@ -2,11 +2,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { createTrip, fetchTrip, fetchTrips, isRevConflict, setSelectedTripId } from '@/lib/trips/queries'
+import { fetchTrip, fetchTrips, isRevConflict, setSelectedTripId } from '@/lib/trips/queries'
 import { tk } from '@/lib/trips/keys'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripScope } from '@/lib/trips/TripScope'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
+import { OnboardingWizard } from '@/components/trips/OnboardingWizard'
+import { Modal } from '@/components/trips/Modal'
 
 const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
 
@@ -16,7 +18,6 @@ const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm
 // persisting fails silently and the switch is per-device for the session.
 function ActiveTripCard() {
   const sb = createClient()
-  const qc = useQueryClient()
   const { tripId, setTripId } = useTripScope()
   const trips = useQuery({ queryKey: tk.trips, queryFn: () => fetchTrips(sb) })
   const switchMut = useMutation({
@@ -26,15 +27,8 @@ function ActiveTripCard() {
     },
     onSuccess: (id) => setTripId(id),
   })
-  const createMut = useMutation({
-    mutationFn: () => createTrip(sb),
-    onSuccess: async (trip) => {
-      qc.setQueryData(tk.trip(trip.id), trip)
-      qc.invalidateQueries({ queryKey: tk.trips })
-      await setSelectedTripId(sb, trip.id).catch(() => {})
-      setTripId(trip.id)
-    },
-  })
+  // "New trip" launches the same onboarding wizard (mock 09 note) in a modal.
+  const [wizardOpen, setWizardOpen] = useState(false)
   const list = trips.data ?? []
   return (
     <section className="mt-8">
@@ -65,14 +59,18 @@ function ActiveTripCard() {
       </ul>
       <div className="mt-3 flex items-center gap-3">
         <button
-          onClick={() => createMut.mutate()}
-          disabled={createMut.isPending}
-          className="rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+          onClick={() => setWizardOpen(true)}
+          className="rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
         >
-          {createMut.isPending ? 'Creating…' : '＋ New trip'}
+          ＋ New trip
         </button>
-        <span className="text-xs text-neutral-500">starts from the sample route for now — onboarding wizard coming</span>
+        <span className="text-xs text-neutral-500">launches the onboarding wizard</span>
       </div>
+      {wizardOpen && (
+        <Modal title="New trip" onClose={() => setWizardOpen(false)}>
+          <OnboardingWizard onDone={() => setWizardOpen(false)} />
+        </Modal>
+      )}
     </section>
   )
 }

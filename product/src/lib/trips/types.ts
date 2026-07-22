@@ -7,6 +7,8 @@ export interface TripMeta {
   baseCurrency: CurrencyCode
   budgetCap: number
   startDate: string
+  endDate?: string // optional — open-ended trips have none (wizard step 1)
+  homeBase?: string // e.g. "Budapest, Hungary" (wizard step 2, optional)
 }
 export type Tier = 0 | 1 | 2
 

@@ -12,12 +12,12 @@ import { useTripScope } from './TripScope'
 export function useTripScreen() {
   const sb = createClient()
   const { tripId } = useTripScope()
-  // tripId null → no trips exist → the query is disabled and trip.data stays
-  // undefined; screens render the create/empty state exactly as before.
+  // tripId null → no trips exist. The query must still RESOLVE (to null) rather
+  // than sit disabled — a disabled query stays isPending forever, which would
+  // pin every screen on "Loading…" instead of the create/empty state.
   const trip = useQuery({
     queryKey: tk.trip(tripId ?? 'none'),
-    queryFn: () => fetchTrip(sb, tripId!),
-    enabled: tripId !== null,
+    queryFn: () => (tripId ? fetchTrip(sb, tripId) : Promise.resolve(null)),
   })
   const cities = useQuery({ queryKey: qk.cities, queryFn: () => fetchCities(sb) })
   const cityIdx = useMemo(() => buildCityIndex(cities.data ?? []), [cities.data])

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Trip, Ledger, LedgerEntry, TripState } from './types'
-import { makeDefaultState } from './defaultState'
+import { makeNewTripState, type NewTripInput } from './newTrip'
 
 // select('*') on purpose: the rev columns (state_rev/ledger_rev) only exist once
 // supabase/migrations/06-security.sql is applied. '*' works on both schemas —
@@ -94,10 +94,12 @@ export async function resolveActiveTrip(sb: SupabaseClient): Promise<Trip | null
 // CREATE-TRIP: owner=auth.uid() satisfies trips_insert. Insert ONLY owner/name/
 // state/ledger — the document model is the single source of truth; the scalar
 // columns (travelers, rates, …) live inside `state` and must not be duplicated.
-export async function createTrip(sb: SupabaseClient): Promise<Trip> {
+// Seeds from the wizard's inputs via makeNewTripState — never from the owner's
+// real trip data (the old makeDefaultState seed leaked booking confirmations).
+export async function createTrip(sb: SupabaseClient, input: NewTripInput): Promise<Trip> {
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user!.id
-  const seed = makeDefaultState()
+  const seed = makeNewTripState(input)
   const { data, error } = await sb
     .from('trips')
     .insert({ owner: uid, name: seed.meta.tripName, state: seed, ledger: [] })
@@ -105,6 +107,20 @@ export async function createTrip(sb: SupabaseClient): Promise<Trip> {
     .single()
   if (error) throw error
   return data as Trip
+}
+
+// Wizard step 3 / Settings sharing: record a co-editor invite. The invitee gets
+// access by signing in with this email and accepting (RLS from migrations 02+06
+// lets them join ONLY with the invited role). Acceptance UI in the product app
+// lands with M3's sharing panel.
+export async function createInvite(sb: SupabaseClient, tripId: string, email: string, role: 'editor' | 'viewer' = 'editor'): Promise<void> {
+  const { data: auth } = await sb.auth.getUser()
+  const uid = auth.user?.id
+  if (!uid) throw new Error('Not signed in')
+  const { error } = await sb
+    .from('trip_invites')
+    .insert({ trip_id: tripId, email: email.trim().toLowerCase(), role, invited_by: uid })
+  if (error) throw error
 }
 
 // Itinerary/settings edit: writes ONLY the `state` column (+ name) through the
