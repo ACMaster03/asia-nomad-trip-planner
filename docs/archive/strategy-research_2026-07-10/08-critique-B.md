@@ -1,0 +1,60 @@
+# Adversarial critique — Option B (Universal Expo app)
+
+I verified the design's codebase claims against the repo at `/Users/grohmannpatrik/Claude/Projects/Ázsia nomad trip planning/asia-nomad-planner` and its ecosystem claims against current sources. Credit where due first, because it bounds the critique: the file inventory is honest. `types.ts` = 90 ln, `budget.ts` = 167 ln, exactly 16 `components/trips/*.tsx`, view surface = 1,684 (components) + 692 (`src/app`) ≈ the claimed ~2,400; `queries.ts` really does take a `SupabaseClient` arg; the `useTripMutation`/`useLedgerMutation` scope-serialized updater pattern, the `globeData.ts` pure/impure split (only `loadMapOpts`/`saveMapOpts` touch `localStorage`), `Globe.tsx`'s BUILD/PATCH + `ratesRef` + `_destructor` structure, `proxy.ts`/auth routes, migrations 01–05 with `can_access_trip()`/`is_admin()`, the `fetchActiveTrip` newest-row hack, and the ARCHITECTURE.md deferred-normalization plan all check out. Expo SDK 56 = RN 0.85 + React 19.2 is real (released May 21, 2026). The design is well-researched. It still has one blocker and three majors.
+
+---
+
+## BLOCKER
+
+### B1. The milestone calendar collides with the actual trip dates, and the design never checks.
+The design treats the trip as an abstract "deadline and dogfood." The repo pins it down: `product/src/lib/trips/defaultState.ts` contains **real bookings** — flight BUD→PVG **Sept 3, 2026** ("REAL BOOKING", conf# in notes, Beijing hotel Aug 31–Sep 5, free-cancel deadline **Aug 29**), main route Oct 1, 2026 → Feb 25, 2027. Today is July 10, 2026. Departure is in **8 weeks**.
+
+Now apply the design's own arithmetic: 15–18.5 pw → 5–7 calendar months implies ~0.65 pw/week of real throughput (day job). M0+M1 = 3.5–4.5 pw ≈ **late August at the earliest, with zero slack** — the phone app lands at or after wheels-up. M2 (live mode + family follow — the only feature that must exist *during* the trip to matter) is another 3–4 pw ≈ **October–November, i.e. mid-trip**, built from hostels: EAS builds, APNs/FCM setup, RLS design, device testing on hotel wifi. M5 lands roughly when the trip *ends*. The plan's "value-first sequencing" claim is false against its own numbers: the emotionally resonant features arrive after the moment that motivates them. Also note the design's flagship push-notification example — stay-cancellation reminders — has its first real-world instance on **Aug 29**, which no version of this plan ships in time.
+
+**Fix:** Re-sequence around a hard "trip-ready" gate of ~Aug 20: (a) gut M0 — no monorepo surgery, no repointing the production app (see M2 below); copy the ~600 domain lines into the Expo app; (b) trip-ready scope = OTP auth + ledger add-entry + check-in (photo/rating/comment) + a follow feed, nothing else; (c) explicitly defer parity (M4) and web cutover (M5) to during/after the trip, when the frozen Next app keeps serving planning needs; (d) use a phone calendar reminder for the Aug 29 cancellation deadline, not engineering.
+
+---
+
+## MAJOR
+
+### M1. The `updated_at` optimistic-concurrency guard is broken as specified, and the offline-queue story makes it worse.
+Verified in `product/src/lib/trips/queries.ts`: `writeState` and `writeLedger` both stamp the **shared** `updated_at` column from the **client clock** (`new Date().toISOString()`), and `fetchActiveTrip` orders on it. The proposed `.eq('updated_at', seen)` guard therefore: (a) makes ledger writes spuriously conflict with state writes and vice versa — destroying the deliberate "two columns never clobber each other" property the code comments document; (b) rests on client-generated timestamps (skew, equal values); (c) interacts fatally with the M2 "offline queue (TanStack persister + mutation queue)": every queued mutation replays against a snapshot that is stale *by definition* after the partner writes anything, so the guard rejects nearly all post-offline writes with no merge path. Two phones + jsonb ledger array + read-modify-write = dropped expense rows, exactly during the trip.
+
+**Fix:** The design missed that `supabase/schema.sql` **already contains a normalized `public.ledger` table with RLS policies written** (the `can_access_trip(trip_id)` loop covers it). Route M1's "ledger add-entry from the phone" — the highest-frequency, highest-conflict write — to append-only rows there (trivially mergeable, offline-safe, zero new migrations). For `trips.state`, use per-column integer revisions (`state_rev`) instead of `updated_at` — note this requires adding a column, which the design's own odd ground rule "new columns never" forbids; drop that rule (additive columns are exactly as safe as additive tables).
+
+### M2. M2's "family follows on Expo web, zero install" contradicts the plan's own sequencing, and the anon share-code security model is hand-waved.
+Web deployment of the Expo app happens at **M5**; at M2 there is no Expo web to open `follow/[shareCode]` in. Either family installs the native app (violates "zero install"), or the follow page goes into the frozen Next app (violates the freeze), or Expo web ships partially at M2 (unbudgeted). Separately, "RLS for viewer/anon-scoped follow" is not a design: Postgres RLS cannot see a share code held by an anon client — you need security-definer RPCs keyed by the code (with rate limiting against enumeration) or minting a scoped JWT. And because **Supabase Realtime Postgres Changes enforces RLS**, anon followers under a code-gated model receive no change events — follower realtime needs Broadcast channels or polling, contradicting the "Postgres Changes on `checkins`, free tier fine" line. Also (nit, M6): materialized views don't support RLS policies at all; public aggregates are gated by grants/wrapper views, so "anon-read RLS on aggregates" needs rewording into an actual deny-by-default public/private isolation design — this DB will hold both a public community platform and private trips.
+
+**Fix:** Decide the M2 delivery channel now (recommended: deploy Expo web at M2 to a subdomain, follow route only — it also de-risks the M5 cutover early). Specify follower access as security-definer RPCs + Broadcast channel per share code; write the enumeration/rate-limit story down.
+
+### M3. The native map claim is factually wrong: MapLibre **Native** has no globe projection.
+The design asserts "globe projection landed in MapLibre GL JS/**native** in 2024–25" and promises "most of the wow factor." Globe view shipped in MapLibre GL JS 5.0 (web, Jan 2025) only; MapLibre Native — which `@maplibre/maplibre-react-native` wraps — supports Web Mercator exclusively, with globe an open feature request ([maplibre-native#3161](https://github.com/maplibre/maplibre-native/issues/3161), [roadmap](https://maplibre.org/roadmap/maplibre-native/), [globe view status](https://maplibre.org/roadmap/maplibre-gl-js/globe-view/)). So on the platform the design says users will live on, the signature 3D globe is a flat Mercator map. Feasibility survives (flat map with route/arcs/hazards is fine); the pitch does not.
+
+**Fix:** State plainly: native = flat MapLibre map at M3; globe remains web-only. If the globe is brand-critical on mobile, budget a spike (three.js via expo-gl, or WebView-embedded globe.gl for the map tab only — ironic but pragmatic) as an explicit, separately-priced M3b rather than implying MapLibre delivers it.
+
+---
+
+## MINOR
+
+- **"`structuredClone` is fine on Hermes ≥ RN 0.74" is unsupported and almost certainly false.** [facebook/hermes#684](https://github.com/facebook/hermes/issues/684) (open since 2022); RN 0.83–0.85 release notes list added web APIs (Performance, IntersectionObserver) with no `structuredClone` ([RN releases](https://reactnative.dev/blog), [0.85 summary](https://medium.com/@onix_react/release-react-native-0-85-677b3007b041)). Verified usage: `defaultState.ts:51`. One-line polyfill fixes it, but it falsifies "moved verbatim, zero changes" — audit Bucket A for Hermes gaps generally (`format.ts` uses `toLocaleString` with options; Hermes Intl is a subset — test on device).
+- **Line-count error:** "`product/src/lib` is ~603 lines" — it's **835** (the ~600 figure only fits Bucket A ≈ 580 incl. pure `globeData`). Immaterial to the plan, but it's presented as a verified fact.
+- **M0 contradicts the freeze:** repointing the production Next app's `@/lib/...` imports at extracted packages plus monorepo-izing the Vercel build is a prod-touching change with zero user value, weeks before departure. Copy, don't move; reconcile after the trip. (Same for "delete legacy static app at M0" — the brief calls it the fallback; deleting it pre-trip buys nothing.)
+- **OTP switch has unbudgeted prerequisites:** verified `login/page.tsx` uses magic-link PKCE (`emailRedirectTo` → `/auth/callback`); 6-digit OTP needs the Supabase email template changed to `{{ .Token }}` **and** custom SMTP — the built-in email service is rate-limited to a handful of mails/hour and unfit for even family-scale sign-in bursts.
+- **iOS distribution during a multi-month trip:** TestFlight builds expire after 90 days — Oct→Feb spans expiry; EAS Update covers JS only, not build expiry or cert issues. Plan a real App Store submission (or 1-year ad-hoc profiles) *before* departure; Apple's $99 is a day-one cost, not an M5 cost.
+- **`expo-notifications` does no web push** — cancellation reminders reach native installs only; the "one implementation" claim needs that asterisk.
+- **Marketing-shell SEO pages "reading the catalogue at build time":** verified `cities_select` RLS is `is_public or owner = auth.uid()` — anon/build-time reads need the service-role key or an is_public-only subset; say so.
+- **DMA optimism:** "dodge much of the 15–30% cut" overstates it — Apple's EU alternative-terms still levy acquisition/store-services fees; don't anchor the business case on it.
+
+---
+
+### Critical Files for Implementation
+- /Users/grohmannpatrik/Claude/Projects/Ázsia nomad trip planning/asia-nomad-planner/product/src/lib/trips/defaultState.ts (real trip dates driving B1; `structuredClone` usage)
+- /Users/grohmannpatrik/Claude/Projects/Ázsia nomad trip planning/asia-nomad-planner/product/src/lib/trips/queries.ts (shared `updated_at` + client clock — invalidates the OCC guard as specified)
+- /Users/grohmannpatrik/Claude/Projects/Ázsia nomad trip planning/asia-nomad-planner/supabase/schema.sql (normalized `ledger` table + RLS already exist — the correct M1 conflict fix)
+- /Users/grohmannpatrik/Claude/Projects/Ázsia nomad trip planning/asia-nomad-planner/product/src/lib/trips/useLedgerMutation.ts (the whole-array read-modify-write that clobbers under two phones)
+- /Users/grohmannpatrik/Claude/Projects/Ázsia nomad trip planning/asia-nomad-planner/product/src/components/Globe.tsx (web-only globe; the native-map asterisk)
+
+Sources: [MapLibre Native globe issue #3161](https://github.com/maplibre/maplibre-native/issues/3161), [MapLibre GL JS globe view roadmap](https://maplibre.org/roadmap/maplibre-gl-js/globe-view/), [MapLibre Native roadmap](https://maplibre.org/roadmap/maplibre-native/), [hermes#684 structuredClone](https://github.com/facebook/hermes/issues/684), [Expo SDK 56 changelog](https://expo.dev/changelog/sdk-56), [RN 0.85 release summary](https://medium.com/@onix_react/release-react-native-0-85-677b3007b041), [React Native blog](https://reactnative.dev/blog).
+
+### Verdict
+**SOUND-WITH-FIXES.** The three fixes that matter most: (1) re-sequence around the verified Sept 3, 2026 departure — gut M0, define an ~Aug 20 "trip-ready" milestone (OTP auth + ledger add + check-ins + follow feed), defer parity and cutover; (2) drop the `updated_at` OCC guard for per-column revisions and move ledger writes to the already-existing normalized `public.ledger` table so two offline phones can't clobber money data; (3) make family-follow concrete — deploy the Expo web follow route at M2 and replace hand-waved "anon RLS" with security-definer RPCs + Broadcast (Postgres Changes won't reach anon followers), while re-scoping the native map promise to a flat MapLibre map since MapLibre Native has no globe.
