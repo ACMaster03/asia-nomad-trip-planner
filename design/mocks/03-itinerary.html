@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Itinerary (Stops · Stays · Transport · Extras)</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* page header */
+.itin-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.itin-head .trip { font-size: 12px; color: var(--muted); }
+
+/* ---- Gantt-style stop timeline ---- */
+.g-scroll { overflow-x: auto; }
+.gantt { min-width: 580px; position: relative; padding-top: 2px; }
+.g-months { position: relative; height: 16px; margin-left: 88px; }
+.g-months b { position: absolute; font-size: 10px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em; transform: translateX(3px); }
+.g-body { position: relative; }
+.g-grid { position: absolute; left: 88px; right: 0; top: 0; bottom: 0; }
+.g-grid i { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.g-row { display: flex; align-items: center; height: 26px; position: relative; }
+.g-row .lbl { width: 88px; flex: none; font-size: 11px; color: var(--muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; padding-right: 8px; }
+.g-track { position: relative; flex: 1; height: 100%; }
+.g-bar { position: absolute; top: 5px; height: 16px; border-radius: 5px; display: flex; align-items: center;
+  justify-content: center; font-size: 10px; font-weight: 700; color: var(--bg); overflow: hidden; white-space: nowrap; }
+.g-bar.c-th { background: var(--accent); }
+.g-bar.c-vn { background: var(--ok); }
+.g-bar.c-my { background: var(--warn); }
+.g-bar.c-id { background: var(--gold); }
+.g-bar.c-gap { background: transparent; border: 1.5px dashed var(--border-strong); color: var(--muted); font-weight: 600; }
+.g-legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: 10px;
+  font-size: 11px; color: var(--muted); }
+.g-legend .dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+
+/* ---- filter row ---- */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 16px 0 4px; }
+.filters .select, .filters .input { width: auto; padding: 5px 9px; font-size: 12.5px; }
+.filters .check { font-size: 12.5px; color: var(--muted); }
+.filters .count { font-size: 12px; color: var(--faint); margin-left: auto; }
+@container (max-width: 500px) { .filters .count { margin-left: 0; width: 100%; } }
+
+/* ---- country groups + stop rows ---- */
+.cty-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px; margin: 14px 0 2px; cursor: pointer; font-size: 13px; }
+.cty-head .caret { color: var(--muted); font-size: 11px; width: 12px; flex: none; }
+.cty-head .nm { font-weight: 650; }
+.cty-head .sum { color: var(--muted); font-size: 12px; }
+.stop-row { display: flex; align-items: center; gap: 9px; padding: 9px 6px 9px 12px; border-bottom: 1px solid var(--border); }
+.stop-row:last-child { border-bottom: 0; }
+.stop-row .flag { font-size: 16px; flex: none; }
+.stop-row .nm { font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+.stop-row .dates { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.stop-row .nights { font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 999px;
+  padding: 1px 7px; white-space: nowrap; flex: none; }
+.stop-row.dim { opacity: .62; }
+.stop-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; flex: none; }
+.tier { font-size: 10px; font-weight: 700; letter-spacing: .04em; border: 1px solid var(--border-strong);
+  color: var(--muted); border-radius: 999px; padding: 1px 6px; }
+.tier.t3 { color: var(--gold); border-color: var(--gold); }
+.wx { font-size: 14px; cursor: default; }
+.notes-ic { font-size: 13px; color: var(--muted); }
+.notes-ic i { font-style: normal; font-size: 9.5px; font-weight: 700; color: var(--accent); vertical-align: super; }
+.icon-btn { border: 0; background: none; cursor: pointer; font-size: 13px; color: var(--muted);
+  padding: 2px 5px; border-radius: 6px; }
+.icon-btn:hover { background: var(--surface2); }
+@container (max-width: 500px) {
+  .stop-row { flex-wrap: wrap; row-gap: 4px; }
+  .stop-tools { margin-left: 0; width: 100%; padding-left: 25px; }
+}
+
+/* ---- stays ---- */
+.stay-card { margin-bottom: 10px; }
+.stay-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.stay-top .nm { font-weight: 650; font-size: 14.5px; }
+.stay-top .price { margin-left: auto; font-weight: 700; white-space: nowrap; }
+.stay-top .price small { font-weight: 400; color: var(--muted); }
+.stay-sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.deadline { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.deadline b { font-weight: 650; color: var(--warn); }
+.stay-x { border-top: 1px dashed var(--border); margin-top: 11px; padding-top: 11px; }
+.kv { display: grid; grid-template-columns: 118px 1fr; gap: 5px 10px; font-size: 12.5px; }
+.kv .k { color: var(--muted); text-transform: uppercase; font-size: 10px; letter-spacing: .06em; padding-top: 2px; }
+.x-toggle { font-size: 12px; color: var(--accent); cursor: pointer; margin-top: 9px; display: inline-block; }
+@container (max-width: 500px) { .stay-top .price { margin-left: 0; width: 100%; } }
+
+/* ---- transport ---- */
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip { border: 1px solid var(--border-strong); background: var(--surface2); color: var(--muted);
+  border-radius: 999px; padding: 3px 11px; font-size: 12px; cursor: pointer; }
+.chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.tr-row { border: 1px solid var(--border); background: var(--surface); border-radius: 10px;
+  padding: 10px 12px; margin-bottom: 8px; }
+.tr-row.open { border-color: var(--border-strong); }
+.tr-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; cursor: pointer; }
+.tr-main .caret { color: var(--faint); font-size: 11px; flex: none; }
+.tr-route { font-weight: 700; font-size: 14px; letter-spacing: .02em; white-space: nowrap; }
+.tr-route .mode { margin: 0 5px; font-weight: 400; }
+.tr-date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.tr-price { margin-left: auto; text-align: right; font-weight: 650; font-size: 13px; white-space: nowrap; }
+.tr-price small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+.tr-x { border-top: 1px dashed var(--border); margin-top: 10px; padding-top: 12px; }
+@container (max-width: 500px) {
+  .tr-price { margin-left: 0; width: 100%; text-align: left; padding-left: 22px; }
+  .tr-price small { display: inline; margin-left: 6px; }
+}
+
+/* ---- extras ---- */
+.extra-row { display: flex; align-items: center; gap: 11px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
+.extra-row:last-child { border-bottom: 0; }
+.extra-row .grow { flex: 1; min-width: 0; }
+.extra-row .title { font-weight: 600; font-size: 13.5px; }
+.extra-row .meta { color: var(--muted); font-size: 12px; }
+.extra-row .price { font-weight: 650; font-size: 13px; white-space: nowrap; }
+.sw { width: 32px; height: 18px; border-radius: 999px; background: var(--surface2);
+  border: 1px solid var(--border-strong); position: relative; display: inline-block; flex: none; cursor: pointer; }
+.sw i { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--muted); transition: left .15s; }
+.sw.on { background: var(--accent-soft); border-color: var(--accent); }
+.sw.on i { left: 16px; background: var(--accent); }
+@container (max-width: 500px) {
+  .extra-row { flex-wrap: wrap; }
+  .extra-row .price { margin-left: 43px; }
+}
+
+/* ---- viewer ---- */
+.lockbar { display: flex; gap: 9px; align-items: center; border: 1px solid var(--border-strong);
+  background: var(--surface2); border-radius: 8px; padding: 8px 12px; font-size: 12.5px;
+  color: var(--muted); margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <a href="#">Dashboard</a><a href="#" class="on">Itinerary</a><a href="#">Money</a>
+      <a href="#">Map</a><a href="#">Explore</a>
+      <span class="right"><a href="#">Settings</a><span class="avatar">P</span></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ============ shared page header ============ -->
+      <section data-state="*">
+        <div class="itin-head">
+          <span class="h1">Itinerary</span>
+          <span class="trip">Asia 2026–27 · Aug 31 2026 → Feb 25 2027</span>
+          <span class="row spacer"></span>
+          <span data-state="stops stays stay-modal transport transport-open extras">
+            <button class="btn primary sm">＋ Add stop</button>
+          </span>
+          <span data-state="viewer"><span class="badge">👁 view-only</span></span>
+        </div>
+      </section>
+
+      <!-- ============ STATE: stops (editor) ============ -->
+      <section data-state="stops">
+        <div class="tabs">
+          <button class="tab on" onclick="setState('stops')">Stops</button>
+          <button class="tab" onclick="setState('stays')">Stays</button>
+          <button class="tab" onclick="setState('transport')">Transport</button>
+          <button class="tab" onclick="setState('extras')">Extras</button>
+        </div>
+      </section>
+
+      <!-- timeline card is shared by editor stops + viewer (it has no edit affordances) -->
+      <section data-state="stops viewer">
+        <div class="card">
+          <div class="row" style="margin-bottom:8px;">
+            <span class="h2">Route timeline</span>
+            <span class="tiny muted">bar length = nights · color = country</span>
+          </div>
+          <div class="g-scroll">
+            <div class="gantt">
+              <div class="g-months">
+                <b style="left:0%">Sep</b><b style="left:16.9%">Oct</b><b style="left:34.3%">Nov</b>
+                <b style="left:51.1%">Dec</b><b style="left:68.5%">Jan</b><b style="left:86%">Feb</b>
+              </div>
+              <div class="g-body">
+                <div class="g-grid">
+                  <i style="left:0%"></i><i style="left:16.9%"></i><i style="left:34.3%"></i>
+                  <i style="left:51.1%"></i><i style="left:68.5%"></i><i style="left:86%"></i>
+                </div>
+                <div class="g-row"><span class="lbl">🇹🇭 Bangkok</span><span class="g-track"><span class="g-bar c-th" style="left:0%;width:16.9%">30 n</span></span></div>
+                <div class="g-row"><span class="lbl">🇹🇭 Chiang Mai</span><span class="g-track"><span class="g-bar c-th" style="left:16.9%;width:17.4%">31 n</span></span></div>
+                <div class="g-row"><span class="lbl">🇻🇳 Hanoi</span><span class="g-track"><span class="g-bar c-vn" style="left:34.3%;width:7.9%">14</span></span></div>
+                <div class="g-row"><span class="lbl">🇻🇳 Hoi An</span><span class="g-track"><span class="g-bar c-vn" style="left:42.1%;width:9%">16</span></span></div>
+                <div class="g-row"><span class="lbl">🇲🇾 Kuala L.</span><span class="g-track"><span class="g-bar c-my" style="left:51.1%;width:17.4%">31 n</span></span></div>
+                <div class="g-row"><span class="lbl">🇮🇩 Bali</span><span class="g-track"><span class="g-bar c-id" style="left:68.5%;width:17.4%">31 n</span></span></div>
+                <div class="g-row"><span class="lbl faint">unassigned</span><span class="g-track"><span class="g-bar c-gap" style="left:86%;width:13.4%">24 n ?</span></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="g-legend">
+            <span><i class="dot" style="background:var(--accent)"></i>Thailand</span>
+            <span><i class="dot" style="background:var(--ok)"></i>Vietnam</span>
+            <span><i class="dot" style="background:var(--warn)"></i>Malaysia</span>
+            <span><i class="dot" style="background:var(--gold)"></i>Indonesia</span>
+            <span><i class="dot" style="border:1.5px dashed var(--border-strong)"></i>unassigned gap</span>
+          </div>
+        </div>
+        <div class="note">Timeline renders <b>in-plan stops only</b> (Siem Reap idea below is excluded). Bars recompute
+          when dates change; overlapping stops render stacked with a ⚠ conflict badge — conflict state not mocked here,
+          OPEN QUESTION: should overlaps be blocked at save or just warned? The dashed “unassigned” bar (Feb 1–25) is
+          auto-derived from the gap between the last stop and the booked home flight — it feeds the Dashboard
+          “24 nights unplanned” nudge.</div>
+      </section>
+
+      <section data-state="stops">
+        <div class="filters">
+          <label class="check"><input type="checkbox" checked> in-plan only</label>
+          <select class="select"><option>All countries</option><option>Thailand</option><option>Vietnam</option><option>Malaysia</option><option>Indonesia</option><option>Cambodia</option></select>
+          <input class="input" type="date" value="2026-09-01">
+          <input class="input" type="date" value="2027-02-25">
+          <select class="select"><option>Any tier</option><option>$ budget</option><option>$$ mid</option><option>$$$ splurge</option></select>
+          <span class="count">6 in-plan stops · 153 nights (+24 unassigned)</span>
+        </div>
+        <div class="note">“in-plan only” is OFF in this mock so the Siem Reap idea shows. Filter state is mirrored into
+          the URL query so Patrik can send Anna a pre-filtered link. Tier = expected cost level of the stop; it also
+          colors nothing here (country wins) — OPEN QUESTION: offer a “color by tier” toggle on the timeline?</div>
+
+        <!-- Thailand -->
+        <div class="cty-head"><span class="caret">▾</span><span class="nm">🇹🇭 Thailand</span><span class="sum">2 stops · 61 nights</span></div>
+        <div class="card" style="padding:2px 8px;">
+          <div class="stop-row">
+            <span class="flag">🇹🇭</span><span class="nm">Bangkok</span>
+            <span class="dates">Sep 1 → Oct 1</span><span class="nights">30 n</span>
+            <span class="stop-tools">
+              <span class="tier">$$</span>
+              <span class="wx" title="Sep avg: 32° · rainy season">🌧</span>
+              <span class="notes-ic">📝<i>2</i></span>
+              <label class="check tiny" title="counts toward budget & route"><input type="checkbox" checked></label>
+              <button class="icon-btn" title="edit">✏️</button><button class="icon-btn" title="delete">🗑</button>
+            </span>
+          </div>
+          <div class="stop-row">
+            <span class="flag">🇹🇭</span><span class="nm">Chiang Mai</span>
+            <span class="dates">Oct 1 → Nov 1</span><span class="nights">31 n</span>
+            <span class="stop-tools">
+              <span class="tier">$</span>
+              <span class="wx" title="Oct avg: 31° · end of rains">⛅</span>
+              <span class="notes-ic">📝<i>1</i></span>
+              <label class="check tiny"><input type="checkbox" checked></label>
+              <button class="icon-btn" title="edit">✏️</button><button class="icon-btn" title="delete">🗑</button>
+            </span>
+          </div>
+        </div>
+
+        <!-- Vietnam -->
+        <div class="cty-head"><span class="caret">▾</span><span class="nm">🇻🇳 Vietnam</span><span class="sum">2 stops · 30 nights</span></div>
+        <div class="card" style="padding:2px 8px;">
+          <div class="stop-row">
+            <span class="flag">🇻🇳</span><span class="nm">Hanoi</span>
+            <span class="dates">Nov 1 → Nov 15</span><span class="nights">14 n</span>
+            <span class="stop-tools">
+              <span class="tier">$</span>
+              <span class="wx" title="Nov avg: 25° · dry, cooling">⛅</span>
+              <span class="notes-ic faint">📝</span>
+              <label class="check tiny"><input type="checkbox" checked></label>
+              <button class="icon-btn" title="edit">✏️</button><button class="icon-btn" title="delete">🗑</button>
+            </span>
+          </div>
+          <div class="stop-row">
+            <span class="flag">🇻🇳</span><span class="nm">Hoi An</span>
+            <span class="dates">Nov 15 → Dec 1</span><span class="nights">16 n</span>
+            <span class="stop-tools">
+              <span class="tier">$</span>
+              <span class="wx warn" title="Nov: typhoon-season tail in central VN — flood risk">🌧</span>
+              <span class="notes-ic">📝<i>1</i></span>
+              <label class="check tiny"><input type="checkbox" checked></label>
+              <button class="icon-btn" title="edit">✏️</button><button class="icon-btn" title="delete">🗑</button>
+            </span>
+          </div>
+        </div>
+
+        <!-- Malaysia (collapsed example) -->
+        <div class="cty-head"><span class="caret">▸</span><span class="nm">🇲🇾 Malaysia</span><span class="sum">1 stop · 31 nights (collapsed)</span></div>
+
+        <!-- Indonesia -->
+        <div class="cty-head"><span class="caret">▾</span><span class="nm">🇮🇩 Indonesia</span><span class="sum">1 stop · 31 nights</span></div>
+        <div class="card" style="padding:2px 8px;">
+          <div class="stop-row">
+            <span class="flag">🇮🇩</span><span class="nm">Bali (Canggu)</span>
+            <span class="dates">Jan 1 → Feb 1</span><span class="nights">31 n</span>
+            <span class="stop-tools">
+              <span class="tier">$$</span>
+              <span class="wx" title="Jan avg: 30° · wet season showers">🌦</span>
+              <span class="notes-ic faint">📝</span>
+              <label class="check tiny"><input type="checkbox" checked></label>
+              <button class="icon-btn" title="edit">✏️</button><button class="icon-btn" title="delete">🗑</button>
+            </span>
+          </div>
+        </div>
+
+        <!-- Cambodia (idea, not in plan) -->
+        <div class="cty-head"><span class="caret">▾</span><span class="nm">🇰🇭 Cambodia</span><span class="sum">1 idea · not in plan</span></div>
+        <div class="card" style="padding:2px 8px;">
+          <div class="stop-row dim">
+            <span class="flag">🇰🇭</span><span class="nm">Siem Reap</span>
+            <span class="dates">TBD (Dec?)</span><span class="nights">~5 n</span>
+            <span class="stop-tools">
+              <span class="tier">$</span>
+              <span class="wx" title="Dec avg: 30° · dry">☀️</span>
+              <span class="notes-ic">📝<i>1</i></span>
+              <label class="check tiny" title="not in plan — excluded from budget, route & timeline"><input type="checkbox"></label>
+              <button class="icon-btn" title="edit">✏️</button><button class="icon-btn" title="delete">🗑</button>
+            </span>
+          </div>
+        </div>
+
+        <div class="note">Row anatomy: flag · city · dates · nights (auto = check-out − check-in) · tier pill ·
+          weather glyph (historic monthly normals, cached daily via pg_cron from Open-Meteo climate API — hover shows
+          avg + season) · 📝 note count (stop notes are editor-only, <b>never</b> sent to follower links) · in-plan
+          checkbox · edit/delete. Delete prompts a confirm; OPEN QUESTION: a stop with linked stays/transport —
+          block delete, or cascade with an undo toast? Country group collapse state persists per user (localStorage).</div>
+      </section>
+
+      <!-- ============ STATE: stays ============ -->
+      <section data-state="stays stay-modal">
+        <div class="tabs">
+          <button class="tab" onclick="setState('stops')">Stops</button>
+          <button class="tab on" onclick="setState('stays')">Stays</button>
+          <button class="tab" onclick="setState('transport')">Transport</button>
+          <button class="tab" onclick="setState('extras')">Extras</button>
+        </div>
+      </section>
+
+      <section data-state="stays">
+        <div class="note">Decluttered per owner review: the card face shows only name · city/dates · price · ONE
+          status badge · the two money deadlines. Everything else (URL, platform, per-night, rating, notes) lives in
+          the ▸ Details expander. Cards sort by check-in date; a missing stay for an in-plan stop renders as a gap card.</div>
+
+        <!-- Bangkok — booked, shown EXPANDED as the expander example -->
+        <div class="card stay-card">
+          <div class="stay-top">
+            <span class="nm">The Quartz Residence</span>
+            <span class="badge ok">booked</span>
+            <span class="price">437,000 HUF <small>· ฿42,000</small></span>
+          </div>
+          <div class="stay-sub">Bangkok · Sep 1 → Oct 1 · 30 nights</div>
+          <div class="deadline">
+            <span>⏳ free-cancel until <b>Aug 24</b></span>
+            <span>💳 card charged <b>Aug 25</b></span>
+          </div>
+          <div class="stay-x">
+            <div class="kv">
+              <span class="k">Per night</span><span>≈ 14,600 HUF (฿1,400)</span>
+              <span class="k">Platform</span><span>Agoda · <a href="#">agoda.com/the-quartz-…</a></span>
+              <span class="k">Rating</span><span class="stars"><span class="off">★★★★★</span> <span class="tiny muted">unlocks after check-out</span></span>
+              <span class="k">In plan</span><span>✓ counts toward budget</span>
+              <span class="k">Notes</span><span class="muted">Ask for high floor · pool 07–21 · 📝 editor-only, hidden from followers</span>
+            </div>
+            <span class="x-toggle">▴ Hide details</span>
+          </div>
+        </div>
+
+        <!-- Chiang Mai — chosen -->
+        <div class="card stay-card">
+          <div class="stay-top">
+            <span class="nm">Nimman Loft Studio</span>
+            <span class="badge accent">chosen</span>
+            <span class="price">265,000 HUF <small>· ฿25,500</small></span>
+          </div>
+          <div class="stay-sub">Chiang Mai · Oct 1 → Nov 1 · 31 nights</div>
+          <div class="deadline"><span class="faint">deadlines appear once booked</span></div>
+          <span class="x-toggle">▸ Details</span>
+        </div>
+
+        <!-- Hanoi — idea -->
+        <div class="card stay-card">
+          <div class="stay-top">
+            <span class="nm">Old Quarter Homestay</span>
+            <span class="badge">idea</span>
+            <span class="price">120,000 HUF <small>· ~7.5M VND</small></span>
+          </div>
+          <div class="stay-sub">Hanoi · Nov 1 → Nov 15 · 14 nights</div>
+          <span class="x-toggle">▸ Details</span>
+        </div>
+
+        <!-- Hoi An — gap card -->
+        <div class="card stay-card" style="border-style:dashed;">
+          <div class="stay-top">
+            <span class="nm muted">No stay yet — Hoi An</span>
+            <span class="badge warn">gap</span>
+          </div>
+          <div class="stay-sub">Nov 15 → Dec 1 · 16 nights uncovered</div>
+          <div style="margin-top:8px;"><button class="btn sm">🔍 Find a stay</button></div>
+        </div>
+
+        <div class="row" style="margin-top:14px;">
+          <button class="btn primary">＋ Add stay</button>
+          <span class="tiny muted">stays auto-link to the stop covering their dates</span>
+        </div>
+
+        <div class="note">Free-cancel + charge dates drive deadline alerts: badge turns amber at T-14, red at T-3;
+          push + email fire at T-7 and T-1 (to BOTH editors — confirmed w/ owner? OPEN QUESTION). Charge dates also
+          pre-book the amount in Money → Ledger as a planned outflow on that date. Statuses: booked / chosen / idea —
+          exactly one badge on the card face, by design.</div>
+      </section>
+
+      <!-- ============ STATE: stay-modal ============ -->
+      <section data-state="stay-modal">
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3>Edit stay</h3>
+            <label class="field"><span class="label">Name</span>
+              <input class="input" value="The Quartz Residence"></label>
+            <label class="field"><span class="label">City / stop</span>
+              <select class="select"><option>Bangkok (Sep 1 → Oct 1)</option><option>Chiang Mai</option><option>Hanoi</option><option>Hoi An</option><option>Kuala Lumpur</option><option>Bali</option></select></label>
+            <div class="grid c2">
+              <label class="field"><span class="label">Check-in</span><input class="input" type="date" value="2026-09-01"></label>
+              <label class="field"><span class="label">Check-out</span><input class="input" type="date" value="2026-10-01"></label>
+            </div>
+            <div class="grid c2">
+              <label class="field"><span class="label">Price / night</span><input class="input" value="1,400"></label>
+              <label class="field"><span class="label">Currency</span>
+                <select class="select"><option>THB</option><option>HUF</option><option>EUR</option><option>VND</option></select></label>
+            </div>
+            <label class="field"><span class="label">Status</span>
+              <select class="select"><option>booked</option><option>chosen</option><option>idea</option></select></label>
+            <div class="grid c2">
+              <label class="field"><span class="label">Free-cancel until 🆕</span><input class="input" type="date" value="2026-08-24"></label>
+              <label class="field"><span class="label">Charge date 🆕</span><input class="input" type="date" value="2026-08-25"></label>
+            </div>
+            <div class="note" style="margin-top:0;">These two dates power the deadline alerts (Dashboard “Action
+              needed”, push at T-7/T-1) and place a planned outflow in the Ledger on the charge date. Both optional —
+              only relevant when status = booked. Validation: free-cancel ≤ charge date ≤ check-in.</div>
+            <label class="field"><span class="label">Rating (for after)</span>
+              <span class="stars"><span class="off">★★★★★</span></span>
+              <span class="tiny muted"> — disabled until check-out passes; then feeds the community review draft</span></label>
+            <label class="field"><span class="label">URL</span>
+              <input class="input" value="agoda.com/the-quartz-residence"></label>
+            <label class="check" style="margin-bottom:14px;"><input type="checkbox" checked> In plan — include in budget totals</label>
+            <div class="row">
+              <button class="btn danger sm">Delete</button>
+              <span class="spacer"></span>
+              <button class="btn ghost">Cancel</button>
+              <button class="btn primary">Save</button>
+            </div>
+          </div>
+        </div>
+        <div class="note">Same modal serves “Add stay” (fields empty, status defaults to <i>idea</i>). URL and notes
+          are stripped from every follower payload server-side, not just hidden client-side. OPEN QUESTION: should
+          changing check-in/out here nudge the parent stop’s dates when they no longer overlap?</div>
+      </section>
+
+      <!-- ============ STATE: transport (+ transport-open expands row 1) ============ -->
+      <section data-state="transport transport-open">
+        <div class="tabs">
+          <button class="tab" onclick="setState('stops')">Stops</button>
+          <button class="tab" onclick="setState('stays')">Stays</button>
+          <button class="tab on" onclick="setState('transport')">Transport</button>
+          <button class="tab" onclick="setState('extras')">Extras</button>
+        </div>
+
+        <div class="chips">
+          <span class="chip on">All · 9</span>
+          <span class="chip">✈ Flight · 5</span>
+          <span class="chip">🚌 Bus · 1</span>
+          <span class="chip">🚆 Train · 2</span>
+          <span class="chip">⛴ Boat · 1</span>
+        </div>
+
+        <!-- Row 1: BUD → BKK, expands in transport-open -->
+        <div class="tr-row" id="trBudBkk">
+          <div class="tr-main" onclick="setState(cur==='transport-open'?'transport':'transport-open')">
+            <span class="caret" data-state="transport">▸</span>
+            <span class="caret" data-state="transport-open">▾</span>
+            <span class="tr-route">BUD <span class="mode">✈</span> BKK</span>
+            <span class="tr-date">Aug 31 2026</span>
+            <span class="badge ok">booked</span>
+            <span class="tr-price">372,000 HUF<small>2 pax · paid</small></span>
+          </div>
+          <div class="tr-x" data-state="transport-open">
+            <div class="kv">
+              <span class="k">Duration</span><span>11 h 0 m · 1 stop (DOH)</span>
+              <span class="k">Carrier</span><span>Qatar Airways</span>
+              <span class="k">Departs</span><span>Aug 31 · 14:05 CEST · BUD T2B</span>
+              <span class="k">Arrives</span><span>Sep 1 · 06:05 ICT · BKK</span>
+              <span class="k">Booking</span><span><span class="badge ok">booked</span> <span class="tiny muted">· paid Apr 2026 · auto-imported to Ledger</span></span>
+              <span class="k">Baggage</span><span>30 kg checked each · 7 kg cabin</span>
+              <span class="k">Notes</span><span class="muted">Online check-in opens Aug 30, 14:05 CEST · seats together requested</span>
+            </div>
+            <div class="row" style="margin-top:12px;">
+              <button class="btn sm">🛰 Track flight</button>
+              <button class="btn ghost sm">✏️ Edit</button>
+              <span class="spacer"></span>
+              <button class="btn ghost sm danger" style="border:0;">🗑</button>
+            </div>
+            <div class="note">“Track flight” deep-links: pre-departure → Flightradar24 web with route pre-filled;
+              during the trip (live phase) it becomes the primary CTA and also pins the leg to the /live Today screen
+              and the follower feed (“Patrik & Anna are in the air ✈”). Confirmation / PNR codes are stored encrypted
+              and shown only after a tap-to-reveal — never in list views, never to followers or viewers.</div>
+          </div>
+        </div>
+
+        <!-- collapsed rows -->
+        <div class="tr-row"><div class="tr-main">
+          <span class="caret">▸</span><span class="tr-route">BKK <span class="mode">🚆</span> CNX</span>
+          <span class="tr-date">Oct 1 · sleeper</span><span class="badge accent">chosen</span>
+          <span class="tr-price">13,000 HUF<small>2 pax · 2nd cl. AC</small></span>
+        </div></div>
+        <div class="tr-row"><div class="tr-main">
+          <span class="caret">▸</span><span class="tr-route">CNX <span class="mode">✈</span> HAN</span>
+          <span class="tr-date">Nov 1</span><span class="badge">idea</span>
+          <span class="tr-price">~55,000 HUF<small>2 pax</small></span>
+        </div></div>
+        <div class="tr-row"><div class="tr-main">
+          <span class="caret">▸</span><span class="tr-route">HAN <span class="mode">🚆</span> DAD</span>
+          <span class="tr-date">Nov 15 · night train</span><span class="badge">idea</span>
+          <span class="tr-price">~26,000 HUF<small>2 pax · soft sleeper</small></span>
+        </div></div>
+        <div class="tr-row"><div class="tr-main">
+          <span class="caret">▸</span><span class="tr-route">DAD <span class="mode">🚌</span> Hoi An</span>
+          <span class="tr-date">Nov 15 · shuttle 45 m</span><span class="badge">idea</span>
+          <span class="tr-price">~3,000 HUF<small>2 pax</small></span>
+        </div></div>
+        <div class="tr-row"><div class="tr-main">
+          <span class="caret">▸</span><span class="tr-route">DAD <span class="mode">✈</span> KUL</span>
+          <span class="tr-date">Dec 1</span><span class="badge">idea</span>
+          <span class="tr-price">~48,000 HUF<small>2 pax</small></span>
+        </div></div>
+        <div class="tr-row"><div class="tr-main">
+          <span class="caret">▸</span><span class="tr-route">KUL <span class="mode">✈</span> DPS</span>
+          <span class="tr-date">Jan 1</span><span class="badge">idea</span>
+          <span class="tr-price">~60,000 HUF<small>2 pax</small></span>
+        </div></div>
+        <div class="tr-row"><div class="tr-main">
+          <span class="caret">▸</span><span class="tr-route">DPS <span class="mode">⛴</span> Nusa Penida</span>
+          <span class="tr-date">Jan 12 · day trip</span><span class="badge">idea</span>
+          <span class="tr-price">~9,000 HUF<small>2 pax · return</small></span>
+        </div></div>
+        <div class="tr-row"><div class="tr-main">
+          <span class="caret">▸</span><span class="tr-route">DPS <span class="mode">✈</span> BUD</span>
+          <span class="tr-date">Feb 25 2027</span><span class="badge warn">not booked</span>
+          <span class="tr-price">~420,000 HUF<small>2 pax · watch fares</small></span>
+        </div></div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn primary">＋ Add leg</button>
+          <span class="tiny muted">legs sort by date; a leg whose endpoints don’t match adjacent stops gets a ⚠ mismatch hint</span>
+        </div>
+
+        <div class="note">Collapsed rows deliberately show ONLY route · mode · date · one badge · price — everything
+          else is behind the expander (tap anywhere on the row). Prices are per-couple totals in HUF with the source
+          currency remembered per leg. The “not booked” home flight fires a reminder (“fares for Feb usually rise from
+          Nov”) — OPEN QUESTION: is a fare-watch integration in scope, or manual reminder only? Followers see route +
+          date only — no prices, no notes, no PNR.</div>
+      </section>
+
+      <!-- ============ STATE: extras ============ -->
+      <section data-state="extras">
+        <div class="tabs">
+          <button class="tab" onclick="setState('stops')">Stops</button>
+          <button class="tab" onclick="setState('stays')">Stays</button>
+          <button class="tab" onclick="setState('transport')">Transport</button>
+          <button class="tab on" onclick="setState('extras')">Extras</button>
+        </div>
+
+        <div class="sec mt0"><span class="h2">🛂 Visas</span></div>
+        <div class="card" style="padding:4px 12px;">
+          <div class="extra-row">
+            <span class="sw on"><i></i></span>
+            <span class="grow"><span class="title">Thailand — visa exempt + 30-day extension</span>
+              <div class="meta">extension at Chiang Mai immigration, week of Sep 28</div></span>
+            <span class="badge">action later</span><span class="price">44,000 HUF</span>
+          </div>
+          <div class="extra-row">
+            <span class="sw on"><i></i></span>
+            <span class="grow"><span class="title">Vietnam — e-visa ×2</span>
+              <div class="meta">apply online from Oct 2 (≤ 30 days before the Nov 1 entry)</div></span>
+            <span class="badge warn">reminder set</span><span class="price">18,000 HUF</span>
+          </div>
+          <div class="extra-row">
+            <span class="sw on"><i></i></span>
+            <span class="grow"><span class="title">Malaysia — visa-free 90 days</span>
+              <div class="meta">nothing to do · arrival card online ≤ 3 days before</div></span>
+            <span class="badge ok">free</span><span class="price">0 HUF</span>
+          </div>
+          <div class="extra-row">
+            <span class="sw on"><i></i></span>
+            <span class="grow"><span class="title">Indonesia — visa on arrival ×2</span>
+              <div class="meta">extendable once (+30 d) — extension NOT yet in plan</div></span>
+            <span class="badge">on arrival</span><span class="price">22,000 HUF</span>
+          </div>
+        </div>
+
+        <div class="sec"><span class="h2">🛡 Insurance</span></div>
+        <div class="card" style="padding:4px 12px;">
+          <div class="extra-row">
+            <span class="sw on"><i></i></span>
+            <span class="grow"><span class="title">Nomad travel insurance — 2 travellers · 6 months</span>
+              <div class="meta">must start Aug 31 · buy by Aug 15 for the early rate</div></span>
+            <span class="badge warn">buy by Aug 15</span><span class="price">340,000 HUF</span>
+          </div>
+        </div>
+
+        <div class="sec"><span class="h2">🎒 Gear</span></div>
+        <div class="card" style="padding:4px 12px;">
+          <div class="extra-row">
+            <span class="sw on"><i></i></span>
+            <span class="grow"><span class="title">Carry-on backpacks 40 L ×2</span>
+              <div class="meta">bought Jun 2026 — cost already in Ledger</div></span>
+            <span class="badge ok">bought</span><span class="price">180,000 HUF</span>
+          </div>
+          <div class="extra-row">
+            <span class="sw on"><i></i></span>
+            <span class="grow"><span class="title">Universal adapter + travel router</span>
+              <div class="meta">order by mid-Aug</div></span>
+            <span class="badge">to buy</span><span class="price">25,000 HUF</span>
+          </div>
+          <div class="extra-row" style="opacity:.62;">
+            <span class="sw"><i></i></span>
+            <span class="grow"><span class="title">New phone for Anna</span>
+              <div class="meta">wishlist — toggled out of plan, excluded from budget</div></span>
+            <span class="badge">wishlist</span><span class="price">250,000 HUF</span>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn primary">＋ Add extra</button>
+          <span class="tiny muted">categories: visa · insurance · gear · other</span>
+        </div>
+
+        <div class="note">The in-plan toggle is the whole point of this tab: ON pushes the amount into Money → Budget
+          as a one-off planned cost (visible against the 4,500,000 HUF cap immediately); OFF keeps the item as a
+          visible wishlist row. Items with a date (“buy by Aug 15”, “apply from Oct 2”) surface in the Dashboard
+          deadline feed alongside stay charge dates. OPEN QUESTION: should visa items auto-generate from the stop
+          list per country (Explore KB knows the rules), with these rows just confirming them?</div>
+      </section>
+
+      <!-- ============ STATE: viewer (read-only stops) ============ -->
+      <section data-state="viewer">
+        <div class="lockbar">🔒 You have view-only access to <b>Asia 2026–27</b>. Ask Patrik or Anna for edit rights.</div>
+        <div class="tabs">
+          <button class="tab on">Stops</button>
+          <button class="tab">Stays</button>
+          <button class="tab">Transport</button>
+          <button class="tab">Extras</button>
+        </div>
+        <div class="note">Viewer = signed-in account with read-only rights (e.g. a friend). All four tabs render, just
+          without add/edit/delete controls, checkboxes or the filter row’s in-plan toggle. Viewers DO see prices and
+          statuses; whether they see private stop notes is an OPEN QUESTION (current lean: no — notes stay editor-only,
+          same as followers). Followers (no account, /follow link) never reach this screen at all — they get the
+          sanitized follow page only.</div>
+      </section>
+      <!-- viewer also shows the shared timeline card above (data-state="stops viewer") -->
+      <section data-state="viewer">
+        <div class="cty-head"><span class="caret">▾</span><span class="nm">🇹🇭 Thailand</span><span class="sum">2 stops · 61 nights</span></div>
+        <div class="card" style="padding:2px 8px;">
+          <div class="stop-row">
+            <span class="flag">🇹🇭</span><span class="nm">Bangkok</span>
+            <span class="dates">Sep 1 → Oct 1</span><span class="nights">30 n</span>
+            <span class="stop-tools"><span class="tier">$$</span><span class="wx">🌧</span></span>
+          </div>
+          <div class="stop-row">
+            <span class="flag">🇹🇭</span><span class="nm">Chiang Mai</span>
+            <span class="dates">Oct 1 → Nov 1</span><span class="nights">31 n</span>
+            <span class="stop-tools"><span class="tier">$</span><span class="wx">⛅</span></span>
+          </div>
+        </div>
+        <div class="cty-head"><span class="caret">▾</span><span class="nm">🇻🇳 Vietnam</span><span class="sum">2 stops · 30 nights</span></div>
+        <div class="card" style="padding:2px 8px;">
+          <div class="stop-row">
+            <span class="flag">🇻🇳</span><span class="nm">Hanoi</span>
+            <span class="dates">Nov 1 → Nov 15</span><span class="nights">14 n</span>
+            <span class="stop-tools"><span class="tier">$</span><span class="wx">⛅</span></span>
+          </div>
+          <div class="stop-row">
+            <span class="flag">🇻🇳</span><span class="nm">Hoi An</span>
+            <span class="dates">Nov 15 → Dec 1</span><span class="nights">16 n</span>
+            <span class="stop-tools"><span class="tier">$</span><span class="wx">🌧</span></span>
+          </div>
+        </div>
+        <div class="cty-head"><span class="caret">▾</span><span class="nm">🇲🇾 Malaysia</span><span class="sum">1 stop · 31 nights</span></div>
+        <div class="card" style="padding:2px 8px;">
+          <div class="stop-row">
+            <span class="flag">🇲🇾</span><span class="nm">Kuala Lumpur</span>
+            <span class="dates">Dec 1 → Jan 1</span><span class="nights">31 n</span>
+            <span class="stop-tools"><span class="tier">$$</span><span class="wx">🌧</span></span>
+          </div>
+        </div>
+        <div class="cty-head"><span class="caret">▾</span><span class="nm">🇮🇩 Indonesia</span><span class="sum">1 stop · 31 nights</span></div>
+        <div class="card" style="padding:2px 8px;">
+          <div class="stop-row">
+            <span class="flag">🇮🇩</span><span class="nm">Bali (Canggu)</span>
+            <span class="dates">Jan 1 → Feb 1</span><span class="nights">31 n</span>
+            <span class="stop-tools"><span class="tier">$$</span><span class="wx">🌦</span></span>
+          </div>
+        </div>
+        <div class="note">Note the Siem Reap idea is hidden for viewers by default (only in-plan content shows) —
+          OPEN QUESTION: should viewers see ideas too? Also no 📝 note icons and no in-plan checkboxes in rows.</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Itinerary (Stops · Stays · Transport · Extras)',
+  states: [
+    { id: 'stops', label: 'Stops (editor)', desc: 'Owner Patrik, July 2026 planning session — full edit rights: timeline, filters, country groups.' },
+    { id: 'stays', label: 'Stays', desc: 'Patrik or Anna in early August 2026, checking accommodation before the Aug 24 free-cancel deadline.' },
+    { id: 'stay-modal', label: 'Stay modal', desc: 'Editor editing the booked Bangkok apartment — new free-cancel + charge-date fields drive alerts.' },
+    { id: 'transport', label: 'Transport', desc: 'Editor scanning all legs collapsed, filtering by mode with the type chips.' },
+    { id: 'transport-open', label: 'Transport (open)', desc: 'Editor tapped the BUD→BKK flight row — expanded detail with carrier, times, track-flight.' },
+    { id: 'extras', label: 'Extras', desc: 'Editor pre-departure (July–Aug 2026): visas, insurance, gear — in-plan toggles feed the budget.' },
+    { id: 'viewer', label: 'Viewer (read-only)', desc: 'A friend with a viewer account, any time — read-only stops, no edit affordances anywhere.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

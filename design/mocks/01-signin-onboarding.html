@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Sign-in &amp; Onboarding</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* pre-auth minimal brand header (replaces appnav on this screen) */
+.authbrand { display: flex; justify-content: center; align-items: baseline; gap: 8px;
+  border-bottom: 1px solid var(--border); padding: 14px 16px; }
+.authbrand .b { font-weight: 700; font-size: 15px; }
+.authbrand .tag { color: var(--faint); font-size: 11.5px; letter-spacing: .04em; }
+@container (max-width: 500px) { .authbrand .tag { display: none; } }
+
+/* centered auth layout */
+.auth-wrap { display: flex; flex-direction: column; align-items: center; padding-top: 22px; }
+.auth-card { width: 100%; max-width: 430px; }
+.auth-card.wide { max-width: 560px; }
+@container (max-width: 500px) { .auth-wrap { padding-top: 8px; } }
+
+/* brand globe glyph (token-only colors so it flips with theme) */
+.brandglobe { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px;
+  border: 1px solid var(--accent);
+  background:
+    radial-gradient(circle at 34% 30%, var(--accent) 0 13%, transparent 14%),
+    radial-gradient(circle at 63% 52%, var(--accent) 0 9%, transparent 10%),
+    radial-gradient(circle at 46% 72%, var(--accent) 0 6%, transparent 7%),
+    radial-gradient(circle at 35% 32%, var(--accent-soft) 0 55%, var(--surface2) 100%);
+  box-shadow: 0 0 34px var(--accent-soft), inset -8px -8px 18px var(--accent-soft); }
+.brandglobe.sm { width: 46px; height: 46px; margin-bottom: 10px; }
+
+.auth-title { text-align: center; font-size: 19px; font-weight: 700; }
+.auth-sub { text-align: center; color: var(--muted); font-size: 13px; margin: 4px 0 16px; }
+
+/* divider with label */
+.divider { display: flex; align-items: center; gap: 10px; color: var(--faint);
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; margin: 16px 0; }
+.divider::before, .divider::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+
+/* full-width buttons in auth cards */
+.btn.block { width: 100%; justify-content: center; }
+.oauth-glyph { font-weight: 800; font-size: 15px; line-height: 1; }
+.oauth-glyph.g { color: var(--accent); border: 1.5px solid currentColor; border-radius: 50%;
+  width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; }
+
+.smallprint { color: var(--faint); font-size: 11.5px; text-align: center; margin-top: 14px; line-height: 1.55; }
+.smallprint a { color: var(--muted); text-decoration: underline; }
+
+/* remembered-account chip (returning user) */
+.acct-chip { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-strong);
+  background: var(--surface2); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.acct-chip .who { flex: 1; min-width: 0; }
+.acct-chip .who .n { font-weight: 600; font-size: 14px; }
+.acct-chip .who .e { color: var(--muted); font-size: 12px; }
+
+/* OTP boxes */
+.otp-row { display: flex; gap: 8px; justify-content: center; margin: 16px 0 6px; }
+.otp-box { width: 46px; height: 54px; border: 1px solid var(--border-strong); border-radius: 10px;
+  background: var(--surface2); display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; }
+.otp-box.focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.otp-box.empty { color: var(--faint); font-weight: 400; }
+.otp-box.bad { border-color: var(--danger); color: var(--danger); }
+@container (max-width: 500px) { .otp-row { gap: 6px; } .otp-box { width: 42px; height: 50px; font-size: 20px; } }
+
+/* wizard progress dots */
+.dots { display: flex; align-items: flex-start; margin: 4px 0 18px; }
+.dstep { flex: none; width: 110px; text-align: center; }
+.dstep .dot { width: 26px; height: 26px; border-radius: 50%; margin: 0 auto 6px;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.dstep.on .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.dstep .dl { font-size: 11px; color: var(--muted); line-height: 1.3; }
+.dstep.on .dl { color: var(--text); font-weight: 600; }
+.dstep .opt { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); }
+.dline { flex: 1; border-top: 1px dashed var(--border-strong); margin-top: 13px; min-width: 12px; }
+@container (max-width: 500px) { .dstep { width: 92px; } .dstep .dl { font-size: 10.5px; } }
+
+/* travellers stepper */
+.stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--border-strong);
+  border-radius: 8px; overflow: hidden; }
+.stepper button { width: 38px; border: 0; background: var(--surface2); color: var(--text);
+  font-size: 17px; cursor: pointer; padding: 6px 0; }
+.stepper .val { min-width: 48px; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; background: var(--surface); border-left: 1px solid var(--border-strong);
+  border-right: 1px solid var(--border-strong); }
+
+/* toggle switch */
+.switch { width: 34px; height: 20px; border-radius: 999px; background: var(--surface2);
+  border: 1px solid var(--border-strong); position: relative; flex: none; display: inline-block; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--muted); }
+.switch.on { background: var(--accent); border-color: var(--accent); }
+.switch.on::after { left: auto; right: 2px; background: var(--accent-ink); }
+
+/* compact previews of wizard steps 2–3 */
+.step-preview .card { border-style: dashed; background: transparent; }
+.step-preview { opacity: .8; }
+
+/* budget amount + currency side by side */
+.money-field { display: flex; gap: 8px; }
+.money-field .input { flex: 1; }
+.money-field .select { width: 92px; flex: none; }
+
+/* invite avatars pair */
+.av-pair { display: flex; justify-content: center; margin-bottom: 10px; }
+.av-pair .avatar { width: 44px; height: 44px; font-size: 16px; }
+.av-pair .avatar + .avatar { margin-left: -10px; background: var(--surface2); color: var(--muted);
+  border-color: var(--border-strong); }
+.av-pair .arrow { align-self: center; margin: 0 10px; color: var(--faint); font-size: 16px; }
+
+/* role explanation rows */
+.role-list { margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.role-list li { display: flex; gap: 8px; padding: 5px 0; align-items: baseline; }
+.role-list .i { flex: none; width: 16px; text-align: center; }
+
+/* error glyph */
+.err-glyph { width: 58px; height: 58px; border-radius: 50%; margin: 0 auto 12px;
+  background: transparent; border: 2px solid var(--danger); color: var(--danger);
+  display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <!-- Pre-auth: no appnav. Minimal centered brand header only. -->
+    <header class="authbrand">
+      <span class="b">🧭 Nomad</span>
+      <span class="tag">plan the trip · live the trip · let them follow</span>
+    </header>
+    <main class="screen" id="screen">
+
+      <!-- ============ STATE: signin (new user) ============ -->
+      <section data-state="signin">
+        <div class="auth-wrap">
+          <div class="auth-card">
+            <div class="brandglobe"></div>
+            <div class="auth-title">Sign in to Nomad</div>
+            <div class="auth-sub">No password. We email you a one-time code.</div>
+
+            <div class="card pad-lg">
+              <label class="field">
+                <span class="label">Email</span>
+                <input class="input" type="email" placeholder="you@example.com" value="">
+              </label>
+              <button class="btn primary lg block">Send code</button>
+
+              <div class="divider">or continue with</div>
+
+              <div class="stack" style="gap:8px;">
+                <button class="btn block"><span class="oauth-glyph"></span> Continue with Apple</button>
+                <button class="btn block"><span class="oauth-glyph g">G</span> Continue with Google</button>
+              </div>
+            </div>
+
+            <div class="smallprint">
+              By continuing you agree to the <a href="#">Terms</a> and <a href="#">Privacy policy</a>.<br>
+              We only use your email to sign you in — no marketing, ever.
+            </div>
+
+            <div class="note">Auth = Supabase email OTP. The email contains BOTH a 6-digit code and a
+              magic link — typing the code covers the phone-reading-laptop-email case; tapping the
+              link covers same-device. Rate limit: 1 email / 60s per address (Supabase default).</div>
+            <div class="note">Apple sign-in is a launch requirement (needed for the future iOS app
+              review; web side is already wired, only external Apple config remains). Google is
+              standard Supabase OAuth. Both create the same account row if the email matches an
+              existing OTP account — <b>open question:</b> confirm Supabase identity-linking is ON so
+              patrik@… via Google and via OTP don't become two accounts.</div>
+            <div class="note">Followers (e.g. Mom) NEVER see this screen — /follow/[token] links are
+              account-free by design. This screen is only for owner / co-editor / viewer roles.</div>
+            <div class="note"><b>Open question:</b> do we need a marketing/landing page before this,
+              or is app.nomad… sign-in the root? Mock assumes sign-in is the root for M1.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STATE: returning user ============ -->
+      <section data-state="returning">
+        <div class="auth-wrap">
+          <div class="auth-card">
+            <div class="brandglobe"></div>
+            <div class="auth-title">Welcome back</div>
+            <div class="auth-sub">Your session expired — confirm it's you.</div>
+
+            <div class="card pad-lg">
+              <div class="acct-chip">
+                <span class="avatar">P</span>
+                <span class="who">
+                  <span class="n">Patrik</span><br>
+                  <span class="e">pat•••@nomad.app</span>
+                </span>
+                <span class="badge accent">last device</span>
+              </div>
+              <button class="btn primary lg block">Continue as Patrik</button>
+              <div class="divider">or</div>
+              <button class="btn ghost block">Use a different account</button>
+            </div>
+
+            <div class="smallprint">
+              Continuing sends a fresh code to pat•••@nomad.app.<br>
+              Not you? <a href="#">Clear this device</a>.
+            </div>
+
+            <div class="note">Shown only when a local identity hint exists (localStorage) but the
+              Supabase refresh token is expired/revoked. Sessions normally persist ~30 days and
+              silently refresh, so most returning users skip this screen entirely and land on the
+              Dashboard. Email is masked because the device may be shared.</div>
+            <div class="note">"Continue as Patrik" pre-fills the email and jumps straight to the
+              code-sent state (one tap fewer). "Use a different account" returns to the blank
+              sign-in state and clears the hint.</div>
+            <div class="note"><b>Open question:</b> on the PWA (installed to home screen mid-trip,
+              possibly offline in Vietnam), should an expired session keep read-only cached data
+              visible behind this prompt instead of blocking the whole app? Leaning yes — decide
+              before M2 (live phase).</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STATE: code-sent (OTP entry) ============ -->
+      <section data-state="code-sent">
+        <div class="auth-wrap">
+          <div class="auth-card">
+            <div class="brandglobe sm"></div>
+            <div class="auth-title">Check your email</div>
+            <div class="auth-sub">We sent a 6-digit code to <b>pat•••@nomad.app</b></div>
+
+            <div class="card pad-lg">
+              <div class="otp-row" aria-label="6-digit code">
+                <span class="otp-box">4</span>
+                <span class="otp-box">8</span>
+                <span class="otp-box">2</span>
+                <span class="otp-box focus empty">|</span>
+                <span class="otp-box empty">·</span>
+                <span class="otp-box empty">·</span>
+              </div>
+              <div class="small muted" style="text-align:center;">Paste works — the code splits across boxes.</div>
+
+              <div class="hr"></div>
+
+              <div class="row" style="justify-content:center; gap:6px;">
+                <button class="btn sm ghost" disabled>Resend code</button>
+                <span class="small muted">available in 0:42</span>
+              </div>
+              <div class="small muted" style="text-align:center; margin-top:8px;">
+                📮 Open your email app — the message is from <b>sign-in@nomad.app</b>.<br>
+                Nothing there? Check spam, or <a href="#">go back</a> and fix the address.
+              </div>
+            </div>
+
+            <div class="smallprint">Code expires in 10 minutes. The magic link in the same email also works.</div>
+
+            <div class="note">Code auto-submits when the 6th digit lands — no separate "Verify"
+              button. On phone the input gets <code>autocomplete="one-time-code"</code> so iOS/Android
+              suggest the code from Mail/Messages automatically.</div>
+            <div class="note">Resend cooldown 60s (matches Supabase rate limit); resending
+              invalidates the previous code. Max 5 wrong attempts per code, then the code is burned
+              → auth-error state.</div>
+            <div class="note">If the user instead taps the magic link on another device, THIS tab
+              detects the new session (Supabase realtime auth event) and proceeds by itself —
+              worth mocking? Covered by a toast on the Dashboard for now.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STATE: wizard (onboarding, step 1 of 3) ============ -->
+      <section data-state="wizard">
+        <div class="auth-wrap">
+          <div class="auth-card wide">
+            <div class="auth-title">Let's set up your trip</div>
+            <div class="auth-sub">Three quick steps — only the first one is required.</div>
+
+            <div class="dots" style="justify-content:center;">
+              <span class="dstep on">
+                <span class="dot">1</span>
+                <span class="dl">Trip basics</span>
+              </span>
+              <span class="dline"></span>
+              <span class="dstep">
+                <span class="dot">2</span>
+                <span class="dl">Home base <span class="opt">optional</span></span>
+              </span>
+              <span class="dline"></span>
+              <span class="dstep">
+                <span class="dot">3</span>
+                <span class="dl">Invite partner <span class="opt">optional</span></span>
+              </span>
+            </div>
+
+            <!-- STEP 1 — full -->
+            <div class="card pad-lg">
+              <div class="h2" style="margin-bottom:12px;">Trip basics</div>
+
+              <label class="field">
+                <span class="label">Trip name</span>
+                <input class="input" value="Asia 2026–27">
+              </label>
+
+              <div class="grid c2 stack-phone">
+                <label class="field mb0">
+                  <span class="label">Start date</span>
+                  <input class="input" value="31 Aug 2026">
+                </label>
+                <div class="field mb0">
+                  <span class="label">End date <span class="faint">— optional</span></span>
+                  <div class="row" style="gap:8px; flex-wrap:nowrap;">
+                    <span class="switch on" role="switch" aria-checked="true"></span>
+                    <input class="input" value="25 Feb 2027">
+                  </div>
+                </div>
+              </div>
+              <div class="small muted" style="margin:4px 0 12px;">Leave the end date off for an open-ended trip — budget pace will use "so far" instead of "per remaining day".</div>
+
+              <div class="grid c2 stack-phone" style="margin-bottom:12px;">
+                <div class="field mb0">
+                  <span class="label">Travellers</span>
+                  <div class="stepper">
+                    <button aria-label="fewer">−</button>
+                    <span class="val">2</span>
+                    <button aria-label="more">+</button>
+                  </div>
+                  <div class="small muted" style="margin-top:4px;">You can name them later (Patrik, Anna…).</div>
+                </div>
+                <div class="field mb0">
+                  <span class="label">Budget cap <span class="faint">— optional</span></span>
+                  <div class="money-field">
+                    <input class="input" value="4,500,000">
+                    <select class="select"><option>HUF</option><option>EUR</option><option>THB</option><option>VND</option></select>
+                  </div>
+                  <div class="small muted" style="margin-top:4px;">≈ €11,390 · whole-trip cap, both travellers</div>
+                </div>
+              </div>
+
+              <button class="btn primary lg block">Create trip →</button>
+            </div>
+
+            <!-- STEPS 2–3 — compact previews -->
+            <div class="stack" style="margin-top:12px; gap:8px;">
+              <div class="step-preview">
+                <div class="card">
+                  <div class="row">
+                    <span class="badge">Step 2</span>
+                    <b>Home base</b>
+                    <span class="small muted">Budapest, Hungary 🇭🇺 — sets departure default, home timezone &amp; HUF as home currency</span>
+                    <span class="spacer"></span>
+                    <span class="badge">skippable</span>
+                  </div>
+                </div>
+              </div>
+              <div class="step-preview">
+                <div class="card">
+                  <div class="row">
+                    <span class="badge">Step 3</span>
+                    <b>Invite your partner</b>
+                    <span class="small muted">Send Anna a co-editor link — full edit access, revocable in Settings</span>
+                    <span class="spacer"></span>
+                    <span class="badge">skippable</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="note">Wizard fires only when a fresh account has zero trips. Skipping steps
+              2–3 is fine — the same settings live in Settings → Trip and Settings → Sharing.
+              "Create trip" (step 1) is the only hard commit; steps 2–3 write onto the trip made in
+              step 1, so closing the tab after step 1 still leaves a usable trip.</div>
+            <div class="note">Budget cap currency also becomes the trip's PRIMARY display currency
+              (HUF here); EUR/THB/VND stay available per-entry in Money. FX rates cached daily via
+              pg_cron. <b>Open question:</b> should cap currency and display currency ever be
+              separable? Mock says no — one less concept.</div>
+            <div class="note">Travellers stepper creates N traveller slots, not accounts — Anna
+              becomes a real co-editor only via the step-3 / Settings invite. Slots are what Money
+              splits and per-person stats hang off.</div>
+            <div class="note"><b>Open question:</b> date pickers — native <code>&lt;input type=date&gt;</code>
+              or a custom range picker? Native is fine for M1; itinerary editing will need the
+              custom one anyway.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STATE: invite-accept (Anna's view) ============ -->
+      <section data-state="invite-accept">
+        <div class="auth-wrap">
+          <div class="auth-card">
+            <div class="av-pair">
+              <span class="avatar">P</span>
+              <span class="avatar">A</span>
+            </div>
+            <div class="auth-title">Patrik invited you to co-edit</div>
+            <div class="auth-sub">Trip · <b>Asia 2026–27</b></div>
+
+            <div class="card pad-lg">
+              <div class="row" style="gap:6px; margin-bottom:12px;">
+                <span class="badge accent">31 Aug 2026 → 25 Feb 2027</span>
+                <span class="badge">2 travellers</span>
+                <span class="badge">6 stops planned</span>
+              </div>
+
+              <div class="card" style="background:var(--surface2); margin-bottom:14px;">
+                <div class="label" style="font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:6px;">As a co-editor you can</div>
+                <ul class="role-list">
+                  <li><span class="i ok">✓</span> Edit everything — stops, stays, transport, places</li>
+                  <li><span class="i ok">✓</span> See and add money entries, notes &amp; booking details</li>
+                  <li><span class="i ok">✓</span> Check in during the trip and post to the family feed</li>
+                  <li><span class="i ok">✓</span> Create &amp; revoke follower links</li>
+                  <li><span class="i faint">✕</span> <span class="muted">Delete the trip or remove Patrik — owner only</span></li>
+                </ul>
+              </div>
+
+              <button class="btn primary lg block">Accept — join as co-editor</button>
+              <button class="btn ghost block" style="margin-top:8px;">Decline</button>
+            </div>
+
+            <div class="smallprint">
+              Signed in as <b>anna•••@nomad.app</b> · <a href="#">not you? switch account</a><br>
+              This invite was sent to this exact email and works once.
+            </div>
+
+            <div class="note">Flow: Anna opens the invite link → if signed out she goes through the
+              normal email-first sign-in (states 1→3) with the invite token carried in the URL →
+              lands here. Accept = membership row (role: co-editor) + redirect to Dashboard with a
+              "You joined Asia 2026–27" toast.</div>
+            <div class="note">Token: single-use, expires 14 days after sending, revocable by Patrik
+              in Settings → Sharing. Bound to Anna's email — if she signs in with a different email
+              the Accept button is replaced by "This invite is for another address" + switch-account
+              link. <b>Open question:</b> allow owner to re-issue to a different email in one tap?</div>
+            <div class="note">Contrast with follower links: Mom's /follow/[token] link never comes
+              through here — no account, no accept step, sanitized view (no money, notes, booking
+              refs). This screen is co-editor / viewer invites only.</div>
+            <div class="note">Decline soft-deletes the invite and shows "Maybe later — Patrik can
+              send a new invite anytime." Patrik sees the declined status in Settings → Sharing.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STATE: auth-error ============ -->
+      <section data-state="auth-error">
+        <div class="auth-wrap">
+          <div class="auth-card">
+            <div class="err-glyph">!</div>
+            <div class="auth-title">That code didn't work</div>
+            <div class="auth-sub">It may have expired, or a digit is off.</div>
+
+            <div class="card pad-lg">
+              <div class="otp-row" aria-label="rejected code">
+                <span class="otp-box bad">4</span>
+                <span class="otp-box bad">8</span>
+                <span class="otp-box bad">2</span>
+                <span class="otp-box bad">9</span>
+                <span class="otp-box bad">1</span>
+                <span class="otp-box bad">7</span>
+              </div>
+              <div class="small" style="text-align:center; margin-bottom:12px;">
+                <span class="badge danger">code expired</span>
+                <span class="small muted" style="margin-left:6px;">codes last 10 minutes · 2 attempts left on a fresh code</span>
+              </div>
+
+              <button class="btn primary lg block">Email me a new code</button>
+              <button class="btn ghost block" style="margin-top:8px;">Re-enter code</button>
+            </div>
+
+            <div class="smallprint">
+              Still stuck? <a href="#">Start over with a different email</a> ·
+              codes come from <b>sign-in@nomad.app</b>
+            </div>
+
+            <div class="note">Same state serves three failures with different badge text:
+              <b>code expired</b> (&gt;10 min), <b>wrong code</b> (mistyped, shows attempts left),
+              and <b>link already used</b> (stale magic link tapped twice — common when email apps
+              prefetch links; Supabase counts prefetch as a use. Mitigation: prefer the 6-digit code
+              path in the email copy).</div>
+            <div class="note">After 5 wrong attempts OR 4 resends within 15 min the address is
+              cooled down 15 min — copy switches to "Too many tries — wait 15 minutes." No CAPTCHA
+              at this scale; revisit if abuse appears.</div>
+            <div class="note">"Re-enter code" returns to the code-sent state keeping the same code
+              (only if not expired/burned). "Email me a new code" restarts the resend timer and
+              invalidates the old code.</div>
+            <div class="note"><b>Open question:</b> mid-trip on hotel Wi-Fi captive portals, OTP
+              emails can be slow — do we need a fallback (e.g. remembered-device grace period)?
+              Ties into the offline/PWA question on the returning state.</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Sign-in & Onboarding',
+  states: [
+    { id: 'signin', label: 'Sign in (new)', desc: 'A brand-new visitor (Patrik, day one) at the app root — no account, no session.' },
+    { id: 'returning', label: 'Returning user', desc: 'Patrik on a known device weeks later — session expired but the device remembers who he is.' },
+    { id: 'code-sent', label: 'Code sent', desc: 'Patrik seconds after tapping "Send code" — email OTP on its way, entry boxes waiting.' },
+    { id: 'wizard', label: 'Onboarding wizard', desc: 'Patrik right after his FIRST successful sign-in — zero trips exist; step 1 of 3 (basics → home base → invite).' },
+    { id: 'invite-accept', label: 'Invite accept (Anna)', desc: 'Anna, arriving via Patrik\'s co-editor invite link, already signed in with her own email.' },
+    { id: 'auth-error', label: 'Auth error', desc: 'Patrik after an expired/mistyped code or a stale magic link — needs a clean retry path.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

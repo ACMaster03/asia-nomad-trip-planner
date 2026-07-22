@@ -172,22 +172,56 @@ create index if not exists trip_invites_trip_idx  on public.trip_invites (trip_i
 
 -- ============================================================================
 -- ROW LEVEL SECURITY
--- Every row is reachable only by the trip's owner or its members.
+-- Every row is reachable only by the trip's owner or its members; only the
+-- owner and 'editor' members may WRITE.
+--
+-- >>> AUTHORITY NOTE: migrations/06-security.sql is the AUTHORITY for RLS. <<<
+-- The function/policy text below is kept aligned with 06 so re-running this
+-- "safe to re-run" file on a live database does NOT silently reopen the holes
+-- 06 closed (role-blind writes, invite self-escalation). 06 additionally
+-- installs the owner-freeze and invite-accept guard triggers, the rev counters
+-- and the write RPCs — always (re)apply 06 after this file. If this file and
+-- 06 ever disagree, 06 wins.
 -- ============================================================================
-create or replace function public.can_access_trip(t uuid)
-returns boolean language sql security definer stable as $$
+-- Role-aware access helpers (definitions identical to 06-security.sql):
+create or replace function public.can_view_trip(t uuid)
+returns boolean language sql security definer stable set search_path = public as $$
   select exists (select 1 from public.trips        where id = t and owner = auth.uid())
-      or exists (select 1 from public.trip_members  where trip_id = t and user_id = auth.uid());
+      or exists (select 1 from public.trip_members where trip_id = t and user_id = auth.uid());
+$$;
+
+create or replace function public.can_edit_trip(t uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.trips        where id = t and owner = auth.uid())
+      or exists (select 1 from public.trip_members where trip_id = t and user_id = auth.uid()
+                                                     and role = 'editor');
+$$;
+
+-- Back-compat alias: "access" means VIEW; write policies use can_edit_trip.
+create or replace function public.can_access_trip(t uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select public.can_view_trip(t);
 $$;
 
 -- does the signed-in user have a pending invite to this trip? (security definer: no RLS recursion)
 create or replace function public.has_pending_invite(t uuid)
-returns boolean language sql security definer stable as $$
+returns boolean language sql security definer stable set search_path = public as $$
   select exists (
     select 1 from public.trip_invites i
     where i.trip_id = t and i.status = 'pending'
       and lower(i.email) = lower(auth.jwt() ->> 'email')
   );
+$$;
+
+-- role on the signed-in user's (newest) pending invite — constrains self-joins
+create or replace function public.pending_invite_role(t uuid)
+returns text language sql security definer stable set search_path = public as $$
+  select i.role
+  from public.trip_invites i
+  where i.trip_id = t and i.status = 'pending'
+    and lower(i.email) = lower(auth.jwt() ->> 'email')
+  order by i.created_at desc
+  limit 1;
 $$;
 
 alter table public.trips        enable row level security;
@@ -208,8 +242,11 @@ create policy trips_select on public.trips for select
 drop policy if exists trips_insert on public.trips;
 create policy trips_insert on public.trips for insert with check (owner = auth.uid());
 drop policy if exists trips_update on public.trips;
--- members (e.g. your partner) can update the shared trip doc too, not just the owner
-create policy trips_update on public.trips for update using (public.can_access_trip(id));
+-- only the owner and 'editor' members can update the shared trip doc (matches 06;
+-- WITH CHECK included so the updated row must still satisfy the same predicate)
+create policy trips_update on public.trips for update
+  using      (public.can_edit_trip(id))
+  with check (public.can_edit_trip(id));
 drop policy if exists trips_delete on public.trips;
 create policy trips_delete on public.trips for delete using (owner = auth.uid());
 
@@ -219,9 +256,11 @@ drop policy if exists members_select on public.trip_members;
 drop policy if exists members_insert on public.trip_members;
 drop policy if exists members_delete on public.trip_members;
 create policy members_select on public.trip_members for select using ( public.can_access_trip(trip_id) );
+-- owner adds anyone; an invitee adds ONLY themselves with EXACTLY the invited
+-- role (matches 06 — prevents "invited as viewer, join as editor")
 create policy members_insert on public.trip_members for insert with check (
   exists (select 1 from public.trips where id = trip_id and owner = auth.uid())
-  or ( user_id = auth.uid() and public.has_pending_invite(trip_id) )
+  or ( user_id = auth.uid() and role = public.pending_invite_role(trip_id) )
 );
 create policy members_delete on public.trip_members for delete using (
   exists (select 1 from public.trips where id = trip_id and owner = auth.uid()) or user_id = auth.uid()
@@ -232,21 +271,31 @@ drop policy if exists invites_select on public.trip_invites;
 create policy invites_select on public.trip_invites for select
   using ( public.can_access_trip(trip_id) or lower(email) = lower(auth.jwt() ->> 'email') );
 drop policy if exists invites_insert on public.trip_invites;
+-- inviting is a WRITE-level action: editors/owner only (matches 06)
 create policy invites_insert on public.trip_invites for insert
-  with check ( public.can_access_trip(trip_id) and invited_by = auth.uid() );
+  with check ( public.can_edit_trip(trip_id) and invited_by = auth.uid() );
 drop policy if exists invites_update on public.trip_invites;
+-- editors manage invites; the invitee may only ACCEPT their own pending invite
+-- as-is — that restriction is enforced by 06's guard_invite_update trigger
 create policy invites_update on public.trip_invites for update
-  using ( public.can_access_trip(trip_id) or lower(email) = lower(auth.jwt() ->> 'email') );
+  using      ( public.can_edit_trip(trip_id) or lower(email) = lower(auth.jwt() ->> 'email') )
+  with check ( public.can_edit_trip(trip_id) or lower(email) = lower(auth.jwt() ->> 'email') );
 
--- child tables: full access if you can access the parent trip
+-- child tables: read if you can VIEW the parent trip, write only if you can
+-- EDIT it (matches 06 — the old single role-blind %_all policy let viewers write)
 do $$
 declare tbl text;
 begin
   foreach tbl in array array['segments','stays','transport','extras','notes','ledger']
   loop
     execute format('drop policy if exists %1$s_all on public.%1$s;', tbl);
+    execute format('drop policy if exists %1$s_select on public.%1$s;', tbl);
+    execute format('drop policy if exists %1$s_write  on public.%1$s;', tbl);
     execute format(
-      'create policy %1$s_all on public.%1$s for all using (public.can_access_trip(trip_id)) with check (public.can_access_trip(trip_id));',
+      'create policy %1$s_select on public.%1$s for select using (public.can_view_trip(trip_id));',
+      tbl);
+    execute format(
+      'create policy %1$s_write on public.%1$s for all using (public.can_edit_trip(trip_id)) with check (public.can_edit_trip(trip_id));',
       tbl);
   end loop;
 end $$;

@@ -34,7 +34,7 @@ export function ExtrasTab() {
         <p className="text-sm text-neutral-500">One-off, upfront costs (visas, insurance, gear). Included total: <b>{fmtHUF(total)}</b>.</p>
         <button onClick={() => setModal({ extra: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
       </div>
-      <SaveError show={mut.isError} />
+      <SaveError show={mut.isError} error={mut.error} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="text-left text-neutral-500">

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Screen Name</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
+      <a href="#">Map</a><a href="#">Explore</a>
+      <span class="right"><a href="#">Settings</a><span class="avatar">P</span></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- One <section data-state="stateId otherStateId"> per state-variant.
+           Use data-state="*" for blocks visible in every state. -->
+      <section data-state="example">
+        <div class="h1">Example state</div>
+        <div class="note">Replace with real screen content.</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Screen Name',
+  states: [
+    { id: 'example', label: 'Example', desc: 'Describe who is looking at this and when.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

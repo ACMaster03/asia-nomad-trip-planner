@@ -5,6 +5,7 @@ import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import { computeBudget, ledgerByMonth, plannedByMonth } from '@/lib/trips/budget'
 import { fmtHUF, toHUF, monthLabel } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
+import { SaveError } from '@/components/trips/SaveError'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import type { LedgerEntry } from '@/lib/trips/types'
 
@@ -70,12 +71,12 @@ export function LedgerTab() {
       currency: form.cur || baseCur,
       note: form.note.trim(),
     }
-    mut.mutate((cur) => [...cur, entry])
+    mut.mutate({ kind: 'upsert', entry })
     setForm({ date: todayISO(), type: 'income', cat: '', amount: '', cur: '', note: '' })
   }
   function del(id: string) {
     if (!confirm('Delete this entry?')) return
-    mut.mutate((cur) => cur.filter((x) => x.id !== id))
+    mut.mutate({ kind: 'delete', id })
   }
 
   const input = 'rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900'
@@ -86,6 +87,7 @@ export function LedgerTab() {
       <p className="mb-4 text-sm text-neutral-500">
         Log what you actually earn and spend to see, month by month, whether you&apos;re turning a profit.
       </p>
+      <SaveError show={mut.isError} error={mut.error} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat k="Total income" v={fmtHUF(v.totalInc)} sub={'~$' + Math.round(v.totalInc / usd)} />

@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Map</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* ---- Map screen ---- */
+.map-head { display: flex; align-items: flex-start; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.map-head .spacer { flex: 1; }
+
+.map-wrap { position: relative; }
+.map-ph.map-lg { min-height: 540px; }
+.map-ph.map-strip { min-height: 180px; }
+@container (max-width: 500px) { .map-ph.map-lg { min-height: 470px; } }
+
+/* globe stage: fixed-size layer the pins/arcs are positioned against,
+   stands in for the real WebGL globe projection */
+.globe-stage { position: relative; width: 340px; height: 340px; flex: none; }
+.globe-stage .globe { width: 100%; height: 100%; }
+@container (max-width: 500px) { .globe-stage { width: 300px; height: 300px; } }
+
+.arcs { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 1; pointer-events: none; }
+.arc-booked   { fill: none; stroke: var(--gold); stroke-width: 2.6; stroke-linecap: round; }
+.arc-planned  { fill: none; stroke: var(--gold); stroke-width: 2; stroke-dasharray: 5 6; stroke-linecap: round; opacity: .8; }
+.arc-return   { fill: none; stroke: var(--gold); stroke-width: 1.6; stroke-dasharray: 2 7; opacity: .45; }
+.arc-traveled { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+
+/* pins */
+.pinw { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column;
+  align-items: center; gap: 3px; z-index: 3; }
+.pinw .dot { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; background: var(--surface); border: 2px solid var(--gold); color: var(--text);
+  box-shadow: var(--shadow); }
+.pinw.planned .dot { border-style: dashed; }
+.pinw.current .dot { border-color: var(--accent); color: var(--accent); }
+.pinw .lab { font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  background: color-mix(in srgb, var(--bg) 72%, transparent); padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
+.pinw.home .dot { border-radius: 6px; border: 1.5px solid var(--border-strong); background: var(--surface2);
+  font-size: 13px; width: 24px; }
+.pinw.hazard .dot { background: transparent; border: 0; box-shadow: none; font-size: 16px; width: auto; height: auto; }
+.pinw.hazard .lab { color: var(--warn); }
+
+/* live position ring */
+.pos-ring { position: absolute; transform: translate(-50%, -50%); width: 54px; height: 54px; border-radius: 50%;
+  border: 2px solid var(--accent); z-index: 2; animation: ringpulse 2.4s ease-out infinite; }
+@keyframes ringpulse {
+  0% { box-shadow: 0 0 0 0 var(--accent-soft); }
+  70% { box-shadow: 0 0 0 18px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* floating map chrome */
+.map-chip { position: absolute; z-index: 5; display: inline-flex; align-items: center; gap: 7px;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: 999px; padding: 5px 12px;
+  font-size: 12px; font-weight: 500; box-shadow: var(--shadow); max-width: 78%; }
+.map-chip .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
+.map-gear { position: absolute; top: 12px; right: 12px; z-index: 6; width: 38px; height: 38px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border-strong); color: var(--text); font-size: 16px;
+  cursor: pointer; box-shadow: var(--shadow); }
+.map-gear.active { border-color: var(--accent); color: var(--accent); }
+.map-zoom { position: absolute; right: 14px; top: 60px; z-index: 5; display: flex; flex-direction: column;
+  border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); }
+.map-zoom button { width: 34px; height: 32px; border: 0; background: var(--surface); color: var(--text);
+  font-size: 15px; cursor: pointer; }
+.map-zoom button + button { border-top: 1px solid var(--border); }
+
+/* legend */
+.legend-card { position: absolute; left: 12px; bottom: 12px; z-index: 5; width: 220px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  box-shadow: var(--shadow); }
+.legend-card .k { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 4px; }
+.legend-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); padding: 2.5px 0; }
+.legend-row b { color: var(--text); font-weight: 600; }
+.sw { width: 24px; flex: none; border-top: 3px solid var(--gold); border-radius: 2px; }
+.sw.dash { border-top-style: dashed; border-top-width: 2px; }
+.sw.traveled { border-top-color: var(--accent); }
+.sw.ret { border-top-style: dotted; border-top-width: 2px; opacity: .55; }
+.swp { width: 13px; height: 13px; flex: none; border-radius: 50%; border: 2px solid var(--gold); background: var(--surface); }
+.swp.dash { border-style: dashed; }
+.swp.cur { border-color: var(--accent); }
+.legend-card.static { position: static; width: auto; }
+.legend-card.static .lrow-wrap { display: flex; flex-wrap: wrap; gap: 2px 18px; }
+@container (max-width: 500px) {
+  .legend-card { width: 168px; padding: 8px 9px; }
+  .legend-row { font-size: 10.5px; }
+  .map-chip { font-size: 11px; padding: 4px 10px; }
+}
+
+/* live: today card */
+.today-card { position: absolute; right: 12px; bottom: 12px; z-index: 5; width: 252px;
+  background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 12px;
+  box-shadow: var(--shadow); }
+.today-card .k { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+.today-card .t { font-weight: 700; font-size: 14.5px; margin-top: 2px; }
+.today-card .m { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+@container (max-width: 500px) { .today-card { width: 196px; right: 10px; bottom: 10px; padding: 10px; } }
+
+/* country panel */
+.country-panel { position: absolute; top: 12px; right: 12px; bottom: 12px; z-index: 7; width: 336px; overflow: auto;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px;
+  box-shadow: var(--shadow); }
+@container (max-width: 500px) {
+  .country-panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 74%;
+    border-radius: 14px 14px 0 0; border-left: 0; border-right: 0; border-bottom: 0; }
+}
+.cp-close { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid var(--border-strong); background: var(--surface2); color: var(--muted); font-size: 13px; cursor: pointer; }
+.cp-flag { font-size: 27px; line-height: 1; }
+.cp-sec { margin-top: 14px; }
+.cp-sec .k { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px; }
+.fact { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 4.5px 0;
+  border-bottom: 1px dashed var(--border); }
+.fact:last-child { border-bottom: 0; }
+.fact .fk { color: var(--muted); flex: none; }
+.fact .fv { text-align: right; }
+.grab { width: 38px; height: 4px; border-radius: 999px; background: var(--border-strong); margin: 0 auto 10px; display: none; }
+@container (max-width: 500px) { .grab { display: block; } }
+
+/* settings overlay */
+.map-dim { position: absolute; inset: 0; z-index: 6;
+  background: color-mix(in srgb, var(--bg) 55%, transparent); }
+.set-group { margin-top: 14px; }
+.set-group > .k { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.set-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.set-row:last-child { border-bottom: 0; }
+.set-row .grow { flex: 1; min-width: 0; }
+.set-row .d { color: var(--muted); font-size: 11.5px; margin-top: 1px; }
+.tgl { width: 36px; height: 21px; border-radius: 999px; background: var(--surface2);
+  border: 1px solid var(--border-strong); position: relative; flex: none; }
+.tgl::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
+  background: var(--faint); }
+.tgl.on { background: var(--accent-soft); border-color: var(--accent); }
+.tgl.on::after { left: auto; right: 2px; background: var(--accent); }
+.radio-g { font-size: 15px; color: var(--faint); flex: none; width: 18px; text-align: center; }
+.radio-g.on { color: var(--accent); }
+
+/* lite / 2D fallback */
+.lite-map { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: var(--surface2); }
+.lite-map svg { display: block; width: 100%; height: auto; }
+.land { fill: var(--accent-soft); stroke: var(--border-strong); stroke-width: 1; }
+.gridline { stroke: var(--border); stroke-width: 1; opacity: .7; }
+.lroute-b { fill: none; stroke: var(--gold); stroke-width: 2.5; }
+.lroute-p { fill: none; stroke: var(--gold); stroke-width: 2; stroke-dasharray: 6 6; opacity: .8; }
+.lroute-r { fill: none; stroke: var(--gold); stroke-width: 1.5; stroke-dasharray: 2 8; opacity: .4; }
+.lcity { fill: var(--surface); stroke: var(--gold); stroke-width: 2; }
+.lcity.planned { stroke-dasharray: 2.5 2.5; }
+.lhome { fill: var(--surface2); stroke: var(--border-strong); stroke-width: 1.5; }
+.llab { font: 600 10px -apple-system, "Segoe UI", Roboto, sans-serif; fill: var(--muted); letter-spacing: .04em; }
+.llab.strong { fill: var(--text); }
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
+      <a href="#" class="on">Map</a><a href="#">Explore</a>
+      <span class="right"><a href="#">Settings</a><span class="avatar">P</span></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ============ shared header ============ -->
+      <section data-state="*">
+        <div class="map-head">
+          <div>
+            <div class="h1">Map</div>
+            <div class="small muted">Asia 2026–27 · Budapest ⌂ → Bangkok → … → home · Aug 31 2026 – Feb 25 2027</div>
+          </div>
+          <span class="spacer"></span>
+          <span class="badge gold">6 stops</span>
+          <span class="badge">1 leg booked</span>
+          <span class="badge">179 days</span>
+        </div>
+      </section>
+
+      <!-- ============ 1 · PLANNING ============ -->
+      <section data-state="planning">
+        <div class="map-wrap">
+          <div class="map-ph map-lg">
+            <div class="globe-stage">
+              <svg class="arcs" viewBox="0 0 340 340" aria-hidden="true">
+                <path class="arc-booked"  d="M44,44 Q118,52 163,150"/>
+                <path class="arc-planned" d="M163,150 Q150,124 146,99"/>
+                <path class="arc-planned" d="M146,99 Q176,76 207,85"/>
+                <path class="arc-planned" d="M207,85 Q222,102 224,122"/>
+                <path class="arc-planned" d="M224,122 Q208,182 167,214"/>
+                <path class="arc-planned" d="M167,214 Q188,248 214,265"/>
+                <path class="arc-return"  d="M214,265 Q40,296 30,120"/>
+              </svg>
+              <div class="globe"></div>
+              <div class="pinw home" style="left:13%; top:13%;"><span class="dot">⌂</span><span class="lab">Budapest</span></div>
+              <div class="pinw" style="left:48%; top:44%;"><span class="dot">1</span><span class="lab">Bangkok · Sep</span></div>
+              <div class="pinw planned" style="left:43%; top:29%;"><span class="dot">2</span><span class="lab">Chiang Mai · Oct</span></div>
+              <div class="pinw planned" style="left:61%; top:25%;"><span class="dot">3</span><span class="lab">Hanoi · Nov</span></div>
+              <div class="pinw planned" style="left:66%; top:36%;"><span class="dot">4</span><span class="lab">Hoi An · Nov</span></div>
+              <div class="pinw planned" style="left:49%; top:63%;"><span class="dot">5</span><span class="lab">Kuala Lumpur · Dec</span></div>
+              <div class="pinw planned" style="left:63%; top:78%;"><span class="dot">6</span><span class="lab">Bali · Jan</span></div>
+              <div class="pinw hazard" style="left:79%; top:26%;"><span class="dot">🌀</span><span class="lab">Monsoon Oct–Dec</span></div>
+              <div class="pinw hazard" style="left:78%; top:70%;"><span class="dot">⚠</span><span class="lab">Quake zone</span></div>
+            </div>
+            <div class="map-chip" style="top:12px; left:12px;">🌘 Day/night · terminator live</div>
+            <button class="map-gear" title="Map settings">⚙</button>
+            <div class="map-zoom"><button>+</button><button>−</button></div>
+            <div class="legend-card">
+              <div class="k">Legend</div>
+              <div class="legend-row"><span class="sw"></span><span><b>Booked</b> leg (gold, solid)</span></div>
+              <div class="legend-row"><span class="sw dash"></span><span><b>Planned</b> leg (dashed)</span></div>
+              <div class="legend-row"><span class="sw ret"></span><span>Return · Feb 25 '27</span></div>
+              <div class="legend-row"><span class="swp"></span><span>Stop pin · booked stay</span></div>
+              <div class="legend-row"><span class="swp dash"></span><span>Stop pin · planned</span></div>
+              <div class="legend-row"><span style="width:13px; text-align:center; flex:none;">⌂</span><span>Home base</span></div>
+              <div class="legend-row"><span style="width:13px; text-align:center; flex:none;">🌀</span><span>Monsoon season</span></div>
+              <div class="legend-row"><span style="width:13px; text-align:center; flex:none;">⚠</span><span>Seismic zone</span></div>
+              <div class="tiny faint" style="margin-top:6px;">Layers: day/night ✓ · borders ✓ · hazards ✓ · weather ✗</div>
+            </div>
+          </div>
+        </div>
+        <div class="note">Arcs are derived, not drawn by hand: gold <b>solid</b> = booked transport (the Budapest→Bangkok flight, Aug 31); <b>dashed</b> = planned legs generated from the Itinerary stop order. Reordering stops in Itinerary re-draws arcs instantly (client-side, no save round-trip). Pin numbers = itinerary order; ⌂ home is unnumbered.</div>
+        <div class="note">Hazard glyphs: 🌀 monsoon months per coast come from the curated country catalogue (admin-maintained, per city/coast + month range); ⚠ seismic zones are a static bundled layer (USGS polygons, shipped with the app, no runtime fetch). Both only render when the Hazards layer is on; tapping a glyph opens a small explainer ("Vietnam central coast: typhoon season Oct–Dec — your Hoi An stop falls inside it").</div>
+        <div class="note">Day/night shading is computed from real UTC solar position, so it is always astronomically correct. What timezone the printed clock labels use is configurable in ⚙ (see Settings overlay state).</div>
+        <div class="note">Tapping a stop pin or a country (borders layer on) opens the Country panel state. The same globe component powers /follow for Mom, but sanitized: no ⚙, no costs, position rounded to city.</div>
+        <div class="note">OPEN QUESTION: Hanoi + Hoi An pins nearly overlap at world zoom — cluster to a single "VN · 2 stops" pin until zoomed in, or nudge labels apart?</div>
+      </section>
+
+      <!-- ============ 2 · LIVE ============ -->
+      <section data-state="live">
+        <div class="map-wrap">
+          <div class="map-ph map-lg">
+            <div class="globe-stage">
+              <svg class="arcs" viewBox="0 0 340 340" aria-hidden="true">
+                <path class="arc-traveled" d="M44,44 Q118,52 163,150"/>
+                <path class="arc-planned"  d="M163,150 Q150,124 146,99"/>
+                <path class="arc-planned"  d="M146,99 Q176,76 207,85"/>
+                <path class="arc-planned"  d="M207,85 Q222,102 224,122"/>
+                <path class="arc-planned"  d="M224,122 Q208,182 167,214"/>
+                <path class="arc-planned"  d="M167,214 Q188,248 214,265"/>
+                <path class="arc-return"   d="M214,265 Q40,296 30,120"/>
+              </svg>
+              <div class="globe"></div>
+              <div class="pos-ring" style="left:48%; top:44%;"></div>
+              <div class="pinw home" style="left:13%; top:13%;"><span class="dot">⌂</span><span class="lab">Budapest</span></div>
+              <div class="pinw current" style="left:48%; top:44%;"><span class="dot">1</span><span class="lab">Bangkok · now</span></div>
+              <div class="pinw planned" style="left:43%; top:29%;"><span class="dot">2</span><span class="lab">Chiang Mai · Oct</span></div>
+              <div class="pinw planned" style="left:61%; top:25%;"><span class="dot">3</span><span class="lab">Hanoi · Nov</span></div>
+              <div class="pinw planned" style="left:66%; top:36%;"><span class="dot">4</span><span class="lab">Hoi An · Nov</span></div>
+              <div class="pinw planned" style="left:49%; top:63%;"><span class="dot">5</span><span class="lab">Kuala Lumpur · Dec</span></div>
+              <div class="pinw planned" style="left:63%; top:78%;"><span class="dot">6</span><span class="lab">Bali · Jan</span></div>
+            </div>
+            <div class="map-chip" style="top:12px; left:12px;"><span class="pulse-dot"></span>Last seen: Bangkok · 2h ago <span class="faint">· check-in</span></div>
+            <button class="map-gear" title="Map settings">⚙</button>
+            <div class="map-zoom"><button>+</button><button>−</button></div>
+            <div class="legend-card">
+              <div class="k">Legend · live</div>
+              <div class="legend-row"><span class="sw traveled"></span><span><b>Traveled</b> so far</span></div>
+              <div class="legend-row"><span class="sw dash"></span><span><b>Upcoming</b> planned</span></div>
+              <div class="legend-row"><span class="swp cur"></span><span>Current stop + ring</span></div>
+              <div class="legend-row"><span class="swp dash"></span><span>Future stop</span></div>
+              <div class="tiny faint" style="margin-top:6px;">Ring teal &lt;6h · amber 6–24h · grey &gt;24h</div>
+            </div>
+            <div class="today-card">
+              <div class="k">Today · Sat Sep 5 · Day 6 / 179</div>
+              <div class="t">Bangkok — apartment base</div>
+              <div class="m">☀ 33° feels 38 · 1 THB ≈ 10.4 HUF</div>
+              <div class="m">Next: <b>Chatuchak Weekend Market</b> · planned 10:00</div>
+              <div style="margin-top:8px;"><a href="#" class="btn sm primary">Open /live →</a></div>
+            </div>
+          </div>
+        </div>
+        <div class="note">Position source: the latest /live check-in, or an opt-in foreground GPS ping from the PWA. iOS PWAs cannot background-track, so "last seen" usually means "last check-in" — the chip says which. Staleness: &lt;6h teal pulse, 6–24h amber static ring, &gt;24h grey ring + "last seen Thu" wording (no fake freshness).</div>
+        <div class="note">Traveled arc (teal) = legs with at least one actual check-in past the origin; upcoming legs stay dashed gold. Detailed plan-vs-actual comparison lives on the /live timeline, not here — the map only encodes traveled/upcoming.</div>
+        <div class="note">Today card mirrors the /live today screen (same query). Weather cached hourly (Open-Meteo, server-side), FX daily at 06:00 CET via pg_cron. Followers see weather but never money — this card is traveller-only anyway.</div>
+        <div class="note">Follower variant ("Mom" on /follow): same ring, but position rounded to city level and delayed up to 1h; exact GPS coordinates never leave the travellers' view.</div>
+        <div class="note">OPEN QUESTION: Patrik and Anna split up for a day → two devices report different positions. Show two rings (P/A avatars), or only the trip's "primary" device? Leaning two rings, initials inside.</div>
+      </section>
+
+      <!-- ============ 3 · COUNTRY PANEL ============ -->
+      <section data-state="country-panel">
+        <div class="map-wrap">
+          <div class="map-ph map-lg">
+            <div class="globe-stage">
+              <svg class="arcs" viewBox="0 0 340 340" aria-hidden="true">
+                <path class="arc-booked"  d="M44,44 Q118,52 163,150"/>
+                <path class="arc-planned" d="M163,150 Q150,124 146,99"/>
+                <path class="arc-planned" d="M146,99 Q176,76 207,85"/>
+                <path class="arc-planned" d="M207,85 Q222,102 224,122"/>
+                <path class="arc-planned" d="M224,122 Q208,182 167,214"/>
+                <path class="arc-planned" d="M167,214 Q188,248 214,265"/>
+              </svg>
+              <div class="globe"></div>
+              <div class="pinw home" style="left:13%; top:13%;"><span class="dot">⌂</span><span class="lab">Budapest</span></div>
+              <div class="pinw current" style="left:48%; top:44%;"><span class="dot">1</span><span class="lab">Bangkok · selected</span></div>
+              <div class="pinw planned" style="left:43%; top:29%;"><span class="dot">2</span><span class="lab">Chiang Mai</span></div>
+              <div class="pinw planned" style="left:61%; top:25%;"><span class="dot">3</span><span class="lab">Hanoi</span></div>
+              <div class="pinw planned" style="left:49%; top:63%;"><span class="dot">5</span><span class="lab">Kuala Lumpur</span></div>
+            </div>
+            <button class="map-gear" title="Map settings">⚙</button>
+
+            <aside class="country-panel">
+              <div class="grab"></div>
+              <button class="cp-close" title="Close">✕</button>
+              <div class="row" style="gap:10px;">
+                <span class="cp-flag">🇹🇭</span>
+                <div>
+                  <div class="h2">Thailand</div>
+                  <div class="tiny muted">2 stops on route · Sep–Oct 2026</div>
+                </div>
+                <span class="badge accent">next up</span>
+              </div>
+
+              <div class="cp-sec">
+                <div class="k">Quick facts</div>
+                <div class="fact"><span class="fk">Currency</span><span class="fv"><b>THB</b> · 1 THB ≈ 10.4 HUF <span class="tiny faint">(cached daily)</span></span></div>
+                <div class="fact"><span class="fk">Time zone</span><span class="fv">UTC+7 · +5h vs Budapest</span></div>
+                <div class="fact"><span class="fk">Plugs</span><span class="fv">A · B · C/O · 230 V</span></div>
+                <div class="fact"><span class="fk">eSIM</span><span class="fv">from ~1,600 HUF / 15 GB</span></div>
+              </div>
+
+              <div class="cp-sec">
+                <div class="k">Visa — HU passport</div>
+                <div class="small"><b>Visa exemption:</b> 60 days on arrival (air &amp; land), free.</div>
+                <div class="small" style="margin-top:3px;"><b>Extension:</b> +30 days at an immigration office, ~1,900 THB.</div>
+                <div class="tiny faint" style="margin-top:4px;">Curated by admin · last reviewed Jun 28 2026</div>
+                <div class="note" style="margin:8px 0 0;">Curated summary, informational only — rules change. Every role sees this disclaimer: <b>always verify with an official source before booking.</b> <a href="#">Royal Thai Embassy →</a></div>
+              </div>
+
+              <div class="cp-sec">
+                <div class="k">Safety — FCDO advice</div>
+                <div class="row" style="gap:8px;"><span class="badge ok">Mostly: normal precautions</span></div>
+                <div class="small muted" style="margin-top:5px;">Advises against all but essential travel: deep-south provinces (Pattani, Yala, Narathiwat, parts of Songkhla) — none on our route.</div>
+                <div class="tiny faint" style="margin-top:4px;">Cached weekly via pg_cron · fetched Jul 6 2026 · source: FCDO</div>
+              </div>
+
+              <div class="cp-sec">
+                <div class="k">Cities by daily cost · per person incl. stay</div>
+                <table class="table">
+                  <tr><td>Bangkok</td><td class="right"><b>24,100 HUF</b></td><td class="right"><span class="badge gold">stop 1</span></td></tr>
+                  <tr><td>Chiang Mai</td><td class="right"><b>18,400 HUF</b></td><td class="right"><span class="badge">stop 2</span></td></tr>
+                  <tr><td>Pai</td><td class="right"><b>15,800 HUF</b></td><td class="right"></td></tr>
+                  <tr><td>Krabi</td><td class="right"><b>26,300 HUF</b></td><td class="right"></td></tr>
+                  <tr><td>Phuket</td><td class="right"><b>29,900 HUF</b></td><td class="right"></td></tr>
+                </table>
+                <div class="tiny faint" style="margin-top:4px;">Medians from the Explore catalogue (admin + later community data) — not your ledger.</div>
+              </div>
+
+              <div class="cp-sec row" style="gap:8px;">
+                <a href="#" class="btn sm primary">Open in Explore →</a>
+                <a href="#" class="btn sm ghost">＋ Add stop here</a>
+              </div>
+            </aside>
+          </div>
+        </div>
+        <div class="note">Opens by tapping a stop pin or the country shape itself (needs the Borders layer for tap-targets). Desktop: right side panel; phone: bottom sheet with grab handle, drag down or ✕ to close. Deep-linkable as /map?country=TH so Explore and Dashboard can jump here.</div>
+        <div class="note">All figures here are catalogue-level (country/city facts), not personal trip money — so the panel is safe for viewer role too. Followers on /follow don't get the panel at all (zero-chrome view). OPEN QUESTION: give followers a mini panel with just flag + weather?</div>
+        <div class="note">Visa block is per-passport. Patrik + Anna are both HU, so one summary; later feature: per-traveller passport setting → two visa rows when they differ.</div>
+      </section>
+
+      <!-- ============ 4 · SETTINGS OVERLAY ============ -->
+      <section data-state="settings-overlay">
+        <div class="map-wrap" style="margin-bottom:14px;">
+          <div class="map-ph map-strip">
+            <div class="globe" style="width:120px; height:120px;"></div>
+            <div class="map-dim"></div>
+            <button class="map-gear active" title="Map settings">⚙</button>
+          </div>
+        </div>
+        <div class="note" style="margin-top:0;">The ⚙ sheet opens centered over the dimmed map (map shown collapsed here so the whole sheet is reviewable). Esc / tap outside / Done closes it.</div>
+        <div class="modal-backdrop">
+          <div class="modal">
+            <div class="row"><h3 style="margin-bottom:0;">Map settings</h3><span class="spacer"></span><button class="cp-close" style="position:static;" title="Close">✕</button></div>
+
+            <div class="set-group">
+              <div class="k">Layers</div>
+              <div class="set-row"><div class="grow">Day / night terminator<div class="d">Solar position from UTC — always astronomically correct.</div></div><span class="tgl on"></span></div>
+              <div class="set-row"><div class="grow">Country borders<div class="d">Also enables tapping a country to open its panel.</div></div><span class="tgl on"></span></div>
+              <div class="set-row"><div class="grow">Hazards (monsoon 🌀 / seismic ⚠)<div class="d">Catalogue seasons + bundled seismic polygons.</div></div><span class="tgl on"></span></div>
+              <div class="set-row"><div class="grow">Weather overlay <span class="badge warn" style="margin-left:4px;">beta</span><div class="d">Rain/cloud tiles, cached 30 min. Heavier on GPU.</div></div><span class="tgl"></span></div>
+              <div class="set-row"><div class="grow">Live position ring<div class="d">Live phase only; hidden while planning.</div></div><span class="tgl on"></span></div>
+            </div>
+
+            <div class="set-group">
+              <div class="k">Clock &amp; timezone</div>
+              <label class="field" style="margin:8px 0 6px;">
+                <span class="label">Timezone for map clock labels</span>
+                <select class="select">
+                  <option selected>Trip local — current stop (Asia/Bangkok, UTC+7)</option>
+                  <option>My device (Europe/Budapest, UTC+2)</option>
+                  <option>Custom…</option>
+                </select>
+              </label>
+              <div class="note" style="margin:6px 0 0;">Owner requirement, spelled out: the day/night <b>shading itself is always correct</b> — computed from real UTC solar position, never from this setting. The timezone here only controls the printed clock labels ("18:42 in Bangkok") and when "today" rolls over in the today card. Default: device tz pre-trip → auto-switch to current stop once live. OPEN QUESTION: is the auto-switch surprising? Maybe a one-time toast when it flips.</div>
+            </div>
+
+            <div class="set-group">
+              <div class="k">Renderer</div>
+              <div class="set-row"><span class="radio-g on">◉</span><div class="grow">3D globe (WebGL)<div class="d">Arcs, terminator, atmosphere. Default when the device can handle it.</div></div></div>
+              <div class="set-row"><span class="radio-g">○</span><div class="grow">2D lite map<div class="d">Flat fallback for weak devices / battery saver — see the Lite state.</div></div></div>
+              <div class="set-row"><div class="grow">Reduce motion<div class="d">Follows the OS setting by default; kills arc animation + ring pulse.</div></div><span class="tgl"></span></div>
+            </div>
+
+            <div class="row" style="margin-top:14px;">
+              <a href="#" class="btn sm ghost">Reset defaults</a>
+              <span class="spacer"></span>
+              <a href="#" class="btn sm primary">Done</a>
+            </div>
+          </div>
+        </div>
+        <div class="note">Settings persist per device (localStorage) — a weak phone keeps lite mode without dragging the desktop down. OPEN QUESTION: sync layer preferences to the account (Supabase user_settings) or is per-device actually the right behavior?</div>
+        <div class="note">Role note: viewer sees the same ⚙ minus nothing (all view-level); followers on /follow get no ⚙ at all — their layers are fixed by the link's sanitized config.</div>
+      </section>
+
+      <!-- ============ 5 · LITE / 2D FALLBACK ============ -->
+      <section data-state="lite">
+        <div class="row" style="margin-bottom:12px;">
+          <div class="toast warn">⚡ Lite map active — WebGL unavailable or low-power device detected. <a href="#" style="margin-left:4px;">Try 3D anyway</a></div>
+        </div>
+        <div class="lite-map">
+          <svg viewBox="0 0 700 380" aria-hidden="true">
+            <path class="gridline" d="M0,95 H700 M0,190 H700 M0,285 H700"/>
+            <path class="gridline" d="M140,0 V380 M280,0 V380 M420,0 V380 M560,0 V380"/>
+            <path class="land" d="M-20,-20 H215 Q235,40 172,70 Q120,96 60,82 Q0,70 -20,30 Z"/>
+            <path class="land" d="M260,-20 H720 V148 Q640,170 585,150 Q560,205 505,196 Q462,186 452,132 Q402,122 386,72 Q352,46 356,-20 Z"/>
+            <path class="land" d="M430,150 Q462,182 452,232 Q472,272 442,302 Q420,272 414,230 Q400,190 430,150 Z"/>
+            <ellipse class="land" cx="430" cy="330" rx="56" ry="14" transform="rotate(35 430 330)"/>
+            <ellipse class="land" cx="520" cy="354" rx="46" ry="9"/>
+            <ellipse class="land" cx="565" cy="298" rx="36" ry="25"/>
+            <path class="lroute-b" d="M85,52 C200,80 350,120 440,190"/>
+            <path class="lroute-p" d="M440,190 L425,140 L505,120 L525,165 L445,275 L545,352"/>
+            <path class="lroute-r" d="M545,352 C300,368 120,220 85,62"/>
+            <rect class="lhome" x="80" y="47" width="11" height="11" rx="2"/>
+            <text class="llab strong" x="97" y="50">⌂ BUDAPEST</text>
+            <circle class="lcity" cx="440" cy="190" r="5"/><text class="llab strong" x="450" y="205">1 · BANGKOK</text>
+            <circle class="lcity planned" cx="425" cy="140" r="5"/><text class="llab" x="340" y="137">2 · CHIANG MAI</text>
+            <circle class="lcity planned" cx="505" cy="120" r="5"/><text class="llab" x="515" y="115">3 · HANOI</text>
+            <circle class="lcity planned" cx="525" cy="165" r="5"/><text class="llab" x="537" y="170">4 · HOI AN</text>
+            <circle class="lcity planned" cx="445" cy="275" r="5"/><text class="llab" x="457" y="282">5 · KUALA LUMPUR</text>
+            <circle class="lcity planned" cx="545" cy="352" r="5"/><text class="llab" x="557" y="348">6 · BALI</text>
+            <text x="595" y="150" font-size="15">🌀</text><text class="llab" x="612" y="147">OCT–DEC</text>
+            <text x="600" y="335" font-size="14">⚠</text>
+          </svg>
+          <div class="map-chip" style="top:10px; left:10px;">🗺 2D lite</div>
+          <button class="map-gear" title="Map settings">⚙</button>
+        </div>
+        <div class="legend-card static" style="margin-top:12px;">
+          <div class="k">Legend · lite</div>
+          <div class="lrow-wrap">
+            <div class="legend-row"><span class="sw"></span><span><b>Booked</b> leg</span></div>
+            <div class="legend-row"><span class="sw dash"></span><span><b>Planned</b> leg</span></div>
+            <div class="legend-row"><span class="sw ret"></span><span>Return</span></div>
+            <div class="legend-row"><span class="swp"></span><span>Booked stop</span></div>
+            <div class="legend-row"><span class="swp dash"></span><span>Planned stop</span></div>
+            <div class="legend-row"><span style="width:13px; text-align:center; flex:none;">🌀⚠</span><span>Hazards</span></div>
+          </div>
+        </div>
+        <div class="note">Auto-detect triggers: WebGL context creation fails, device memory &lt; 4 GB, Save-Data header, or OS battery saver → lite renders automatically, with the amber banner + "Try 3D anyway" escape hatch. Manual override lives in ⚙ → Renderer; the choice is remembered per device.</div>
+        <div class="note">Feature parity: same pins, arcs, hazard glyphs, country tap (simplified shapes) and the same country panel / live ring — lite applies to every map state, not just planning. Dropped: day/night terminator shading, arc animation, position pulse (static ring instead). It's plain SVG: crisp at any zoom, ~0 GPU cost.</div>
+        <div class="note">Lite doubles as the snapshot renderer for static exports (e.g. the follower notification e-mail embeds a route image) — one codepath, two uses.</div>
+        <div class="note">OPEN QUESTION: keep lite as bundled stylized SVG (no external requests, matches self-hosting goal) vs proper raster map tiles (prettier, but needs a tile server / third-party dependency)?</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Map',
+  states: [
+    { id: 'planning', label: 'Planning', desc: 'Owner Patrik, mid-July 2026 (pre-departure) — reviewing the whole route, seasons and hazards on the globe before booking onward legs.' },
+    { id: 'live', label: 'Live', desc: 'Co-editor Anna on the road — Sat Sep 5 2026, day 6, Bangkok. Glancing at position, traveled route and today.' },
+    { id: 'country-panel', label: 'Country panel', desc: 'Patrik tapped the Thailand pin while planning — country facts (visa, safety, costs) before committing more stops.' },
+    { id: 'settings-overlay', label: '⚙ Settings', desc: 'Patrik opened ⚙ on the map — layer toggles, timezone for the clock labels, renderer choice.' },
+    { id: 'lite', label: '2D lite', desc: 'Auto-detected flat fallback — Anna\'s old backup phone / battery saver / no WebGL. Same data, no globe.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

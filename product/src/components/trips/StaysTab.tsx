@@ -34,7 +34,7 @@ export function StaysTab() {
         <p className="text-sm text-neutral-500">Accommodation options per stop. Tick one to count it in the budget (instead of the estimate).</p>
         <button onClick={() => setModal({ stay: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
       </div>
-      <SaveError show={mut.isError} />
+      <SaveError show={mut.isError} error={mut.error} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="text-left text-neutral-500">

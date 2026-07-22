@@ -33,7 +33,7 @@ export function TransportTab() {
         <p className="text-sm text-neutral-500">Flights and other legs between stops. Tick to count a leg in the budget.</p>
         <button onClick={() => setModal({ leg: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
       </div>
-      <SaveError show={mut.isError} />
+      <SaveError show={mut.isError} error={mut.error} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="text-left text-neutral-500">

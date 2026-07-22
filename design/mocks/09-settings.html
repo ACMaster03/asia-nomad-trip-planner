@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Settings</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* settings section header inside cards */
+.sethead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.sethead .h2 { flex: none; }
+.sethead .sub { color: var(--muted); font-size: 12px; }
+
+/* form grid (trip meta) */
+.fieldgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+@container (max-width: 500px) { .fieldgrid { grid-template-columns: 1fr; } }
+.suffix-input { display: flex; align-items: center; gap: 8px; }
+.suffix-input .input { flex: 1; }
+.suffix-input .suffix { color: var(--muted); font-size: 13px; flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-radius: 999px; padding: 4px 12px 4px 5px; font-size: 13px; }
+.chip .avatar { width: 24px; height: 24px; font-size: 11px; }
+.chip .role { color: var(--muted); font-size: 11.5px; }
+
+/* FX table */
+.fx-manual { font-size: 11px; }
+@container (max-width: 500px) { .fx-src { display: none; } }
+
+/* toggle switch */
+.switch { display: inline-flex; align-items: center; flex: none; }
+.switch input { appearance: none; -webkit-appearance: none; width: 42px; height: 23px; margin: 0;
+  border-radius: 999px; background: var(--surface2); border: 1px solid var(--border-strong);
+  cursor: pointer; position: relative; transition: background .15s, border-color .15s; }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px;
+  border-radius: 50%; background: var(--muted); transition: left .15s, background .15s; }
+.switch input:checked { background: var(--accent); border-color: var(--accent); }
+.switch input:checked::after { left: 21px; background: var(--accent-ink); }
+
+/* share-link token pill */
+.token { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 1px 6px; color: var(--muted); white-space: nowrap; }
+
+/* followers-see / never-see explainer */
+.privgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@container (max-width: 500px) { .privgrid { grid-template-columns: 1fr; } }
+.privgrid ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+.privgrid li { margin: 2px 0; }
+.privhead { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; }
+
+/* radio rows (theme picker) */
+.radio-row { display: flex; align-items: center; gap: 10px; padding: 10px 4px;
+  border-bottom: 1px solid var(--border); cursor: pointer; }
+.radio-row:last-child { border-bottom: 0; }
+.radio-row input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; flex: none; }
+.radio-row .grow { flex: 1; }
+.radio-row .rt { font-weight: 600; font-size: 14px; }
+.radio-row .rd { color: var(--muted); font-size: 12px; }
+
+/* accent palette swatches.
+   NOTE: the swatch strips below are CONTENT (they depict the literal palette
+   colours a user picks between), so they are defined as screen-local tokens
+   here and stay identical in dark & light theme — only the card chrome themes. */
+:root {
+  --pal-teal-a: #2dd4bf; --pal-teal-b: #14b8a6; --pal-teal-c: #0d9488; --pal-teal-d: #115e59;
+  --pal-bkk-a: #fbbf24;  --pal-bkk-b: #eab308;  --pal-bkk-c: #d97706;  --pal-bkk-d: #92400e;
+  --pal-hoi-a: #f43f5e;  --pal-hoi-b: #fb7185;  --pal-hoi-c: #f97316;  --pal-hoi-d: #facc15;
+  --pal-bali-a: #22c55e; --pal-bali-b: #16a34a; --pal-bali-c: #84cc16; --pal-bali-d: #166534;
+  --pal-tok-a: #ec4899;  --pal-tok-b: #a855f7;  --pal-tok-c: #06b6d4;  --pal-tok-d: #f472b6;
+}
+.pal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@container (max-width: 500px) { .pal-grid { grid-template-columns: repeat(2, 1fr); } }
+.pal { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: var(--surface2);
+  cursor: pointer; display: flex; flex-direction: column; gap: 8px; }
+.pal.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.pal .pname { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.pal .pdesc { color: var(--muted); font-size: 11.5px; }
+.sw-strip { display: flex; height: 26px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+.sw-strip i { flex: 1; }
+
+/* mini live preview */
+.preview-ui { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--bg); }
+.preview-ui .pnav { display: flex; gap: 10px; align-items: center; padding: 8px 12px;
+  border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.preview-ui .pnav b { color: var(--text); }
+.preview-ui .pbody { padding: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.preview-ui .progress { flex: 1; min-width: 120px; }
+
+/* danger zone */
+.danger-card { border-color: var(--danger); }
+.drow { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); }
+.drow:last-child { border-bottom: 0; }
+.drow .grow { flex: 1; min-width: 220px; }
+.drow .dt { font-weight: 600; font-size: 14px; }
+.drow .dd { color: var(--muted); font-size: 12px; margin-top: 1px; }
+@container (max-width: 500px) { .drow { flex-wrap: wrap; } .drow .grow { min-width: 100%; } }
+
+.consequences { margin: 8px 0 12px; padding-left: 18px; font-size: 13px; color: var(--muted); }
+.consequences li { margin: 3px 0; }
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
+      <a href="#">Map</a><a href="#">Explore</a>
+      <span class="right"><a href="#" class="on">Settings</a><span class="avatar">P</span></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ============ shared header ============ -->
+      <section data-state="*">
+        <div class="row">
+          <div>
+            <div class="h1">Settings</div>
+            <div class="small muted">Asia 2026–27 · signed in as Patrik <span class="badge accent">owner</span></div>
+          </div>
+        </div>
+        <div class="note">In the real app Settings is <b>one scrollable page</b> with an anchor rail on desktop
+          (Trip · Sharing · Appearance · Danger zone) and sticky section chips on phone. The mock splits the
+          sections into switcher states so each can be reviewed in isolation.</div>
+      </section>
+
+      <!-- ============================================================
+           STATE: trip — trip meta, FX rates, active-trip switcher
+           ============================================================ -->
+      <section data-state="trip">
+        <div class="stack">
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Trip</h2>
+              <span class="sub">name, dates, travellers, budget</span>
+              <span class="spacer"></span>
+              <span class="badge">same form as onboarding</span>
+            </div>
+            <div class="note">This block reuses the <b>TripMetaForm</b> component from onboarding wizard step 1 —
+              single source of truth for fields + validation. Anything added there (e.g. home base) appears here
+              automatically.</div>
+            <div class="fieldgrid">
+              <label class="field">
+                <span class="label">Trip name</span>
+                <input class="input" value="Asia 2026–27">
+              </label>
+              <label class="field">
+                <span class="label">Home base</span>
+                <input class="input" value="Budapest, Hungary">
+              </label>
+              <label class="field">
+                <span class="label">Start date</span>
+                <input class="input" value="31 Aug 2026">
+              </label>
+              <label class="field">
+                <span class="label">End date</span>
+                <input class="input" value="25 Feb 2027">
+              </label>
+              <div class="field">
+                <span class="label">Travellers</span>
+                <div class="chips">
+                  <span class="chip"><span class="avatar">P</span> Patrik <span class="role">owner</span></span>
+                  <span class="chip"><span class="avatar">A</span> Anna <span class="role">co-editor</span></span>
+                </div>
+                <div class="tiny muted" style="margin-top:6px;">Manage people in <a href="#" onclick="setState('sharing');return false;">Sharing</a> →</div>
+              </div>
+              <div>
+                <label class="field">
+                  <span class="label">Budget cap</span>
+                  <span class="suffix-input">
+                    <input class="input" value="4,500,000">
+                    <span class="suffix">HUF</span>
+                  </span>
+                </label>
+                <label class="field">
+                  <span class="label">Primary currency</span>
+                  <select class="select">
+                    <option selected>HUF — Hungarian forint</option>
+                    <option>EUR — Euro</option>
+                    <option>THB — Thai baht</option>
+                    <option>VND — Vietnamese dong</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="note"><b>Open question:</b> if dates are shrunk after bookings exist (e.g. end moved before
+              the booked Bangkok stay Sept 1–30), do we block the save, or allow with a warning listing the
+              now-out-of-range items? Mock assumption: warn + list, never silently orphan bookings.</div>
+            <div class="row" style="margin-top:4px;">
+              <button class="btn primary">Save changes</button>
+              <button class="btn ghost">Discard</button>
+              <span class="spacer"></span>
+              <span class="tiny muted">Last edited by Anna · yesterday 21:14</span>
+            </div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Exchange rates</h2>
+              <span class="sub">used everywhere money is converted</span>
+              <span class="spacer"></span>
+              <span class="badge ok">auto-updated daily · last: today 06:00</span>
+            </div>
+            <div style="overflow-x:auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Currency</th>
+                  <th class="right">Rate → HUF</th>
+                  <th class="fx-src">Source</th>
+                  <th class="right"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>EUR</b> <span class="muted tiny">1 €</span></td>
+                  <td class="right">395.00</td>
+                  <td class="fx-src muted">auto (ECB)</td>
+                  <td class="right"><button class="btn sm ghost">✎ override</button></td>
+                </tr>
+                <tr>
+                  <td><b>THB</b> <span class="muted tiny">1 ฿</span></td>
+                  <td class="right">10.40</td>
+                  <td class="fx-src muted">auto (ECB)</td>
+                  <td class="right"><button class="btn sm ghost">✎ override</button></td>
+                </tr>
+                <tr>
+                  <td><b>VND</b> <span class="muted tiny">per 1,000 ₫</span></td>
+                  <td class="right">16.00 <span class="badge warn fx-manual">manual</span></td>
+                  <td class="fx-src muted">override by Patrik · 04 Jul</td>
+                  <td class="right"><button class="btn sm ghost">↺ reset to auto</button></td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+            <div class="note">Rates cached daily via <b>pg_cron at 06:00 Europe/Budapest</b> (ECB primary,
+              exchangerate.host fallback). If the cache is &gt;48 h stale the badge turns to
+              <span class="badge warn">stale</span> and conversions show a ⚠ hint. Ledger entries convert at the
+              <b>entry-date</b> rate (stored per row), not the current rate — so history never drifts.</div>
+            <div class="note"><b>Open question:</b> should a manual override apply retroactively to existing ledger
+              rows in that currency, or only from now on? Mock assumption: from now on only, with an explicit
+              "recalculate past entries" action if ever needed.</div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Active trip</h2>
+              <span class="sub">all screens are scoped to the active trip</span>
+            </div>
+            <div class="list-row">
+              <span class="avatar">🧭</span>
+              <div class="grow">
+                <div class="title">Asia 2026–27</div>
+                <div class="meta">31 Aug 2026 → 25 Feb 2027 · 2 travellers · 6 stops planned</div>
+              </div>
+              <span class="badge accent">Active ✓</span>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="btn">＋ New trip</button>
+              <span class="tiny muted">launches the same onboarding wizard</span>
+            </div>
+            <div class="note">Switching the active trip is <b>per account</b> (stored on the profile, synced by
+              Supabase) — not per device — so Patrik's phone and laptop always show the same trip. Past trips stay
+              listed here read-only when they end. Followers' links are bound to one trip and are unaffected by
+              switching.</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================
+           STATE: sharing — co-editors, viewers, follow links
+           ============================================================ -->
+      <section data-state="sharing">
+        <div class="stack">
+
+          <div class="card hero pad-lg">
+            <div class="row">
+              <div>
+                <div class="h2">👁 3 people can currently see your trip</div>
+                <div class="small muted" style="margin-top:2px;">2 followers via links (Mom + Anna's dad) · 1 viewer (Dávid) — Anna co-edits as a traveller, not counted</div>
+              </div>
+              <span class="spacer"></span>
+              <label class="switch" title="Pause all sharing"><input type="checkbox"></label>
+              <span class="small">Pause all sharing</span>
+            </div>
+            <div class="note">The owner explicitly asked for this <b>always-visible count</b>. Follower count =
+              distinct devices that opened a follow link in the last 30 days (followers have no accounts, so this is
+              approximate — note says "≈" on hover). <b>Pause</b> keeps links and follower devices intact but serves
+              them the <b>"Sharing paused"</b> page (mock 07-follow → "Sharing paused" state) until unpaused — softer than revoking.</div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Co-editors</h2>
+              <span class="sub">full edit access, see everything incl. money</span>
+            </div>
+            <div class="list-row">
+              <span class="avatar">A</span>
+              <div class="grow">
+                <div class="title">Anna</div>
+                <div class="meta">co-editor · full edit access · joined 8 May 2026</div>
+              </div>
+              <button class="btn sm danger">Remove</button>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <input class="input" placeholder="email address" style="max-width:280px;">
+              <button class="btn">Invite co-editor</button>
+            </div>
+            <div class="note">Invite = magic-link email; accepting requires an account (see mock 01, "co-editor
+              invite accept" state). Removal is immediate — their session loses write access on next request (RLS
+              policy re-check). Their past ledger entries / check-ins stay, still attributed to them.</div>
+            <div class="note"><b>Open question:</b> can co-editors manage sharing themselves (create/revoke follow
+              links, invite viewers)? Mock assumption: <b>yes</b> for follow links, <b>no</b> for adding/removing
+              co-editors — only the owner manages people with edit rights.</div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Viewers</h2>
+              <span class="sub">account required, read-only</span>
+            </div>
+            <div class="list-row">
+              <span class="avatar">D</span>
+              <div class="grow">
+                <div class="title">Dávid</div>
+                <div class="meta">viewer · read-only, sees everything incl. money · joined 3 Jul 2026</div>
+              </div>
+              <button class="btn sm danger">Remove</button>
+            </div>
+            <div class="small muted" style="padding:8px 4px;">Viewers sign in with their own account
+              and see the full trip — including budget — but cannot edit anything.</div>
+            <div class="row" style="margin-top:6px;">
+              <input class="input" placeholder="email address" style="max-width:280px;">
+              <button class="btn">Invite viewer</button>
+            </div>
+            <div class="note"><b>Open question:</b> do viewers really need to see money? A per-invite
+              "hide money from this viewer" toggle may be wanted (e.g. a friend vs. a parent who co-funds). Not in
+              M1 scope — flagging for review.</div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Follow links</h2>
+              <span class="sub">no account needed — sanitized live view</span>
+              <span class="spacer"></span>
+              <button class="btn primary sm">＋ Create follow link</button>
+            </div>
+
+            <div class="list-row">
+              <div class="grow">
+                <div class="title">Family <span class="token">nomad.app/follow/f7Kq…3d</span></div>
+                <div class="meta">created 12 Jun 2026 · 214 views · 2 active followers (Mom + Anna's dad) · 1 notify-me opt-in</div>
+              </div>
+              <button class="btn sm">⧉ Copy</button>
+              <button class="btn sm danger">Revoke</button>
+            </div>
+            <div class="list-row">
+              <div class="grow">
+                <div class="title">Friends <span class="token">nomad.app/follow/9zTe…kA</span></div>
+                <div class="meta">created 2 Jul 2026 · 38 views · 0 active followers <span class="badge">unused 30d</span></div>
+              </div>
+              <button class="btn sm">⧉ Copy</button>
+              <button class="btn sm danger">Revoke</button>
+            </div>
+
+            <hr class="hr">
+            <div class="privgrid">
+              <div>
+                <div class="privhead ok">Followers see</div>
+                <ul>
+                  <li>Route, cities &amp; dates (day precision)</li>
+                  <li>Last check-in city + "last seen" time</li>
+                  <li>Check-ins, place ratings &amp; comments marked public</li>
+                  <li>Photos marked public</li>
+                </ul>
+              </div>
+              <div>
+                <div class="privhead danger">Followers never see</div>
+                <ul>
+                  <li>Money — budget, ledger, prices, anything with a currency</li>
+                  <li>Private notes &amp; booking references</li>
+                  <li>Exact GPS / addresses (city-level only)</li>
+                  <li>Documents, passports, insurance</li>
+                </ul>
+              </div>
+            </div>
+            <div class="note">Sanitization is enforced <b>server-side</b>: the /follow endpoint reads from a
+              dedicated view that simply has no money/notes/ref columns — it is not client-side filtering. The same
+              rules are shown to followers themselves on their page footer ("what you can see").</div>
+            <div class="note">"Create follow link" opens a small modal: label (e.g. "Family"), optional expiry date,
+              done → link + QR shown for easy WhatsApp sharing. <b>Revoke</b> is instant and permanent (token
+              deleted; follower device shows the "revoked" state from mock 07). <b>Open question:</b> should links
+              default to an expiry (trip end + 30 days)? Mock assumption: yes, editable.</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================
+           STATE: appearance — theme + accent palettes
+           ============================================================ -->
+      <section data-state="appearance">
+        <div class="stack">
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Theme</h2>
+              <span class="sub">per device</span>
+            </div>
+            <label class="radio-row">
+              <input type="radio" name="theme" checked>
+              <span class="grow"><span class="rt">Dark</span><br><span class="rd">Always dark, regardless of system.</span></span>
+              <span>🌙</span>
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="theme">
+              <span class="grow"><span class="rt">Light</span><br><span class="rd">Always light.</span></span>
+              <span>☀️</span>
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="theme">
+              <span class="grow"><span class="rt">System</span><br><span class="rd">Follow the device setting (default for new users).</span></span>
+              <span>⚙️</span>
+            </label>
+            <div class="note">Stored in <b>localStorage per device</b> (a phone can be dark while the laptop is
+              light) — deliberately NOT synced to the profile. Applied before first paint to avoid a theme flash
+              (inline script in &lt;head&gt;, same trick as this mock kit).</div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Accent palette</h2>
+              <span class="sub">destination-inspired · more added later</span>
+            </div>
+            <div class="pal-grid">
+              <div class="pal sel">
+                <div class="pname">Nomad Teal <span class="badge accent">default</span></div>
+                <div class="sw-strip">
+                  <i style="background:var(--pal-teal-a)"></i><i style="background:var(--pal-teal-b)"></i>
+                  <i style="background:var(--pal-teal-c)"></i><i style="background:var(--pal-teal-d)"></i>
+                </div>
+                <div class="pdesc">The brand default.</div>
+              </div>
+              <div class="pal">
+                <div class="pname">Bangkok Gold</div>
+                <div class="sw-strip">
+                  <i style="background:var(--pal-bkk-a)"></i><i style="background:var(--pal-bkk-b)"></i>
+                  <i style="background:var(--pal-bkk-c)"></i><i style="background:var(--pal-bkk-d)"></i>
+                </div>
+                <div class="pdesc">Temple gold &amp; saffron.</div>
+              </div>
+              <div class="pal">
+                <div class="pname">Hoi An Lantern</div>
+                <div class="sw-strip">
+                  <i style="background:var(--pal-hoi-a)"></i><i style="background:var(--pal-hoi-b)"></i>
+                  <i style="background:var(--pal-hoi-c)"></i><i style="background:var(--pal-hoi-d)"></i>
+                </div>
+                <div class="pdesc">Old-town lantern reds.</div>
+              </div>
+              <div class="pal">
+                <div class="pname">Bali Jungle</div>
+                <div class="sw-strip">
+                  <i style="background:var(--pal-bali-a)"></i><i style="background:var(--pal-bali-b)"></i>
+                  <i style="background:var(--pal-bali-c)"></i><i style="background:var(--pal-bali-d)"></i>
+                </div>
+                <div class="pdesc">Rice-terrace greens.</div>
+              </div>
+              <div class="pal">
+                <div class="pname">Tokyo Neon</div>
+                <div class="sw-strip">
+                  <i style="background:var(--pal-tok-a)"></i><i style="background:var(--pal-tok-b)"></i>
+                  <i style="background:var(--pal-tok-c)"></i><i style="background:var(--pal-tok-d)"></i>
+                </div>
+                <div class="pdesc">Shinjuku after dark.</div>
+              </div>
+            </div>
+            <div class="note">A palette only swaps the <b>--accent / --accent-strong / --accent-soft / --accent-ink</b>
+              tokens (with dark- and light-tuned values per palette); all neutral surfaces stay untouched, so every
+              screen keeps working. Destination-inspired palettes tie into the catalogue — the plan is to unlock/add
+              more as new destinations are added (community palettes later?). Contrast for each palette must pass
+              AA on both themes before shipping — Tokyo Neon pink on light bg needs checking. <b>Open question:</b>
+              per-device like theme, or synced per account? Mock assumption: per device, consistent with theme.</div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Preview</h2>
+              <span class="sub">updates live as you pick</span>
+            </div>
+            <div class="preview-ui">
+              <div class="pnav">🧭 <b>Nomad</b> <span>Dashboard</span> <span class="accent" style="font-weight:600;">Money</span> <span>Map</span></div>
+              <div class="pbody">
+                <button class="btn primary sm">Add expense</button>
+                <span class="badge accent">92% of cap</span>
+                <div class="progress"><i style="width:92%"></i></div>
+                <span class="tiny muted">92% of 4,500,000 HUF</span>
+              </div>
+            </div>
+            <div class="note">Static teal in this mock; in the app the strip re-renders instantly with the selected
+              palette + current theme so the user can judge before committing. No save button — selection applies
+              immediately, with an "undo" toast.</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================
+           STATE: danger — export, sign out, delete/leave, confirm modal
+           ============================================================ -->
+      <section data-state="danger">
+        <div class="stack">
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Your data</h2>
+            </div>
+            <div class="drow">
+              <div class="grow">
+                <div class="dt">Export trip data</div>
+                <div class="dd">One JSON file: trip meta, stops, stays, transport, ledger, check-ins, ratings, notes. Photos as URLs.</div>
+              </div>
+              <button class="btn">⭳ Export JSON</button>
+            </div>
+            <div class="drow">
+              <div class="grow">
+                <div class="dt">Sign out</div>
+                <div class="dd">Signs this device out of Patrik's account.</div>
+              </div>
+              <button class="btn ghost">Sign out</button>
+            </div>
+            <div class="note">Export is generated server-side and downloaded directly (no email) — doubles as the
+              GDPR data-portability answer. It contains <b>only the requesting user's trips</b>; Anna's private
+              profile data is not included even though she's on the trip. <b>Open question:</b> signing out of the
+              PWA while offline check-ins are still queued (see mock 06) could lose them — block sign-out with a
+              warning until the queue is flushed? Mock assumption: yes, warn + offer "sync now".</div>
+          </div>
+
+          <div class="card pad-lg danger-card">
+            <div class="sethead">
+              <h2 class="h2 danger">Danger zone</h2>
+              <span class="sub">owner only</span>
+            </div>
+            <div class="drow">
+              <div class="grow">
+                <div class="dt">Delete trip "Asia 2026–27"</div>
+                <div class="dd">Removes the trip for everyone — co-editor, viewers, and all follow links. This cannot be undone from the UI.</div>
+              </div>
+              <button class="btn danger">Delete trip…</button>
+            </div>
+            <div class="note">Deletion is a <b>soft delete with a 30-day grace period</b> in the DB (owner can email
+              support to restore), but the UI presents it as final — grace period is a safety net, not a feature.
+              Follow links stop resolving <b>immediately</b> on delete. <b>Open question:</b> should deleting also
+              offer "export first" inline? Mock assumption: yes — the modal below links to Export.</div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="sethead">
+              <h2 class="h2">Leave trip</h2>
+              <span class="spacer"></span>
+              <span class="badge warn">co-editor view — Anna sees this instead of Danger zone</span>
+            </div>
+            <div class="drow">
+              <div class="grow">
+                <div class="dt">Leave "Asia 2026–27"</div>
+                <div class="dd">You lose access to this trip. Your past expenses and check-ins remain, attributed to you.</div>
+              </div>
+              <button class="btn danger">Leave trip…</button>
+            </div>
+            <div class="note">Role-dependent block: owner gets <b>Delete</b>, co-editor/viewer get <b>Leave</b> —
+              never both. If the owner wants to hand the trip over instead, that's a transfer-ownership flow —
+              <b>open question:</b> is ownership transfer needed for M1? Mock assumption: no, post-M1.</div>
+          </div>
+
+          <div>
+            <div class="sec"><h2 class="h2">Confirmation modal</h2><span class="small muted">shown after "Delete trip…"</span></div>
+            <div class="modal-backdrop">
+              <div class="modal">
+                <h3 class="danger">Delete "Asia 2026–27"?</h3>
+                <div class="small muted">This removes the trip for everyone:</div>
+                <ul class="consequences">
+                  <li><b>2 travellers</b> — Anna loses access immediately</li>
+                  <li><b>6 stops · 2 bookings</b> — incl. the booked Bangkok stay (does <u>not</u> cancel the real booking!)</li>
+                  <li><b>34 ledger entries</b> — 1,218,400 HUF of recorded history</li>
+                  <li><b>2 follow links</b> — Mom's page stops working right away</li>
+                </ul>
+                <div class="toast warn" style="margin-bottom:12px;">⚠ Consider <a href="#">exporting your data</a> first.</div>
+                <label class="field">
+                  <span class="label">Type the trip name to confirm</span>
+                  <input class="input" placeholder="Asia 2026–27">
+                </label>
+                <div class="row">
+                  <span class="spacer"></span>
+                  <button class="btn ghost">Cancel</button>
+                  <button class="btn danger" disabled>Delete forever</button>
+                </div>
+              </div>
+            </div>
+            <div class="note">Type-to-confirm keeps the delete button disabled until the name matches exactly.
+              The consequences list is <b>computed live</b> (real counts), not boilerplate — the owner should see
+              exactly what is at stake. The booking warning matters: deleting the plan does not cancel real-world
+              reservations. Leave-trip uses the same modal pattern with a lighter body (no type-to-confirm, just
+              consequences + confirm).</div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Settings',
+  states: [
+    { id: 'trip', label: 'Trip & FX', desc: 'Owner (Patrik), a few weeks before departure, reviewing trip meta, exchange rates and the active-trip switcher.' },
+    { id: 'sharing', label: 'Sharing', desc: 'Owner managing who can see the trip — Anna as co-editor, follow links already shared with family (Mom follows).' },
+    { id: 'appearance', label: 'Appearance', desc: 'Either traveller personalising theme + accent palette on their own device, any time.' },
+    { id: 'danger', label: 'Danger zone', desc: 'Owner scrolled to the bottom: export / sign out / delete — includes the co-editor "leave trip" variant and the delete confirmation modal.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

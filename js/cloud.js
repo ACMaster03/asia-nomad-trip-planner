@@ -4,7 +4,7 @@
    working/offline store; the cloud is the sync layer between devices/people. If the
    Supabase client or config is missing (e.g. offline file://), everything below no-ops
    and the app runs exactly as the local-only version. */
-var cloud = { client:null, user:null, tripId:null, pushTimer:null, applyingRemote:false, status:"local" };
+var cloud = { client:null, user:null, tripId:null, applyingRemote:false, status:"local" };
 var ACTIVE_TRIP_KEY="asiaNomadActiveTrip";
 function cloudReady(){ return !!(cloud.client && cloud.user); }
 function myEmail(){ return ((cloud.user&&cloud.user.email)||"").toLowerCase(); }
@@ -37,10 +37,10 @@ function applyTripRow(row){
     ledger=Array.isArray(row.ledger)?row.ledger:[]; saveLedger();
     cloud.applyingRemote=false;
     render();
-  } else {
-    cloudPush(true); // row exists but empty -> seed from local
   }
-  cloud.status="synced"; updateCloudBtn();
+  /* (an empty row means nothing to pull; this app never writes — the product
+     app seeds/owns the document, local data stays local) */
+  cloud.status="readonly"; updateCloudBtn();
 }
 function cloudLoad(){
   if(!cloudReady()) return;
@@ -52,7 +52,7 @@ function cloudLoad(){
         if(res.error){ cloudErr(res.error); return; }
         var rows=res.data||[];
         if(rows.length){ applyTripRow(rows[0]); }
-        else { cloudPush(true); cloud.status="synced"; updateCloudBtn(); } // no accessible trip -> seed from local
+        else { cloud.status="readonly"; updateCloudBtn(); } // no accessible trip — create it in the product app (this app never writes)
         cloudCheckIncoming();
       }, cloudErr);
   };
@@ -74,26 +74,18 @@ function cloudCheckIncoming(){
     .then(function(res){ cloud.incoming=(res.data&&res.data.length)||0; updateCloudBtn(); }, function(){});
 }
 function cloudPush(immediate){
-  if(!cloudReady() || cloud.applyingRemote) return;
-  function doPush(){
-    var payload={ state:state, ledger:ledger, name:(state.meta&&state.meta.tripName)||"Trip", updated_at:new Date().toISOString() };
-    var done=function(res){ if(res&&res.error){ cloud.status="error"; console.warn("cloud push:", res.error.message); } else { cloud.status="synced"; } updateCloudBtn(); };
-    if(cloud.tripId){
-      cloud.client.from("trips").update(payload).eq("id",cloud.tripId).then(done,done);
-    } else {
-      payload.owner=cloud.user.id;
-      cloud.client.from("trips").insert(payload).select("id").then(function(res){ if(res.data&&res.data[0]){ cloud.tripId=res.data[0].id; setActiveTripId(cloud.tripId); } done(res); }, done);
-    }
-  }
-  cloud.status="syncing"; updateCloudBtn();
-  if(cloud.pushTimer){ clearTimeout(cloud.pushTimer); cloud.pushTimer=null; }
-  if(immediate) doPush(); else cloud.pushTimer=setTimeout(doPush, 1200);
+  /* READ-ONLY: this legacy app must never write to the cloud. The product app owns all
+     writes (separate state/ledger columns + revision guards); pushing {state, ledger}
+     together from here would silently clobber them. Local edits stay in localStorage. */
+  if(!cloudReady()) return;
+  cloud.status="readonly"; updateCloudBtn();
 }
 function cloudPushDebounced(){ cloudPush(false); }
 function updateCloudBtn(){
   var b=document.getElementById("cloudBtn"); if(!b) return;
   if(!cloud.client){ b.textContent="☁ Local"; b.title="Cloud not configured — running local-only"; return; }
   if(!cloud.user){ b.textContent="☁ Sign in"; b.title="Sign in to sync across devices"; return; }
+  if(cloud.status==="readonly"){ b.textContent="☁ 👁 read-only"; b.title="This legacy app reads the cloud but never writes — edit in the main app. Local changes stay on this device."; return; }
   var icon = cloud.status==="error"?"⚠":(cloud.status==="syncing"?"⟳":"✓");
   var badge = cloud.incoming ? " · "+cloud.incoming+" invite"+(cloud.incoming>1?"s":"") : "";
   b.textContent="☁ "+icon+" "+(cloud.user.email||"Synced")+badge;
@@ -177,7 +169,7 @@ function cloudInviteSend(){
   var email=((val("inv_email")||"").trim().toLowerCase());
   var role=val("inv_role")||"editor";
   if(!email){ if(m) m.textContent="Enter their email."; return; }
-  if(!cloud.tripId){ if(m) m.textContent="No active trip yet — make any edit first, then invite."; return; }
+  if(!cloud.tripId){ if(m) m.textContent="No active trip yet — create the trip in the main app first, then invite from here."; return; }
   if(email===myEmail()){ if(m) m.textContent="That's your own email 🙂"; return; }
   if(m) m.textContent="Sending…";
   cloud.client.from("trip_invites").insert({ trip_id:cloud.tripId, email:email, role:role, invited_by:cloud.user.id })
@@ -195,8 +187,11 @@ function cloudAcceptInvite(tripId, role){
   cloud.client.from("trip_members").insert({ trip_id:tripId, user_id:cloud.user.id, role:role||"editor" })
     .then(function(r){
       if(r.error){ alert("Could not accept invite: "+r.error.message); return; }
+      /* only the PENDING invite may be flipped to accepted — without this filter a
+         stale revoked/accepted row for the same trip+email would be hit instead,
+         the DB guard would reject it, and the pending invite would stay stranded */
       cloud.client.from("trip_invites").update({ status:"accepted", accepted_by:cloud.user.id, accepted_at:new Date().toISOString() })
-        .eq("trip_id",tripId).eq("email",myEmail()).then(function(){},function(){});
+        .eq("trip_id",tripId).eq("email",myEmail()).eq("status","pending").then(function(){},function(){});
       cloud.incoming=0; setActiveTripId(tripId); closeModal(); cloudLoad();
     }, function(e){ alert("Could not accept invite: "+((e&&e.message)||e)); });
 }

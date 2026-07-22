@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Money (Budget · Monthly · Ledger)</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* view toggle pill (By category | By stop) */
+.ptoggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; }
+.ptoggle button { border: 0; background: transparent; color: var(--muted); font: inherit;
+  font-size: 12.5px; font-weight: 600; padding: 5px 14px; cursor: pointer; }
+.ptoggle button.on { background: var(--accent); color: var(--accent-ink); }
+
+/* hero total-vs-cap bar */
+.money-track { display: flex; height: 22px; border-radius: 999px; background: var(--surface2);
+  border: 1px solid var(--border); overflow: hidden; margin-top: 10px; }
+.money-track .seg { height: 100%; }
+.seg.booked { background: var(--accent-strong); }
+.seg.est { background: var(--accent-soft); border-left: 1px solid var(--accent); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); margin-top: 9px; }
+.legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+.dot.booked { background: var(--accent-strong); }
+.dot.est { background: var(--accent-soft); border: 1px solid var(--accent); }
+.dot.head { background: var(--surface2); border: 1px solid var(--border-strong); }
+
+/* category bars */
+.catrow { display: grid; grid-template-columns: 96px 1fr 158px; gap: 12px; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border); }
+.catrow:last-child { border-bottom: 0; }
+.catrow .cname { font-size: 12.5px; font-weight: 600; }
+.catrow .cbar { height: 12px; border-radius: 999px; background: var(--surface2); border: 1px solid var(--border);
+  overflow: hidden; display: flex; }
+.catrow .cbar .fill { display: flex; height: 100%; }
+.catrow .amts { text-align: right; }
+.catrow .amts .main { font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+.catrow .amts .sub { font-size: 10.5px; color: var(--muted); }
+
+/* tier strip */
+.tierwrap { position: relative; padding-bottom: 20px; margin-top: 12px; }
+.tiers { position: relative; display: flex; height: 40px; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.tier { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+  border-right: 1px dashed var(--border-strong); line-height: 1.3; }
+.tier:last-child { border-right: 0; }
+.tier b { font-size: 11px; letter-spacing: 0; }
+.tier.lean { flex: 36; }
+.tier.comfort { flex: 9; background: var(--accent-soft); color: var(--accent); }
+.tier.stretch { flex: 9; color: var(--danger); }
+.tiermark { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 2px solid var(--accent); }
+.tiermark-label { position: absolute; bottom: 0; transform: translateX(-50%); font-size: 10.5px;
+  color: var(--accent); font-weight: 700; white-space: nowrap; }
+
+/* by-stop table */
+.tablewrap { overflow-x: auto; }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table td.num { font-weight: 600; }
+.table .tot td { border-top: 1px solid var(--border-strong); font-weight: 700; }
+
+/* monthly cards */
+.mgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); }
+.mcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.mcard .mh { display: flex; align-items: baseline; gap: 8px; margin-bottom: 7px; }
+.mcard .mmm { font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; }
+.mcard .loc { font-size: 11px; color: var(--muted); }
+.mrow { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; padding: 2.5px 0; }
+.mrow .k { color: var(--muted); }
+.mrow .v { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.prov { font-size: 10.5px; color: var(--faint); margin-top: 7px; border-top: 1px dashed var(--border); padding-top: 6px; }
+
+/* ledger */
+.ldate { width: 52px; flex: none; font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.lamt { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 13.5px; }
+.lamt.in { color: var(--ok); }
+.avatar.sm { width: 24px; height: 24px; font-size: 10.5px; }
+.pnl { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  background: var(--surface); margin: 8px 0 12px; }
+.pnl .cell { flex: 1; padding: 9px 14px; border-right: 1px solid var(--border); }
+.pnl .cell:last-child { border-right: 0; }
+.pnl .k { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.pnl .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 1px; }
+.mhdr { display: flex; align-items: center; gap: 10px; margin: 22px 0 4px; }
+.mhdr .line { flex: 1; border-top: 1px solid var(--border); }
+.mhdr .t { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+
+/* add-entry modal */
+.amtrow { display: grid; grid-template-columns: 1fr 118px; gap: 8px; }
+.fxhint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips .badge { cursor: pointer; font-size: 12px; padding: 4px 11px; }
+.seg-btns { display: flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; }
+.seg-btns button { flex: 1; border: 0; background: var(--surface2); color: var(--muted); padding: 8px;
+  font: inherit; font-size: 13px; cursor: pointer; border-right: 1px solid var(--border-strong); }
+.seg-btns button:last-child { border-right: 0; }
+.seg-btns button.on { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+
+/* phone tweaks */
+@container (max-width: 500px) {
+  .hide-sm { display: none; }
+  .pnl .v { font-size: 14px; }
+  .pnl .cell { padding: 8px 10px; }
+  .catrow { grid-template-columns: 74px 1fr 118px; gap: 8px; }
+  .catrow .amts .main { font-size: 12px; }
+  .ldate { width: 44px; font-size: 10.5px; }
+  .list-row { gap: 8px; }
+  .lamt { font-size: 12.5px; }
+  .mgrid { grid-template-columns: 1fr 1fr; }
+  .amtrow { grid-template-columns: 1fr 96px; }
+}
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#" class="on">Money</a>
+      <a href="#">Map</a><a href="#">Explore</a>
+      <span class="right"><a href="#">Settings</a><span class="avatar">P</span></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ===== shared header (all states) ===== -->
+      <section data-state="*">
+        <div class="row">
+          <h1 class="h1">Money</h1>
+          <span class="badge">Asia 2026–27</span>
+          <span class="spacer"></span>
+          <span class="badge accent">Cap 4,500,000 HUF</span>
+          <span class="tiny muted hide-sm">HUF primary · FX cached daily</span>
+        </div>
+        <div class="note">Money stays <b>simple inputs</b> on purpose — amounts, categories, who paid. No accounts,
+          receipt scanning, debt-splitting or bank sync: full personal-finance management is a <b>separate future app</b>.
+          This screen only answers "are we inside the plan?"</div>
+      </section>
+
+      <!-- tab bars (active tab varies by state group) -->
+      <section data-state="budget-bars budget-bystop">
+        <div class="tabs">
+          <button class="tab on">Budget</button>
+          <button class="tab" onclick="setState('monthly')">Monthly</button>
+          <button class="tab" onclick="setState('ledger')">Ledger</button>
+        </div>
+      </section>
+      <section data-state="monthly">
+        <div class="tabs">
+          <button class="tab" onclick="setState('budget-bars')">Budget</button>
+          <button class="tab on">Monthly</button>
+          <button class="tab" onclick="setState('ledger')">Ledger</button>
+        </div>
+      </section>
+      <section data-state="ledger ledger-add empty">
+        <div class="tabs">
+          <button class="tab" onclick="setState('budget-bars')">Budget</button>
+          <button class="tab" onclick="setState('monthly')">Monthly</button>
+          <button class="tab on">Ledger</button>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           STATE: budget-bars — Budget view 1 (by category)
+           ============================================================ -->
+      <section data-state="budget-bars">
+        <div class="row" style="margin-bottom:12px;">
+          <div class="ptoggle">
+            <button class="on">By category</button>
+            <button onclick="setState('budget-bystop')">By stop</button>
+          </div>
+          <span class="spacer"></span>
+          <span class="tiny muted">Estimates editable inline · booked amounts come from Itinerary</span>
+        </div>
+
+        <div class="card hero pad-lg" style="border-color:var(--warn);">
+          <div class="row">
+            <div>
+              <div class="stat-k tiny muted" style="text-transform:uppercase;letter-spacing:.08em;">Total plan vs cap</div>
+              <div style="font-size:26px;font-weight:700;">4,120,000 HUF <span class="muted" style="font-size:14px;font-weight:500;">of 4,500,000 HUF cap</span></div>
+            </div>
+            <span class="spacer"></span>
+            <span class="badge warn">⚠ 92% of cap — over the 90% warning · 380,000 HUF headroom</span>
+          </div>
+          <div class="money-track">
+            <span class="seg booked" style="width:22%" title="Booked / committed 989,000 HUF"></span>
+            <span class="seg est" style="width:69.6%" title="Estimated 3,131,000 HUF"></span>
+          </div>
+          <div class="legend">
+            <span><i class="dot booked"></i>Booked / committed · 989,000 HUF</span>
+            <span><i class="dot est"></i>Estimated (unbooked) · 3,131,000 HUF</span>
+            <span><i class="dot head"></i>Headroom to cap · 380,000 HUF</span>
+          </div>
+        </div>
+        <div class="note">This IS the <b>budget-warning (amber) endframe</b>: the plan crossed 90% of the cap, so the hero card,
+          badge and the Dashboard "Planned cost" tile all switch to <b>--warn</b> tokens (threshold stays 90%). A <b>red over-cap
+          variant exists but is not mocked separately</b>: same layout with --danger tokens on the badge/track/tile, headroom
+          replaced by "over cap by X HUF", and the Dashboard tile mirroring it in red. Behavior only — colors from tokens, no
+          layout change.</div>
+
+        <div class="grid c3" style="margin-top:12px;">
+          <div class="stat"><div class="k">Booked / committed</div><div class="v">989,000 HUF</div><div class="sub">flight ✈ + Bangkok stay 🏠 + gear 🎒</div></div>
+          <div class="stat"><div class="k">Headroom</div><div class="v warn">380,000 HUF</div><div class="sub">if all estimates hold</div></div>
+          <div class="stat"><div class="k">Daily average</div><div class="v">≈23,300 HUF</div><div class="sub">per night · both travellers · all-in incl. stays · 177 nights</div></div>
+        </div>
+
+        <div class="sec"><h2 class="h2">By category</h2><span class="tiny muted">planned · darker segment = already booked</span></div>
+        <div class="card">
+          <div class="catrow">
+            <span class="cname">🏠 Stays</span>
+            <span class="cbar"><span class="fill" style="width:100%"><span class="seg booked" style="width:24.6%"></span><span class="seg est" style="flex:1"></span></span></span>
+            <span class="amts"><div class="main">1,780,000 HUF</div><div class="sub">booked 437,000 HUF</div></span>
+          </div>
+          <div class="catrow">
+            <span class="cname">🚌 Transport</span>
+            <span class="cbar"><span class="fill" style="width:57%"><span class="seg booked" style="width:37%"></span><span class="seg est" style="flex:1"></span></span></span>
+            <span class="amts"><div class="main">1,006,000 HUF</div><div class="sub">booked 372,000 HUF</div></span>
+          </div>
+          <div class="catrow">
+            <span class="cname">🍜 Food</span>
+            <span class="cbar"><span class="fill" style="width:40%"><span class="seg est" style="flex:1"></span></span></span>
+            <span class="amts"><div class="main">705,000 HUF</div><div class="sub">nothing booked</div></span>
+          </div>
+          <div class="catrow">
+            <span class="cname">🎟 Extras</span>
+            <span class="cbar"><span class="fill" style="width:35%"><span class="seg booked" style="width:28.6%"></span><span class="seg est" style="flex:1"></span></span></span>
+            <span class="amts"><div class="main">629,000 HUF</div><div class="sub">visas 84k · insurance 340k · gear 205k — matches Itinerary → Extras</div></span>
+          </div>
+        </div>
+
+        <div class="sec"><h2 class="h2">Budget tier</h2><span class="tiny muted">where the current plan sits</span></div>
+        <div class="card">
+          <div class="tierwrap">
+            <div class="tiers">
+              <div class="tier lean"><b>Lean</b><span>≤ 3.6M HUF</span></div>
+              <div class="tier comfort"><b>Comfort</b><span>3.6–4.5M</span></div>
+              <div class="tier stretch"><b>Stretch</b><span>&gt; 4.5M (cap)</span></div>
+              <div class="tiermark" style="left:76.3%"></div>
+            </div>
+            <div class="tiermark-label" style="left:76.3%">▲ plan · 4.12M HUF</div>
+          </div>
+          <div class="note mb0">Tiers were set in onboarding (budget style) — top of <b>Comfort</b> = the 4.5M cap; editable in
+            Settings → Trip. OPEN QUESTION: should tiers be auto-suggested from destination cost-of-living data in Explore
+            (e.g. Thailand vs Bali multipliers), or stay fully manual?</div>
+        </div>
+
+        <div class="note">Amounts are stored in the <b>original currency + a HUF snapshot</b> taken at entry time; display currency
+          is always HUF here. FX rates cached daily via <b>pg_cron</b> (ECB cross-rates, THB/VND via mid-market fallback).
+          OPEN QUESTION: when a rate moves, unbooked <i>estimates</i> re-rate on the fly but booked/paid amounts stay frozen — confirm?</div>
+        <div class="note">Roles: owner + co-editor (Anna) can edit estimates and the cap. Viewer sees this read-only.
+          A <b>follower never sees Money at all</b> — the whole tab is stripped from the share-link view.</div>
+      </section>
+
+      <!-- ============================================================
+           STATE: budget-bystop — Budget view 2 (by stop)
+           ============================================================ -->
+      <section data-state="budget-bystop">
+        <div class="row" style="margin-bottom:12px;">
+          <div class="ptoggle">
+            <button onclick="setState('budget-bars')">By category</button>
+            <button class="on">By stop</button>
+          </div>
+          <span class="spacer"></span>
+          <span class="tiny muted">Est. per stop lives on the Stop record in Itinerary</span>
+        </div>
+
+        <div class="card">
+          <div class="tablewrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Stop</th>
+                  <th class="hide-sm">Dates</th>
+                  <th class="num">Nights</th>
+                  <th class="num">Est. cost</th>
+                  <th class="num hide-sm">≈ / night</th>
+                  <th class="num">Actual so far</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>✈ Budapest → Bangkok <span class="badge ok">booked</span></td>
+                  <td class="hide-sm muted">Aug 31 '26</td>
+                  <td class="num muted">—</td>
+                  <td class="num">380,000 HUF</td>
+                  <td class="num hide-sm muted">—</td>
+                  <td class="num">372,000 HUF</td>
+                </tr>
+                <tr>
+                  <td>🇹🇭 Bangkok <span class="badge ok">stay booked</span></td>
+                  <td class="hide-sm muted">Sep 1 – Oct 1</td>
+                  <td class="num">30</td>
+                  <td class="num">780,000 HUF</td>
+                  <td class="num hide-sm muted">26,000</td>
+                  <td class="num">437,000 HUF</td>
+                </tr>
+                <tr>
+                  <td>🇹🇭 Chiang Mai <span class="badge">planned</span></td>
+                  <td class="hide-sm muted">Oct 1 – Nov 1</td>
+                  <td class="num">31</td>
+                  <td class="num">640,000 HUF</td>
+                  <td class="num hide-sm muted">20,600</td>
+                  <td class="num faint">—</td>
+                </tr>
+                <tr>
+                  <td>🇻🇳 Hanoi <span class="badge">planned</span></td>
+                  <td class="hide-sm muted">Nov 1–15</td>
+                  <td class="num">14</td>
+                  <td class="num">320,000 HUF</td>
+                  <td class="num hide-sm muted">22,900</td>
+                  <td class="num faint">—</td>
+                </tr>
+                <tr>
+                  <td>🇻🇳 Hoi An <span class="badge">planned</span></td>
+                  <td class="hide-sm muted">Nov 15 – Dec 1</td>
+                  <td class="num">16</td>
+                  <td class="num">330,000 HUF</td>
+                  <td class="num hide-sm muted">20,600</td>
+                  <td class="num faint">—</td>
+                </tr>
+                <tr>
+                  <td>🇲🇾 Kuala Lumpur <span class="badge">planned</span></td>
+                  <td class="hide-sm muted">Dec 1 – Jan 1</td>
+                  <td class="num">31</td>
+                  <td class="num">610,000 HUF</td>
+                  <td class="num hide-sm muted">19,700</td>
+                  <td class="num faint">—</td>
+                </tr>
+                <tr>
+                  <td>🇮🇩 Bali <span class="badge">planned</span></td>
+                  <td class="hide-sm muted">Jan 1 – Feb 1 '27</td>
+                  <td class="num">31</td>
+                  <td class="num">700,000 HUF</td>
+                  <td class="num hide-sm muted">22,600</td>
+                  <td class="num faint">—</td>
+                </tr>
+                <tr>
+                  <td>🏠 Home leg + buffer <span class="badge">planned</span></td>
+                  <td class="hide-sm muted">Feb 1–25 '27</td>
+                  <td class="num">24</td>
+                  <td class="num">360,000 HUF</td>
+                  <td class="num hide-sm muted">15,000</td>
+                  <td class="num faint">—</td>
+                </tr>
+                <tr class="tot">
+                  <td>Total</td>
+                  <td class="hide-sm"></td>
+                  <td class="num">177</td>
+                  <td class="num">4,120,000 HUF</td>
+                  <td class="num hide-sm"></td>
+                  <td class="num">809,000 HUF</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="note">"Actual so far" = booked/paid amounts before departure; once live it accumulates ledger entries
+          <b>tagged to the stop</b>. Entries with no stop tag fall into an "Unassigned" row (only shown when non-zero).
+          OPEN QUESTION: auto-tag new entries by the stop's date range, by GPS, or ask every time?</div>
+        <div class="note">Row order mirrors Itinerary; reordering/deleting a stop there updates this table.
+          Per-stop estimate is a single all-in number (stay + food + local transport + extras) — deliberately NOT broken down
+          per category per stop, to keep inputs simple. Cross-view consistency: this column sums to the same 4,120,000 HUF
+          shown on the category view. "Actual so far" (809,000 = flight 372k + Bangkok stay 437k) is stop-tagged spend only —
+          the hero's 989,000 booked/committed additionally counts the gear already bought (180k), which has no stop.</div>
+      </section>
+
+      <!-- ============================================================
+           STATE: monthly — optional simplified monthly view
+           ============================================================ -->
+      <section data-state="monthly">
+        <div class="row" style="margin-bottom:6px;">
+          <h2 class="h2">Monthly cash-flow</h2>
+          <span class="badge gold">OPTIONAL</span>
+          <span class="spacer"></span>
+          <span class="tiny muted">calendar months · Aug '26 → Feb '27</span>
+        </div>
+        <div class="note">Provenance: <b>amounts flow from Budget + Ledger</b> — nothing is entered on this tab.
+          "Cash out" = booked charges (by charge date) + remaining stop estimates; "Earned" = income entries in the Ledger.
+          Only the <b>earn target</b> is set here (tap the value to edit). The whole tab can be hidden in Settings → Trip.</div>
+
+        <div class="mgrid">
+          <div class="mcard" style="border-color:var(--accent);">
+            <div class="mh"><span class="mmm">Aug 2026</span><span class="loc">departure 31st</span></div>
+            <div class="mrow"><span class="k">Cash out</span><span class="v">809,000 HUF <span class="badge ok" style="font-size:9.5px;padding:1px 6px;">booked</span></span></div>
+            <div class="mrow"><span class="k">Earn target ✎</span><span class="v">450,000 HUF</span></div>
+            <div class="mrow"><span class="k">Net</span><span class="v danger">−359,000 HUF</span></div>
+            <div class="prov">✈ flight ×2 (372k, booked) + 🏠 Bangkok stay charged Aug 25 (437k) — from Itinerary</div>
+          </div>
+          <div class="mcard">
+            <div class="mh"><span class="mmm">Sep 2026</span><span class="loc">Bangkok</span></div>
+            <div class="mrow"><span class="k">Cash out</span><span class="v">343,000 HUF</span></div>
+            <div class="mrow"><span class="k">Earn target ✎</span><span class="v">450,000 HUF</span></div>
+            <div class="mrow"><span class="k">Net</span><span class="v ok">+107,000 HUF</span></div>
+            <div class="prov">Bangkok stop est 780k − stay (437k) already charged in Aug</div>
+          </div>
+          <div class="mcard">
+            <div class="mh"><span class="mmm">Oct 2026</span><span class="loc">Chiang Mai</span></div>
+            <div class="mrow"><span class="k">Cash out</span><span class="v">640,000 HUF</span></div>
+            <div class="mrow"><span class="k">Earn target ✎</span><span class="v">450,000 HUF</span></div>
+            <div class="mrow"><span class="k">Net</span><span class="v danger">−190,000 HUF</span></div>
+            <div class="prov">= Chiang Mai stop estimate</div>
+          </div>
+          <div class="mcard">
+            <div class="mh"><span class="mmm">Nov 2026</span><span class="loc">Hanoi · Hoi An</span></div>
+            <div class="mrow"><span class="k">Cash out</span><span class="v">650,000 HUF</span></div>
+            <div class="mrow"><span class="k">Earn target ✎</span><span class="v">450,000 HUF</span></div>
+            <div class="mrow"><span class="k">Net</span><span class="v danger">−200,000 HUF</span></div>
+            <div class="prov">= Hanoi 320k + Hoi An 330k</div>
+          </div>
+          <div class="mcard">
+            <div class="mh"><span class="mmm">Dec 2026</span><span class="loc">Kuala Lumpur</span></div>
+            <div class="mrow"><span class="k">Cash out</span><span class="v">610,000 HUF</span></div>
+            <div class="mrow"><span class="k">Earn target ✎</span><span class="v">450,000 HUF</span></div>
+            <div class="mrow"><span class="k">Net</span><span class="v danger">−160,000 HUF</span></div>
+            <div class="prov">= Kuala Lumpur stop estimate</div>
+          </div>
+          <div class="mcard">
+            <div class="mh"><span class="mmm">Jan 2027</span><span class="loc">Bali</span></div>
+            <div class="mrow"><span class="k">Cash out</span><span class="v">700,000 HUF</span></div>
+            <div class="mrow"><span class="k">Earn target ✎</span><span class="v">450,000 HUF</span></div>
+            <div class="mrow"><span class="k">Net</span><span class="v danger">−250,000 HUF</span></div>
+            <div class="prov">= Bali stop estimate</div>
+          </div>
+          <div class="mcard">
+            <div class="mh"><span class="mmm">Feb 2027</span><span class="loc">home Feb 25</span></div>
+            <div class="mrow"><span class="k">Cash out</span><span class="v">360,000 HUF</span></div>
+            <div class="mrow"><span class="k">Earn target ✎</span><span class="v">300,000 HUF</span></div>
+            <div class="mrow"><span class="k">Net</span><span class="v danger">−60,000 HUF</span></div>
+            <div class="prov">= home leg + buffer · partial month (target pro-rated)</div>
+          </div>
+        </div>
+
+        <div class="pnl" style="margin-top:14px;">
+          <div class="cell"><div class="k">Total cash out</div><div class="v">4,112,000 HUF</div></div>
+          <div class="cell"><div class="k">Total earn target</div><div class="v">3,000,000 HUF</div></div>
+          <div class="cell"><div class="k">Planned net burn</div><div class="v danger">−1,112,000 HUF</div></div>
+          <div class="cell hide-sm"><div class="k">vs cap</div><div class="v warn">4.11M · 91% ⚠</div></div>
+        </div>
+
+        <div class="note">Traceability example the owner asked for: the Bangkok apartment is a <b>September stay</b> but hits
+          <b>August</b> cash-out, because free-cancel ends Aug 24 and the card is charged Aug 25 (charge date from Itinerary).
+          Total here (4,112,000) differs from Budget's 4,120,000 because booked <b>actuals replace estimates</b>
+          (flight 372,000 actual vs 380,000 estimate) — a ⓘ tooltip explains this in-app.</div>
+        <div class="note">During the trip a third row "Earned so far" appears per month, fed by Income entries in the Ledger.
+          OPEN QUESTION: should earn target auto-distribute from one total (e.g. 3M ÷ months) instead of per-month inputs?</div>
+      </section>
+
+      <!-- ============================================================
+           STATE: ledger — entries list, live phase
+           ============================================================ -->
+      <section data-state="ledger">
+        <div class="row" style="margin-bottom:4px;">
+          <button class="btn sm ghost">‹</button>
+          <span style="font-weight:700;">September 2026</span>
+          <button class="btn sm ghost" disabled>›</button>
+          <span class="tiny muted">month to date</span>
+          <span class="spacer"></span>
+          <button class="btn primary sm" onclick="setState('ledger-add')">＋ Add entry</button>
+        </div>
+
+        <div class="pnl">
+          <div class="cell"><div class="k">In</div><div class="v ok">+513,500 Ft</div></div>
+          <div class="cell"><div class="k">Out</div><div class="v">55,200 Ft</div></div>
+          <div class="cell"><div class="k">Net</div><div class="v ok">+458,300 Ft</div></div>
+        </div>
+
+        <div class="card">
+          <div class="list-row">
+            <span class="ldate">Sep 12</span>
+            <span class="grow"><span class="title">Chatuchak — gifts &amp; tees</span><span class="meta" style="display:block;">฿850 → 8,800 Ft · Bangkok</span></span>
+            <span class="badge">Extras</span>
+            <span class="lamt">8,800 Ft</span>
+            <span class="avatar sm">A</span>
+          </div>
+          <div class="list-row">
+            <span class="ldate">Sep 11</span>
+            <span class="grow"><span class="title">Grab to Wat Pho</span><span class="meta" style="display:block;">฿240 → 2,500 Ft · Bangkok</span></span>
+            <span class="badge gold">Transport</span>
+            <span class="lamt">2,500 Ft</span>
+            <span class="avatar sm">P</span>
+          </div>
+          <div class="list-row">
+            <span class="ldate">Sep 10</span>
+            <span class="grow"><span class="title">Jay Fai dinner</span><span class="meta" style="display:block;">฿1,900 → 19,800 Ft · Bangkok</span></span>
+            <span class="badge warn">Food</span>
+            <span class="lamt">19,800 Ft</span>
+            <span class="avatar sm">A</span>
+          </div>
+          <div class="list-row">
+            <span class="ldate">Sep 9</span>
+            <span class="grow"><span class="title">Freelance payout — retainer</span><span class="meta" style="display:block;">€1,300 → 513,500 Ft</span></span>
+            <span class="badge ok">Income</span>
+            <span class="lamt in">+513,500 Ft</span>
+            <span class="avatar sm">P</span>
+          </div>
+          <div class="list-row">
+            <span class="ldate">Sep 8</span>
+            <span class="grow"><span class="title">7-Eleven groceries</span><span class="meta" style="display:block;">฿620 → 6,400 Ft · Bangkok</span></span>
+            <span class="badge warn">Food</span>
+            <span class="lamt">6,400 Ft</span>
+            <span class="avatar sm">P</span>
+          </div>
+          <div class="list-row">
+            <span class="ldate">Sep 5</span>
+            <span class="grow"><span class="title">SIM cards ×2 (AIS, 30d)</span><span class="meta" style="display:block;">฿1,200 → 12,500 Ft · Bangkok</span></span>
+            <span class="badge">Extras</span>
+            <span class="lamt">12,500 Ft</span>
+            <span class="avatar sm">P</span>
+          </div>
+          <div class="list-row">
+            <span class="ldate">Sep 2</span>
+            <span class="grow"><span class="title">BTS Rabbit card top-up ×2</span><span class="meta" style="display:block;">฿500 → 5,200 Ft · Bangkok</span></span>
+            <span class="badge gold">Transport</span>
+            <span class="lamt">5,200 Ft</span>
+            <span class="avatar sm">A</span>
+          </div>
+        </div>
+
+        <div class="mhdr"><span class="t">August 2026</span><span class="line"></span></div>
+        <div class="pnl">
+          <div class="cell"><div class="k">In</div><div class="v muted">0 Ft</div></div>
+          <div class="cell"><div class="k">Out</div><div class="v">809,000 Ft</div></div>
+          <div class="cell"><div class="k">Net</div><div class="v danger">−809,000 Ft</div></div>
+        </div>
+        <div class="card">
+          <div class="list-row">
+            <span class="ldate">Aug 31</span>
+            <span class="grow"><span class="title">Flight BUD → BKK ×2</span><span class="meta" style="display:block;">paid at booking · charge date unknown → defaulted to travel date</span></span>
+            <span class="badge accent">⤵ from plan</span>
+            <span class="badge gold hide-sm">Transport</span>
+            <span class="lamt">372,000 Ft</span>
+            <span class="avatar sm">P</span>
+          </div>
+          <div class="list-row">
+            <span class="ldate">Aug 25</span>
+            <span class="grow"><span class="title">Bangkok apartment — September</span><span class="meta" style="display:block;">฿42,000 → 437,000 Ft · charged at free-cancel deadline + 1 day</span></span>
+            <span class="badge accent">⤵ from plan</span>
+            <span class="badge hide-sm" style="color:var(--accent);border-color:var(--accent);">Stays</span>
+            <span class="lamt">437,000 Ft</span>
+            <span class="avatar sm">P</span>
+          </div>
+        </div>
+
+        <div class="note">⤵ rows are <b>auto-imported from Itinerary bookings</b> (status = booked + a charge date), kept in
+          sync one-way. Editing the amount here detaches the row (becomes manual, sync badge removed with a confirm dialog).
+          OPEN QUESTION: if the booking is deleted in Itinerary, does the ledger row vanish or stay flagged "orphaned"?
+          (proposal: stays, flagged).</div>
+        <div class="note">Income entries (green, "+") feed "Earned so far" on the Monthly tab — this is the whole income-ledger
+          story, on purpose no invoicing/clients. Viewer role sees this list read-only (no ＋ Add button);
+          <b>followers never see the Money tab, amounts, or booking references anywhere</b>.</div>
+      </section>
+
+      <!-- ============================================================
+           STATE: ledger-add — add entry modal
+           ============================================================ -->
+      <section data-state="ledger-add">
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3>Add entry</h3>
+            <div class="field">
+              <span class="label">Amount</span>
+              <div class="amtrow">
+                <input class="input" type="text" value="1,900" inputmode="decimal">
+                <select class="select">
+                  <option selected>THB ฿</option>
+                  <option>HUF Ft</option>
+                  <option>EUR €</option>
+                  <option>VND ₫</option>
+                </select>
+              </div>
+              <div class="fxhint">≈ 19,800 Ft @ 10.4 Ft/฿ · rate cached today 06:00</div>
+            </div>
+            <div class="field">
+              <span class="label">Category</span>
+              <div class="chips">
+                <button class="badge">🏠 Stays</button>
+                <button class="badge">🚌 Transport</button>
+                <button class="badge accent">🍜 Food</button>
+                <button class="badge">🎟 Extras</button>
+                <button class="badge">💼 Income</button>
+              </div>
+            </div>
+            <div class="field">
+              <span class="label">Note <span style="text-transform:none;letter-spacing:0;">(optional)</span></span>
+              <input class="input" type="text" value="Jay Fai — crab omelette 🦀">
+            </div>
+            <div class="grid c2">
+              <div class="field mb0">
+                <span class="label">Date</span>
+                <input class="input" type="date" value="2026-09-10">
+              </div>
+              <div class="field mb0">
+                <span class="label">Paid by</span>
+                <div class="seg-btns">
+                  <button>Patrik</button>
+                  <button class="on">Anna</button>
+                  <button>Shared</button>
+                </div>
+              </div>
+            </div>
+            <div class="tiny muted" style="margin:10px 0 2px;">Auto-tagged to stop: <b>🇹🇭 Bangkok</b> (from today's date) · <a href="#">change</a></div>
+            <hr class="hr">
+            <div class="row">
+              <span class="spacer"></span>
+              <button class="btn ghost" onclick="setState('ledger')">Cancel</button>
+              <button class="btn primary" onclick="setState('ledger')">Add entry</button>
+            </div>
+          </div>
+        </div>
+        <div class="note">Currency defaults to the <b>current stop's country</b> (THB while in Thailand); date defaults to today.
+          "Paid by" only records who fronted it — no debt-splitting math, that belongs to the future finance app.
+          Amount is saved in THB + the HUF snapshot shown in the hint. Works offline: queued and synced like check-ins.</div>
+        <div class="note">OPEN QUESTION: quick-add presets ("coffee", "grab", "street food") worth it, or is this 5-field
+          form fast enough on phone? Owner to decide after trying the phone viewport.</div>
+      </section>
+
+      <!-- ============================================================
+           STATE: empty — no ledger entries yet
+           ============================================================ -->
+      <section data-state="empty">
+        <div class="empty">
+          <div class="glyph">🧾</div>
+          <h3>No entries yet</h3>
+          <p class="small" style="max-width:420px;margin:0 auto;">The ledger starts counting when you add your first expense —
+            or import what you've already booked.</p>
+        </div>
+
+        <div class="card hero" style="max-width:520px;margin:0 auto;">
+          <div class="h2" style="margin-bottom:4px;">Import your 2 booked costs?</div>
+          <div class="small muted" style="margin-bottom:6px;">Found in Itinerary — booked items with a known charge:</div>
+          <div class="list-row">
+            <span>✈</span>
+            <span class="grow"><span class="title">Flight BUD → BKK ×2</span><span class="meta" style="display:block;">booked · paid at booking</span></span>
+            <span class="lamt">372,000 Ft</span>
+          </div>
+          <div class="list-row">
+            <span>🏠</span>
+            <span class="grow"><span class="title">Bangkok apartment — September</span><span class="meta" style="display:block;">booked · card charged Aug 25 (free-cancel until Aug 24)</span></span>
+            <span class="lamt">437,000 Ft</span>
+          </div>
+          <div class="row" style="margin-top:12px;">
+            <label class="check tiny muted"><input type="checkbox" checked> auto-import future bookings too</label>
+            <span class="spacer"></span>
+            <button class="btn ghost sm">Not now</button>
+            <button class="btn primary sm" onclick="setState('ledger')">Import 2 items</button>
+          </div>
+        </div>
+
+        <div class="note" style="max-width:520px;margin:14px auto;">Import creates ⤵ "from plan" rows dated by charge date and
+          keeps them synced with Itinerary. With auto-import ON, every future booking lands here on its charge date without asking.
+          OPEN QUESTION: should auto-import be the default (checkbox pre-checked, as mocked) — owner leaned yes, confirm.</div>
+        <div class="note" style="max-width:520px;margin:14px auto;">This state also appears mid-trip if all entries are deleted;
+          the import card only shows while unimported booked costs exist. Budget + Monthly tabs work fine with an empty ledger
+          (estimates only, "actual" columns show —).</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Money (Budget · Monthly · Ledger)',
+  states: [
+    { id: 'budget-bars',   label: 'Budget · bars',    desc: 'Patrik (owner), July 2026 pre-departure — plan sits at 92% of the 4,500,000 HUF cap (amber warning); flight + Bangkok stay already booked.' },
+    { id: 'budget-bystop', label: 'Budget · by stop', desc: 'Patrik + Anna in a planning session — comparing per-stop estimates and what is already committed, stop by stop.' },
+    { id: 'monthly',       label: 'Monthly',          desc: 'Patrik, planning phase — optional simplified view: monthly cash-out vs freelance earn targets, all amounts traced from Budget + Ledger.' },
+    { id: 'ledger',        label: 'Ledger',           desc: 'Patrik in Bangkok, Sep 12 2026 (live phase) — reviewing the month; 2 rows were auto-imported from the plan, the rest logged by hand.' },
+    { id: 'ledger-add',    label: 'Ledger · add',     desc: 'Anna on her phone right after dinner at Jay Fai — logging a THB expense in under 10 seconds.' },
+    { id: 'empty',         label: 'Empty',            desc: 'Either traveller opening Ledger for the first time (pre-trip) — nothing logged yet, app offers to import the 2 booked costs.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

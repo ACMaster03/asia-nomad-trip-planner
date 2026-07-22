@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Explore (knowledge base)</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* breadcrumbs */
+.crumbs { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+.crumbs a { color: var(--muted); }
+.crumbs a:hover { color: var(--accent); }
+.crumbs .sep { color: var(--faint); margin: 0 5px; }
+.crumbs .cur { color: var(--text); font-weight: 600; }
+
+/* search */
+.searchbar { display: flex; gap: 8px; align-items: center; margin: 16px 0 4px; }
+.searchbar .input { flex: 1; }
+
+/* country tile grid */
+.cgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+@container (max-width: 500px) { .cgrid { grid-template-columns: repeat(2, 1fr); } }
+.ctile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 12px 12px; cursor: pointer; color: var(--text); font: inherit; text-align: left;
+  display: flex; flex-direction: column; gap: 3px; }
+.ctile:hover { border-color: var(--accent); }
+.ctile .flag { font-size: 30px; line-height: 1.1; }
+.ctile .cname { font-weight: 650; font-size: 14px; margin-top: 5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ctile .cmeta { font-size: 11.5px; color: var(--muted); }
+.ctile .cmeta.own { color: var(--accent); }
+.ctile.ghosttile { border-style: dashed; background: transparent; align-items: center;
+  justify-content: center; text-align: center; color: var(--muted); gap: 6px; }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 999px; padding: 4px 12px;
+  font-size: 12.5px; font-family: inherit; cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+.chip.accent { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.chip:disabled { opacity: .5; cursor: default; }
+
+/* city cards */
+.citycard { cursor: pointer; }
+.citycard:hover { border-color: var(--accent); }
+.citycard .facts { margin-top: 9px; display: flex; flex-direction: column; gap: 4px; }
+.fact { display: flex; gap: 7px; font-size: 12.5px; color: var(--muted); align-items: baseline; }
+.fact b { color: var(--text); font-weight: 600; }
+
+/* catalogue field rows */
+.fieldrow { display: flex; align-items: baseline; gap: 10px; padding: 7px 2px;
+  border-bottom: 1px solid var(--border); font-size: 13px; }
+.fieldrow:last-of-type { border-bottom: 0; }
+.fieldrow .fk { color: var(--muted); flex: 1; min-width: 0; }
+.fieldrow .fv { font-weight: 600; text-align: right; }
+.fieldrow .unit { color: var(--faint); font-weight: 400; font-size: 12px; }
+
+/* month strip (weather) */
+.mrow { display: flex; gap: 4px; margin-top: 10px; }
+.mchip { flex: 1; text-align: center; font-size: 10.5px; padding: 3px 0; border-radius: 4px;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+.mchip.good { color: var(--ok); border-color: var(--ok); }
+.mchip.wet { color: var(--warn); border-color: var(--warn); }
+.mchip.here { box-shadow: 0 0 0 2px var(--accent); color: var(--accent); font-weight: 700; }
+
+/* admin edit affordances */
+.pencilbtn { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 13px;
+  padding: 1px 5px; border-radius: 5px; flex: none; font-family: inherit; }
+.pencilbtn:hover { color: var(--accent); background: var(--accent-soft); }
+.pencilbtn.del:hover { color: var(--danger); background: transparent; }
+.draghandle { color: var(--faint); cursor: grab; font-size: 12px; flex: none; }
+.addrow { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-top: 10px;
+  padding: 8px 11px; border: 1px dashed var(--border-strong); border-radius: 8px; width: 100%;
+  color: var(--accent); font-size: 12.5px; font-family: inherit; cursor: pointer; background: transparent; text-align: left; }
+.addrow:hover { border-color: var(--accent); }
+
+/* own notes */
+.ownnote { display: flex; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.ownnote:last-of-type { border-bottom: 0; }
+.ownnote .body { flex: 1; min-width: 0; font-size: 13px; }
+.ownnote .meta { color: var(--faint); font-size: 11.5px; margin-top: 2px; }
+
+/* community teaser */
+.teaser { border-style: dashed; }
+
+@container (max-width: 500px) {
+  .searchbar .hide-phone { display: none; }
+  .ctile .flag { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
+      <a href="#">Map</a><a href="#" class="on">Explore</a>
+      <span class="right"><span class="badge gold" data-state="admin">🛠 admin</span><a href="#">Settings</a><span class="avatar">P</span></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ============ STATE: start (empty entry point) ============ -->
+      <section data-state="start">
+        <div class="row">
+          <div>
+            <div class="h1">Explore</div>
+            <div class="muted small">Country &amp; city knowledge base — catalogue facts, with your own notes layered on top.</div>
+          </div>
+          <span class="spacer"></span>
+          <span class="badge hide-phone">8 countries · 26 cities · 86 places</span>
+        </div>
+
+        <div class="searchbar">
+          <input class="input" placeholder="🔍 Search countries, cities or places… e.g. “Wat Pho”, “visa Vietnam”">
+          <button class="btn sm ghost hide-phone">Filters</button>
+        </div>
+        <div class="note">Search spans catalogue field values, landmark names AND the couple's own notes; results grouped Country / City / Place. Postgres trigram index, debounced client-side. OPEN QUESTION: once community reviews ship, should search also match review text, or keep it catalogue-only?</div>
+
+        <div class="sec"><h2 class="h2">Recently viewed</h2><span class="muted tiny">per user, synced to profile</span></div>
+        <div class="chips">
+          <button class="chip">🇹🇭 Bangkok</button>
+          <button class="chip">🇹🇭 Chiang Mai</button>
+          <button class="chip">🇻🇳 Hanoi</button>
+        </div>
+        <div class="note">Recently-viewed is per USER, not per trip (Anna sees her own chips). Hidden entirely on a true first visit — this mock shows a returning session. Stored on the profile row, mirrored to localStorage for instant paint.</div>
+
+        <div class="empty" style="padding: 30px 18px 8px;">
+          <div class="glyph">🗺️</div>
+          <h3>Pick a country to explore</h3>
+          <div class="small">Explore starts empty on purpose — no feed, no suggestions. Choose a country below or search.</div>
+        </div>
+        <div class="note">Owner decision: Explore starts EMPTY — no featured/editorial content on landing. The country grid is the single entry point; keeps first paint fast and avoids fake “recommended” content we can't stand behind.</div>
+
+        <div class="cgrid">
+          <button class="ctile">
+            <span class="flag">🇹🇭</span>
+            <span class="cname">Thailand <span class="badge accent">on route</span></span>
+            <span class="cmeta">6 cities · 34 places</span>
+            <span class="cmeta own">✎ 4 own notes</span>
+          </button>
+          <button class="ctile">
+            <span class="flag">🇻🇳</span>
+            <span class="cname">Vietnam <span class="badge accent">on route</span></span>
+            <span class="cmeta">5 cities · 18 places</span>
+            <span class="cmeta own">✎ 1 own note</span>
+          </button>
+          <button class="ctile">
+            <span class="flag">🇲🇾</span>
+            <span class="cname">Malaysia <span class="badge accent">on route</span></span>
+            <span class="cmeta">3 cities · 9 places</span>
+          </button>
+          <button class="ctile">
+            <span class="flag">🇮🇩</span>
+            <span class="cname">Indonesia <span class="badge accent">on route</span></span>
+            <span class="cmeta">4 cities · 7 places</span>
+          </button>
+          <button class="ctile">
+            <span class="flag">🇰🇭</span>
+            <span class="cname">Cambodia</span>
+            <span class="cmeta">2 cities · 5 places</span>
+          </button>
+          <button class="ctile">
+            <span class="flag">🇱🇦</span>
+            <span class="cname">Laos</span>
+            <span class="cmeta">2 cities · 3 places</span>
+          </button>
+          <button class="ctile">
+            <span class="flag">🇸🇬</span>
+            <span class="cname">Singapore</span>
+            <span class="cmeta">1 city · 6 places</span>
+          </button>
+          <button class="ctile">
+            <span class="flag">🇵🇭</span>
+            <span class="cname">Philippines</span>
+            <span class="cmeta">3 cities · 4 places</span>
+          </button>
+          <button class="ctile ghosttile">
+            <span class="flag">＋</span>
+            <span class="cname">Country missing?</span>
+            <span class="cmeta">The catalogue is DB-driven — an admin adds it, no app update needed.</span>
+          </button>
+        </div>
+        <div class="note">City/place counts are live COUNTs over catalogue tables (cached ~5 min). “on route” badge = the country appears in this trip's itinerary stops (Thailand Sep–Oct, Vietnam Nov, Malaysia Dec, Indonesia Jan). The ✎ tile badge bubbles up city-level own notes so a country with the couple's notes is visible from the very first screen.</div>
+      </section>
+
+      <!-- ============ STATE: country (Thailand selected) ============ -->
+      <section data-state="country">
+        <div class="crumbs"><a href="#">Explore</a><span class="sep">›</span><span class="cur">🇹🇭 Thailand</span></div>
+
+        <div class="row">
+          <div class="h1">🇹🇭 Thailand</div>
+          <span class="badge accent">on route · Sep–Oct 2026</span>
+          <span class="spacer"></span>
+          <button class="btn sm ghost hide-phone">⇄ Compare cities</button>
+        </div>
+
+        <div class="grid c4" style="margin-top: 12px;">
+          <div class="stat"><div class="k">Currency</div><div class="v">THB</div><div class="sub">1 THB ≈ 10.4 HUF · cash at markets</div></div>
+          <div class="stat"><div class="k">Visa · HU passport</div><div class="v">60 days</div><div class="sub">visa-exempt entry · +30 d extension</div></div>
+          <div class="stat"><div class="k">Plugs</div><div class="v">A·B·C</div><div class="sub">230 V — EU plugs mostly fit</div></div>
+          <div class="stat"><div class="k">SIM / eSIM</div><div class="v">~300 THB</div><div class="sub">AIS / True tourist packs, 15–30 d</div></div>
+        </div>
+        <div class="note">Country-level facts are catalogue fields too (group “Country basics”). Every value stores <code>verified_at</code> + who verified; values older than 180 days render a ⚠ stale badge. Visa row last verified 2026-05-12. OPEN QUESTION: should stale visa/entry fields auto-nag the admin (they change often and matter most)? FX rate comes from the Money module's daily FX cache — one source of truth.</div>
+
+        <div class="sec">
+          <h2 class="h2">Cities</h2>
+          <span class="muted tiny">6 in catalogue</span>
+          <span class="spacer"></span>
+          <span class="chips"><button class="chip accent">route order</button><button class="chip">daily cost</button><button class="chip">name</button></span>
+        </div>
+
+        <div class="grid c2 stack-phone">
+          <div class="card citycard">
+            <div class="row">
+              <span class="h2">Bangkok</span>
+              <span class="badge accent">✎ 3 notes</span>
+              <span class="badge ok">itinerary · Sep (booked)</span>
+              <span class="spacer"></span><span class="faint">›</span>
+            </div>
+            <div class="facts">
+              <span class="fact">💸 <b>฿฿ · ~23k HUF/day</b> for two · excl. stay · mid-range</span>
+              <span class="fact">🌤 best <b>Nov–Feb</b> · Sept = rainy season</span>
+              <span class="fact">🛂 covered by <b>60-day exemption</b></span>
+              <span class="fact">📌 <b>12 places</b> · Wat Pho, Chatuchak, Jay Fai…</span>
+            </div>
+          </div>
+
+          <div class="card citycard">
+            <div class="row">
+              <span class="h2">Chiang Mai</span>
+              <span class="badge accent">✎ 1 note</span>
+              <span class="badge warn">itinerary · Oct (planned)</span>
+              <span class="spacer"></span><span class="faint">›</span>
+            </div>
+            <div class="facts">
+              <span class="fact">💸 <b>฿ · ~18k HUF/day</b> for two · excl. stay — cheapest big city</span>
+              <span class="fact">🌤 best <b>Nov–Feb</b> · burning season Feb–Apr!</span>
+              <span class="fact">🛂 covered by <b>60-day exemption</b> — check total days</span>
+              <span class="fact">📌 <b>8 places</b> · Old City temples, Nimman…</span>
+            </div>
+          </div>
+
+          <div class="card citycard">
+            <div class="row">
+              <span class="h2">Phuket</span>
+              <span class="spacer"></span><span class="faint">›</span>
+            </div>
+            <div class="facts">
+              <span class="fact">💸 <b>฿฿฿ · ~35k HUF/day</b> for two · excl. stay — resort pricing</span>
+              <span class="fact">🌤 best <b>Nov–Apr</b> · Sept swells, red flags</span>
+              <span class="fact">🛂 covered by <b>60-day exemption</b></span>
+              <span class="fact">📌 <b>6 places</b></span>
+            </div>
+          </div>
+
+          <div class="card citycard">
+            <div class="row">
+              <span class="h2">Krabi</span>
+              <span class="spacer"></span><span class="faint">›</span>
+            </div>
+            <div class="facts">
+              <span class="fact">💸 <b>฿฿ · ~24k HUF/day</b> for two · excl. stay</span>
+              <span class="fact">🌤 best <b>Nov–Apr</b></span>
+              <span class="fact">🛂 covered by <b>60-day exemption</b></span>
+              <span class="fact">📌 <b>4 places</b> · Railay, Tiger Cave…</span>
+            </div>
+          </div>
+
+          <div class="card citycard">
+            <div class="row">
+              <span class="h2">Pai</span>
+              <span class="spacer"></span><span class="faint">›</span>
+            </div>
+            <div class="facts">
+              <span class="fact">💸 <b>฿ · ~15k HUF/day</b> for two · excl. stay</span>
+              <span class="fact">🌤 best <b>Nov–Feb</b> · cold nights Dec–Jan</span>
+              <span class="fact">🛂 covered by <b>60-day exemption</b></span>
+              <span class="fact">📌 <b>3 places</b></span>
+            </div>
+          </div>
+
+          <div class="card citycard">
+            <div class="row">
+              <span class="h2">Ko Lanta</span>
+              <span class="badge">thin coverage</span>
+              <span class="spacer"></span><span class="faint">›</span>
+            </div>
+            <div class="facts">
+              <span class="fact">💸 <b>฿฿ · ~22k HUF/day</b> for two · excl. stay</span>
+              <span class="fact">🌤 best <b>Nov–Apr</b> · many places close May–Oct</span>
+              <span class="fact">🛂 covered by <b>60-day exemption</b></span>
+              <span class="fact">📌 <b>1 place</b> — needs admin love</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="note">✎ badge = owner request (HU): “jelezze a box ha van benne saját jegyzetelés” — a city card shows the pencil badge with a count whenever Patrik or Anna have own notes for that city. Itinerary badges are cross-computed from the trip's stops: green = booked stop, amber = planned/unbooked. Cost tier (฿/฿฿/฿฿฿) is derived by bucketing the catalogue's “daily budget (couple)” field — shown in HUF via the FX cache so it's comparable across countries.</div>
+        <div class="note">“Thin coverage” badge = fewer than 3 places AND missing required field groups; nudges the couple to ask an admin (or, later, the community) to fill gaps BEFORE they route there. OPEN QUESTION: should editors be able to suggest a catalogue edit from here (suggestion inbox for admin)?</div>
+      </section>
+
+      <!-- ============ STATE: city (Bangkok detail) ============ -->
+      <section data-state="city">
+        <div class="crumbs"><a href="#">Explore</a><span class="sep">›</span><a href="#">🇹🇭 Thailand</a><span class="sep">›</span><span class="cur">Bangkok</span></div>
+
+        <div class="row">
+          <div class="h1">Bangkok</div>
+          <span class="badge ok">itinerary · Sep 1–30 · apartment booked</span>
+          <span class="badge">฿฿ tier</span>
+          <span class="spacer"></span>
+        </div>
+        <div class="chips" style="margin-top: 10px;">
+          <button class="chip accent">📍 Check in here — Live</button>
+          <button class="chip">🗓 View in Itinerary</button>
+          <button class="chip">🌍 Show on Map</button>
+        </div>
+        <div class="note">“Check in here” is the live-mode tie-in: deep-links into the /live check-in flow with Bangkok's place list preselected. Enabled only while the trip is live AND Bangkok is the current/adjacent stop; pre-trip it renders disabled with tooltip “trip hasn't started”. Anna is viewing this mid-Sept, so it's active.</div>
+
+        <div class="grid c2 stack-phone" style="margin-top: 14px;">
+          <div class="card">
+            <div class="row"><span class="h2">💸 Costs</span><span class="spacer"></span><span class="muted tiny">≈ HUF via daily FX cache</span></div>
+            <div class="fieldrow"><span class="fk">Daily budget (couple)</span><span class="fv">1,800–2,600 THB <span class="unit">≈ 19–27k HUF</span></span></div>
+            <div class="fieldrow"><span class="fk">Street-food meal</span><span class="fv">60–120 THB</span></div>
+            <div class="fieldrow"><span class="fk">Restaurant meal</span><span class="fv">250–600 THB</span></div>
+            <div class="fieldrow"><span class="fk">BTS/MRT single ride</span><span class="fv">17–62 THB</span></div>
+            <div class="fieldrow"><span class="fk">Grab across town</span><span class="fv">150–250 THB</span></div>
+            <div class="fieldrow"><span class="fk">Monthly apartment</span><span class="fv">18k–35k THB <span class="unit">≈ 187–364k HUF</span></span></div>
+          </div>
+
+          <div class="card">
+            <div class="row"><span class="h2">🌤 Weather</span><span class="spacer"></span><span class="badge warn">Sept = monsoon</span></div>
+            <div class="fieldrow"><span class="fk">Best months</span><span class="fv">Nov–Feb</span></div>
+            <div class="fieldrow"><span class="fk">Monsoon</span><span class="fv">May–Oct</span></div>
+            <div class="fieldrow"><span class="fk">September average</span><span class="fv">32 °C · ~78% humidity</span></div>
+            <div class="fieldrow"><span class="fk">Rain pattern</span><span class="fv">short, hard afternoon bursts</span></div>
+            <div class="mrow">
+              <span class="mchip good">J</span><span class="mchip good">F</span><span class="mchip">M</span><span class="mchip">A</span>
+              <span class="mchip wet">M</span><span class="mchip wet">J</span><span class="mchip wet">J</span><span class="mchip wet">A</span>
+              <span class="mchip wet here">S</span><span class="mchip wet">O</span><span class="mchip good">N</span><span class="mchip good">D</span>
+            </div>
+            <div class="tiny muted" style="margin-top: 5px;">green = best season · amber = monsoon · ring = your stay</div>
+          </div>
+
+          <div class="card">
+            <div class="row"><span class="h2">🚆 Transport</span></div>
+            <div class="fieldrow"><span class="fk">Airport → city</span><span class="fv">ARL 45 THB · ~26 min</span></div>
+            <div class="fieldrow"><span class="fk">Metro</span><span class="fv">BTS + MRT · Rabbit card</span></div>
+            <div class="fieldrow"><span class="fk">Ride-hailing</span><span class="fv">Grab, Bolt — everywhere</span></div>
+            <div class="fieldrow"><span class="fk">River</span><span class="fv">Chao Phraya Express 16–33 THB</span></div>
+            <div class="fieldrow"><span class="fk">Scooter rental</span><span class="fv">not recommended in BKK</span></div>
+          </div>
+
+          <div class="card">
+            <div class="row"><span class="h2">🧾 Practical</span></div>
+            <div class="fieldrow"><span class="fk">Tap water</span><span class="fv">don't drink — refill stations</span></div>
+            <div class="fieldrow"><span class="fk">Tipping</span><span class="fv">not expected · round up</span></div>
+            <div class="fieldrow"><span class="fk">Coworking</span><span class="fv">many · ~250 THB/day</span></div>
+            <div class="fieldrow"><span class="fk">Emergency</span><span class="fv">191 · tourist police 1155</span></div>
+          </div>
+        </div>
+        <div class="note">Field groups are rendered from catalogue METADATA, not hardcoded UI: <code>explore_field</code> (group, label, type, unit, sort_order) + <code>explore_value</code> (city_id, field_id, value, verified_at). The renderer walks whatever metadata exists — when an admin adds a “Health &amp; safety” group or a “Tap water” field, it appears here with zero code changes and no deploy. Money-typed fields auto-convert to HUF using the same FX cache as the Money screen.</div>
+
+        <div class="card" style="margin-top: 12px;">
+          <div class="row">
+            <span class="h2">📌 Landmarks &amp; food</span>
+            <span class="badge">12 places</span>
+            <span class="spacer"></span>
+            <button class="btn sm ghost">＋ Suggest a place</button>
+          </div>
+          <div class="list-row">
+            <span style="font-size: 20px;">🛕</span>
+            <span class="grow">
+              <span class="title">Wat Pho <span class="badge">temple</span> <span class="badge ok">✓ checked in Sep 11</span></span>
+              <span class="meta">Reclining Buddha · entry 300 THB · go at 08:00 for calm</span>
+            </span>
+            <span class="stars tiny faint hide-phone">★ — <span class="tiny">coming</span></span>
+          </div>
+          <div class="list-row">
+            <span style="font-size: 20px;">🛍️</span>
+            <span class="grow">
+              <span class="title">Chatuchak Weekend Market <span class="badge">market</span></span>
+              <span class="meta">Sat–Sun only · cash + haggling · 15,000 stalls, go early</span>
+            </span>
+            <span class="stars tiny faint hide-phone">★ — <span class="tiny">coming</span></span>
+          </div>
+          <div class="list-row">
+            <span style="font-size: 20px;">🦀</span>
+            <span class="grow">
+              <span class="title">Jay Fai <span class="badge">street food</span> <span class="badge accent">✎ own note</span></span>
+              <span class="meta">Michelin street food · crab omelette ~1,000 THB · long queue</span>
+            </span>
+            <span class="stars tiny faint hide-phone">★ — <span class="tiny">coming</span></span>
+          </div>
+          <div class="list-row">
+            <span style="font-size: 20px;">🌳</span>
+            <span class="grow">
+              <span class="title">Lumpini Park <span class="badge">park</span></span>
+              <span class="meta">free · morning tai-chi · resident monitor lizards</span>
+            </span>
+            <span class="stars tiny faint hide-phone">★ — <span class="tiny">coming</span></span>
+          </div>
+          <div class="row" style="margin-top: 8px;"><a href="#" class="small">Show all 12 places →</a></div>
+        </div>
+        <div class="note">Places live in the same <code>place</code> table that feeds the Live check-in picker — that's how “✓ checked in Sep 11” appears here after Patrik's Wat Pho check-in. “Suggest a place” creates a pending place for admin approval (editors can't pollute the shared catalogue directly). The greyed ★ slot reserves layout space for the future community average so the card doesn't reflow when reviews ship.</div>
+
+        <div class="card" style="margin-top: 12px;">
+          <div class="row">
+            <span class="h2">✎ Our notes</span>
+            <span class="badge accent">private to trip members</span>
+            <span class="spacer"></span>
+            <button class="btn sm">＋ Add note</button>
+          </div>
+          <div class="ownnote">
+            <span class="avatar">P</span>
+            <span class="body">Jay Fai — queue starts before 11:00; try the ticket system. Budget 1,000 THB for the crab omelette, worth it once. #food
+              <span class="meta">Patrik · Jun 14 2026</span>
+            </span>
+          </div>
+          <div class="ownnote">
+            <span class="avatar" style="color: var(--gold); border-color: var(--gold); background: transparent;">A</span>
+            <span class="body">Chatuchak is weekends only — we fly out Mon Aug 31 and land Tue Sep 1, so first chance is Sep 5–6. Combine with Or Tor Kor market next door.
+              <span class="meta">Anna · Jun 20 2026</span>
+            </span>
+          </div>
+          <div class="ownnote">
+            <span class="avatar">P</span>
+            <span class="body">Ask the apartment host: monthly BTS pass vs Rabbit card top-up — which is cheaper for daily Sathorn commute?
+              <span class="meta">Patrik · Jul 2 2026</span>
+            </span>
+          </div>
+        </div>
+        <div class="note">Own notes are per-trip + per-city, written by owner/co-editor; viewer (account) can read them, but the FOLLOWER share link NEVER includes them — the sanitizer strips money, notes and booking refs. Notes support #hashtags; a note tagged to a place name (Jay Fai) also lights the ✎ badge on that landmark row above. OPEN QUESTION: proper place-level notes vs the current city-level + hashtag convention?</div>
+
+        <div class="card teaser" style="margin-top: 12px;">
+          <div class="row">
+            <span class="h2">★ Community</span>
+            <span class="badge gold">coming</span>
+          </div>
+          <div class="muted small" style="margin-top: 6px;">Average ratings and short reviews from travellers who checked in at these places. Planned for the community phase — check-ins already store a ★ rating today, so the averages will have history from day one. Reviews will pass an admin moderation queue (see 10-later-phases mock).</div>
+        </div>
+      </section>
+
+      <!-- ============ STATE: admin (catalogue editing) ============ -->
+      <section data-state="admin">
+        <div class="crumbs"><a href="#">Explore</a><span class="sep">›</span><a href="#">🇹🇭 Thailand</a><span class="sep">›</span><span class="cur">Bangkok</span><span class="sep">·</span><span class="badge gold">editing</span></div>
+
+        <div class="card hero">
+          <div class="row">
+            <span class="badge gold">🛠 ADMIN</span>
+            <b>Catalogue editing mode</b>
+            <span class="spacer"></span>
+            <button class="btn sm">＋ Add city</button>
+            <button class="btn sm">＋ Add country</button>
+            <button class="btn sm primary">Done</button>
+          </div>
+          <div class="muted small" style="margin-top: 6px;">Changes are DB-driven — they go live for every trip instantly. No deploy, no app update. Every edit is audit-logged (who, field, old → new).</div>
+        </div>
+        <div class="note">Role gate: only the <code>admin</code> role sees pencils and add-rows; owner/co-editor get the read-only city view (their own notes stay editable there). Currently Patrik holds admin for his own catalogue; when the product goes multi-tenant, catalogue admin becomes a separate global role. OPEN QUESTION: instant-live edits (as mocked) vs a draft→publish workflow — instant is fine for M1 single-admin, revisit before community launch.</div>
+
+        <div class="grid c2 stack-phone" style="margin-top: 12px;">
+          <div class="card">
+            <div class="row"><span class="h2">💸 Costs</span><span class="spacer"></span><button class="pencilbtn" title="rename group">✎</button></div>
+            <div class="fieldrow"><span class="draghandle">⠿</span><span class="fk">Daily budget (couple)</span><span class="fv">1,800–2,600 THB</span><button class="pencilbtn">✎</button></div>
+            <div class="fieldrow"><span class="draghandle">⠿</span><span class="fk">Street-food meal</span><span class="fv">60–120 THB</span><button class="pencilbtn">✎</button></div>
+            <div class="fieldrow"><span class="draghandle">⠿</span><span class="fk">BTS/MRT single ride</span><span class="fv">17–62 THB</span><button class="pencilbtn">✎</button></div>
+            <div class="fieldrow"><span class="draghandle">⠿</span><span class="fk">Monthly apartment</span><span class="fv">18k–35k THB</span><button class="pencilbtn">✎</button></div>
+            <button class="addrow">＋ Add field to “Costs” — label · type (text / number / money / range / months) · unit</button>
+          </div>
+
+          <div class="card">
+            <div class="row"><span class="h2">🌤 Weather</span><span class="spacer"></span><button class="pencilbtn" title="rename group">✎</button></div>
+            <div class="fieldrow"><span class="draghandle">⠿</span><span class="fk">Best months</span><span class="fv">Nov–Feb</span><button class="pencilbtn">✎</button></div>
+            <div class="fieldrow"><span class="draghandle">⠿</span><span class="fk">Monsoon</span><span class="fv">May–Oct</span><button class="pencilbtn">✎</button></div>
+            <div class="fieldrow"><span class="draghandle">⠿</span><span class="fk">September average</span><span class="fv">32 °C · ~78%</span><button class="pencilbtn">✎</button></div>
+            <button class="addrow">＋ Add field to “Weather”</button>
+          </div>
+        </div>
+
+        <button class="addrow" style="margin-top: 12px;">＋ Add field group — e.g. “Health &amp; safety”, “Visas &amp; border runs” · renders on every city of this country automatically</button>
+        <div class="note">Field TYPES drive both the edit form and the read renderer: <code>money</code> gets FX conversion, <code>months</code> renders the month strip, <code>range</code> gets min–max inputs. Saving a value refreshes its <code>verified_at</code>, which clears any ⚠ stale badge. Reordering (⠿) writes <code>sort_order</code>.</div>
+
+        <div class="card" style="margin-top: 12px;">
+          <div class="row">
+            <span class="h2">📌 Landmarks &amp; food</span>
+            <span class="badge">12 places</span>
+            <span class="badge warn">1 pending suggestion</span>
+            <span class="spacer"></span>
+          </div>
+          <div class="list-row">
+            <span style="font-size: 20px;">🛕</span>
+            <span class="grow"><span class="title">Wat Pho</span><span class="meta">temple · 300 THB · geo pin set</span></span>
+            <button class="pencilbtn">✎</button><button class="pencilbtn del">✕</button>
+          </div>
+          <div class="list-row">
+            <span style="font-size: 20px;">🦀</span>
+            <span class="grow"><span class="title">Jay Fai</span><span class="meta">street food · geo pin set</span></span>
+            <button class="pencilbtn">✎</button><button class="pencilbtn del">✕</button>
+          </div>
+          <div class="list-row">
+            <span style="font-size: 20px;">🌳</span>
+            <span class="grow"><span class="title">Lumpini Park</span><span class="meta">park · geo pin set</span></span>
+            <button class="pencilbtn">✎</button><button class="pencilbtn del">✕</button>
+          </div>
+          <div class="list-row" style="opacity: .75;">
+            <span style="font-size: 20px;">☕</span>
+            <span class="grow"><span class="title">Roots Coffee <span class="badge warn">suggested by Anna</span></span><span class="meta">café · needs geo pin + category confirm</span></span>
+            <button class="btn sm">Approve</button><button class="pencilbtn del">✕</button>
+          </div>
+          <button class="addrow">＋ Add landmark — name · category · one-liner · geo pin (the pin feeds the Live check-in picker)</button>
+        </div>
+        <div class="note">Deleting a place that has check-ins is blocked — it archives instead (check-in history must survive). Suggested places from editors land here as pending rows. Landmark geo pins are REQUIRED before approval: the Live check-in flow and the Map screen both consume them.</div>
+
+        <div class="toast" style="margin-top: 12px;">✓ “BTS/MRT single ride” updated — live for all users. <a href="#">Undo</a></div>
+        <div class="note">Save model: field edits commit on blur with a 10-second Undo toast (audit row written either way). Community-phase moderation (reviews, photos) is a separate admin queue — mocked in <code>10-later-phases.html</code>, not here.</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Explore (knowledge base)',
+  states: [
+    { id: 'start', label: 'Start (empty)', desc: 'Patrik (owner), pre-trip planning in July 2026 — first landing on Explore this session: nothing selected, pick a country.' },
+    { id: 'country', label: 'Country: Thailand', desc: 'Patrik (owner) tapped Thailand while planning the Oct route — comparing cities; ✎ badges mark cities with their own notes.' },
+    { id: 'city', label: 'City: Bangkok', desc: 'Anna (co-editor) mid-September, during the Bangkok stay — checking transport facts, their own notes, and checking in via Live.' },
+    { id: 'admin', label: 'Admin edit', desc: 'Admin maintaining the catalogue on the same Bangkok page — editing fields, adding cities/fields; DB-driven, no deploy.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

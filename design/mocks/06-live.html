@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Live — today screen</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* Live is phone-first: desktop is the same centered narrow column */
+main.screen { max-width: 520px; }
+
+.daterow { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+.kicker { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+.weather-chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border);
+  background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 12.5px;
+  white-space: nowrap; flex: none; }
+.weather-chip .sub { color: var(--faint); font-size: 10.5px; }
+.weather-chip.stale { border-color: var(--warn); color: var(--warn); }
+.weather-chip.stale .sub { color: var(--warn); opacity: .8; }
+
+.bigcta { width: 100%; justify-content: center; padding: 13px 18px; font-size: 15.5px;
+  border-radius: 12px; margin: 2px 0 4px; }
+
+.offline-banner { display: flex; align-items: center; gap: 9px; border: 1px solid var(--warn);
+  background: var(--surface2); color: var(--warn); font-weight: 600; font-size: 13px;
+  border-radius: 10px; padding: 9px 12px; margin-bottom: 12px; }
+
+/* square photo thumbs (CSS-only placeholders) */
+.thumb { width: 56px; height: 56px; border-radius: 10px; border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface2));
+  display: flex; align-items: center; justify-content: center; font-size: 26px; flex: none; position: relative; }
+.thumb .corner { position: absolute; right: -6px; bottom: -6px; font-size: 13px; line-height: 1;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: 50%;
+  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+.thumb.evt { background: var(--surface2); border-style: dashed; font-size: 22px; }
+
+/* plan-vs-actual mini timeline */
+.tl { display: flex; gap: 4px; margin: 10px 0 6px; }
+.tl-seg { min-width: 0; }
+.tl-lab { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted); margin-bottom: 4px; text-align: center; white-space: nowrap; overflow: hidden; }
+.tl-bar { display: block; height: 8px; border-radius: 5px; background: var(--surface2);
+  border: 1px solid var(--border-strong); position: relative; }
+.tl-seg.done .tl-bar { background: var(--accent); border-color: var(--accent); }
+.tl-seg.cur .tl-bar { border-color: var(--accent);
+  background: linear-gradient(90deg, var(--accent) 0 38%, var(--surface2) 38%); }
+.tl-seg.cur .tl-bar::after { content: ""; position: absolute; left: 38%; top: 50%;
+  transform: translate(-50%, -50%); width: 12px; height: 12px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 0 0 2px var(--accent); }
+.tl-seg.unbooked .tl-bar { border-style: dashed; }
+
+/* check-in sheet */
+.sheetwrap { padding: 26px 12px; }
+@container (max-width: 500px) {
+  .sheetwrap { padding: 18px 0 0; align-items: flex-end; border-left: 0; border-right: 0; border-bottom: 0; border-radius: 0; }
+  .sheetwrap .modal { border-radius: 18px 18px 0 0; border-bottom: 0; max-width: none; }
+  .daterow { flex-wrap: wrap; }
+}
+.list-row.sel { border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 10px; padding: 11px 10px; }
+.list-row.sel + .list-row { border-top: 0; }
+
+.starpick { display: flex; gap: 8px; font-size: 32px; line-height: 1; }
+.starpick b { font-weight: 400; color: var(--gold); cursor: pointer; }
+.starpick b.off { color: var(--border-strong); }
+
+.attach-tile { width: 56px; height: 56px; border: 1.5px dashed var(--border-strong); background: transparent;
+  color: var(--muted); border-radius: 10px; display: flex; flex-direction: column; gap: 1px;
+  align-items: center; justify-content: center; font-size: 15px; cursor: pointer; }
+.attach-tile small { font-size: 9px; letter-spacing: .04em; }
+
+.chiprow { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--border-strong); background: var(--surface2); color: var(--muted);
+  border-radius: 999px; padding: 6px 13px; font-size: 13px; cursor: pointer; }
+.chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+
+.gpschip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--accent);
+  color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 6px 12px;
+  font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+.countnum { font-size: 52px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
+      <a href="#">Map</a><a href="#" class="on">Live</a><a href="#">Explore</a>
+      <span class="right"><a href="#">Settings</a><span class="avatar">P</span></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ================= OFFLINE BANNER (offline only) ================= -->
+      <section data-state="offline">
+        <div class="offline-banner">📴 Offline — check-ins will sync
+          <span class="spacer"></span><span class="badge warn">1 queued</span></div>
+        <div class="note">Banner triggers on <b>navigator.onLine + a failed heartbeat</b> (airplane mode alone isn't reliable).
+          The screen stays fully usable: reads come from the local SWR cache, writes go to the outbox.
+          No feature is disabled offline — check-in is THE core offline action (temples have no wifi).</div>
+      </section>
+
+      <!-- ================= SYNC-ERROR TOAST (sync-error only) ================= -->
+      <section data-state="sync-error">
+        <div class="toast warn" style="width:100%">⚠️ <b>1 photo didn't upload.</b>&nbsp;All check-ins themselves are saved.
+          <span class="spacer"></span><button class="btn sm">↻ Retry</button></div>
+        <div class="note"><b>Don't catastrophize:</b> a single failed asset renders as a quiet toast + a badge on the one
+          affected item — never a full-screen error. Auto-retry with exponential backoff (×5), then manual retry.
+          The check-in row and the photo are separate sync units, so a fat photo can never block the check-in itself.</div>
+      </section>
+
+      <!-- ================= TODAY (shared by today / offline / sync-error) ================= -->
+      <section data-state="today offline sync-error">
+
+        <div class="daterow">
+          <div data-state="today sync-error">
+            <div class="kicker">Friday · Sep 11, 2026 · 09:05 ICT</div>
+            <div class="h1">Day 12 <span class="muted" style="font-weight:400">of 179</span> · Bangkok 🇹🇭</div>
+          </div>
+          <div data-state="offline">
+            <div class="kicker">Saturday · Sep 12, 2026 · 10:40 ICT</div>
+            <div class="h1">Day 13 <span class="muted" style="font-weight:400">of 179</span> · Bangkok 🇹🇭</div>
+          </div>
+          <span class="spacer"></span>
+          <span class="weather-chip" data-state="today sync-error">⛅ 32° <span class="sub">feels 38° · 08:30</span></span>
+          <span class="weather-chip stale" data-state="offline">⛅ 32° <span class="sub">as of 09:55</span></span>
+        </div>
+        <div class="note">Day counter runs in the <b>current stop's timezone</b> (Asia/Bangkok), not the phone's.
+          <b>Decided (see FIXTURES.md):</b> Day 1 = the departure day (Aug 31, Budapest) → Sep 11 = Day 12,
+          Sep 12 = Day 13 (the offline state is the next morning). Weather: Open-Meteo for current-stop coords, fetched
+          client-side, cached 30 min (and daily via pg_cron for the follower page). Offline shows the last cached
+          value with an "as of" stamp — never hide it, stale beats blank.</div>
+
+        <!-- current stop card -->
+        <div class="card hero">
+          <div class="kicker">Current stop · 1 of 6</div>
+          <div class="row" style="margin-top:4px">
+            <div class="h2">🏢 Sukhumvit apartment, Bangkok</div>
+            <span class="spacer"></span><span class="badge ok">booked</span>
+          </div>
+          <div class="small muted" style="margin:2px 0 10px">Sep 1 – Oct 1 · 30 nights</div>
+          <div class="progress"><i style="width:38%"></i></div>
+          <div class="row small" style="margin-top:7px">
+            <span data-state="today sync-error">Night <b>11</b> of 30</span>
+            <span data-state="offline">Night <b>12</b> of 30</span>
+            <span class="muted">·</span>
+            <span class="accent" data-state="today sync-error"><b>19 nights left</b></span>
+            <span class="accent" data-state="offline"><b>18 nights left</b></span>
+            <span class="spacer"></span><span class="badge ok">on plan</span>
+          </div>
+          <hr class="hr">
+          <div class="row small">
+            <span class="muted">Next:</span><b>Chiang Mai</b><span class="muted">· from Oct 1</span>
+            <span class="spacer"></span><span class="badge warn">planned · not booked</span>
+          </div>
+        </div>
+        <div class="note">Stop data comes from the Itinerary stays table. Booking ref, price and the cancellation window
+          are deliberately <b>not shown here</b> (tap-through opens the stay in Itinerary) — Live is the glanceable,
+          over-the-shoulder-safe screen. Followers never see the apartment name/address at all, only the city.
+          The "not booked" nudge for the next stop escalates on the Dashboard, not here.</div>
+
+        <!-- big check-in CTA -->
+        <button class="btn primary bigcta" onclick="setState('checkin')">📍 Check in — where are you?</button>
+        <div class="tiny muted" style="text-align:center; margin-bottom:4px">One tap · works offline · rating and photo optional</div>
+
+        <!-- plan vs actual mini timeline -->
+        <div class="card" style="margin-top:12px">
+          <div class="row"><span class="kicker">Plan vs actual</span><span class="spacer"></span><span class="badge ok">on plan</span></div>
+          <div class="tl">
+            <div class="tl-seg done" style="flex:.5"><span class="tl-lab">✈︎</span><i class="tl-bar"></i></div>
+            <div class="tl-seg cur" style="flex:2"><span class="tl-lab">BKK</span><i class="tl-bar"></i></div>
+            <div class="tl-seg unbooked" style="flex:2"><span class="tl-lab">CNX</span><i class="tl-bar"></i></div>
+            <div class="tl-seg unbooked" style="flex:2"><span class="tl-lab">HAN·HOI</span><i class="tl-bar"></i></div>
+            <div class="tl-seg unbooked" style="flex:2"><span class="tl-lab">KUL</span><i class="tl-bar"></i></div>
+            <div class="tl-seg unbooked" style="flex:2.2"><span class="tl-lab">Bali</span><i class="tl-bar"></i></div>
+            <div class="tl-seg unbooked" style="flex:.5"><span class="tl-lab">🏠</span><i class="tl-bar"></i></div>
+          </div>
+          <div class="tiny muted">● you are here · solid = booked · dashed = planned, unbooked · widths ∝ stop length</div>
+        </div>
+        <div class="note">The <b>actual</b> track is derived from arrival/departure <b>events</b> + the city of the latest
+          check-in — no continuous GPS tracking. If actual ≠ plan (e.g. stayed in Bangkok into October), this card splits
+          into two rows (plan above, actual below, drift highlighted) — full version lives on the Dashboard live state.</div>
+
+        <!-- recent check-ins -->
+        <div class="sec"><span class="h2">Recent check-ins</span><span class="spacer"></span><a href="#" class="small">All activity →</a></div>
+        <div class="card" style="padding:4px 12px">
+
+          <!-- queued item — offline only -->
+          <div class="list-row" data-state="offline">
+            <div class="thumb">🛍<span class="corner">⏳</span></div>
+            <div class="grow">
+              <div class="title">Chatuchak Weekend Market <span class="badge warn">⏳ queued</span></div>
+              <div class="stars">★★★★★</div>
+              <div class="meta">"Bought two bags of things we absolutely do not have room for." · Anna · 2 photos · 10:15 · syncs when back online</div>
+            </div>
+          </div>
+
+          <div class="list-row">
+            <div class="thumb">🛕</div>
+            <div class="grow">
+              <div class="title">Wat Pho <span class="badge accent">followers</span></div>
+              <div class="stars">★★★★★</div>
+              <div class="meta">"Reclining Buddha is unreal. Go before 9am — no crowds." · Patrik · 1 photo · Fri Sep 11 08:45</div>
+            </div>
+          </div>
+
+          <!-- Jay Fai: normal in today/offline… -->
+          <div class="list-row" data-state="today offline">
+            <div class="thumb">🦀</div>
+            <div class="grow">
+              <div class="title">Jay Fai <span class="badge">trip only</span></div>
+              <div class="stars">★★★★<span class="off">★</span></div>
+              <div class="meta">"Crab omelette worth the two-hour queue." · Anna · Thu Sep 10 19:30</div>
+            </div>
+          </div>
+          <!-- …failed photo variant in sync-error -->
+          <div class="list-row" data-state="sync-error">
+            <div class="thumb">🦀<span class="corner">⚠️</span></div>
+            <div class="grow">
+              <div class="title">Jay Fai <span class="badge danger">photo failed</span></div>
+              <div class="stars">★★★★<span class="off">★</span></div>
+              <div class="meta">Check-in synced ✅ · photo upload failed (connection dropped) · Thu Sep 10 19:30</div>
+              <div class="row" style="margin-top:6px; gap:8px">
+                <button class="btn sm">↻ Retry photo</button>
+                <button class="btn sm ghost">Remove photo</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- event-type example -->
+          <div class="list-row">
+            <div class="thumb evt">🛬</div>
+            <div class="grow">
+              <div class="title">Arrived in Bangkok <span class="badge">event</span></div>
+              <div class="meta">Sep 1 · 06:05 · auto-suggested from flight BUD → BKK, confirmed by Patrik · no rating</div>
+            </div>
+          </div>
+        </div>
+        <div class="note"><b>Events</b> (arrived / departed / moved stop) are check-ins without a rating — they drive the
+          plan-vs-actual track and the follower map's "last seen". The app suggests them from itinerary dates
+          ("Land in Bangkok today — confirm arrival?") rather than auto-firing, so a delayed flight can't lie to Mom.
+          Visibility badges: <b>trip only</b> (Patrik + Anna) · <b>followers</b> (Mom's link) · <b>public</b> (later,
+          community reviews). Followers never see money, notes marked private, or booking refs regardless of badge.</div>
+
+        <button class="fab" title="Check in" onclick="setState('checkin')">📍</button>
+      </section>
+
+      <!-- ================= CHECK-IN SHEET ================= -->
+      <section data-state="checkin">
+        <div class="daterow">
+          <div>
+            <div class="kicker">Friday · Sep 11, 2026</div>
+            <div class="h1" style="opacity:.35">Day 12 · Bangkok 🇹🇭</div>
+          </div>
+        </div>
+        <div class="note">Rendered as a <b>bottom sheet</b> over the dimmed today screen (phone) / centered modal (desktop).
+          Two steps on-device — 1: pick place, 2: details — shown stacked here so every control is reviewable.
+          Nothing below the rating is required: "select place → Save" is a valid 2-tap check-in.</div>
+
+        <div class="modal-backdrop sheetwrap">
+          <div class="modal">
+            <div class="row" style="margin-bottom:10px">
+              <h3 style="margin:0">📍 Check in</h3>
+              <span class="spacer"></span>
+              <button class="btn sm ghost" onclick="setState('today')">✕</button>
+            </div>
+
+            <!-- step 1: pick a place -->
+            <div class="kicker" style="margin-bottom:6px">Step 1 · Where?</div>
+            <input class="input" placeholder="🔎 Search places in Bangkok…">
+            <div class="tiny muted" style="margin:10px 0 2px">NEARBY · sorted by distance from GPS</div>
+
+            <div class="list-row sel">
+              <div class="thumb">🛕</div>
+              <div class="grow">
+                <div class="title">Wat Pho</div>
+                <div class="meta">Attraction · 0.4 km · <span class="badge">catalogue</span></div>
+              </div>
+              <span class="accent" style="font-size:18px">✓</span>
+            </div>
+            <div class="list-row">
+              <div class="thumb">🦀</div>
+              <div class="grow"><div class="title">Jay Fai</div>
+                <div class="meta">Street food · 1.1 km · <span class="badge">community</span></div></div>
+            </div>
+            <div class="list-row">
+              <div class="thumb">🌳</div>
+              <div class="grow"><div class="title">Lumpini Park</div>
+                <div class="meta">Park · 2.0 km · <span class="badge">catalogue</span></div></div>
+            </div>
+            <div class="list-row">
+              <div class="thumb">🛍</div>
+              <div class="grow"><div class="title">Chatuchak Weekend Market</div>
+                <div class="meta">Market · 7.2 km · <span class="badge">catalogue</span></div></div>
+            </div>
+            <div style="padding:10px 4px 2px"><a href="#" onclick="setState('custom-place')">＋ Can't find it? Add a custom place</a></div>
+
+            <div class="note">Source = admin <b>catalogue</b> + <b>community</b>-added places for the current city
+              (badge shows provenance). Distance needs the geolocation permission — if denied, list falls back to the
+              city's places alphabetically with a "enable location for nearby" hint. Places already in today's plan
+              (from Explore) float to the top.</div>
+
+            <hr class="hr">
+
+            <!-- step 2: details -->
+            <div class="kicker" style="margin-bottom:6px">Step 2 · Details — all optional</div>
+
+            <div class="field"><span class="label">Type</span>
+              <div class="chiprow">
+                <button class="chip on">📍 Place visit</button>
+                <button class="chip">🛬 Arrived in city</button>
+                <button class="chip">🛫 Departed</button>
+              </div>
+            </div>
+            <div class="note">"Arrived / Departed" turn this into an <b>event</b> — rating hides, the plan-vs-actual
+              track and follower "last seen" update. E.g. <i>Arrived in Bangkok</i> on Sep 1 was created exactly here,
+              pre-filled by the flight-day suggestion.</div>
+
+            <div class="field"><span class="label">Rating</span>
+              <div class="starpick"><b>★</b><b>★</b><b>★</b><b>★</b><b>★</b></div>
+              <div class="tiny muted" style="margin-top:4px">Tap a star · tap again to clear — quick check-ins don't need one</div>
+            </div>
+
+            <div class="field"><span class="label">Comment</span>
+              <textarea class="input" rows="2">Reclining Buddha is unreal. Go before 9am — no crowds.</textarea>
+            </div>
+
+            <div class="field"><span class="label">Photo</span>
+              <div class="row" style="gap:8px">
+                <div class="thumb">🛕</div>
+                <button class="attach-tile">📷<small>ADD</small></button>
+              </div>
+              <div class="tiny muted" style="margin-top:4px">Compressed on device (~1600px) · EXIF GPS stripped from any shared copy</div>
+            </div>
+
+            <div class="field"><span class="label">Visible to</span>
+              <select class="select">
+                <option>🔒 Trip only — Patrik + Anna</option>
+                <option selected>👨‍👩‍👧 Trip + followers — Mom's link</option>
+                <option disabled>🌍 Public — community reviews (later phase)</option>
+              </select>
+            </div>
+            <div class="note"><b>Default is Trip only</b> — sharing is an opt-in per check-in, never a surprise.
+              Patrik bumped this one to followers so Mom sees Wat Pho. "Public" unlocks with community reviews and
+              goes through moderation. <b>OPEN QUESTION:</b> allow changing visibility retroactively (and should
+              followers' cached feeds then purge)? Proposed: yes, edit anytime; follower feed is always
+              server-rendered fresh, so no purge problem.</div>
+
+            <button class="btn primary lg" style="width:100%; justify-content:center">Save check-in</button>
+            <div class="tiny muted" style="text-align:center; margin-top:6px">Saves to the local outbox first — instant even on temple wifi</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= CUSTOM PLACE ================= -->
+      <section data-state="custom-place">
+        <div class="daterow">
+          <div>
+            <div class="kicker">Friday · Sep 11, 2026</div>
+            <div class="h1" style="opacity:.35">Day 12 · Bangkok 🇹🇭</div>
+          </div>
+        </div>
+        <div class="note">Reached from "＋ Can't find it?" inside the check-in sheet. Same sheet, second page —
+          back arrow returns to the place list with state kept.</div>
+
+        <div class="modal-backdrop sheetwrap">
+          <div class="modal">
+            <div class="row" style="margin-bottom:10px">
+              <button class="btn sm ghost" onclick="setState('checkin')">←</button>
+              <h3 style="margin:0">＋ Add a place here</h3>
+              <span class="spacer"></span>
+              <button class="btn sm ghost" onclick="setState('today')">✕</button>
+            </div>
+
+            <div class="field"><span class="label">Name</span>
+              <input class="input" value="Ekkamai Green Café">
+            </div>
+
+            <div class="field"><span class="label">Kind</span>
+              <div class="chiprow">
+                <button class="chip">🛕 Attraction</button>
+                <button class="chip on">🍜 Food</button>
+                <button class="chip">🛏 Stay</button>
+                <button class="chip">📌 Other</button>
+              </div>
+            </div>
+
+            <div class="field"><span class="label">Location</span>
+              <div class="row" style="gap:8px">
+                <span class="gpschip">📡 13.72411, 100.58325 · ±8 m</span>
+                <button class="btn sm ghost">↻ refresh</button>
+              </div>
+              <div class="tiny muted" style="margin-top:4px">Auto-filled from device GPS · tap to fine-tune on a map (map picker not mocked)</div>
+            </div>
+
+            <div class="field"><span class="label">City</span>
+              <select class="select">
+                <option selected>Bangkok, Thailand — current stop</option>
+                <option>Chiang Mai, Thailand</option>
+                <option>Hanoi, Vietnam</option>
+                <option>Other city…</option>
+              </select>
+            </div>
+            <div class="note">City pre-selects from the current stop and sanity-checks against the GPS coords
+              (coords in Hanoi + city "Bangkok" → warn). Before saving, a <b>dedupe check</b> runs: same-ish name or
+              any place within 150 m suggests "Did you mean → Jay Fai (120 m)?" to keep the community layer clean.</div>
+            <div class="note"><b>OPEN QUESTIONS:</b> custom places start <b>trip-private</b>; promoting one into the
+              public community catalogue goes through the admin moderation queue (see mock 10). Who can edit after
+              promotion — creator, admin only? And do we keep the creator's name on the public place ("added by Patrik")?</div>
+
+            <button class="btn primary lg" style="width:100%; justify-content:center">Save place &amp; check in</button>
+            <div class="tiny muted" style="text-align:center; margin-top:6px">Returns to check-in with this place selected</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PRE-TRIP ================= -->
+      <section data-state="pre-trip">
+        <div class="daterow">
+          <div>
+            <div class="kicker">Friday · Jul 10, 2026 · Budapest</div>
+            <div class="h1">Asia 2026–27</div>
+          </div>
+        </div>
+
+        <div class="card hero" style="text-align:center; padding:26px 16px">
+          <div class="kicker">Departure in</div>
+          <div class="countnum">52 <span style="font-size:22px; font-weight:600">days</span></div>
+          <div class="small muted" style="margin-top:6px">Budapest → Bangkok · Mon, Aug 31 2026 · <span class="badge ok">flight booked</span></div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div class="h2" style="margin-bottom:6px">🌙 Live mode starts with your trip</div>
+          <div class="small muted">On Aug 31 this screen wakes up and becomes your daily home:</div>
+          <div class="small" style="margin-top:8px; display:grid; gap:5px">
+            <div>📍 One-tap check-ins with ratings, photos &amp; comments</div>
+            <div>🏢 Current stop, nights left, what's next</div>
+            <div>⛅ Today's weather where you are</div>
+            <div>📈 Plan vs actual — are we still on the route we drew?</div>
+            <div>🛬 Arrival events that update Mom's follower map</div>
+          </div>
+        </div>
+        <div class="note">Followers see almost nothing pre-trip — Mom's link shows the countdown and the rough route
+          only (see mock 07). The trip flips to live automatically at the trip start date in the departure timezone;
+          owner can also flip it manually ("We're at the airport!").</div>
+
+        <div class="sec"><span class="h2">Before you fly</span></div>
+        <div class="card" style="padding:4px 12px">
+          <div class="list-row">
+            <div class="thumb evt">🏢</div>
+            <div class="grow">
+              <div class="title">Bangkok apartment — free cancel until Aug 24</div>
+              <div class="meta">Card will be charged Aug 25 · from Itinerary → stays</div>
+            </div>
+            <span class="badge warn">in 45 days</span>
+          </div>
+          <div class="list-row">
+            <div class="thumb evt">🛂</div>
+            <div class="grow">
+              <div class="title">Thailand: visa-exempt 60 days</div>
+              <div class="meta">Covers all of September · from Explore country facts</div>
+            </div>
+            <span class="badge ok">ok</span>
+          </div>
+        </div>
+        <div class="note">Pre-trip, the Live tab moonlights as a "what still bites us" surface: money-critical dates and
+          entry requirements pulled from Itinerary + Explore. <b>OPEN QUESTION:</b> is this duplication with the
+          Dashboard worth it, or should pre-trip Live show the countdown only?</div>
+
+        <div class="sec"><span class="h2">Try it before you go</span></div>
+        <div class="card">
+          <div class="row">
+            <div class="grow">
+              <div style="font-weight:600">Make a test check-in</div>
+              <div class="small muted">Full real flow — GPS, photo, offline outbox — flagged as test.</div>
+            </div>
+            <button class="btn">📍 Test check-in</button>
+          </div>
+        </div>
+        <div class="note"><b>Dogfood:</b> test check-ins are real rows flagged <code>is_test</code> — they exercise GPS
+          permission, photo upload and the offline outbox at home in Budapest, where fixing bugs is cheap. Never shown
+          to followers, excluded from stats, one-tap "delete all test data" in Settings before departure.</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Live — today screen',
+  states: [
+    { id: 'today', label: 'Today', desc: 'Patrik on his phone, morning of Day 12 in Bangkok — the default screen while the trip is live.' },
+    { id: 'checkin', label: 'Check-in', desc: 'Patrik standing at Wat Pho, tapped the check-in CTA — bottom sheet over the today screen.' },
+    { id: 'custom-place', label: 'Custom place', desc: 'Patrik is at a café that is in no catalogue — adding it from within the check-in sheet.' },
+    { id: 'offline', label: 'Offline', desc: 'Anna on the BTS with no signal right after checking in at Chatuchak (Sat Sep 12) — the write sits in the local outbox.' },
+    { id: 'sync-error', label: 'Sync error', desc: 'Fri Sep 11 evening, back online — Thursday\'s Jay Fai photo upload failed; every check-in itself synced fine.' },
+    { id: 'pre-trip', label: 'Pre-trip', desc: 'Patrik at home in Budapest, July 2026 — 52 days before departure, live mode not yet started.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

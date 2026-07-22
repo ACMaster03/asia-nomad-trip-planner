@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Dashboard</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* nav state variants */
+.navgroup { display: contents; }
+.navdim { opacity: .4; pointer-events: none; }
+
+/* generic tiny uppercase label (outside .stat) */
+.klabel { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+/* stat value units */
+.stat .v .unit { font-size: 13px; font-weight: 600; color: var(--muted); margin-left: 1px; }
+
+/* planning-completeness chips */
+.checkchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+/* region cost cheat sheet */
+.cheat { text-align: center; }
+.cheat .pillrow { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
+.costpill { display: inline-flex; align-items: baseline; gap: 7px; border: 1px solid var(--border-strong);
+  background: var(--surface2); border-radius: 999px; padding: 7px 14px; font-size: 13px; white-space: nowrap; }
+.costpill b { font-size: 15.5px; }
+.costpill .per { font-size: 10.5px; color: var(--muted); }
+
+/* next-stop hero typography — city AND country share var(--text) on purpose */
+.city-big { font-size: 38px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; color: var(--text); }
+.country-big { font-size: 20px; font-weight: 650; color: var(--text); margin-top: 2px; }
+
+/* deadlines strip (horizontal scroll) */
+.deadlines { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.deadline { flex: none; width: 208px; }
+.deadline .dtitle { font-weight: 600; margin-top: 2px; }
+.deadline .badge { margin-top: 8px; }
+
+/* plan-vs-actual strip (live) */
+.pva { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: stretch; }
+.pva .arrow { align-self: center; color: var(--faint); font-size: 20px; }
+.pva .ptitle { font-weight: 650; font-size: 15px; margin-top: 4px; }
+
+@container (max-width: 500px) {
+  .city-big { font-size: 30px; }
+  .country-big { font-size: 17px; }
+  .pva { grid-template-columns: 1fr; }
+  .pva .arrow { transform: rotate(90deg); justify-self: center; }
+  .deadline { width: 182px; }
+}
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <span class="navgroup" data-state="planning viewer">
+        <a href="#" class="on">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
+        <a href="#">Map</a><a href="#">Explore</a>
+      </span>
+      <span class="navgroup" data-state="live">
+        <a href="#" class="on">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
+        <a href="#">Map</a><a href="#">Live</a><a href="#">Explore</a>
+      </span>
+      <span class="navgroup" data-state="empty">
+        <a href="#" class="on">Dashboard</a><a href="#" class="navdim">Itinerary</a><a href="#" class="navdim">Money</a>
+        <a href="#" class="navdim">Map</a><a href="#">Explore</a>
+      </span>
+      <span class="right">
+        <span class="badge accent" data-state="viewer">👁 Viewer</span>
+        <a href="#">Settings</a>
+        <span class="avatar" data-state="planning live empty">P</span>
+        <span class="avatar" data-state="viewer">D</span>
+      </span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ================= PLANNING + VIEWER (shared header) ================= -->
+      <section data-state="planning viewer">
+        <div class="row" style="margin-bottom:4px; align-items:flex-start">
+          <div>
+            <div class="h1">Asia 2026–27
+              <span class="badge">✈ Planning</span>
+              <span class="badge accent" data-state="viewer">👁 Read-only</span>
+            </div>
+            <div class="muted small" style="margin-top:2px">Patrik + Anna · Budapest → Bangkok Aug 31, 2026 · home Feb 25, 2027</div>
+          </div>
+          <span class="spacer"></span>
+          <span class="row" style="gap:8px" data-state="planning">
+            <button class="btn sm">＋ Add stop</button>
+            <button class="btn sm ghost">Share…</button>
+          </span>
+        </div>
+        <div class="note">Phase badge flips automatically by date: <b>Planning → Live</b> at trip-local midnight on departure day,
+          <b>Live → Done</b> the day after return. No manual toggle. OPEN QUESTION: allow the owner to force Live mode a day early
+          (e.g. already at the airport hotel)?</div>
+      </section>
+
+      <!-- viewer-only explainer -->
+      <section data-state="viewer">
+        <div class="note"><b>Viewer role</b> (signed-in, read-only): sees the exact same dashboard as the owner — including money,
+          deadlines and notes — but every edit affordance is gone (no “＋ Add stop”, no “Share…”, no “Edit stop”). Viewers cannot
+          invite others or manage share links. Contrast with <b>follower</b> (no account, share link): followers NEVER see money,
+          notes or booking data. OPEN QUESTION: should viewers see booking references / confirmation codes, or keep those
+          owner+co-editor only? Current assumption: hidden from viewers too.</div>
+      </section>
+
+      <!-- ================= PLANNING + VIEWER (hero stats) ================= -->
+      <section data-state="planning viewer">
+        <div class="grid c4" style="margin-top:10px">
+          <div class="stat big accent">
+            <div class="k">Days until departure</div>
+            <div class="v">52</div>
+            <div class="sub">Mon Aug 31 · BUD → BKK · ✈ booked</div>
+          </div>
+          <div class="stat big">
+            <div class="k">Trip length</div>
+            <div class="v">179 <span class="unit">days</span></div>
+            <div class="sub">Aug 31 → Feb 25, 2027 · ≈ 6 months</div>
+          </div>
+          <div class="stat big" style="border-color:var(--warn)">
+            <div class="k">Planned cost</div>
+            <div class="v warn">4,120,000 <span class="unit">HUF</span></div>
+            <div class="sub">of 4,500,000 HUF cap · <span class="warn">92% — over the 90% warning ⚠</span></div>
+          </div>
+          <div class="stat big">
+            <div class="k">Stops planned</div>
+            <div class="v">6</div>
+            <div class="sub">1 booked · 5 to book</div>
+          </div>
+        </div>
+        <div class="note">Each tile deep-links: Days → Itinerary, Cost → Money, Stops → Map. “Planned cost” sums booked
+          stays/transport + estimates for unbooked stops, converted THB/VND/EUR → HUF at FX rates cached daily via pg_cron.
+          Turns <span class="warn">amber at 90%</span> of cap and <span class="danger">red over cap</span>.</div>
+
+        <!-- planning completeness -->
+        <div class="card" style="margin-top:12px">
+          <div class="row">
+            <span class="klabel">Trip planning progress</span>
+            <span class="spacer"></span>
+            <b>30%</b>
+          </div>
+          <div class="progress" style="height:12px; margin-top:8px"><i style="width:30%"></i></div>
+          <div class="checkchips">
+            <span class="badge ok">Dates 6/6 ✓</span>
+            <span class="badge warn">Stays booked 1/6</span>
+            <span class="badge warn">Transport booked 1/9</span>
+            <span class="badge">Visas 0/2</span>
+            <span class="badge">Insurance ☐</span>
+          </div>
+          <div class="note">Completeness = weighted checklist: dates 20% · stays 40% · transport 30% · docs (visas + insurance) 10%.
+            Recomputed on every itinerary edit, not stored. Chips deep-link to the matching Itinerary filter.
+            OPEN QUESTION: should the bar be capped below 100% until insurance + both visas are ticked, or is 100% purely bookings?</div>
+        </div>
+      </section>
+
+      <!-- ================= PLANNING + VIEWER (region cost cheat sheet) ================= -->
+      <section data-state="planning viewer">
+        <div class="sec"><h2 class="h2">Region cost cheat sheet</h2></div>
+        <div class="card cheat pad-lg">
+          <div class="klabel">Typical daily cost · per person · excl. stays · mid-range</div>
+          <div class="pillrow">
+            <span class="costpill">🇹🇭 Thailand <b>11,000</b> <span class="per">HUF/day</span></span>
+            <span class="costpill">🇻🇳 Vietnam <b>8,500</b> <span class="per">HUF/day</span></span>
+            <span class="costpill">🇲🇾 Malaysia <b>10,000</b> <span class="per">HUF/day</span></span>
+            <span class="costpill">🇮🇩 Bali <b>9,500</b> <span class="per">HUF/day</span></span>
+          </div>
+          <div class="tiny muted" style="margin-top:12px">Your current Bangkok plan works out to <b>≈ 5,700 HUF</b>/day/person excl. stay — lean vs the 11,000 Thailand benchmark.</div>
+          <div class="note" style="text-align:left">Renamed to “Region cost cheat sheet” (was “Daily cost benchmarks”) — owner request.
+            Values are catalogue mid-range averages <b>per person, excl. stays</b> (food + local transport + activities — the kit-wide daily-cost convention, see FIXTURES.md), cached daily via pg_cron;
+            FX → HUF at the same cached rate as the cost tile. OPEN QUESTION: once the trip is live, blend in the couple’s own
+            ledger burn per country instead of catalogue averages?</div>
+        </div>
+      </section>
+
+      <!-- ================= PLANNING + VIEWER (next stop) ================= -->
+      <section data-state="planning viewer">
+        <div class="sec"><h2 class="h2">Next stop</h2><span class="muted small">first on the route</span></div>
+        <div class="card hero pad-lg">
+          <div class="row" style="align-items:flex-start">
+            <div>
+              <div class="city-big">Bangkok</div>
+              <div class="country-big">Thailand 🇹🇭</div>
+              <div class="muted small" style="margin-top:8px">Sep 1 → Oct 1, 2026 · <b style="color:var(--text)">30 nights</b> · apartment in Sukhumvit</div>
+              <div class="row" style="margin-top:12px; gap:8px">
+                <span class="badge ok">Stay booked</span>
+                <span class="badge warn">Free-cancel until Aug 24</span>
+                <span class="badge">🌦 ~32 °C · wet-season afternoon storms</span>
+              </div>
+            </div>
+            <span class="spacer"></span>
+            <div class="stack" style="gap:8px; align-items:flex-end">
+              <button class="btn sm" data-state="planning">Edit stop</button>
+              <a class="small" href="#">Open in Itinerary →</a>
+            </div>
+          </div>
+          <div class="note">City and country deliberately share <b>var(--text)</b> at full strength — an earlier draft rendered the
+            country in muted grey, which read as a bug (owner complaint, now a rule: hero identity text is never muted; only the
+            date/meta line below is).</div>
+          <div class="note">Weather hint = static climate profile (month × city) from the catalogue — NOT a live forecast. Live
+            forecast appears only in Live mode / the /live screen. Source refreshed monthly, no per-user API calls.</div>
+        </div>
+      </section>
+
+      <!-- ================= PLANNING + VIEWER (deadlines strip) ================= -->
+      <section data-state="planning viewer">
+        <div class="sec"><h2 class="h2">Upcoming deadlines</h2><span class="muted small">soonest first · scrolls sideways</span></div>
+        <div class="deadlines">
+          <div class="card deadline">
+            <div class="klabel">Aug 24</div>
+            <div class="dtitle">Free cancellation ends</div>
+            <div class="muted small">Bangkok apartment · Sukhumvit</div>
+            <span class="badge warn">⚠ money at stake</span>
+          </div>
+          <div class="card deadline">
+            <div class="klabel">Aug 25</div>
+            <div class="dtitle">Card charged 437,000 HUF</div>
+            <div class="muted small">Bangkok apartment · full stay (฿42,000)</div>
+            <span class="badge">auto-charge</span>
+          </div>
+          <div class="card deadline">
+            <div class="klabel">Aug 30</div>
+            <div class="dtitle">Online check-in opens</div>
+            <div class="muted small">BUD → BKK · dep. 14:05</div>
+            <span class="badge accent">flight</span>
+          </div>
+          <div class="card deadline">
+            <div class="klabel">Oct 2</div>
+            <div class="dtitle">Vietnam e-visa window opens</div>
+            <div class="muted small">apply ≤ 30 days before the Nov 1 entry</div>
+            <span class="badge">manual to-do</span>
+          </div>
+        </div>
+        <div class="note">Strip is auto-derived: <b>stay.free_cancel_until</b>, <b>stay.charge_on</b> and transport check-in windows come
+          straight from Itinerary records; visa/insurance items are manual checklist entries with a due date. The warn badge marks any
+          deadline where money is at stake, regardless of how far away it is. Dismissed items reappear 7 days before due.
+          OPEN QUESTION: push/email reminders at T-7 and T-1 — configured here or in Settings?</div>
+      </section>
+
+      <!-- ================= LIVE ================= -->
+      <section data-state="live">
+        <div class="row" style="margin-bottom:4px; align-items:flex-start">
+          <div>
+            <div class="h1">Asia 2026–27 <span class="badge accent">● Live — Day 19</span></div>
+            <div class="muted small" style="margin-top:2px">Bangkok, Thailand · Fri Sep 18, 2026 · 14:20 ICT (UTC+7)</div>
+          </div>
+          <span class="spacer"></span>
+          <button class="btn sm primary">📍 Open Live mode</button>
+        </div>
+        <div class="note">Same dashboard URL — the phase is derived from dates, so the tiles silently morph from planning metrics to
+          live metrics on departure day. Header clock shows trip-local timezone (from current stop), not Budapest time.
+          <b>Live appears in the app nav during the trip</b> (as shown above) — planning-phase navs never show it.</div>
+
+        <div class="grid c4" style="margin-top:10px">
+          <div class="stat big accent">
+            <div class="k">Day of trip</div>
+            <div class="v">19 <span class="unit">/ 179</span></div>
+            <div class="sub">Sep 18 · 160 days to go</div>
+          </div>
+          <div class="stat big">
+            <div class="k">Current stop</div>
+            <div class="v">Bangkok</div>
+            <div class="sub">🇹🇭 until Oct 1 · 13 nights left</div>
+          </div>
+          <div class="stat big">
+            <div class="k">Spent so far</div>
+            <div class="v">742k <span class="unit">HUF</span></div>
+            <div class="sub"><span class="ok">5% under</span> plan-to-date (781k)</div>
+          </div>
+          <div class="stat big">
+            <div class="k">Next leg</div>
+            <div class="v">13 <span class="unit">days</span></div>
+            <div class="sub">BKK → Chiang Mai · Oct 1 · <span class="warn">unbooked ⚠</span></div>
+          </div>
+        </div>
+        <div class="note">“Spent so far” = ledger sum to today incl. the Bangkok rent <b>amortized per night</b> (it was charged Aug 25,
+          pre-trip — showing it as a day-1 lump would make week 1 look catastrophic). Green when ≤ time-prorated plan, amber when over.
+          “Next leg unbooked” warning escalates to the deadlines logic at T-7. OPEN QUESTION: is amortized rent the right default, or
+          should Money offer a toggle (cash basis vs accrual)?</div>
+
+        <div class="sec"><h2 class="h2">Today — plan vs actual</h2></div>
+        <div class="pva">
+          <div class="card">
+            <div class="klabel">Today’s plan</div>
+            <div class="ptitle">Chinatown food crawl</div>
+            <div class="muted small">planned 18:30 · no bookings · idea saved from Explore</div>
+          </div>
+          <div class="arrow">➜</div>
+          <div class="card">
+            <div class="row" style="gap:8px">
+              <span class="klabel">Latest check-in</span>
+              <span class="spacer"></span>
+              <span class="badge">nothing yet</span>
+            </div>
+            <div class="ptitle">No check-in yet today</div>
+            <div class="muted small">last seen 09:10 near Lumpini Park · Map location ping</div>
+          </div>
+        </div>
+        <div class="note">Matching is by <b>place_id</b> between today’s itinerary items and check-ins → a green “on plan” badge on the
+          right card once one matches. Shown here: the no-check-in-yet variant — the right cell falls back to “last seen” from the Map
+          location ping, not a check-in. If nothing is planned today the left cell says “Free day — nothing planned”.</div>
+
+        <div class="sec"><h2 class="h2">Recent check-ins</h2><span class="spacer"></span><a class="small" href="#">Full feed →</a></div>
+        <div class="card">
+          <div class="list-row">
+            <span class="avatar">P</span>
+            <div class="grow">
+              <div class="title">Jay Fai <span class="badge">2nd visit</span></div>
+              <div class="meta">Yesterday 20:10 · street food · “Round two. Drunken noodles this time — still worth the queue.”</div>
+            </div>
+            <span class="stars">★★★★<span class="off">★</span></span>
+          </div>
+          <div class="list-row">
+            <span class="avatar">A</span>
+            <div class="grow">
+              <div class="title">Chatuchak Weekend Market</div>
+              <div class="meta">Sat Sep 12 10:15 · market · “Bought two bags of things we absolutely do not have room for.”</div>
+            </div>
+            <span class="stars">★★★★★</span>
+          </div>
+          <div class="list-row">
+            <span class="avatar">P</span>
+            <div class="grow">
+              <div class="title">Wat Pho</div>
+              <div class="meta">Fri Sep 11 08:45 · 📷 1 photo · “Reclining Buddha is unreal. Go before 9am — no crowds.”</div>
+            </div>
+            <span class="stars">★★★★★</span>
+          </div>
+          <div class="note">Preview = last 3 check-ins across both travellers, newest first. Photos are shown only as a 📷 marker here
+            (dashboard stays light on mobile data); full photos live in the Live feed. Ratings entered at check-in feed the future
+            community-reviews phase.</div>
+        </div>
+
+        <div class="card hero pad-lg" style="margin-top:16px; text-align:center">
+          <button class="btn primary lg">📍 Open Live mode</button>
+          <div class="muted small" style="margin-top:8px">Today timeline · one-tap check-in · works offline</div>
+          <div class="tiny faint" style="margin-top:6px">🔗 2 followers — Mom last opened the trip 2 h ago</div>
+          <div class="note" style="text-align:left">Primary CTA repeats down here after the feed (thumb reach on phone). Follower glance
+            comes from the share-link access log — visible to owner + co-editor only, never to viewers or followers themselves.
+            OPEN QUESTION: per-follower “last opened” (as shown) vs an aggregate count for privacy?</div>
+        </div>
+      </section>
+
+      <!-- ================= EMPTY ================= -->
+      <section data-state="empty">
+        <div class="card pad-lg" style="margin-top:8px">
+          <div class="empty">
+            <div class="glyph">🧭</div>
+            <h3>No trips yet</h3>
+            <p style="max-width:420px; margin:0 auto 20px">Plan the route, keep the budget honest, and let the family
+              follow along live — all in one place.</p>
+            <button class="btn primary lg">＋ Create your first trip</button>
+            <div class="small muted" style="margin-top:16px">Someone already planning? <a href="#">Accept an invite</a> to join
+              their trip as a co-editor or viewer.</div>
+          </div>
+        </div>
+        <div class="grid c3" style="margin-top:12px">
+          <div class="card" style="text-align:center">
+            <div style="font-size:22px">🗺</div>
+            <div style="font-weight:600; margin-top:4px">Route &amp; stays</div>
+            <div class="muted small">Stops, nights, transport legs and cancellation deadlines in one timeline.</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-size:22px">💰</div>
+            <div style="font-weight:600; margin-top:4px">Budget in HUF</div>
+            <div class="muted small">Multi-currency ledger with a hard cap and plan-vs-actual tracking.</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-size:22px">📡</div>
+            <div style="font-weight:600; margin-top:4px">Live share</div>
+            <div class="muted small">Family follows with a link — no account, no money details, just the journey.</div>
+          </div>
+        </div>
+        <div class="note">Trip-scoped nav links (Itinerary / Money / Map) are dimmed and inert until a trip exists — <b>Explore stays
+          active</b> because it is catalogue data, not trip data (useful for dreaming before committing). “Create your first trip”
+          launches the onboarding wizard from screen 01. “Accept an invite” asks for the invite code / link if the user landed here
+          without one. OPEN QUESTION: should we prefill the wizard with a sample “Asia starter” template trip?</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Dashboard',
+  states: [
+    { id: 'planning', label: 'Planning', desc: 'Owner (Patrik) at home on Jul 10, 2026 — 52 days before departure — checking trip readiness after breakfast.' },
+    { id: 'live', label: 'Live', desc: 'Patrik on his phone in Bangkok, Fri Sep 18, 2026 (day 19 of 179), glancing at the dashboard between check-ins.' },
+    { id: 'empty', label: 'Empty', desc: 'Brand-new account minutes after sign-up — no trip created and no invite accepted yet.' },
+    { id: 'viewer', label: 'Viewer', desc: 'Read-only account holder (friend Dávid) opening the trip pre-departure — full data, zero edit affordances.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

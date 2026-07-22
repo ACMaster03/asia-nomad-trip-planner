@@ -87,4 +87,10 @@ export interface Trip {
   ledger: Ledger
   updated_at: string
   created_at: string
+  // Revision counters from migration 06 (optimistic-concurrency guards).
+  // Optional on purpose: on a pre-migration database the columns don't exist
+  // and the write paths fall back to legacy direct updates.
+  // TODO(migration-06): make required once 06-security.sql is applied in prod.
+  state_rev?: number
+  ledger_rev?: number
 }

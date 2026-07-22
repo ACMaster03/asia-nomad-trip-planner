@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Later phases</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* kit-wide P3/P4 banner */
+.p3banner { display: flex; gap: 10px; align-items: flex-start;
+  background: var(--accent-soft); border: 1px dashed var(--accent);
+  border-radius: 10px; padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px; color: var(--text); }
+.p3banner .glyph { font-size: 16px; line-height: 1.2; }
+
+/* simulated public-page chrome (logged-out visitors) */
+.urlchip { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: 100%;
+  border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; font-size: 12px;
+  background: var(--surface2);
+  color: var(--muted); margin-bottom: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.pubheader { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  border: 1px solid var(--border); background: var(--surface); border-radius: 10px;
+  padding: 8px 12px; margin-bottom: 14px; font-size: 13px; }
+.pubheader .brand { font-weight: 700; }
+.pubheader .spacer { flex: 1; }
+.crumbs { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.crumbs a { color: var(--muted); }
+
+/* place page */
+/* fractional star for aggregate ratings (4.8 → 5th glyph ~80% filled) */
+.starfrac { position: relative; display: inline-block; color: var(--border-strong); }
+.starfrac::before { content: "★"; position: absolute; left: 0; top: 0; width: 80%; overflow: hidden; color: var(--gold); }
+.placegrid { display: grid; gap: 14px; grid-template-columns: 1.55fr 1fr; align-items: start; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fact { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; }
+.fact .k { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.fact .v { font-size: 13px; font-weight: 600; margin-top: 1px; }
+.review { display: flex; gap: 10px; padding: 12px 2px; border-bottom: 1px solid var(--border); }
+.review:last-of-type { border-bottom: 0; }
+.review .body { flex: 1; min-width: 0; }
+.review .who { font-weight: 600; font-size: 13.5px; }
+.review .ctx { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.review p { margin: 6px 0 0; font-size: 13px; }
+.photos { display: flex; gap: 6px; margin-top: 8px; }
+.photo-ph { width: 62px; height: 62px; border-radius: 8px; background: var(--surface2);
+  border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--faint); }
+.map-thumb { min-height: 150px; }
+.aff { border: 1px dashed var(--border-strong); background: var(--surface); border-radius: 10px; padding: 12px 14px; }
+.aff .tag { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); font-weight: 700; }
+.aff .row-item { display: flex; align-items: baseline; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.aff .row-item:last-child { border-bottom: 0; }
+.aff .price { margin-left: auto; font-weight: 600; white-space: nowrap; }
+
+/* journal */
+.route-chips { display: flex; flex-wrap: wrap; gap: 6px 4px; align-items: center; font-size: 12.5px; }
+.route-chips .chip { background: var(--surface2); border: 1px solid var(--border-strong);
+  border-radius: 999px; padding: 2px 10px; font-weight: 600; font-size: 12px; }
+.route-chips .sep { color: var(--faint); }
+.monthhdr { display: flex; align-items: center; gap: 10px; margin: 20px 0 8px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; }
+.monthhdr::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+.jentry { display: flex; gap: 12px; }
+.jday { flex: none; width: 56px; text-align: center; padding-top: 4px; }
+.jday .d { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.jday .n { font-weight: 700; font-size: 15px; color: var(--accent); }
+.jentry .card { flex: 1; min-width: 0; }
+.milestone { border-left: 3px solid var(--accent); }
+
+/* expo mini phone frames */
+.mini-phone { border: 5px solid var(--border-strong); border-radius: 24px; background: var(--bg);
+  aspect-ratio: 9 / 18.2; display: flex; flex-direction: column; overflow: hidden;
+  font-size: 10.5px; line-height: 1.35; }
+.mp-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+  font-weight: 700; text-align: center; margin-bottom: 6px; }
+.mp-head { padding: 8px 9px 4px; }
+.mp-head .t { font-weight: 700; font-size: 12px; }
+.mp-head .s { color: var(--muted); font-size: 9.5px; }
+.mp-body { flex: 1; padding: 4px 8px 6px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+.mp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 7px; }
+.mp-card .k { font-size: 8.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.mp-btn { background: var(--accent-strong); color: var(--accent-ink); border: 0; border-radius: 8px;
+  padding: 7px 0; font-weight: 700; font-size: 11px; text-align: center; }
+.mp-tabs { display: flex; justify-content: space-around; border-top: 1px solid var(--border);
+  padding: 5px 2px 8px; font-size: 8.5px; color: var(--muted); text-align: center; }
+.mp-tabs .ton { color: var(--accent); font-weight: 700; }
+.mp-map { flex: 1; border-radius: 8px; border: 1px solid var(--border); position: relative; overflow: hidden;
+  background: linear-gradient(150deg, var(--accent-soft), transparent 65%), var(--surface2); }
+.mp-map .rline { position: absolute; left: 18%; top: 22%; width: 62%; border-top: 2px dashed var(--accent); transform: rotate(28deg); }
+.mp-map .mpin { position: absolute; font-size: 12px; transform: translate(-50%, -100%); }
+.mp-feedrow { display: flex; gap: 6px; align-items: flex-start; padding: 5px 2px; border-bottom: 1px solid var(--border); }
+.mp-feedrow:last-child { border-bottom: 0; }
+.mp-feedrow .em { flex: none; }
+.mp-amount { text-align: center; font-size: 20px; font-weight: 700; padding: 4px 0 2px; }
+.mp-chips { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+.mp-chips span { border: 1px solid var(--border-strong); border-radius: 999px; padding: 1px 7px; font-size: 8.5px; color: var(--muted); }
+.mp-chips span.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+.mp-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.mp-pad .key { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  text-align: center; padding: 4px 0; font-weight: 600; font-size: 11px; }
+
+/* moderation */
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.tablewrap .table { min-width: 680px; }
+.tablewrap .table td { vertical-align: top; }
+.mod-item .t { font-weight: 600; font-size: 13px; }
+.mod-item .s { color: var(--muted); font-size: 11.5px; margin-top: 1px; }
+.mod-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.sig { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+
+/* phone adjustments */
+@container (max-width: 500px) {
+  .placegrid { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: repeat(2, 1fr); }
+  .jday { width: 44px; }
+  .pubheader .hide-phone { display: none; }
+  .mini-phone { font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav">
+      <span class="brand">🧭 Nomad</span>
+      <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
+      <a href="#">Map</a><a href="#" class="on">Explore</a>
+      <span class="right"><a href="#">Settings</a><span class="avatar">P</span></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ======================= kit-wide banner ======================= -->
+      <section data-state="*">
+        <div class="p3banner">
+          <span class="glyph">🧪</span>
+          <span><b>P3/P4 scope — designed now so near-term choices don't paint us into a corner.</b>
+          Nothing on this screen is built in M1–M4. These endframes exist so early decisions
+          (public/private flags on check-ins, catalogue shape, <code>is_admin</code>, review data model)
+          are made with the end state in view.</span>
+        </div>
+        <div class="note">The app nav above is the mock-kit chrome. The two public states
+          (place page, journal) really render a slim <b>logged-out marketing header</b> instead —
+          simulated inside each state below. Moderation renders inside the normal app under
+          <code>/admin</code>, visible only when <code>profiles.is_admin = true</code>.</div>
+      </section>
+
+      <!-- ======================= STATE: place-page ======================= -->
+      <section data-state="place-page">
+        <div class="urlchip">🌐 nomad.app<b>/p/thailand/wat-pho</b> · public · indexable</div>
+        <div class="pubheader">
+          <span class="brand">🧭 Nomad</span>
+          <a href="#" class="hide-phone">Explore places</a>
+          <span class="spacer"></span>
+          <a href="#">Sign in</a>
+          <button class="btn primary sm">Plan a trip</button>
+        </div>
+        <div class="note">Public pages never show the account app nav. Header = brand, explore index,
+          sign-in, and the acquisition CTA. Rendered as a <b>statically generated page</b>
+          (ISR, revalidated daily via pg_cron-triggered webhook) — fast + crawlable. Emits JSON-LD
+          <code>TouristAttraction</code> + <code>AggregateRating</code> for rich results.</div>
+
+        <div class="crumbs"><a href="#">Explore</a> › <a href="#">Thailand</a> › <a href="#">Bangkok</a> › Wat Pho</div>
+
+        <div class="card hero pad-lg">
+          <div class="row">
+            <div>
+              <h1 class="h1">🛕 Wat Pho — Temple of the Reclining Buddha</h1>
+              <div class="muted small" style="margin-top:4px;">Temple · Bangkok, Thailand</div>
+              <div class="row" style="margin-top:8px; gap:8px;">
+                <span class="stars">★★★★<span class="starfrac">★</span></span>
+                <b>4.8</b>
+                <span class="muted small">from 23 travellers who checked in with Nomad</span>
+              </div>
+            </div>
+            <span class="spacer"></span>
+            <div class="row" style="gap:8px;">
+              <button class="btn sm ghost">🔗 Share</button>
+              <button class="btn sm">＋ Save to a trip</button>
+            </div>
+          </div>
+        </div>
+        <div class="note">Rating = mean of <b>public</b> check-in ratings only. "Save to a trip" for a
+          logged-out visitor routes to sign-up, then deep-links back — this page is the top of the
+          acquisition funnel. <b>Open question:</b> minimum number of public reviews before a place
+          page is published/indexed (suggest ≥3, else <code>noindex</code>)?</div>
+
+        <div class="sec"><h2 class="h2">At a glance</h2><span class="tiny muted">from the shared catalogue — same rows the in-app Explore uses</span></div>
+        <div class="facts">
+          <div class="fact"><div class="k">Kind</div><div class="v">Temple / landmark</div></div>
+          <div class="fact"><div class="k">Entry fee</div><div class="v">300 THB <span class="muted tiny">(≈ 3,100 HUF)</span></div></div>
+          <div class="fact"><div class="k">Hours</div><div class="v">08:00 – 18:30 daily</div></div>
+          <div class="fact"><div class="k">Time needed</div><div class="v">~1.5 hours</div></div>
+          <div class="fact"><div class="k">Best time</div><div class="v">Before 09:00</div></div>
+          <div class="fact"><div class="k">Getting there</div><div class="v">Tha Tien Pier · MRT Sanam Chai</div></div>
+          <div class="fact"><div class="k">Dress code</div><div class="v">Shoulders + knees covered</div></div>
+          <div class="fact"><div class="k">Nearby</div><div class="v">Grand Palace · Wat Arun (ferry)</div></div>
+          <div class="fact"><div class="k">Last verified</div><div class="v">Jun 2027 <span class="muted tiny">by admin</span></div></div>
+        </div>
+        <div class="note">Fact fields are catalogue data (admin-curated, community-suggestable via the
+          moderation queue — see the "Moderation" state). Currency conversion shown at today's cached FX;
+          this is catalogue info, never traveller spend data.</div>
+
+        <div class="sec"><h2 class="h2">Traveller reviews</h2><span class="tiny muted">real check-ins, newest first</span>
+          <span class="spacer"></span><select class="select" style="width:auto; padding:4px 8px; font-size:12px;"><option>Newest</option><option>Highest rated</option></select></div>
+
+        <div class="placegrid">
+          <div class="card">
+            <div class="review">
+              <span class="avatar">P</span>
+              <div class="body">
+                <div class="row" style="gap:8px;">
+                  <span class="who">Patrik</span>
+                  <span class="stars" style="font-size:13px;">★★★★★</span>
+                  <span class="spacer"></span>
+                  <span class="tiny muted">Sep 11, 2026</span>
+                </div>
+                <div class="ctx">Day 12 of <a href="#">Asia 2026–27</a> · checked in on site</div>
+                <p>Reclining Buddha is unreal. Go before 9am — no crowds. We went at 08:05, right at opening,
+                and had the hall almost to ourselves; by 09:30 the tour buses arrive.</p>
+                <div class="photos"><div class="photo-ph">📷</div></div>
+              </div>
+            </div>
+            <div class="review">
+              <span class="avatar">E</span>
+              <div class="body">
+                <div class="row" style="gap:8px;">
+                  <span class="who">Elena R.</span>
+                  <span class="stars" style="font-size:13px;">★★★★★</span>
+                  <span class="spacer"></span>
+                  <span class="tiny muted">Oct 2, 2026</span>
+                </div>
+                <div class="ctx">Day 3 of Siam Circuit '26</div>
+                <p>Dress code is enforced at the gate but they lend cover-ups for free. The massage
+                school inside does a 30-min foot massage — book on arrival, slots go quickly.</p>
+              </div>
+            </div>
+            <div class="review">
+              <span class="avatar">M</span>
+              <div class="body">
+                <div class="row" style="gap:8px;">
+                  <span class="who">Márta K.</span>
+                  <span class="stars" style="font-size:13px;">★★★★<span class="off">★</span></span>
+                  <span class="spacer"></span>
+                  <span class="tiny muted">Feb 3, 2027</span>
+                </div>
+                <div class="ctx">Day 4 of Thailand Winter '27</div>
+                <p>Stunning, but packed by 10:00 — go early or late. The 300 THB ticket includes a
+                free bottle of water, kiosk is just past the entrance.</p>
+              </div>
+            </div>
+            <div class="review">
+              <span class="avatar">J</span>
+              <div class="body">
+                <div class="row" style="gap:8px;">
+                  <span class="who">Jonas</span>
+                  <span class="stars" style="font-size:13px;">★★★★★</span>
+                  <span class="spacer"></span>
+                  <span class="tiny muted">Nov 19, 2026</span>
+                </div>
+                <div class="ctx">Day 33 of SEA Loop '26–27</div>
+                <p>Combine with Wat Arun — the cross-river ferry from Tha Tien is 5 THB and runs
+                every few minutes. Sunset from the other bank is the shot everyone wants.</p>
+                <div class="photos"><div class="photo-ph">📷</div></div>
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px;"><a href="#" class="small">Show all 23 reviews ↓</a></div>
+            <div class="note">Only check-ins the traveller explicitly flagged <b>public</b> appear here —
+              per-check-in toggle at check-in time, default private. Display name = first name only by
+              default. "Day 12 of Asia 2026–27" links to the trip journal <b>only if</b> that journal is
+              itself opt-in public; otherwise plain text. <b>Open questions:</b> photo consent copy at
+              check-in ("this photo may appear on public place pages"); can a review be edited after
+              publish (suggest: yes, re-enters moderation if reported)?</div>
+          </div>
+
+          <div class="stack">
+            <div class="card" style="padding:10px;">
+              <div class="map-ph map-thumb">
+                <span class="tiny">Bangkok · old town</span>
+                <span class="map-pin" style="left:52%; top:56%;">📍</span>
+              </div>
+              <div class="row" style="margin-top:8px;">
+                <span class="tiny muted">13.7465° N, 100.4930° E</span>
+                <span class="spacer"></span><a href="#" class="small">Open map ↗</a>
+              </div>
+            </div>
+
+            <div class="card hero">
+              <div class="h2">Planning a trip to Bangkok?</div>
+              <p class="small muted" style="margin:6px 0 10px;">Route, stays, budget and live sharing
+                with family — in one quiet app. Wat Pho is already in the catalogue.</p>
+              <button class="btn primary" style="width:100%;">🧭 Plan a trip with Nomad — free</button>
+              <div class="tiny muted" style="margin-top:6px; text-align:center;">No card needed · sign in with Apple / Google / email</div>
+            </div>
+            <div class="note">Acquisition CTA: sign-up pre-seeds the onboarding wizard with this city +
+              place saved. Track referral source (<code>utm=placepage</code>) to measure SEO → sign-up.</div>
+
+            <div class="aff">
+              <div class="row" style="margin-bottom:6px;">
+                <span class="tag">Sponsored</span>
+                <span class="spacer"></span>
+                <span class="tiny muted">affiliate · clearly marked</span>
+              </div>
+              <div class="h2" style="font-size:14px;">Book a stay nearby</div>
+              <div class="row-item"><span>🏨 Sala Rattanakosin</span><span class="tiny muted">river view</span><span class="price">from €120 ↗</span></div>
+              <div class="row-item"><span>🏨 Arun Residence</span><span class="tiny muted">old town</span><span class="price">from €78 ↗</span></div>
+              <div class="row-item"><span>🏨 Riva Arun</span><span class="tiny muted">rooftop bar</span><span class="price">from €95 ↗</span></div>
+              <div class="tiny faint" style="margin-top:6px;">We may earn a commission. Never mixed into traveller reviews.</div>
+            </div>
+            <div class="note">Affiliate slot is a P4 <b>sketch</b>, not a commitment: fixed position,
+              hard-labelled "Sponsored", visually separated (dashed) from organic content.
+              <b>Open questions:</b> which network (Booking / Agoda / none), and does the slot show for
+              signed-in travellers too, or public visitors only?</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================= STATE: journal ======================= -->
+      <section data-state="journal">
+        <div class="urlchip">🌐 nomad.app<b>/journal/asia-2026-27</b> · public · opt-in</div>
+        <div class="pubheader">
+          <span class="brand">🧭 Nomad</span>
+          <a href="#" class="hide-phone">Explore places</a>
+          <span class="spacer"></span>
+          <a href="#">Sign in</a>
+          <button class="btn primary sm">Plan a trip</button>
+        </div>
+        <div class="note">The public journal is <b>OFF by default</b> — the owner enables it in
+          Settings → Sharing and picks the slug. It is a third audience tier: co-editors see everything,
+          the family <code>/follow/[token]</code> link sees a sanitized live view, the journal shows only
+          <b>public check-ins, delayed 24 h</b> (safety: never broadcasts current position to strangers).
+          No money, no notes, no booking data are even queried for this page — separate sanitized view,
+          not client-side hiding.</div>
+
+        <div class="card hero pad-lg">
+          <div class="tiny muted" style="text-transform:uppercase; letter-spacing:.08em;">Trip journal</div>
+          <h1 class="h1" style="margin-top:2px;">Asia 2026–27</h1>
+          <div class="muted small" style="margin:4px 0 10px;">Patrik &amp; Anna · Aug 31, 2026 → Feb 25, 2027 · 179 days</div>
+          <div class="route-chips">
+            <span class="chip">Budapest</span><span class="sep">✈</span>
+            <span class="chip">Bangkok</span><span class="sep">→</span>
+            <span class="chip">Chiang Mai</span><span class="sep">→</span>
+            <span class="chip">Hanoi</span><span class="sep">→</span>
+            <span class="chip">Hoi An</span><span class="sep">→</span>
+            <span class="chip">Kuala Lumpur</span><span class="sep">→</span>
+            <span class="chip">Bali</span><span class="sep">→</span>
+            <span class="chip">home</span>
+          </div>
+          <div class="grid c3" style="margin-top:14px;">
+            <div class="stat"><div class="k">Day</div><div class="v">21 <span class="muted" style="font-size:13px; font-weight:500;">of 179</span></div><div class="sub">currently: Thailand 🇹🇭</div></div>
+            <div class="stat"><div class="k">Public updates</div><div class="v">9</div><div class="sub">of 31 check-ins total</div></div>
+            <div class="stat"><div class="k">Countries</div><div class="v">1 <span class="muted" style="font-size:13px; font-weight:500;">of 4 planned</span></div><div class="sub">TH · VN · MY · ID</div></div>
+          </div>
+        </div>
+        <div class="note">Hero shows coarse "currently: Thailand" (country only, 24 h delayed) — never a
+          city or venue. Route chips come from itinerary stops but hide dates of future stays (no
+          "empty apartment" signal). <b>Open question:</b> should past stops show dates once departed
+          (harmless) — suggest yes.</div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="row">
+            <div>
+              <div class="h2">Follow this trip</div>
+              <div class="small muted">Get an email when Patrik &amp; Anna publish a new update. No account needed.</div>
+            </div>
+            <span class="spacer"></span>
+            <input class="input" placeholder="you@email.com" style="max-width:220px;">
+            <button class="btn primary">Follow</button>
+          </div>
+        </div>
+        <div class="note">Journal follow = email digest (double opt-in, one-click unsubscribe), stored
+          separately from the family follower tokens. Family "Mom" keeps her richer /follow link; this is
+          for acquaintances and strangers. <b>Open question:</b> allow reactions (❤) from journal readers
+          in P3, or keep it strictly read-only? Suggest read-only first — no comments, no moderation load.</div>
+
+        <div class="monthhdr">September 2026 · Bangkok 🇹🇭</div>
+        <div class="stack">
+          <div class="jentry">
+            <div class="jday"><div class="d">Day</div><div class="n">13</div><div class="d">Sep 12</div></div>
+            <div class="card">
+              <div class="row" style="gap:8px;">
+                <b>🛍 Chatuchak Weekend Market</b>
+                <span class="stars" style="font-size:13px;">★★★★★</span>
+              </div>
+              <p class="small" style="margin:6px 0 0;">Bought two bags of things we absolutely do not have
+              room for. Go early, section 26 for ceramics.</p>
+              <div class="photos"><div class="photo-ph">📷</div><div class="photo-ph">📷</div></div>
+            </div>
+          </div>
+          <div class="jentry">
+            <div class="jday"><div class="d">Day</div><div class="n">12</div><div class="d">Sep 11</div></div>
+            <div class="card">
+              <div class="row" style="gap:8px;">
+                <b>🛕 Wat Pho</b>
+                <span class="stars" style="font-size:13px;">★★★★★</span>
+                <span class="spacer"></span><a href="#" class="tiny">place page ↗</a>
+              </div>
+              <p class="small" style="margin:6px 0 0;">Reclining Buddha is unreal. Go before 9am — no crowds.
+              Drop coins in the 108 bronze bowls.</p>
+              <div class="photos"><div class="photo-ph">📷</div></div>
+            </div>
+          </div>
+          <div class="jentry">
+            <div class="jday"><div class="d">Day</div><div class="n">11</div><div class="d">Sep 10</div></div>
+            <div class="card">
+              <div class="row" style="gap:8px;">
+                <b>🍜 Jay Fai</b>
+                <span class="stars" style="font-size:13px;">★★★★<span class="off">★</span></span>
+              </div>
+              <p class="small" style="margin:6px 0 0;">Crab omelette worth the two-hour queue — Anna disagrees
+              about the queue, not the omelette.</p>
+              <div class="photos"><div class="photo-ph">📷</div></div>
+            </div>
+          </div>
+          <div class="jentry">
+            <div class="jday"><div class="d">Day</div><div class="n">2</div><div class="d">Sep 1</div></div>
+            <div class="card milestone">
+              <b>📍 Arrived in Bangkok</b>
+              <div class="small muted" style="margin-top:2px;">Moved into our September base. First stop: 30 nights in the city.</div>
+            </div>
+          </div>
+          <div class="jentry">
+            <div class="jday"><div class="d">Day</div><div class="n">1</div><div class="d">Aug 31</div></div>
+            <div class="card milestone">
+              <b>✈ Departed Budapest</b>
+              <div class="small muted" style="margin-top:2px;">179 days, one carry-on each. Here we go.</div>
+            </div>
+          </div>
+        </div>
+        <div class="note">Feed = curated: each public check-in can still be hidden from the journal
+          individually ("public on place page but not in my journal" is allowed — two flags, one column
+          each). Milestones (arrival/departure) are auto-generated from itinerary transitions and the
+          owner approves them before they appear. Note the apartment milestone says "September base" —
+          template copy avoids address/booking specifics by construction.</div>
+        <div class="row" style="margin-top:14px; justify-content:center;">
+          <button class="btn ghost">Load earlier updates</button>
+        </div>
+      </section>
+
+      <!-- ======================= STATE: expo-app ======================= -->
+      <section data-state="expo-app">
+        <div class="row" style="margin-bottom:4px;">
+          <h1 class="h1">📲 Nomad Go — native companion (Expo)</h1>
+          <span class="badge accent">P4</span>
+          <span class="badge">design study</span>
+        </div>
+        <p class="muted small" style="margin:4px 0 12px; max-width:640px;">Four static endframe thumbnails —
+        not a web screen. The native app is <b>push-first</b>: reliable notifications, offline check-ins and a
+        home-screen widget are the reasons it exists. Planning stays on the web.</p>
+        <div class="note">Architecture guardrails decided now: same Supabase backend + RLS (no new API
+          surface), the PWA's offline check-in queue is written storage-agnostic so Expo reuses it, and the
+          <b>globe stays web-only</b> — native ships a flat MapLibre map (smaller bundle, better battery).
+          No admin/moderation surfaces on native. Monorepo: <code>apps/web</code> + <code>apps/native</code>,
+          shared <code>packages/core</code>.</div>
+
+        <div class="grid c4">
+          <div>
+            <div class="mp-label">Today</div>
+            <div class="mini-phone">
+              <div class="mp-head"><div class="t">Tue, Sep 15</div><div class="s">Day 16 · Bangkok · 32° ☀</div></div>
+              <div class="mp-body">
+                <div class="mp-card"><div class="k">Next up</div><b>🛍 Chatuchak Market</b><div class="s muted">10:00 · 25 min by MRT</div></div>
+                <div class="mp-card"><div class="k">Tonight</div>🍜 Jay Fai — queue from 17:00</div>
+                <div class="mp-card"><div class="k">Heads-up</div><span class="warn">⚠</span> Rain likely after 16:00</div>
+                <div style="flex:1;"></div>
+                <div class="mp-btn">📍 Check in</div>
+              </div>
+              <div class="mp-tabs"><span class="ton">☀<br>Today</span><span>🗺<br>Map</span><span>📰<br>Feed</span><span>💸<br>Money</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="mp-label">Map</div>
+            <div class="mini-phone">
+              <div class="mp-head"><div class="t">Map</div><div class="s">flat map — globe stays web</div></div>
+              <div class="mp-body">
+                <div class="mp-map">
+                  <span class="rline"></span>
+                  <span class="mpin" style="left:26%; top:34%;">🔵</span>
+                  <span class="mpin" style="left:56%; top:52%;">📍</span>
+                  <span class="mpin" style="left:78%; top:74%;">📍</span>
+                </div>
+                <div class="mp-card"><div class="k">You are here</div><b>Bangkok</b> · old town<div class="s muted">3 saved places within 1 km</div></div>
+              </div>
+              <div class="mp-tabs"><span>☀<br>Today</span><span class="ton">🗺<br>Map</span><span>📰<br>Feed</span><span>💸<br>Money</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="mp-label">Feed</div>
+            <div class="mini-phone">
+              <div class="mp-head"><div class="t">Feed</div><div class="s">trip activity + family</div></div>
+              <div class="mp-body">
+                <div class="mp-card" style="padding:4px 7px;">
+                  <div class="mp-feedrow"><span class="em">⭐</span><span><b>Anna</b> checked in at Lumpini Park ★★★</span></div>
+                  <div class="mp-feedrow"><span class="em">❤</span><span><b>Mom</b> reacted to your Wat Pho photo</span></div>
+                  <div class="mp-feedrow"><span class="em">🔔</span><span>Chiang Mai stay still unbooked — 16 days out</span></div>
+                  <div class="mp-feedrow"><span class="em">✈</span><span>Flight BUD→BKK added to journal</span></div>
+                </div>
+              </div>
+              <div class="mp-tabs"><span>☀<br>Today</span><span>🗺<br>Map</span><span class="ton">📰<br>Feed</span><span>💸<br>Money</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="mp-label">Money quick-add</div>
+            <div class="mini-phone">
+              <div class="mp-head"><div class="t">Add expense</div><div class="s">offline-safe · syncs later</div></div>
+              <div class="mp-body">
+                <div class="mp-amount">฿ 240</div>
+                <div class="mp-chips"><span class="on">THB</span><span>HUF</span><span>EUR</span><span>VND</span></div>
+                <div class="mp-chips"><span class="on">🍜 food</span><span>🚇 transport</span><span>🎟 fun</span></div>
+                <div class="mp-pad">
+                  <span class="key">1</span><span class="key">2</span><span class="key">3</span>
+                  <span class="key">4</span><span class="key">5</span><span class="key">6</span>
+                  <span class="key">7</span><span class="key">8</span><span class="key">9</span>
+                  <span class="key">.</span><span class="key">0</span><span class="key">⌫</span>
+                </div>
+                <div class="mp-btn">Save · ≈ 2,500 HUF</div>
+              </div>
+              <div class="mp-tabs"><span>☀<br>Today</span><span>🗺<br>Map</span><span>📰<br>Feed</span><span class="ton">💸<br>Money</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:14px;">Push catalogue (the actual product of this app):
+          stay charge reminders ("Bangkok apartment charges Aug 25"), unbooked-stay countdowns, partner
+          check-in ("Anna checked in"), family reactions, and daily "Today" summary at 08:00 local.
+          All opt-out per category. <b>Open questions:</b> (1) does follower Mom get a native app login,
+          or do followers stay web/email-only (suggest: web-only until accounts exist for followers)?
+          (2) Money quick-add offline FX — use last cached rate and reconcile on sync? (3) iOS build/deploy
+          from the new Mac — EAS vs local signing, decide at P4 kickoff.</div>
+      </section>
+
+      <!-- ======================= STATE: moderation ======================= -->
+      <section data-state="moderation">
+        <div class="urlchip">🌐 nomad.app<b>/admin/moderation</b> · requires is_admin</div>
+        <div class="row" style="margin-bottom:4px;">
+          <h1 class="h1">Moderation queue</h1>
+          <span class="badge accent">admin</span>
+          <span class="badge ok">is_admin = true</span>
+        </div>
+        <div class="note"><code>profiles.is_admin</code> boolean, set manually in the DB (no self-serve
+          path). Every moderation table has RLS <code>USING (is_admin(auth.uid()))</code> — the
+          <code>/admin</code> route being hidden in nav is cosmetic; enforcement is server-side. At launch
+          the only admin is Patrik. <b>Open question:</b> a second admin before community features open
+          (bus factor + holidays)?</div>
+
+        <div class="grid c4" style="margin:14px 0;">
+          <div class="stat"><div class="k">Pending</div><div class="v">4</div><div class="sub">oldest: 6 days</div></div>
+          <div class="stat"><div class="k">Reports open</div><div class="v">3</div><div class="sub">on 2 items</div></div>
+          <div class="stat"><div class="k">Approved · 7d</div><div class="v">12</div><div class="sub">2 rejected</div></div>
+          <div class="stat"><div class="k">Avg turnaround</div><div class="v">1.4d</div><div class="sub">target &lt; 2 days</div></div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab on">All (6)</button>
+          <button class="tab">Place submissions (2)</button>
+          <button class="tab">Public reviews (2)</button>
+          <button class="tab">Reports (1)</button>
+          <button class="tab">Catalogue edits (1)</button>
+        </div>
+
+        <div class="tablewrap">
+          <table class="table">
+            <thead>
+              <tr><th>Item</th><th>Type</th><th>Submitted by</th><th>When</th><th>Signals</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mod-item"><div class="t">📍 Khao San Night Stalls</div><div class="s">new place · Bangkok · street food · <a href="#">view ↗</a></div></td>
+                <td><span class="badge">place</span></td>
+                <td>t.weber</td>
+                <td class="muted">2d ago</td>
+                <td><div class="sig"><span class="badge warn">⚠ possible duplicate</span><span class="tiny muted">"Khaosan Road Market"</span></div></td>
+                <td><div class="mod-actions"><button class="btn sm primary">Approve</button><button class="btn sm">Merge…</button><button class="btn sm danger">Reject</button></div></td>
+              </tr>
+              <tr>
+                <td class="mod-item"><div class="t">📍 Cà phê Nắng</div><div class="s">new place · Hoi An · café · <a href="#">view ↗</a></div></td>
+                <td><span class="badge">place</span></td>
+                <td>linh.p</td>
+                <td class="muted">5h ago</td>
+                <td><div class="sig"><span class="badge">new contributor</span></div></td>
+                <td><div class="mod-actions"><button class="btn sm primary">Approve</button><button class="btn sm danger">Reject</button></div></td>
+              </tr>
+              <tr>
+                <td class="mod-item"><div class="t">⭐ Review of Jay Fai · ★1</div><div class="s">"better food half price at bkk-food-tours dot com…" · <a href="#">view ↗</a></div></td>
+                <td><span class="badge">review</span></td>
+                <td>foodguide88 <span class="tiny muted">(0 prior)</span></td>
+                <td class="muted">1d ago</td>
+                <td><div class="sig"><span class="badge danger">🚩 reported ×2 · spam</span><span class="badge warn">auto-hidden</span></div></td>
+                <td><div class="mod-actions"><button class="btn sm primary">Approve</button><button class="btn sm danger">Reject</button></div></td>
+              </tr>
+              <tr>
+                <td class="mod-item"><div class="t">⭐ Review of Wat Pho · ★5</div><div class="s">"Beautiful, arrive early…" · <a href="#">view ↗</a></div></td>
+                <td><span class="badge">review</span></td>
+                <td>sofia.m <span class="tiny muted">(0 prior)</span></td>
+                <td class="muted">3h ago</td>
+                <td><div class="sig"><span class="badge">auto-held: first public post</span></div></td>
+                <td><div class="mod-actions"><button class="btn sm primary">Approve</button><button class="btn sm danger">Reject</button></div></td>
+              </tr>
+              <tr>
+                <td class="mod-item"><div class="t">📷 Photo on Lumpini Park check-in</div><div class="s">reason: "inappropriate content" · <a href="#">view ↗</a></div></td>
+                <td><span class="badge">report</span></td>
+                <td class="muted">reporter hidden</td>
+                <td class="muted">8h ago</td>
+                <td><div class="sig"><span class="badge warn">🚩 ×1 · below auto-hide threshold</span><span class="tiny muted">still visible</span></div></td>
+                <td><div class="mod-actions"><button class="btn sm">Hide photo</button><button class="btn sm ghost">Dismiss report</button></div></td>
+              </tr>
+              <tr>
+                <td class="mod-item"><div class="t">✏️ Wat Pho: entry fee 300 → 400 THB</div><div class="s">catalogue field edit · <a href="#">diff ↗</a></div></td>
+                <td><span class="badge">edit</span></td>
+                <td>marta.k</td>
+                <td class="muted">6d ago</td>
+                <td><div class="sig"><span class="badge">needs source check</span></div></td>
+                <td><div class="mod-actions"><button class="btn sm primary">Approve</button><button class="btn sm danger">Reject</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note" style="margin-top:12px;">Auto-rules (cheap, decided now so the schema fits):
+          first public post from a new account → held for review; ≥2 open reports → content auto-hidden
+          pending review; reporter identity never shown to the reported user. Approving a catalogue edit
+          writes a new version row (full audit trail, revertable). Rejects require a canned reason
+          (spam / duplicate / off-topic / inappropriate) — emailed to the submitter.</div>
+        <div class="note"><b>Open questions:</b> appeal flow for rejected reviews (suggest: none in P4,
+          just re-submit); rate limit on submissions per account per day; do we need a "shadow-ban"
+          state for repeat spammers, or is account suspension enough?</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Later phases',
+  states: [
+    { id: 'place-page', label: 'Public place page', desc: 'P3 · A logged-out stranger (or Google crawler) landing on /p/thailand/wat-pho from search — the SEO + acquisition surface.' },
+    { id: 'journal', label: 'Trip journal', desc: 'P3 · Anyone with the public journal URL (opt-in, 24h-delayed) — e.g. a friend-of-a-friend with no account, viewing on Day 21 mid-trip.' },
+    { id: 'expo-app', label: 'Expo app', desc: 'P4 · Owner reviewing the native companion scope — 4 static tab thumbnails Patrik & Anna would use daily while travelling. Not a web screen.' },
+    { id: 'moderation', label: 'Moderation', desc: 'P4 · Admin (Patrik, is_admin=true) working the queue at /admin/moderation once community submissions and public reviews exist.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

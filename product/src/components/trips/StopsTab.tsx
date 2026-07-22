@@ -59,7 +59,7 @@ export function StopsTab() {
       </div>
       <p className="mb-4 text-sm text-neutral-500">Your stops in date order. Toggle the checkbox to include a stop in the plan &amp; budget.</p>
 
-      <SaveError show={mut.isError} />
+      <SaveError show={mut.isError} error={mut.error} />
 
       {span && (
         <div className="mb-6 space-y-1">

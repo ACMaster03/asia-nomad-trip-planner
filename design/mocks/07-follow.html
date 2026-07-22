@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Follow page</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* follower page is phone-first: keep the column narrow even on desktop */
+main.screen { max-width: 620px; }
+
+/* ---- minimal follower header (no app nav — no account exists) ---- */
+.follow-hdr { gap: 8px 12px; }
+.fh-main { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.fh-eyebrow { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--muted); line-height: 1.1; }
+.fh-title { display: block; font-weight: 700; font-size: 14.5px; line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fh-sub { color: var(--muted); font-weight: 500; }
+.powered { font-size: 11px; color: var(--faint); white-space: nowrap; }
+.powered a { color: var(--muted); font-weight: 600; }
+@container (max-width: 500px) {
+  .fh-title { font-size: 13px; }
+  .fh-sub { display: none; }
+}
+
+/* ---- globe / route ---- */
+.follow-map { min-height: 300px; }
+.follow-map.compact { min-height: 220px; }
+.follow-map.compact .globe { width: 140px; height: 140px; }
+.route-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.route-dot { position: absolute; width: 7px; height: 7px; border-radius: 50%;
+  transform: translate(-50%,-50%); background: var(--accent); }
+.route-dot.future { width: 8px; height: 8px; background: transparent; border: 1.5px dashed var(--faint); }
+.pulse-ring { position: absolute; width: 13px; height: 13px; border-radius: 50%;
+  transform: translate(-50%,-50%); background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft); }
+.pulse-ring::after { content: ""; position: absolute; inset: -7px; border-radius: 50%;
+  border: 2px solid var(--accent); animation: fring 2.2s ease-out infinite; }
+.pulse-ring.stale { background: var(--muted); box-shadow: none; }
+.pulse-ring.stale::after { animation: none; border-color: var(--faint); opacity: .6; }
+@keyframes fring { 0% { transform: scale(.45); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+.map-lbl { position: absolute; transform: translate(-50%, 6px); font-size: 10px;
+  letter-spacing: .04em; color: var(--muted); white-space: nowrap;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+  padding: 1px 7px; opacity: .92; }
+.map-chip { position: absolute; display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: 999px;
+  padding: 4px 11px; font-size: 12px; font-weight: 600; box-shadow: var(--shadow); }
+.map-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.map-chip.stale .dot { background: var(--muted); }
+.map-legend { margin-top: 6px; font-size: 10.5px; color: var(--faint); display: flex; gap: 14px; flex-wrap: wrap; }
+.refresh-line { display: flex; align-items: center; gap: 6px; margin: 8px 2px 0; font-size: 11px; color: var(--faint); }
+@container (max-width: 500px) { .follow-map { min-height: 250px; } }
+
+/* ---- feed ---- */
+.klabel { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); margin-bottom: 4px; }
+.feed { padding: 2px 0; }
+.fe { display: flex; gap: 12px; padding: 13px 14px; border-bottom: 1px solid var(--border); }
+.fe:last-child { border-bottom: 0; }
+.fe .ico { width: 34px; height: 34px; border-radius: 50%; flex: none; font-size: 16px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center; }
+.fe.checkin .ico { background: var(--accent-soft); border-color: var(--accent); }
+.fe .grow { flex: 1; min-width: 0; }
+.fe .place { font-weight: 600; font-size: 14px; }
+.fe .when { color: var(--faint); font-size: 11.5px; white-space: nowrap; }
+.fe .who { font-weight: 600; color: var(--text); }
+.fe .cmt { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.fe .stars { font-size: 13px; letter-spacing: 1.5px; }
+.thumbs { display: flex; gap: 6px; margin-top: 8px; }
+.thumb { width: 64px; height: 64px; border-radius: 8px; border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface2));
+  display: inline-flex; align-items: center; justify-content: center; font-size: 24px; }
+.thumb.more { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--surface2); }
+.day-div { text-align: center; font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--faint); padding: 12px 0 3px; }
+@container (max-width: 500px) {
+  .fe { padding: 11px 10px; }
+  .thumb { width: 56px; height: 56px; font-size: 20px; }
+}
+
+/* ---- misc follower bits ---- */
+.subvariant { font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--faint); margin: 20px 0 8px; }
+.subvariant:first-child { margin-top: 0; }
+.nudge { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-top: 12px;
+  border: 1px dashed var(--border-strong); border-radius: 10px; font-size: 13px; color: var(--muted); }
+.nudge .spacer { flex: 1; }
+.growth-card { text-align: center; margin-top: 26px; padding: 18px; }
+.growth-card .g-title { font-weight: 700; font-size: 14.5px; margin-bottom: 3px; }
+.growth-card .g-sub { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
+.quiet-hero { text-align: center; padding: 26px 18px; }
+.quiet-hero .glyph { font-size: 34px; margin-bottom: 8px; }
+.quiet-hero h3 { font-size: 16px; margin-bottom: 6px; }
+.quiet-hero p { margin: 0 auto; max-width: 42ch; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Screen Name</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <nav class="appnav follow-hdr">
+      <span class="fh-main" data-state="follower notify quiet private pre-trip">
+        <span class="brand">🧭</span>
+        <span style="min-width:0">
+          <span class="fh-eyebrow">Following</span>
+          <span class="fh-title">Asia 2026–27 <span class="fh-sub">— Patrik &amp; Anna</span></span>
+        </span>
+      </span>
+      <span class="fh-main" data-state="revoked">
+        <span class="brand">🧭 Nomad</span>
+      </span>
+      <span class="right powered">Powered by <a href="#">Nomad</a></span>
+    </nav>
+    <main class="screen" id="screen">
+
+      <!-- ======================== shared context note ======================== -->
+      <section data-state="*">
+        <div class="note">This page is <b>/follow/[token]</b> — Mom has NO account. The token in the URL is the only
+          credential; there is no sign-in, no app nav, no settings. The minimal header + "Powered by Nomad" link is the
+          growth loop: followers are the top of the future signup funnel (link → landing page). On the revoked state the
+          header drops the trip name entirely (see that state's notes).</div>
+      </section>
+
+      <!-- ======================== FOLLOWER (main live view) ======================== -->
+      <section data-state="follower">
+        <div class="map-ph follow-map">
+          <div class="globe"></div>
+          <svg class="route-svg" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
+            <!-- travelled: Budapest → Bangkok -->
+            <path d="M118 92 Q 182 92 213 148" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-linecap="round"/>
+            <!-- planned (dashed): Bangkok → Chiang Mai → Hanoi → Hoi An → KL → Bali -->
+            <path d="M213 148 Q 212 130 206 124 Q 220 108 232 112 Q 243 118 243 132 Q 237 172 211 196 Q 234 218 255 222"
+              fill="none" style="stroke:var(--faint)" stroke-width="1.5" stroke-dasharray="4 5" opacity=".8"/>
+          </svg>
+          <span class="route-dot" style="left:29.5%; top:30.7%"></span>
+          <span class="map-lbl" style="left:29.5%; top:30.7%">Budapest</span>
+          <span class="pulse-ring" style="left:53.25%; top:49.3%"></span>
+          <span class="map-lbl" style="left:53.25%; top:49.3%">Bangkok</span>
+          <span class="route-dot future" style="left:51.5%; top:41.3%"></span>
+          <span class="route-dot future" style="left:58%; top:37.3%"></span>
+          <span class="route-dot future" style="left:60.75%; top:44%"></span>
+          <span class="route-dot future" style="left:52.75%; top:65.3%"></span>
+          <span class="route-dot future" style="left:63.75%; top:74%"></span>
+          <span class="map-chip" style="left:12px; bottom:12px"><span class="dot"></span> Last seen: Bangkok · 2h ago</span>
+        </div>
+        <div class="map-legend">
+          <span><span style="color:var(--accent)">—</span> travelled</span>
+          <span><span style="color:var(--faint)">┈</span> planned</span>
+          <span><span style="color:var(--accent)">●</span> last seen (pulsing ring)</span>
+        </div>
+        <div class="refresh-line">⟳ Updates automatically · last refreshed 24s ago</div>
+        <div class="note">"Last seen" = timestamp of the latest <b>shared event</b> (check-in / arrival), NOT live GPS
+          tracking. Copy near the ring should say so — Mom must not think this is continuous surveillance, and the
+          travellers must not think they're being tracked. Client polls a sanitized read endpoint <b>~every 60s</b>
+          (ETag/304 so it's cheap); open question: upgrade to SSE later or is 60s polling forever fine?</div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="klabel">Current stop</div>
+          <div class="row">
+            <span class="h1">Bangkok, Thailand 🇹🇭</span>
+            <span class="spacer"></span>
+            <span class="badge accent">Day 13</span>
+          </div>
+          <div class="muted small" style="margin:4px 0 10px">Here since Sep 1 · Stop 1 of 6 · Next planned: Chiang Mai (October)</div>
+          <div class="progress"><i style="width:7%"></i></div>
+          <div class="tiny faint" style="margin-top:5px">Trip: Aug 31, 2026 → Feb 25, 2027 · 179 days</div>
+        </div>
+        <div class="note"><b>Sanitized projection, never raw trip data.</b> This page renders exclusively from a
+          <code>follower_feed</code> projection (SQL view / edge function keyed by token) — money, budgets, private notes,
+          booking references, and exact accommodation addresses are excluded <i>at the query level</i>, not hidden in the
+          client. A follower who opens dev-tools sees nothing more than this page shows. Forward plan is deliberately
+          coarse (city + month only). Open question: is even "Next planned: Chiang Mai" too much to reveal, or exactly
+          the reassurance family wants?</div>
+
+        <button class="nudge" onclick="setState('notify')" style="width:100%; cursor:pointer; background:transparent; color:var(--muted); font:inherit">
+          🔔 Want a ping when they check in? <span class="spacer"></span> <span class="accent" style="font-weight:600">Notify me →</span>
+        </button>
+
+        <div class="sec"><span class="h2">Trip feed</span><span class="tiny faint">times in trip-local time (ICT)</span></div>
+        <div class="card feed">
+          <div class="day-div">Today · Sat Sep 12</div>
+          <div class="fe checkin">
+            <span class="ico">📍</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Chatuchak Weekend Market</span>
+                <span class="stars">★★★★★</span>
+                <span class="spacer"></span><span class="when">10:15 · 2h ago</span>
+              </div>
+              <div class="cmt"><span class="who">Anna</span> — "Bought two bags of things we absolutely do not have room for."</div>
+              <div class="thumbs"><span class="thumb">🧺</span><span class="thumb">🥭</span></div>
+            </div>
+          </div>
+          <div class="day-div">Yesterday · Fri Sep 11</div>
+          <div class="fe checkin">
+            <span class="ico">📍</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Wat Pho</span>
+                <span class="stars">★★★★★</span>
+                <span class="spacer"></span><span class="when">08:45</span>
+              </div>
+              <div class="cmt"><span class="who">Patrik</span> — "Reclining Buddha is unreal. Go before 9am — no crowds."</div>
+              <div class="thumbs"><span class="thumb">🛕</span></div>
+            </div>
+          </div>
+          <div class="day-div">Thu Sep 10</div>
+          <div class="fe checkin">
+            <span class="ico">📍</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Jay Fai</span>
+                <span class="stars">★★★★<span class="off">★</span></span>
+                <span class="spacer"></span><span class="when">19:30</span>
+              </div>
+              <div class="cmt"><span class="who">Anna</span> — "Crab omelette worth the two-hour queue."</div>
+              <div class="thumbs"><span class="thumb">🦀</span></div>
+            </div>
+          </div>
+          <div class="day-div">Sun Sep 6</div>
+          <div class="fe checkin">
+            <span class="ico">📍</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Lumpini Park</span>
+                <span class="stars">★★★<span class="off">★★</span></span>
+                <span class="spacer"></span><span class="when">07:40</span>
+              </div>
+              <div class="cmt"><span class="who">Anna</span> — "Morning run. Shared the path with two monitor lizards."</div>
+            </div>
+          </div>
+          <div class="day-div">Tue Sep 1</div>
+          <div class="fe">
+            <span class="ico">🏙️</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Arrived in Bangkok, Thailand</span>
+                <span class="spacer"></span><span class="when">06:05</span>
+              </div>
+              <div class="cmt">Stop 1 of 6 · staying through September</div>
+            </div>
+          </div>
+          <div class="fe">
+            <span class="ico">🛬</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Flight landed — Bangkok (BKK)</span>
+                <span class="spacer"></span><span class="when">06:05</span>
+              </div>
+              <div class="cmt">Budapest → Bangkok</div>
+            </div>
+          </div>
+        </div>
+        <div class="note">Feed rules: only events the travellers explicitly shared appear (offline-queued or draft
+          check-ins from the /live screen are invisible until synced). "Arrived" and "flight landed" events are generated
+          from the itinerary when a traveller confirms them — followers see route (city→city) but <b>never</b> flight
+          numbers or booking refs. Photo thumbs are resized copies with EXIF/GPS stripped at upload; tapping opens a
+          simple lightbox (no download of originals). Open question: should followers be able to react (❤️) or comment?
+          Currently read-only — comments would need moderation and pull the app toward social-network scope.</div>
+        <div class="note">Pagination: feed shows the latest ~20 events; "Show earlier" loads older pages. A 6-month trip
+          could accumulate hundreds of events — infinite scroll on a grandma's phone is an open UX question.</div>
+
+        <div class="card growth-card">
+          <div class="g-title">🧭 Made with Nomad</div>
+          <div class="g-sub">Patrik &amp; Anna plan their route, budget and journal in Nomad — and share this page with family.</div>
+          <button class="btn sm">Plan your own trip</button>
+        </div>
+        <div class="note">Growth loop: subtle footer CTA + "Powered by Nomad" in the header. Deliberately quiet — this
+          page's job is reassuring family, not conversion. Measure clicks before making it louder.</div>
+      </section>
+
+      <!-- ======================== PRE-TRIP (before departure) ======================== -->
+      <section data-state="pre-trip">
+        <div class="card quiet-hero" style="border-color:var(--accent)">
+          <div class="glyph">🧭</div>
+          <div class="klabel" style="margin-bottom:2px">Departure in</div>
+          <div style="font-size:46px; font-weight:800; letter-spacing:-.02em; line-height:1.05">52 <span style="font-size:20px; font-weight:600">days</span></div>
+          <p style="margin-top:8px">Budapest → Bangkok · Mon, Aug 31 2026</p>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="klabel">The route — cities only for now</div>
+          <div class="row" style="gap:6px; margin-top:8px">
+            <span class="badge">Budapest</span><span class="faint">✈</span>
+            <span class="badge accent">Bangkok</span><span class="faint">→</span>
+            <span class="badge">Chiang Mai</span><span class="faint">→</span>
+            <span class="badge">Hanoi</span><span class="faint">→</span>
+            <span class="badge">Hoi An</span><span class="faint">→</span>
+            <span class="badge">Kuala Lumpur</span><span class="faint">→</span>
+            <span class="badge">Bali</span><span class="faint">→</span>
+            <span class="badge">home</span>
+          </div>
+          <div class="tiny faint" style="margin-top:8px">Departs Aug 31, 2026 · detailed dates appear once the trip is live</div>
+        </div>
+
+        <div class="card quiet-hero" style="margin-top:14px">
+          <div class="glyph">🛫</div>
+          <h3>Follow along from Sep 1</h3>
+          <p>Patrik &amp; Anna fly out on Mon Aug 31 and land in Bangkok on Tue Sep 1 — that's when check-ins,
+            photos and the live map start appearing here.</p>
+        </div>
+
+        <button class="nudge" onclick="setState('notify')" style="width:100%; cursor:pointer; background:transparent; color:var(--muted); font:inherit">
+          🔔 Get a ping the moment the first check-in lands <span class="spacer"></span> <span class="accent" style="font-weight:600">Notify me →</span>
+        </button>
+
+        <div class="note"><b>Pre-trip the follower page is a countdown, not a feed</b> — this resolves 06's cross-reference
+          ("Mom's link shows the countdown and the rough route only"). Deliberately coarse: cities in order + the start date,
+          <b>no dates beyond Aug 31</b>, no map ring, no last-seen (there is nothing to see), no stay names. Notify-me works
+          already so Mom can arm it before departure. The page flips to the live follower view automatically when the trip
+          starts (same phase derivation as the app).</div>
+      </section>
+
+      <!-- ======================== NOTIFY-ME ======================== -->
+      <section data-state="notify">
+        <div class="subvariant">A · Not yet enabled (default)</div>
+        <div class="card hero pad-lg">
+          <div class="row" style="align-items:flex-start">
+            <span style="font-size:26px">🔔</span>
+            <div class="grow" style="flex:1; min-width:0">
+              <div class="h2">Know when they check in</div>
+              <div class="muted small" style="margin:4px 0 12px">Get a ping the moment Patrik &amp; Anna share something new —
+                check-ins, city arrivals, flight landings. Nothing else, no marketing.</div>
+              <button class="btn primary">Enable push notifications</button>
+              <div class="tiny faint" style="margin-top:6px">Browser notifications on this device · no account needed</div>
+            </div>
+          </div>
+          <hr class="hr">
+          <label class="field mb0">
+            <span class="label">Prefer email instead?</span>
+            <span class="row">
+              <input class="input" type="email" placeholder="mom@example.com" style="flex:1; min-width:180px">
+              <button class="btn">Email me updates</button>
+            </span>
+          </label>
+          <div class="tiny faint" style="margin-top:6px">We'll send a confirmation first. Unsubscribe link in every email.</div>
+        </div>
+        <div class="note">Push = standard Web Push via the service worker; the browser permission prompt only fires after
+          this explicit button tap (never on page load). <b>iOS Safari caveat:</b> web push only works if the page is
+          added to the Home Screen as a PWA — Mom is likely on an iPhone, so we need a small "Add to Home Screen first"
+          helper flow here (open question: design that inline walkthrough). Email is the fallback for exactly this case.</div>
+        <div class="note">Subscriptions are keyed to <b>(share-token, device/email)</b> — no account is created. Email
+          requires double opt-in (confirmation click) to prevent using the form to spam third parties. If the link is
+          later revoked or sharing is paused, all its subscriptions stop immediately server-side. Open question: instant
+          pings vs. a daily digest as the default — instant for "flight landed", digest for routine check-ins?</div>
+
+        <div class="subvariant">B · Enabled — manage / disable</div>
+        <div class="card pad-lg">
+          <div class="row">
+            <span style="font-size:22px">✅</span>
+            <div>
+              <div class="h2">Notifications are on</div>
+              <div class="tiny muted">Push on this device · email to mom@example.com <span class="badge ok" style="margin-left:4px">confirmed</span></div>
+            </div>
+          </div>
+          <hr class="hr">
+          <div class="klabel">Notify me about</div>
+          <div class="stack" style="gap:8px">
+            <label class="check"><input type="checkbox" checked> Check-ins at places</label>
+            <label class="check"><input type="checkbox" checked> Arrivals in a new city &amp; flight landings</label>
+            <label class="check"><input type="checkbox"> Daily summary instead of instant pings</label>
+          </div>
+          <hr class="hr">
+          <div class="row">
+            <button class="btn sm ghost">Send a test notification</button>
+            <span class="spacer"></span>
+            <button class="btn sm danger">Disable all</button>
+          </div>
+        </div>
+        <div class="note">"Disable all" deletes the push subscription AND the stored email server-side (not just a mute
+          flag) — a follower has no account page, so this button is their only data-deletion control. GDPR: the email
+          address stored here is personal data of an EU citizen; keep it scoped to the token and purge it when the trip
+          or link is deleted.</div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn sm ghost" onclick="setState('follower')">← Back to the feed</button>
+        </div>
+      </section>
+
+      <!-- ======================== QUIET PERIOD ======================== -->
+      <section data-state="quiet">
+        <div class="map-ph follow-map compact">
+          <div class="globe"></div>
+          <svg class="route-svg" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M118 92 Q 182 92 213 148 Q 212 130 206 124 Q 220 108 232 112 Q 243 118 243 132"
+              fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M243 132 Q 237 172 211 196 Q 234 218 255 222"
+              fill="none" style="stroke:var(--faint)" stroke-width="1.5" stroke-dasharray="4 5" opacity=".8"/>
+          </svg>
+          <span class="route-dot" style="left:29.5%; top:30.7%"></span>
+          <span class="route-dot" style="left:53.25%; top:49.3%"></span>
+          <span class="route-dot" style="left:51.5%; top:41.3%"></span>
+          <span class="route-dot" style="left:58%; top:37.3%"></span>
+          <span class="pulse-ring stale" style="left:60.75%; top:44%"></span>
+          <span class="map-lbl" style="left:60.75%; top:44%">Hoi An</span>
+          <span class="route-dot future" style="left:52.75%; top:65.3%"></span>
+          <span class="route-dot future" style="left:63.75%; top:74%"></span>
+          <span class="map-chip stale" style="left:12px; bottom:12px"><span class="dot"></span> Last seen: Hoi An · Tue</span>
+        </div>
+        <div class="refresh-line">⟳ Updates automatically · last refreshed 31s ago</div>
+
+        <div class="card quiet-hero" style="margin-top:14px">
+          <div class="glyph">🌿</div>
+          <h3>All quiet — and that's okay</h3>
+          <p>Patrik &amp; Anna last shared something on <b>Tuesday</b>, from Hoi An. No news usually just means beaches,
+            long bus rides, or hotel wifi that gave up. New moments will appear here the second they post one.</p>
+        </div>
+        <div class="note"><b>Expectation-setting, not alarm.</b> After ~72h without events the feed header swaps to this
+          calm reassurance card — neutral colors only (no warn/danger tokens), copy written to lower a parent's pulse,
+          not raise it. The ring on the globe stops pulsing and greys out to signal "stale, not live". Open questions:
+          (1) after how many days does the copy change again (7+ days: "they're probably somewhere remote")? (2) should
+          the owner get a gentle nudge on /live — "Mom hasn't seen anything from you in 5 days"? (3) never auto-imply an
+          emergency — this product must not become a dead-man switch.</div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="klabel">Current stop</div>
+          <div class="row">
+            <span class="h1">Hoi An, Vietnam 🇻🇳</span>
+            <span class="spacer"></span>
+            <span class="badge accent">Day 82</span>
+          </div>
+          <div class="muted small" style="margin:4px 0 10px">Here since Nov 15 · Stop 4 of 6 · Next planned: Kuala Lumpur (December)</div>
+          <div class="progress"><i style="width:46%"></i></div>
+          <div class="tiny faint" style="margin-top:5px">Trip: Aug 31, 2026 → Feb 25, 2027 · 179 days</div>
+        </div>
+
+        <button class="nudge" onclick="setState('notify')" style="width:100%; cursor:pointer; background:transparent; color:var(--muted); font:inherit">
+          🔔 Stop checking manually — get a ping when something new arrives <span class="spacer"></span> <span class="accent" style="font-weight:600">Notify me →</span>
+        </button>
+
+        <div class="sec"><span class="h2">Earlier</span><span class="tiny faint">last events · 3 days ago</span></div>
+        <div class="card feed">
+          <div class="day-div">Tue Nov 17</div>
+          <div class="fe checkin">
+            <span class="ico">📍</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Hoi An Old Town</span>
+                <span class="stars">★★★★★</span>
+                <span class="spacer"></span><span class="when">20:05</span>
+              </div>
+              <div class="cmt"><span class="who">Patrik</span> — "Lanterns on the river. Anna cried a little. So did I."</div>
+              <div class="thumbs"><span class="thumb">🏮</span><span class="thumb">🛶</span></div>
+            </div>
+          </div>
+          <div class="day-div">Mon Nov 16</div>
+          <div class="fe checkin">
+            <span class="ico">📍</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Bánh Mì Phượng</span>
+                <span class="stars">★★★★★</span>
+                <span class="spacer"></span><span class="when">12:35</span>
+              </div>
+              <div class="cmt"><span class="who">Anna</span> — "Best sandwich of the trip so far. We went back twice. Same day."</div>
+            </div>
+          </div>
+          <div class="day-div">Sun Nov 15</div>
+          <div class="fe">
+            <span class="ico">🏙️</span>
+            <div class="grow">
+              <div class="row">
+                <span class="place">Arrived in Hoi An, Vietnam</span>
+                <span class="spacer"></span><span class="when">16:10</span>
+              </div>
+              <div class="cmt">Stop 4 of 6 · after Hanoi</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================== REVOKED / EXPIRED ======================== -->
+      <section data-state="revoked">
+        <div class="card pad-lg">
+          <div class="empty">
+            <div class="glyph">🔗</div>
+            <h3>This link isn't active anymore</h3>
+            <p class="muted" style="max-width:44ch; margin:0 auto 18px">The share link you opened has been turned off or
+              has expired. Nothing to see here — ask Patrik for a new link.</p>
+            <button class="btn ghost sm">What is Nomad? Plan your own trip →</button>
+          </div>
+        </div>
+        <div class="note"><b>Zero data leak.</b> The server answers 410 with no trip metadata: no trip name, no route, no
+          traveller list, no dates — and the header above falls back to the bare "🧭 Nomad" brand. Revoked, expired, and
+          never-existed tokens all return this exact page (no token enumeration). The page is also
+          <code>noindex</code>.</div>
+        <div class="note"><b>Open question on "ask Patrik":</b> personalising the dead-end ("ask Patrik") requires
+          keeping the owner's first name attached to revoked tokens. That's a deliberate, tiny retention decision — the
+          recipient obviously knows who sent them the link, but it does distinguish "revoked" from "never existed".
+          Safer alternative copy: "ask the person who shared it with you". Owner to decide which side of the trade-off
+          we take.</div>
+      </section>
+
+      <!-- ======================== SHARING PAUSED ======================== -->
+      <section data-state="private">
+        <div class="card pad-lg">
+          <div class="empty">
+            <div class="glyph">⏸️</div>
+            <h3>Sharing is paused</h3>
+            <p class="muted" style="max-width:46ch; margin:0 auto 18px">Patrik &amp; Anna have paused sharing for a while.
+              Nothing is wrong — travellers sometimes go off-grid on purpose. This page will fill up again the moment
+              sharing resumes, and your notification settings are kept.</p>
+            <button class="btn ghost sm" disabled>⟳ Checks again automatically</button>
+          </div>
+        </div>
+        <div class="note">Distinct from "revoked": the token is still valid, the owner just flipped "Pause sharing" in
+          Settings → Sharing (e.g. for a private week). Because Mom already follows this trip, the header keeps the trip
+          title — but the body reveals nothing new: no last-seen, no map, no feed history while paused. Follower push /
+          email subscriptions are retained but muted; resuming sharing un-mutes them without re-opt-in.</div>
+        <div class="note">Open questions: (1) should followers be able to opt into a one-time "email me when sharing
+          resumes" ping (probably yes — it's the same subscription record)? (2) while paused, should previously shared
+          history stay visible (currently: hidden entirely — pause means <i>pause everything</i>, simplest mental model
+          and safest default)? (3) does the owner see a follower-facing preview of this page from Settings so they know
+          exactly what Mom sees?</div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Follow page (no account)',
+  states: [
+    { id: 'follower', label: 'Follower view', desc: 'Mom on her phone, Sat Sep 12 2026 — two hours after Anna\'s Chatuchak check-in. Opened via share link, no account.' },
+    { id: 'pre-trip', label: 'Pre-trip', desc: 'Mom opens the link on Jul 10 2026, before departure — countdown + coarse route only; the feed starts Sep 1.' },
+    { id: 'notify', label: 'Notify me', desc: 'Mom deciding on alerts: push/email opt-in card (A) and the enabled manage/disable state (B).' },
+    { id: 'quiet', label: 'Quiet period', desc: 'Mom checking the page on Fri Nov 20 — no shared events since Tuesday (Hoi An). Reassuring, not alarming.' },
+    { id: 'revoked', label: 'Revoked link', desc: 'Anyone opening a link Patrik revoked (or an expired token) — polite dead-end, zero trip data leaked.' },
+    { id: 'private', label: 'Sharing paused', desc: 'Mom while Patrik temporarily paused sharing from Settings → Sharing. Link stays valid.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>

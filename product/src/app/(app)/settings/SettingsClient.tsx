@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchActiveTrip } from '@/lib/trips/queries'
+import { fetchActiveTrip, isRevConflict } from '@/lib/trips/queries'
 import { tk } from '@/lib/trips/keys'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -99,7 +99,13 @@ export default function SettingsClient() {
           {mut.isPending ? 'Saving…' : 'Save changes'}
         </button>
         {saved && <span className="text-sm text-emerald-600">✓ Saved</span>}
-        {mut.isError && <span className="text-sm text-red-600">Save failed — try again.</span>}
+        {mut.isError && (
+          <span className="text-sm text-red-600">
+            {isRevConflict(mut.error)
+              ? 'Someone else saved this trip first — the latest version was loaded. Please redo your edit.'
+              : 'Save failed — try again.'}
+          </span>
+        )}
       </div>
     </main>
   )
