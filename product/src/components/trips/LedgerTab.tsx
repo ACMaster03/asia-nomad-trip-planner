@@ -2,7 +2,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
+import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { computeBudget, ledgerByMonth, plannedByMonth } from '@/lib/trips/budget'
+import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { fmtHUF, toHUF, monthLabel } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import { SaveError } from '@/components/trips/SaveError'
@@ -17,10 +19,29 @@ const BAD = 'text-red-600'
 export function LedgerTab() {
   const { trip, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
+  const stateMut = useTripMutation()
   // date starts empty to avoid an SSR/hydration mismatch (todayISO is clock-dependent);
   // filled on mount. add() also falls back to todayISO() so submission is always dated.
   const [form, setForm] = useState({ date: '', type: 'income', cat: '', amount: '', cur: '', note: '' })
+  const [autoFuture, setAutoFuture] = useState(true)
   useEffect(() => { setForm((f) => (f.date ? f : { ...f, date: todayISO() })) }, [])
+
+  // Plan → ledger sync (importCosts.ts). Converges: every upsert is
+  // deterministic, so once the refetched document matches the plan this
+  // returns three empty arrays and the effect below no-ops.
+  const imp = useMemo(
+    () => (trip.data ? planImports(trip.data.state, trip.data.ledger) : null),
+    [trip.data],
+  )
+  const autoImport = trip.data?.state.autoImport
+  useEffect(() => {
+    if (!imp) return
+    // Corrections to already-imported rows always apply (one-way sync + orphan
+    // flags); NEW rows only flow automatically once the user opted in.
+    const ops = [...imp.updates, ...imp.orphans, ...(autoImport ? imp.candidates : [])]
+    ops.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is stable; imp derives from trip.data
+  }, [imp, autoImport])
 
   const view = useMemo(() => {
     if (!trip.data) return null
@@ -75,8 +96,28 @@ export function LedgerTab() {
     setForm({ date: todayISO(), type: 'income', cat: '', amount: '', cur: '', note: '' })
   }
   function del(id: string) {
+    const entry = trip.data?.ledger.find((e) => e.id === id)
+    if (entry?.source) {
+      // Without the skip record, reconcile would resurrect the row next visit.
+      if (!confirm('Remove this imported cost? The booking stays in your Itinerary, but it won’t be re-imported here.')) return
+      const key = sourceKey(entry.source)
+      // Persist the skip BEFORE deleting: the two writes live in different
+      // scopes, and a ledger refetch landing between them shows "booked cost,
+      // no entry, no skip" — the sync effect would re-import the row.
+      stateMut.mutate(
+        (cur) => ({ ...cur, importSkip: [...new Set([...(cur.importSkip ?? []), key])] }),
+        { onSuccess: () => mut.mutate({ kind: 'delete', id }) },
+      )
+      return
+    }
     if (!confirm('Delete this entry?')) return
     mut.mutate({ kind: 'delete', id })
+  }
+
+  function importNow() {
+    if (!imp) return
+    imp.candidates.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
+    stateMut.mutate((cur) => ({ ...cur, autoImport: autoFuture }))
   }
 
   const input = 'rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900'
@@ -88,6 +129,7 @@ export function LedgerTab() {
         Log what you actually earn and spend to see, month by month, whether you&apos;re turning a profit.
       </p>
       <SaveError show={mut.isError} error={mut.error} />
+      <SaveError show={stateMut.isError} error={stateMut.error} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat k="Total income" v={fmtHUF(v.totalInc)} sub={'~$' + Math.round(v.totalInc / usd)} />
@@ -95,6 +137,26 @@ export function LedgerTab() {
         <Stat k="Net profit / loss" v={(v.net >= 0 ? '+' : '') + fmtHUF(v.net)} sub={v.net >= 0 ? 'surplus' : 'shortfall'} color={v.net >= 0 ? '#059669' : '#dc2626'} />
         <Stat k="Planned trip cost" v={fmtHUF(v.plan)} sub="your itinerary estimate" />
       </div>
+
+      {imp && imp.candidates.length > 0 && !autoImport && (
+        <div className="mt-4 rounded-lg border border-teal-600/40 bg-teal-50 p-4 dark:bg-teal-950/30">
+          <div className="font-medium">
+            Import your {imp.candidates.length} booked cost{imp.candidates.length > 1 ? 's' : ''}?
+          </div>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+            Booked itinerary items with a charge date can sit in the ledger as ⤵ “from plan” rows, dated by charge date and kept in sync with the Itinerary.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-4">
+            <button onClick={importNow} disabled={mut.isPending} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
+              Import {imp.candidates.length} item{imp.candidates.length > 1 ? 's' : ''}
+            </button>
+            <label className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+              <input type="checkbox" checked={autoFuture} onChange={(e) => setAutoFuture(e.target.checked)} />
+              auto-import future bookings too
+            </label>
+          </div>
+        </div>
+      )}
 
       <h2 className="mb-2 mt-6 text-lg font-semibold">Add an entry</h2>
       <div className="flex flex-wrap items-end gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
@@ -181,7 +243,15 @@ export function LedgerTab() {
                   <tr key={e.id} className="border-t border-neutral-200 dark:border-neutral-800">
                     <td className="py-1 pr-4 whitespace-nowrap">{e.date}</td>
                     <td className={'pr-4 ' + (isInc ? GOOD : BAD)}>{isInc ? 'income' : 'expense'}</td>
-                    <td className="pr-4">{e.category}</td>
+                    <td className="pr-4 whitespace-nowrap">
+                      {e.category}
+                      {e.source && (
+                        <span className="ml-1.5 rounded border border-teal-600/60 px-1 py-px text-[10px] text-teal-600">⤵ from plan</span>
+                      )}
+                      {e.orphaned && (
+                        <span className="ml-1.5 rounded border border-amber-500/60 px-1 py-px text-[10px] text-amber-600" title="The booking this row came from was removed from the Itinerary.">orphaned</span>
+                      )}
+                    </td>
                     <td className="pr-4 whitespace-nowrap">{e.amount} {e.currency}</td>
                     <td className="pr-4 text-neutral-500">{fmtHUF(toHUF(e.amount, e.currency, v.rates))}</td>
                     <td className="pr-4 text-neutral-500">{e.note}</td>

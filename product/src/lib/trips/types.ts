@@ -71,6 +71,10 @@ export interface TripState {
   transport: TransportLeg[]
   extras: Extra[]
   notes: Record<string, string>
+  // Ledger auto-import (importCosts.ts). undefined = user never asked yet.
+  autoImport?: boolean
+  // Source keys ("stay:<id>") the user deleted from the ledger — never re-import.
+  importSkip?: string[]
 }
 export interface LedgerEntry {
   id: string
@@ -80,6 +84,10 @@ export interface LedgerEntry {
   amount: number
   currency: CurrencyCode
   note: string
+  // Auto-imported rows only (importCosts.ts): the booking this row mirrors.
+  source?: { kind: 'stay' | 'transport'; id: string }
+  // Booking vanished from the plan — row stays on the books, flagged.
+  orphaned?: boolean
 }
 export type Ledger = LedgerEntry[]
 

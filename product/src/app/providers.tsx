@@ -59,7 +59,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
       persistOptions={{
         persister,
         maxAge: 1000 * 60 * 60 * 24, // matches the outbox gcTime
-        buster: 'anp-v1', // bump to invalidate persisted caches after breaking changes
+        buster: 'anp-v2', // bump to invalidate persisted caches after breaking changes
+        dehydrateOptions: {
+          // ONLY outbox mutations may be persisted: they have defaults
+          // registered (outbox.ts) so they restore with a working mutationFn.
+          // Anything else (ledger-write / state-write) restores WITHOUT one and
+          // permanently wedges its serialization scope — every later money/state
+          // save queues behind the zombie until the cache is cleared. Those
+          // writes are rev-guarded and per-session on purpose; dropping them at
+          // reload is the correct behaviour.
+          shouldDehydrateMutation: (m) => m.options.mutationKey?.[0] === 'outbox' && m.state.isPaused,
+        },
       }}
       onSuccess={() => {
         // cache restored → replay anything the outbox queued while offline
