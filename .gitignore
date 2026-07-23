@@ -13,3 +13,4 @@ supabase/backups/
 # Serwist build output — regenerated every `next build --webpack`
 product/public/sw.js
 product/public/sw.js.map
+supabase/.temp/
