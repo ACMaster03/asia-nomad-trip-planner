@@ -8,6 +8,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // `follow` is the public no-account page — an auth-refresh roundtrip
+    // would be pure latency for followers who never have a session.
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|follow|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
