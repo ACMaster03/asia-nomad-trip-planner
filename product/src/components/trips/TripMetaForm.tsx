@@ -19,7 +19,6 @@ export function TripMetaForm({ onSubmit, busy, submitLabel = 'Create trip →' }
 }) {
   const [tripName, setTripName] = useState('')
   const [startDate, setStartDate] = useState('')
-  const [hasEnd, setHasEnd] = useState(false)
   const [endDate, setEndDate] = useState('')
   const [travelers, setTravelers] = useState(2)
   const [budgetCap, setBudgetCap] = useState<string>('')
@@ -30,12 +29,12 @@ export function TripMetaForm({ onSubmit, busy, submitLabel = 'Create trip →' }
     e.preventDefault()
     if (!tripName.trim()) return setError('Give the trip a name.')
     if (!startDate) return setError('Pick a start date.')
-    if (hasEnd && endDate && endDate < startDate) return setError('End date is before the start date.')
+    if (endDate && endDate < startDate) return setError('End date is before the start date.')
     setError(null)
     onSubmit({
       tripName,
       startDate,
-      endDate: hasEnd && endDate ? endDate : undefined,
+      endDate: endDate || undefined,
       travelers,
       budgetCap: budgetCap ? Number(budgetCap) || 0 : 0,
       baseCurrency,
@@ -54,18 +53,10 @@ export function TripMetaForm({ onSubmit, busy, submitLabel = 'Create trip →' }
           Start date
           <input type="date" className={input} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
         </label>
-        <div className={label}>
-          <span className="flex items-center gap-2">
-            End date <span className="text-neutral-400">— optional</span>
-            <input
-              type="checkbox"
-              checked={hasEnd}
-              onChange={(e) => setHasEnd(e.target.checked)}
-              aria-label="Trip has an end date"
-            />
-          </span>
-          <input type="date" className={input} value={endDate} disabled={!hasEnd} onChange={(e) => setEndDate(e.target.value)} />
-        </div>
+        <label className={label}>
+          End date <span className="text-neutral-400">— optional</span>
+          <input type="date" className={input} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        </label>
       </div>
       <p className="mt-1 text-xs text-neutral-500">
         Leave the end date off for an open-ended trip — budget pace will use “so far” instead of “per remaining day”.

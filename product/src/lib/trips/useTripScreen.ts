@@ -19,7 +19,14 @@ export function useTripScreen() {
     queryKey: tk.trip(tripId ?? 'none'),
     queryFn: () => (tripId ? fetchTrip(sb, tripId) : Promise.resolve(null)),
   })
-  const cities = useQuery({ queryKey: qk.cities, queryFn: () => fetchCities(sb) })
+  // World data changes rarely and weighs ~100 kB — fetch client-side once and
+  // let the persisted cache (IndexedDB, 24 h) carry it; the server deliberately
+  // does not prefetch it (see prefetch.ts).
+  const cities = useQuery({
+    queryKey: qk.cities,
+    queryFn: () => fetchCities(sb),
+    staleTime: 6 * 60 * 60_000,
+  })
   const cityIdx = useMemo(() => buildCityIndex(cities.data ?? []), [cities.data])
   return { trip, cities, cityIdx }
 }

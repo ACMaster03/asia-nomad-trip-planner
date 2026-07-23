@@ -2,9 +2,7 @@ import { cache } from 'react'
 import { QueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/server'
 import { resolveActiveTrip } from './queries'
-import { fetchCities } from '@/lib/catalogue/queries'
 import { tk } from './keys'
-import { qk } from '@/lib/catalogue/keys'
 
 // Per-request memoized resolution of the working trip (profile selection →
 // newest visible; see resolveActiveTrip). React cache() dedupes the calls the
@@ -14,17 +12,18 @@ export const getActiveTrip = cache(async () => {
   return resolveActiveTrip(sb)
 })
 
-// Shared by all five trip screens: resolve + seed the active trip document and
-// prefetch the shared catalogue cities (needed for cost estimates) on the
-// server, then hydrate. The client reads the trip id from TripScopeProvider,
-// which the (app) layout initializes from the same memoized resolution.
+// Shared by all five trip screens: resolve + seed the active trip document on
+// the server, then hydrate. The client reads the trip id from
+// TripScopeProvider, which the (app) layout initializes from the same
+// memoized resolution.
+//
+// The cities catalogue is deliberately NOT prefetched here: it is ~100 kB of
+// jsonb that would ride along on EVERY navigation's flight payload. The client
+// fetches it once (useTripScreen, long staleTime) and the IndexedDB-persisted
+// cache keeps it across sessions.
 export async function prefetchTripScreen() {
-  const sb = await createClient()
   const qc = new QueryClient()
-  const [trip] = await Promise.all([
-    getActiveTrip(),
-    qc.prefetchQuery({ queryKey: qk.cities, queryFn: () => fetchCities(sb) }),
-  ])
+  const trip = await getActiveTrip()
   if (trip) qc.setQueryData(tk.trip(trip.id), trip)
   return qc
 }

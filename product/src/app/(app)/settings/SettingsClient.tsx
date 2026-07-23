@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchTrip, fetchTrips, isRevConflict, setSelectedTripId } from '@/lib/trips/queries'
@@ -18,6 +19,7 @@ const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm
 // persisting fails silently and the switch is per-device for the session.
 function ActiveTripCard() {
   const sb = createClient()
+  const router = useRouter()
   const { tripId, setTripId } = useTripScope()
   const trips = useQuery({ queryKey: tk.trips, queryFn: () => fetchTrips(sb) })
   const switchMut = useMutation({
@@ -25,7 +27,12 @@ function ActiveTripCard() {
       await setSelectedTripId(sb, id).catch(() => {}) // pre-07 DB: local-only switch
       return id
     },
-    onSuccess: (id) => setTripId(id),
+    onSuccess: (id) => {
+      setTripId(id)
+      // The nav (incl. the Live tab gate) is rendered by the SERVER layout from
+      // the active trip — without a refresh it stays stale until a hard reload.
+      router.refresh()
+    },
   })
   // "New trip" launches the same onboarding wizard (mock 09 note) in a modal.
   const [wizardOpen, setWizardOpen] = useState(false)
@@ -101,7 +108,10 @@ export default function SettingsClient() {
     // refetch (or post-save invalidate) must not overwrite in-progress keystrokes.
     if (loadedVer.current === trip.data.updated_at) return
     loadedVer.current = trip.data.updated_at
-    const m = trip.data.state.meta
+    // Legacy/hand-seeded trips can lack meta entirely — keep the form on its
+    // defaults instead of crashing the whole screen.
+    const m = trip.data.state?.meta
+    if (!m) return
     setName(m.tripName)
     setTravelers(m.travelers)
     setBudgetCap(m.budgetCap)

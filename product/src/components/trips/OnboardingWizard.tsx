@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { createTrip, createInvite, writeState, setSelectedTripId } from '@/lib/trips/queries'
@@ -42,6 +43,7 @@ function Dots({ step }: { step: 1 | 2 | 3 }) {
 export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
   const sb = createClient()
   const qc = useQueryClient()
+  const router = useRouter()
   const { setTripId } = useTripScope()
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [trip, setTrip] = useState<Trip | null>(null)
@@ -58,6 +60,10 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
       qc.invalidateQueries({ queryKey: tk.trips })
       await setSelectedTripId(sb, t.id).catch(() => {}) // pre-07 DB: local-only
       setTrip(t)
+      setTripId(t.id)
+      // Re-render the server layout: the nav's Live-tab gate reads the active
+      // trip server-side and would otherwise stay stale until a hard reload.
+      router.refresh()
       setStep(2)
     },
   })
