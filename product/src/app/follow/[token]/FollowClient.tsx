@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { fetchSharedFeed, fetchSharedSummary, followMediaUrl, type SharedEvent, type SharedSummary } from '@/lib/follow/api'
+import { disablePush, enablePush, getPushState, type PushState } from '@/lib/follow/push'
 import { nightsBetween } from '@/lib/trips/format'
 
 // /follow/[token] — the no-account family view (approved endframe: mock 07).
@@ -123,6 +125,10 @@ export default function FollowClient({
           <p className="mt-3 text-xs text-neutral-500">
             This page turns into the live feed the day the trip starts. Bookmark it!
           </p>
+          {/* mock 07: followers can arm notifications BEFORE departure */}
+          <div className="mt-4 text-left">
+            <NotifyCard sb={sb} token={token} />
+          </div>
         </section>
       ) : (
         <>
@@ -145,6 +151,8 @@ export default function FollowClient({
               </div>
             </section>
           )}
+
+          <NotifyCard sb={sb} token={token} />
 
           {/* quiet period */}
           {phase === 'live' && quietDays !== null && quietDays >= 3 && (
@@ -219,4 +227,64 @@ export default function FollowClient({
 function Shell({ children }: { children: React.ReactNode }) {
   // Phone-first narrow column, same on desktop (mock 07).
   return <main className="mx-auto max-w-xl p-4 sm:p-6">{children}</main>
+}
+
+// Mock 07 "Notify me" card (variant A = enable, B = enabled/manage). The
+// email-digest alternative from the mock is a later phase.
+function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
+  const [state, setState] = useState<PushState | 'loading'>('loading')
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    getPushState().then(setState)
+  }, [])
+
+  if (state === 'loading' || state === 'unsupported') return null // incl. dev server / old browsers
+
+  const toggle = async () => {
+    setBusy(true)
+    try {
+      setState(state === 'subscribed' ? await disablePush(sb) : await enablePush(sb, token))
+    } catch {
+      setState(await getPushState())
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl" aria-hidden>🔔</span>
+        <div className="min-w-0 grow">
+          <div className="font-medium">Know when they check in</div>
+          <p className="mt-0.5 text-sm text-neutral-500">
+            {state === 'subscribed'
+              ? 'Notifications are on for this device.'
+              : 'Get a ping the moment something new is shared — check-ins, arrivals, notes. Nothing else, no marketing.'}
+          </p>
+          {state === 'denied' ? (
+            <p className="mt-2 text-xs text-neutral-500">
+              Notifications are blocked for this site — enable them in your browser settings to opt in.
+            </p>
+          ) : (
+            <button
+              onClick={toggle}
+              disabled={busy}
+              className={
+                state === 'subscribed'
+                  ? 'mt-2 rounded border border-neutral-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-neutral-700'
+                  : 'mt-2 rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50'
+              }
+            >
+              {busy ? '…' : state === 'subscribed' ? 'Turn off notifications' : 'Enable push notifications'}
+            </button>
+          )}
+          <p className="mt-1.5 text-xs text-neutral-400 dark:text-neutral-600">
+            Browser notifications on this device · no account needed
+            {state !== 'subscribed' && ' · on iPhone, add this page to your Home Screen first'}
+          </p>
+        </div>
+      </div>
+    </section>
+  )
 }

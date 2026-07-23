@@ -21,6 +21,43 @@ declare global {
 }
 declare const self: ServiceWorkerGlobalScope;
 
+// ---- Web Push (M3) --------------------------------------------------------
+// Payload mirrors the shared_feed whitelist (push-fanout function) — nothing
+// a follower couldn't already see. The click target comes from DEVICE-LOCAL
+// IndexedDB (lib/follow/push.ts stores it at subscribe time): our database
+// never holds raw follow tokens, so the server can't put the URL in the
+// payload — the device remembers its own way home instead.
+import { get } from "idb-keyval";
+
+self.addEventListener("push", (event) => {
+  let data: { title?: string; body?: string } = {};
+  try {
+    data = event.data?.json() ?? {};
+  } catch {
+    /* non-JSON push → generic notification */
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title ?? "Trip update", {
+      body: data.body ?? "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    (async () => {
+      const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const existing = wins.find((w) => w.url.includes("/follow/"));
+      if (existing) return existing.focus();
+      const url = ((await get("anp-follow-url").catch(() => null)) as string | null) ?? "/";
+      return self.clients.openWindow(url);
+    })(),
+  );
+});
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
