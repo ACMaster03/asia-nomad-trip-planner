@@ -35,6 +35,23 @@ export interface City {
   attributes: Record<string, unknown> // opaque on purpose — never type each field
 }
 
+// places table (migration 09) — the check-in targets. World data like cities:
+// any signed-in user reads all; users may add source='user' rows attributed to
+// themselves ("Add a place here" in /live).
+export type PlaceKind =
+  | 'landmark' | 'restaurant' | 'cafe' | 'activity' | 'stay' | 'transporthub' | 'other'
+
+export interface Place {
+  id: string
+  city_id: number | null
+  name: string
+  kind: PlaceKind
+  lat: number | null // often NULL (ungeocoded) — fall back to the city's coords
+  lng: number | null
+  source: 'catalogue' | 'user'
+  attributes: Record<string, unknown> // {why,how,cost,time,when,...} — opaque
+}
+
 export interface Country {
   code: string
   name: string

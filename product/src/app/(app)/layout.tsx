@@ -17,12 +17,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // screens render the create/empty state.
   const activeTrip = await getActiveTrip()
 
+  // Nav canon (design/mocks/FIXTURES.md): "Live" is a nav item during the live
+  // phase ONLY — startDate <= today <= endDate (open-ended trips stay live).
+  // Uses the server's UTC calendar date; the layout is already dynamic
+  // (cookie-based auth), so this re-evaluates on every request.
+  const meta = activeTrip?.state?.meta
+  const today = new Date().toISOString().slice(0, 10)
+  const showLive =
+    !!meta?.startDate && meta.startDate <= today && (!meta.endDate || today <= meta.endDate)
+
   return (
     <TripScopeProvider initialTripId={activeTrip?.id ?? null}>
       <div className="min-h-screen">
         <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
           <Link href="/dashboard" className="font-semibold">🧭 Asia Nomad Planner</Link>
           <Link href="/dashboard" className="hover:underline">Dashboard</Link>
+          {showLive && <Link href="/live" className="hover:underline">Live</Link>}
           <Link href="/itinerary" className="hover:underline">Itinerary</Link>
           <Link href="/money" className="hover:underline">Money</Link>
           <Link href="/map" className="hover:underline">Map</Link>

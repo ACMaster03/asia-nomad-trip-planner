@@ -4,4 +4,8 @@ export const tk = {
   trip: (id: string) => ['trip', id] as const,
   // The lightweight trip list for the Settings switcher.
   trips: ['trips'] as const,
+  // The lived-trip event feed (/live): trip_events + embedded check_ins,
+  // newest first. Append-only rows — mutations optimistically prepend/remove
+  // and invalidate this key.
+  events: (tripId: string) => ['trip-events', tripId] as const,
 }
