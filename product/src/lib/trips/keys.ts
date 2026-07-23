@@ -8,4 +8,6 @@ export const tk = {
   // newest first. Append-only rows — mutations optimistically prepend/remove
   // and invalidate this key.
   events: (tripId: string) => ['trip-events', tripId] as const,
+  // Active follow links for the Settings sharing panel (migration 11).
+  shares: (tripId: string) => ['trip-shares', tripId] as const,
 }

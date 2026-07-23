@@ -12,15 +12,19 @@
 -- ============================================================================
 
 create table if not exists public.trip_shares (
-  id         uuid primary key default gen_random_uuid(),
-  trip_id    uuid not null references public.trips (id) on delete cascade,
-  token_hash text not null unique,
-  label      text,
-  created_by uuid not null references auth.users (id) on delete cascade,
-  created_at timestamptz not null default now(),
-  expires_at timestamptz, -- null = never expires
-  revoked_at timestamptz
+  id           uuid primary key default gen_random_uuid(),
+  trip_id      uuid not null references public.trips (id) on delete cascade,
+  token_hash   text not null unique,
+  -- First 6 chars of the raw token, for the Settings list display ("f7Kq3d…").
+  -- Useless for guessing: 250 remaining bits of entropy.
+  token_prefix text,
+  label        text,
+  created_by   uuid not null references auth.users (id) on delete cascade,
+  created_at   timestamptz not null default now(),
+  expires_at   timestamptz, -- null = never expires
+  revoked_at   timestamptz
 );
+alter table public.trip_shares add column if not exists token_prefix text;
 create index if not exists trip_shares_trip_idx on public.trip_shares (trip_id);
 
 alter table public.trip_shares enable row level security;
@@ -41,9 +45,14 @@ create policy trip_shares_delete on public.trip_shares
 -- so the raw token never exists anywhere but the creator's response.
 
 -- ---------------------------------------------------------------------------
--- create_share_link(trip) → the raw token, exactly once.
+-- create_share_link(trip, label, expires) → the raw token, exactly once.
+-- The token is hashed at rest, so it can never be re-shown: the Settings UI
+-- offers Copy only at creation (mock 09's per-row Copy is overridden by the
+-- approved plan's hash-at-rest requirement).
 -- ---------------------------------------------------------------------------
-create or replace function public.create_share_link(p_trip uuid, p_label text default null)
+drop function if exists public.create_share_link(uuid, text); -- pre-final signature
+create or replace function public.create_share_link(
+  p_trip uuid, p_label text default null, p_expires timestamptz default null)
 returns text
 language plpgsql security definer set search_path = public as $$
 declare
@@ -54,12 +63,12 @@ begin
   end if;
   -- 256 bits from two v4 uuids (pgcrypto not required).
   v_token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
-  insert into public.trip_shares (trip_id, token_hash, label, created_by)
-  values (p_trip, encode(sha256(v_token::bytea), 'hex'), p_label, auth.uid());
+  insert into public.trip_shares (trip_id, token_hash, token_prefix, label, created_by, expires_at)
+  values (p_trip, encode(sha256(v_token::bytea), 'hex'), left(v_token, 6), p_label, auth.uid(), p_expires);
   return v_token;
 end $$;
-revoke all on function public.create_share_link(uuid, text) from public, anon;
-grant execute on function public.create_share_link(uuid, text) to authenticated;
+revoke all on function public.create_share_link(uuid, text, timestamptz) from public, anon;
+grant execute on function public.create_share_link(uuid, text, timestamptz) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Internal: token → live share row (null if unknown/revoked/expired).

@@ -74,7 +74,9 @@ export function CheckInModal({
   const [newKind, setNewKind] = useState<PlaceKind>('landmark')
   const [rating, setRating] = useState<number | null>(null)
   const [comment, setComment] = useState('')
-  const [visibility, setVisibility] = useState<TripEventVisibility>('trip')
+  // Mock 06's sheet pre-selects "Trip + followers" — check-ins are what the
+  // family link exists for; 'trip' stays available for private ones.
+  const [visibility, setVisibility] = useState<TripEventVisibility>('followers')
 
   const addPlace = useMutation({
     mutationFn: () => insertUserPlace(sb, { cityId, name: newName, kind: newKind }),
