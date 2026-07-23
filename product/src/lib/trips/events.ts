@@ -101,13 +101,18 @@ export async function insertCheckIn(
     rating?: number | null
     comment?: string | null
     visibility?: TripEventVisibility
+    // storage paths in trip-media (uploaded BEFORE this insert — media.ts)
+    photos?: string[]
   },
 ): Promise<void> {
   await insertTripEvent(sb, {
     id: input.id,
     tripId: input.tripId,
     kind: 'checkin',
-    payload: { placeName: input.placeName },
+    payload: {
+      placeName: input.placeName,
+      ...(input.photos?.length ? { photos: input.photos } : {}),
+    },
     visibility: input.visibility,
   })
   const { error } = await sb.from('check_ins').insert({

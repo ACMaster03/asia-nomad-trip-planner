@@ -24,6 +24,7 @@ import {
   type CheckInVars,
   type EventVars,
 } from '@/lib/trips/outbox'
+import { publicMediaUrl, uploadCheckinPhotos } from '@/lib/trips/media'
 import { Modal } from '@/components/trips/Modal'
 import { SaveError } from '@/components/trips/SaveError'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -113,7 +114,7 @@ export default function LiveClient() {
         trip_id: v.tripId,
         author: uid ?? '',
         kind: 'checkin',
-        payload: { placeName: v.placeName },
+        payload: { placeName: v.placeName, ...(v.photos?.length ? { photos: v.photos } : {}) },
         visibility: v.visibility,
         occurred_at: stamp(),
         created_at: stamp(),
@@ -245,9 +246,22 @@ export default function LiveClient() {
     setNoteText('')
     setNoteOpen(false)
   }
-  const saveCheckIn = (v: CheckInInput) => {
+  const saveCheckIn = async (v: CheckInInput) => {
     if (!tripId) return
-    addCheckIn.mutate({ ...v, id: crypto.randomUUID(), tripId })
+    const id = crypto.randomUUID()
+    const { files, ...rest } = v
+    // Photos upload BEFORE the (outbox-able) insert: paths are plain strings
+    // that survive IndexedDB; blobs would not. Offline → skip photos, the
+    // check-in itself still queues.
+    let photos: string[] | undefined
+    if (files.length && onlineManager.isOnline()) {
+      try {
+        photos = await uploadCheckinPhotos(sb, tripId, id, files)
+      } catch {
+        photos = undefined // photo failure never blocks the check-in
+      }
+    }
+    addCheckIn.mutate({ ...rest, id, tripId, photos })
     setCheckinOpen(false)
   }
 
@@ -669,6 +683,16 @@ function EventRow({ ev, mine, queued, onDelete }: { ev: TripEvent; mine: boolean
           </div>
         )}
         {(comment || noteText) && <div className="mt-0.5 text-sm">&ldquo;{comment ?? noteText}&rdquo;</div>}
+        {Array.isArray(ev.payload.photos) && ev.payload.photos.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {(ev.payload.photos as string[]).map((p) => (
+              <a key={p} href={publicMediaUrl(p)} target="_blank" rel="noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={publicMediaUrl(p)} alt="" loading="lazy" className="h-20 w-20 rounded-lg object-cover" />
+              </a>
+            ))}
+          </div>
+        )}
         <div className="mt-0.5 text-xs text-neutral-500">
           {fmtEventTime(ev.occurred_at)}
           {mine ? ' · you' : ''}

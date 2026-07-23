@@ -34,6 +34,9 @@ export type CheckInVars = {
   rating: number | null
   comment: string
   visibility: TripEventVisibility
+  // storage paths — photos upload BEFORE mutate (plain strings persist fine
+  // in IndexedDB; blobs would not, which is why offline check-ins are photoless)
+  photos?: string[]
 }
 
 export type EventVars = {

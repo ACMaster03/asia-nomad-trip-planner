@@ -25,9 +25,15 @@ export interface SharedEvent {
   id: string
   kind: SharedEventKind
   occurred_at: string
-  payload: { placeName?: string; text?: string; city?: string }
+  payload: { placeName?: string; text?: string; city?: string; photos?: string[] }
   rating: number | null
   comment: string | null
+}
+
+// The bucket is public (migration 12) — the path IS the credential, same
+// entropy model as the follow token itself.
+export function followMediaUrl(path: string): string {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/trip-media/${path}`
 }
 
 // null = unknown/revoked/expired token (the RPC deliberately does not say which).

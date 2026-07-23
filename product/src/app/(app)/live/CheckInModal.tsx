@@ -28,6 +28,9 @@ export type CheckInInput = {
   rating: number | null
   comment: string
   visibility: TripEventVisibility
+  // raw picks — LiveClient compresses + uploads them, then passes storage
+  // paths into the outbox mutation (blobs can't ride the offline queue)
+  files: File[]
 }
 
 // Step 1 (pick a place, searchable, scoped to the current stop's city) +
@@ -74,6 +77,7 @@ export function CheckInModal({
   const [newKind, setNewKind] = useState<PlaceKind>('landmark')
   const [rating, setRating] = useState<number | null>(null)
   const [comment, setComment] = useState('')
+  const [files, setFiles] = useState<File[]>([])
   // Mock 06's sheet pre-selects "Trip + followers" — check-ins are what the
   // family link exists for; 'trip' stays available for private ones.
   const [visibility, setVisibility] = useState<TripEventVisibility>('followers')
@@ -238,6 +242,44 @@ export function CheckInModal({
               onChange={(e) => setComment(e.target.value)}
             />
           </label>
+          <div className="mt-3 text-sm">Photos</div>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {files.map((f, i) => (
+              <span key={i} className="relative">
+                {/* object URLs are tiny previews; revoked on unmount is skipped
+                    on purpose — the modal is short-lived */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={URL.createObjectURL(f)} alt="" className="h-14 w-14 rounded object-cover" />
+                <button
+                  aria-label="Remove photo"
+                  onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                  className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-neutral-800 text-[10px] leading-none text-white"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {files.length < 4 && (
+              <label className="flex h-14 w-14 cursor-pointer items-center justify-center rounded border border-dashed border-neutral-300 text-xl text-neutral-400 dark:border-neutral-700">
+                ＋
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const picked = [...(e.target.files ?? [])]
+                    setFiles([...files, ...picked].slice(0, 4))
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-neutral-500">
+            Up to 4 — compressed on your phone before upload. Photos need signal; offline check-ins send without them.
+          </p>
           <label className="mt-2 block text-sm">
             Visible to
             <select
@@ -258,7 +300,7 @@ export function CheckInModal({
           <button
             onClick={() =>
               sel &&
-              onSave({ placeId: sel.id, placeName: sel.name, rating, comment, visibility })
+              onSave({ placeId: sel.id, placeName: sel.name, rating, comment, visibility, files })
             }
             disabled={!sel || saving}
             className="rounded bg-teal-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"

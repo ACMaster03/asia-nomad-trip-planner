@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchSharedFeed, fetchSharedSummary, type SharedEvent, type SharedSummary } from '@/lib/follow/api'
+import { fetchSharedFeed, fetchSharedSummary, followMediaUrl, type SharedEvent, type SharedSummary } from '@/lib/follow/api'
 import { nightsBetween } from '@/lib/trips/format'
 
 // /follow/[token] — the no-account family view (approved endframe: mock 07).
@@ -182,6 +182,16 @@ export default function FollowClient({
                       )}
                       {e.comment && (
                         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{e.comment}</p>
+                      )}
+                      {!!e.payload.photos?.length && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {e.payload.photos.map((p) => (
+                            <a key={p} href={followMediaUrl(p)} target="_blank" rel="noreferrer">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={followMediaUrl(p)} alt="" loading="lazy" className="h-24 w-24 rounded-lg object-cover" />
+                            </a>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <span className="shrink-0 text-xs text-neutral-500">{timeAgo(e.occurred_at)}</span>
