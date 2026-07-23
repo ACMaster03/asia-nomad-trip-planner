@@ -1,6 +1,12 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import {
+  onlineManager,
+  useMutation,
+  useMutationState,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripScope } from '@/lib/trips/TripScope'
@@ -9,12 +15,15 @@ import { nightsBetween, segNights } from '@/lib/trips/format'
 import {
   deleteTripEvent,
   fetchTripEvents,
-  insertCheckIn,
-  insertTripEvent,
   type TripEvent,
   type TripEventKind,
-  type TripEventVisibility,
 } from '@/lib/trips/events'
+import {
+  CHECKIN_MUTATION_KEY,
+  EVENT_MUTATION_KEY,
+  type CheckInVars,
+  type EventVars,
+} from '@/lib/trips/outbox'
 import { Modal } from '@/components/trips/Modal'
 import { SaveError } from '@/components/trips/SaveError'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -89,16 +98,19 @@ export default function LiveClient() {
   const rollback = (_e: unknown, _v: unknown, ctx?: { prevList?: TripEvent[] }) => {
     if (ctx?.prevList) qc.setQueryData(eventsKey, ctx.prevList)
   }
-  const settle = () => qc.invalidateQueries({ queryKey: eventsKey })
+  const settle = () => qc.invalidateQueries({ queryKey: eventsKey }) // delete-mutation only; inserts settle via outbox defaults
   const stamp = () => new Date().toISOString()
 
-  const addCheckIn = useMutation({
-    mutationFn: (v: CheckInInput & { id: string }) =>
-      insertCheckIn(sb, { ...v, tripId: tripId!, comment: v.comment }),
+  // Insert mutations run through the OUTBOX defaults (lib/trips/outbox.ts):
+  // no local mutationFn, so offline calls pause + persist to IndexedDB and
+  // replay on reconnect/reload. Optimistic UI callbacks stay local — they only
+  // matter in the live session; replays after reload just refetch the feed.
+  const addCheckIn = useMutation<void, Error, CheckInVars, { prevList?: TripEvent[] }>({
+    mutationKey: CHECKIN_MUTATION_KEY,
     onMutate: (v) =>
       optimisticPrepend({
         id: v.id,
-        trip_id: tripId ?? '',
+        trip_id: v.tripId,
         author: uid ?? '',
         kind: 'checkin',
         payload: { placeName: v.placeName },
@@ -108,16 +120,14 @@ export default function LiveClient() {
         check_in: { place_id: v.placeId, rating: v.rating, comment: v.comment.trim() || null },
       }),
     onError: rollback,
-    onSettled: settle,
   })
 
-  const addEvent = useMutation({
-    mutationFn: (v: { id: string; kind: TripEventKind; payload: Record<string, unknown>; visibility?: TripEventVisibility }) =>
-      insertTripEvent(sb, { ...v, tripId: tripId! }),
+  const addEvent = useMutation<void, Error, EventVars, { prevList?: TripEvent[] }>({
+    mutationKey: EVENT_MUTATION_KEY,
     onMutate: (v) =>
       optimisticPrepend({
         id: v.id,
-        trip_id: tripId ?? '',
+        trip_id: v.tripId,
         author: uid ?? '',
         kind: v.kind,
         payload: v.payload,
@@ -127,8 +137,27 @@ export default function LiveClient() {
         check_in: null,
       }),
     onError: rollback,
-    onSettled: settle,
   })
+
+  // Offline awareness: TanStack's onlineManager is the same signal that pauses
+  // the outbox mutations — subscribing to it keeps banner and behavior in sync.
+  const online = useSyncExternalStore(
+    (cb) => onlineManager.subscribe(cb),
+    () => onlineManager.isOnline(),
+    () => true,
+  )
+
+  // Ids of queued (paused) outbox rows → the feed marks them "queued".
+  const pausedIds = new Set(
+    useMutationState({
+      filters: {
+        predicate: (m) =>
+          m.state.isPaused &&
+          ['outbox'].includes((m.options.mutationKey?.[0] as string) ?? ''),
+      },
+      select: (m) => (m.state.variables as { id?: string })?.id ?? '',
+    }),
+  )
 
   const delEvent = useMutation({
     mutationFn: (id: string) => deleteTripEvent(sb, id),
@@ -205,19 +234,20 @@ export default function LiveClient() {
 
   const doArrived = () => {
     const city = current?.city ?? next?.city ?? previous?.city ?? ''
-    if (!city) return
+    if (!city || !tripId) return
     if (!confirm(`Mark "Arrived in ${city}"?`)) return
-    addEvent.mutate({ id: crypto.randomUUID(), kind: 'arrived', payload: { city } })
+    addEvent.mutate({ id: crypto.randomUUID(), tripId, kind: 'arrived', payload: { city } })
   }
   const saveNote = () => {
     const text = noteText.trim()
-    if (!text) return
-    addEvent.mutate({ id: crypto.randomUUID(), kind: 'note', payload: { text } })
+    if (!text || !tripId) return
+    addEvent.mutate({ id: crypto.randomUUID(), tripId, kind: 'note', payload: { text } })
     setNoteText('')
     setNoteOpen(false)
   }
   const saveCheckIn = (v: CheckInInput) => {
-    addCheckIn.mutate({ ...v, id: crypto.randomUUID() })
+    if (!tripId) return
+    addCheckIn.mutate({ ...v, id: crypto.randomUUID(), tripId })
     setCheckinOpen(false)
   }
 
@@ -249,6 +279,11 @@ export default function LiveClient() {
         </h1>
       </div>
 
+      {!online && (
+        <div className="mb-3 rounded-lg border border-amber-600/60 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+          📡 You&apos;re offline — check-ins are saved on this phone and will sync when you&apos;re back.
+        </div>
+      )}
       <SaveError show={addCheckIn.isError || addEvent.isError || delEvent.isError} error={mutErr} />
 
       {phase === 'pre' ? (
@@ -405,6 +440,7 @@ export default function LiveClient() {
             key={ev.id}
             ev={ev}
             mine={!!uid && ev.author === uid}
+            queued={pausedIds.has(ev.id)}
             onDelete={() => {
               if (confirm('Delete this entry? This is the undo — the row is removed for everyone.'))
                 delEvent.mutate(ev.id)
@@ -586,7 +622,7 @@ function PreTrip({
   )
 }
 
-function EventRow({ ev, mine, onDelete }: { ev: TripEvent; mine: boolean; onDelete: () => void }) {
+function EventRow({ ev, mine, queued, onDelete }: { ev: TripEvent; mine: boolean; queued?: boolean; onDelete: () => void }) {
   const placeName = typeof ev.payload.placeName === 'string' ? ev.payload.placeName : null
   const noteText = typeof ev.payload.text === 'string' ? ev.payload.text : null
   const city = typeof ev.payload.city === 'string' ? ev.payload.city : null
@@ -610,6 +646,11 @@ function EventRow({ ev, mine, onDelete }: { ev: TripEvent; mine: boolean; onDele
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold">{title}</span>
+          {queued && (
+            <span className="rounded-full border border-amber-600 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
+              ⏳ queued — will sync
+            </span>
+          )}
           {ev.visibility !== 'trip' && (
             <span className="rounded-full border border-teal-600 px-2 py-0.5 text-[11px] font-semibold text-teal-600">
               {ev.visibility}

@@ -30,6 +30,12 @@ alter table public.profiles
 create or replace function public.guard_profile_active_trip()
 returns trigger language plpgsql set search_path = public as $$
 begin
+  -- Privileged contexts (SQL editor, service_role) have auth.uid() = null and
+  -- bypass the check — same convention as 06's RPC pre-checks. RLS still
+  -- prevents ordinary users from reaching this trigger for other rows.
+  if auth.uid() is null then
+    return new;
+  end if;
   if new.active_trip_id is not null
      and new.active_trip_id is distinct from old.active_trip_id
      and not public.can_view_trip(new.active_trip_id) then
