@@ -44,16 +44,30 @@ export async function getPushState(): Promise<PushState> {
   // getRegistration (NOT .ready — .ready hangs forever when no SW is
   // registered, e.g. the Serwist-less dev server).
   const reg = await navigator.serviceWorker.getRegistration()
-  if (!reg) return 'unsupported'
+  // No registration YET is normal on a fresh install's first launch — the
+  // push API exists, so offer the button; enablePush waits for the SW.
+  if (!reg) return 'ready'
   const sub = await reg.pushManager.getSubscription()
   return sub ? 'subscribed' : 'ready'
 }
 
 export async function enablePush(sb: SupabaseClient, token: string): Promise<PushState> {
-  const reg = await navigator.serviceWorker.getRegistration()
-  if (!reg) return 'unsupported'
+  // requestPermission MUST be the first thing in the tap handler: iOS only
+  // shows the prompt during the tap's transient activation, and any await
+  // before it silently resolves 'default' with no prompt at all
+  // (dogfood 2026-07-24: "didn't get prompted" in the installed app).
   const perm = await Notification.requestPermission()
   if (perm !== 'granted') return perm === 'denied' ? 'denied' : 'ready'
+  // A freshly installed Home-Screen app may still be registering the SW on
+  // its first launch — wait briefly for it rather than bailing.
+  let reg = await navigator.serviceWorker.getRegistration()
+  if (!reg) {
+    reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<undefined>((r) => setTimeout(() => r(undefined), 5000)),
+    ])
+  }
+  if (!reg) return 'unsupported'
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: toUint8(VAPID_PUBLIC_KEY) as BufferSource,

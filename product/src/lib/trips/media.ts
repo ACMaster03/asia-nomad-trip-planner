@@ -9,19 +9,47 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 const MAX_EDGE = 1600
 const QUALITY = 0.8
 
+// iPhone cameras hand us HEIC, which Safari's createImageBitmap can't decode
+// (dogfood 2026-07-24: uploads failed silently on the phone). The <img>
+// element path decodes everything the browser can display — HEIC included on
+// iOS — so fall back to it.
+async function decodeImage(
+  file: File,
+): Promise<{ src: CanvasImageSource; w: number; h: number; done: () => void }> {
+  try {
+    const bmp = await createImageBitmap(file)
+    return { src: bmp, w: bmp.width, h: bmp.height, done: () => bmp.close() }
+  } catch {
+    const url = URL.createObjectURL(file)
+    try {
+      const img = new Image()
+      img.decoding = 'async'
+      img.src = url
+      await img.decode()
+      return { src: img, w: img.naturalWidth, h: img.naturalHeight, done: () => URL.revokeObjectURL(url) }
+    } catch (e) {
+      URL.revokeObjectURL(url)
+      throw e
+    }
+  }
+}
+
 export async function compressImage(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height))
-  const w = Math.round(bitmap.width * scale)
-  const h = Math.round(bitmap.height * scale)
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, w, h)
-  bitmap.close()
-  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', QUALITY))
-  if (!blob) throw new Error('Could not process the photo.')
-  return blob
+  const { src, w: iw, h: ih, done } = await decodeImage(file)
+  try {
+    const scale = Math.min(1, MAX_EDGE / Math.max(iw, ih))
+    const w = Math.round(iw * scale)
+    const h = Math.round(ih * scale)
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    canvas.getContext('2d')!.drawImage(src, 0, 0, w, h)
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', QUALITY))
+    if (!blob) throw new Error('Could not process the photo.')
+    return blob
+  } finally {
+    done()
+  }
 }
 
 export async function uploadCheckinPhotos(
