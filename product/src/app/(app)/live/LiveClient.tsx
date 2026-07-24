@@ -254,19 +254,21 @@ export default function LiveClient() {
     // that survive IndexedDB; blobs would not. Offline → skip photos, the
     // check-in itself still queues.
     let photos: string[] | undefined
-    let photoError = false
+    let photoError: string | null = null
     if (files.length && onlineManager.isOnline()) {
       try {
         photos = await uploadCheckinPhotos(sb, tripId, id, files)
-      } catch {
+      } catch (e) {
         photos = undefined // photo failure never blocks the check-in…
-        photoError = true // …but it must never be SILENT either (dogfood 2026-07-24)
+        // …but it must never be silent OR vague — surface the stage-tagged
+        // message so a field report pinpoints the cause (dogfood 2026-07-24).
+        photoError = (e as Error)?.message ?? String(e)
       }
     }
     addCheckIn.mutate({ ...rest, id, tripId, photos })
     setCheckinOpen(false)
     if (photoError) {
-      alert('Check-in posted — but the photos could not be uploaded. Try again from the check-in with better signal.')
+      alert(`Check-in posted — but the photos didn't make it.\n\nDetail: ${photoError}`)
     }
   }
 

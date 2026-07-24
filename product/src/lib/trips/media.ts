@@ -25,7 +25,18 @@ async function decodeImage(
       const img = new Image()
       img.decoding = 'async'
       img.src = url
-      await img.decode()
+      try {
+        await img.decode()
+      } catch {
+        // Safari's decode() is known to reject spuriously on large images —
+        // fall back to the load event; a truly undecodable file errors here.
+        await new Promise<void>((res, rej) => {
+          if (img.complete && img.naturalWidth > 0) return res()
+          img.onload = () => res()
+          img.onerror = () => rej(new Error(`cannot decode ${file.type || 'image'}`))
+        })
+      }
+      if (!img.naturalWidth) throw new Error(`cannot decode ${file.type || 'image'}`)
       return { src: img, w: img.naturalWidth, h: img.naturalHeight, done: () => URL.revokeObjectURL(url) }
     } catch (e) {
       URL.revokeObjectURL(url)
@@ -60,12 +71,19 @@ export async function uploadCheckinPhotos(
 ): Promise<string[]> {
   const paths: string[] = []
   for (let i = 0; i < files.length; i++) {
-    const blob = await compressImage(files[i])
+    // Stage-tagged errors: the /live alert shows this message verbatim, so a
+    // field report pinpoints decode vs upload without a debugger.
+    let blob: Blob
+    try {
+      blob = await compressImage(files[i])
+    } catch (e) {
+      throw new Error(`processing photo ${i + 1}: ${(e as Error)?.message ?? e}`)
+    }
     const path = `${tripId}/${eventId}/${i}.jpg`
     const { error } = await sb.storage
       .from('trip-media')
       .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
-    if (error) throw error
+    if (error) throw new Error(`uploading photo ${i + 1}: ${error.message}`)
     paths.push(path)
   }
   return paths
