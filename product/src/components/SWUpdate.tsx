@@ -71,3 +71,5 @@ export function SWUpdate() {
   }, [])
   return null
 }
+
+// build-stamp: auto-update E2E test (2026-07-24)
