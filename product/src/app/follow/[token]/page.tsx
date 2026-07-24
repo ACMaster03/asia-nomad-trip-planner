@@ -17,6 +17,10 @@ export async function generateMetadata(
     title: s ? `Follow ${s.tripName}` : 'Follow a trip',
     description: s ? 'Live trip updates — route, check-ins and notes.' : undefined,
     robots: { index: false }, // link-knowledge IS the access control — never index
+    // Per-token manifest: Add-to-Home-Screen must reopen THIS page, not the
+    // app's /dashboard start_url — and installing is what unlocks iOS push.
+    manifest: `/follow/${token}/manifest`,
+    appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Follow' },
   }
 }
 

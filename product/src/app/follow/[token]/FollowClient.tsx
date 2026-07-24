@@ -238,7 +238,30 @@ function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
     getPushState().then(setState)
   }, [])
 
-  if (state === 'loading' || state === 'unsupported') return null // incl. dev server / old browsers
+  if (state === 'loading' || state === 'unsupported') return null // dev server / old browsers
+
+  // iOS in a plain browser tab: push only works INSTALLED — show the path
+  // instead of hiding (dogfood 2026-07-24: "no option on mobile").
+  if (state === 'ios-install') {
+    return (
+      <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl" aria-hidden>🔔</span>
+          <div className="min-w-0 grow">
+            <div className="font-medium">Know when they check in</div>
+            <p className="mt-0.5 text-sm text-neutral-500">
+              On iPhone/iPad, notifications need this page on your Home Screen:
+            </p>
+            <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-neutral-600 dark:text-neutral-400">
+              <li>Open this link in <strong>Safari</strong> (if you&apos;re in Messenger/Instagram, tap ⋯ → Open in Safari)</li>
+              <li>Tap <strong>Share</strong> <span aria-hidden>⎋</span> → <strong>Add to Home Screen</strong></li>
+              <li>Open it from the new icon → tap <strong>Enable push notifications</strong> here</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   const toggle = async () => {
     setBusy(true)
@@ -281,7 +304,6 @@ function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
           )}
           <p className="mt-1.5 text-xs text-neutral-400 dark:text-neutral-600">
             Browser notifications on this device · no account needed
-            {state !== 'subscribed' && ' · on iPhone, add this page to your Home Screen first'}
           </p>
         </div>
       </div>

@@ -14,7 +14,21 @@ function toUint8(base64url: string): Uint8Array {
   return Uint8Array.from(raw, (c) => c.charCodeAt(0))
 }
 
-export type PushState = 'unsupported' | 'denied' | 'subscribed' | 'ready'
+export type PushState = 'unsupported' | 'ios-install' | 'denied' | 'subscribed' | 'ready'
+
+// iOS WebKit (Safari, Chrome-on-iOS, in-app browsers — all the same engine)
+// only exposes the push API to web apps INSTALLED on the Home Screen (16.4+).
+// In a plain tab we must show install instructions, not silently hide.
+function isIOSBrowserNeedingInstall(): boolean {
+  const iOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    // iPadOS masquerades as macOS but has touch
+    (navigator.userAgent.includes('Mac') && navigator.maxTouchPoints > 1)
+  const standalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as { standalone?: boolean }).standalone === true
+  return iOS && !standalone
+}
 
 export async function getPushState(): Promise<PushState> {
   if (
@@ -23,6 +37,7 @@ export async function getPushState(): Promise<PushState> {
     !('PushManager' in window) ||
     !('Notification' in window)
   ) {
+    if (typeof window !== 'undefined' && isIOSBrowserNeedingInstall()) return 'ios-install'
     return 'unsupported'
   }
   if (Notification.permission === 'denied') return 'denied'
