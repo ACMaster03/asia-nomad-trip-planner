@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Providers } from './providers'
+import { SWUpdate } from '@/components/SWUpdate'
 
 export const metadata: Metadata = {
   title: 'Asia Nomad Planner',
@@ -27,6 +28,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
+        {/* root-level: the follower page needs update auto-apply too */}
+        <SWUpdate />
         <Providers>{children}</Providers>
       </body>
     </html>

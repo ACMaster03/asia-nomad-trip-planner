@@ -1,0 +1,73 @@
+'use client'
+import { useEffect } from 'react'
+
+// Auto-apply app updates (dogfood 2026-07-24: the installed PWA kept running
+// stale code until a force-quit). Three parts:
+//   1. CHECK: ask for a new service worker on launch, on every return to the
+//      foreground, and every 15 min while open — an installed app can sit
+//      resumed for days without a navigation, so the default
+//      check-on-navigation never fires.
+//   2. APPLY: sw.ts uses skipWaiting + clientsClaim, so a found update takes
+//      control immediately → 'controllerchange' fires here.
+//   3. RELOAD: reload the page on controllerchange so the running JS matches
+//      the new worker — deferred while the user is mid-typing (reload happens
+//      when the app next goes to the background instead).
+export function SWUpdate() {
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+
+    // First-ever install also fires controllerchange (clientsClaim) — that
+    // one must NOT reload, the page is already the newest version.
+    let hadController = !!navigator.serviceWorker.controller
+    let reloading = false
+
+    const reload = () => {
+      if (reloading) return
+      reloading = true
+      window.location.reload()
+    }
+    const onControllerChange = () => {
+      if (!hadController) {
+        hadController = true
+        return
+      }
+      const el = document.activeElement
+      const typing =
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement ||
+        (el instanceof HTMLElement && el.isContentEditable)
+      if (document.visibilityState === 'visible' && typing) {
+        // don't rip the page out from under a half-written check-in
+        const onHide = () => {
+          if (document.visibilityState === 'hidden') {
+            document.removeEventListener('visibilitychange', onHide)
+            reload()
+          }
+        }
+        document.addEventListener('visibilitychange', onHide)
+      } else {
+        reload()
+      }
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+
+    const check = () =>
+      navigator.serviceWorker
+        .getRegistration()
+        .then((r) => r?.update())
+        .catch(() => {})
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') check()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    const interval = setInterval(check, 15 * 60_000)
+    check()
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+      document.removeEventListener('visibilitychange', onVisible)
+      clearInterval(interval)
+    }
+  }, [])
+  return null
+}
