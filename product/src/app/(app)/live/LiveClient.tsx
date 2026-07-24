@@ -29,6 +29,7 @@ import { Modal } from '@/components/trips/Modal'
 import { SaveError } from '@/components/trips/SaveError'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { CheckInModal, type CheckInInput } from './CheckInModal'
+import { EditEventModal } from './EditEventModal'
 import type { Segment, Stay, TripState } from '@/lib/trips/types'
 
 const EVENT_ICON: Record<TripEventKind, string> = {
@@ -176,6 +177,7 @@ export default function LiveClient() {
   const [noteOpen, setNoteOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
+  const [editEvent, setEditEvent] = useState<TripEvent | null>(null)
 
   // ---- derive today's picture from the plan ---------------------------------
   const s = trip.data?.state
@@ -467,6 +469,7 @@ export default function LiveClient() {
             ev={ev}
             mine={!!uid && ev.author === uid}
             queued={pausedIds.has(ev.id)}
+            onEdit={() => setEditEvent(ev)}
             onDelete={() => {
               if (confirm('Delete this entry? This is the undo — the row is removed for everyone.'))
                 delEvent.mutate(ev.id)
@@ -474,6 +477,10 @@ export default function LiveClient() {
           />
         ))}
       </div>
+
+      {editEvent && tripId && (
+        <EditEventModal ev={editEvent} tripId={tripId} onClose={() => setEditEvent(null)} />
+      )}
 
       {checkinOpen && (
         <CheckInModal
@@ -648,7 +655,7 @@ function PreTrip({
   )
 }
 
-function EventRow({ ev, mine, queued, onDelete }: { ev: TripEvent; mine: boolean; queued?: boolean; onDelete: () => void }) {
+function EventRow({ ev, mine, queued, onEdit, onDelete }: { ev: TripEvent; mine: boolean; queued?: boolean; onEdit: () => void; onDelete: () => void }) {
   const placeName = typeof ev.payload.placeName === 'string' ? ev.payload.placeName : null
   const noteText = typeof ev.payload.text === 'string' ? ev.payload.text : null
   const city = typeof ev.payload.city === 'string' ? ev.payload.city : null
@@ -708,8 +715,14 @@ function EventRow({ ev, mine, queued, onDelete }: { ev: TripEvent; mine: boolean
         <div className="mt-0.5 text-xs text-neutral-500">
           {fmtEventTime(ev.occurred_at)}
           {mine ? ' · you' : ''}
+          {ev.edited_at ? ' · edited' : ''}
         </div>
       </div>
+      {mine && (
+        <button onClick={onEdit} className="mr-3 text-xs text-teal-600 hover:underline">
+          edit
+        </button>
+      )}
       {mine && (
         <button onClick={onDelete} className="text-xs text-red-600 hover:underline">
           undo

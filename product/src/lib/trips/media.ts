@@ -68,6 +68,9 @@ export async function uploadCheckinPhotos(
   tripId: string,
   eventId: string,
   files: File[],
+  // editing appends photos to an event: offset keeps new indices clear of the
+  // existing ones so nothing gets overwritten
+  startIndex = 0,
 ): Promise<string[]> {
   const paths: string[] = []
   for (let i = 0; i < files.length; i++) {
@@ -79,7 +82,7 @@ export async function uploadCheckinPhotos(
     } catch (e) {
       throw new Error(`processing photo ${i + 1}: ${(e as Error)?.message ?? e}`)
     }
-    const path = `${tripId}/${eventId}/${i}.jpg`
+    const path = `${tripId}/${eventId}/${startIndex + i}.jpg`
     const { error } = await sb.storage
       .from('trip-media')
       .upload(path, blob, { contentType: 'image/jpeg', upsert: true })

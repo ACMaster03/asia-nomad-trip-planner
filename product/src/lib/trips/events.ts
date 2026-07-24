@@ -29,15 +29,16 @@ export interface TripEvent {
   trip_id: string
   author: string
   kind: TripEventKind
-  payload: Record<string, unknown> // checkin: {placeName} · note: {text} · arrived: {city}
+  payload: Record<string, unknown> // checkin: {placeName,photos?} · note: {text} · arrived: {city}
   visibility: TripEventVisibility
   occurred_at: string
   created_at: string
+  edited_at?: string | null // migration 15 — powers the "(edited)" marker
   check_in: CheckInDetails | null // null for every kind but 'checkin'
 }
 
 const EVENT_COLS =
-  'id,trip_id,author,kind,payload,visibility,occurred_at,created_at,check_ins(place_id,rating,comment)'
+  'id,trip_id,author,kind,payload,visibility,occurred_at,created_at,edited_at,check_ins(place_id,rating,comment)'
 
 type RawEvent = Omit<TripEvent, 'check_in'> & {
   check_ins: CheckInDetails | CheckInDetails[] | null
@@ -131,5 +132,39 @@ export async function insertCheckIn(
 // Undo: authors delete their own events (RLS-enforced); check_ins cascades.
 export async function deleteTripEvent(sb: SupabaseClient, eventId: string): Promise<void> {
   const { error } = await sb.from('trip_events').delete().eq('id', eventId)
+  if (error) throw error
+}
+
+// Author-only edit (migration 15). Online-only ON PURPOSE — inserts are the
+// only offline path so the outbox replay story stays untouched. edited_at
+// powers the "(edited)" marker; the follower page re-reads payload/rating on
+// its next poll, and push fan-out fires on INSERT only (edits don't re-ping).
+export async function updateTripEvent(
+  sb: SupabaseClient,
+  input: {
+    id: string
+    payload: Record<string, unknown>
+    visibility: TripEventVisibility
+  },
+): Promise<void> {
+  const { error } = await sb
+    .from('trip_events')
+    .update({
+      payload: input.payload,
+      visibility: input.visibility,
+      edited_at: new Date().toISOString(),
+    })
+    .eq('id', input.id)
+  if (error) throw error
+}
+
+export async function updateCheckInDetails(
+  sb: SupabaseClient,
+  input: { eventId: string; rating: number | null; comment: string | null },
+): Promise<void> {
+  const { error } = await sb
+    .from('check_ins')
+    .update({ rating: input.rating, comment: input.comment?.trim() || null })
+    .eq('event_id', input.eventId)
   if (error) throw error
 }
