@@ -4,17 +4,30 @@ import { useEffect, useRef } from 'react'
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   const dialogRef = useRef<HTMLDivElement>(null)
 
+  // onClose is almost always an inline arrow → new identity on every parent
+  // render. It must NOT be an effect dependency: re-running the effect stole
+  // focus back to the dialog on EVERY keystroke of parent-held form state,
+  // which closes the keyboard on iOS (phone dogfood, 2026-07-24).
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
   useEffect(() => {
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden' // lock background scroll
-    dialogRef.current?.focus()
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    // Focus the dialog for Escape/tab context — but never steal it from a
+    // child that already has it (autoFocus fields win).
+    if (!dialogRef.current?.contains(document.activeElement)) {
+      dialogRef.current?.focus()
+    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current() }
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
     }
-  }, [onClose])
+  }, []) // mount-only, on purpose — see onCloseRef above
 
   return (
     <div

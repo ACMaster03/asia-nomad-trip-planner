@@ -29,6 +29,35 @@ declare const self: ServiceWorkerGlobalScope;
 // payload — the device remembers its own way home instead.
 import { get } from "idb-keyval";
 
+// ---- Offline shell warm-up ------------------------------------------------
+// Client-side navigations never create document cache entries (they're RSC
+// fetches), so a force-quit + offline relaunch of "the page you were on"
+// missed the cache and fell back to offline.html (phone dogfood, 2026-07-24).
+// The signed-in app posts WARM_PAGES once per open; we hard-fetch each route
+// (cookies included) and store it under the 'pages' cache the navigation
+// handler reads. Redirected responses are skipped — they can't legally answer
+// a navigation, and a login redirect cached here would trap the user.
+self.addEventListener("message", (event) => {
+  const data = event.data as { type?: string; urls?: string[] } | null;
+  if (data?.type !== "WARM_PAGES" || !Array.isArray(data.urls)) return;
+  const urls = data.urls;
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open("pages");
+      await Promise.all(
+        urls.map(async (url) => {
+          try {
+            const resp = await fetch(url, { credentials: "same-origin" });
+            if (resp.ok && !resp.redirected) await cache.put(url, resp);
+          } catch {
+            /* offline while warming — never mind */
+          }
+        }),
+      );
+    })(),
+  );
+});
+
 self.addEventListener("push", (event) => {
   let data: { title?: string; body?: string } = {};
   try {

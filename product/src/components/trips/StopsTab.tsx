@@ -88,13 +88,15 @@ export function StopsTab() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
+            {/* Phone-width: Country folds under the stop name, Tier hides —
+                the row fits without sideways scrolling (dogfood 2026-07-24). */}
             <tr className="text-left text-neutral-500">
               <th className="py-1 pr-2">In plan</th>
               <th className="pr-4">Stop</th>
-              <th className="pr-4">Country</th>
+              <th className="hidden pr-4 sm:table-cell">Country</th>
               <th className="pr-4">Dates</th>
-              <th className="pr-4">Nights</th>
-              <th className="pr-4">Tier</th>
+              <th className="pr-2 sm:pr-4"><span className="sm:hidden">N</span><span className="hidden sm:inline">Nights</span></th>
+              <th className="hidden pr-4 sm:table-cell">Tier</th>
               <th />
             </tr>
           </thead>
@@ -106,14 +108,20 @@ export function StopsTab() {
                   <td className="py-1 pr-2">
                     <input type="checkbox" aria-label="Include in plan" checked={inPlan} onChange={() => toggle(s.id)} />
                   </td>
-                  <td className="pr-4 font-medium">{s.city}</td>
-                  <td className="pr-4">{s.country}</td>
-                  <td className="pr-4 whitespace-nowrap">{s.arrive} → {s.depart}</td>
-                  <td className="pr-4">{segNights(s)}</td>
-                  <td className="pr-4">{TIER_LABELS[s.tier ?? 1] ?? s.tier}</td>
+                  <td className="pr-4 font-medium">
+                    {s.city}
+                    <span className="block text-xs font-normal text-neutral-500 sm:hidden">{s.country}</span>
+                  </td>
+                  <td className="hidden pr-4 sm:table-cell">{s.country}</td>
+                  <td className="pr-4 whitespace-nowrap" title={`${s.arrive} → ${s.depart}`}>
+                    <span className="sm:hidden">{s.arrive.slice(5)} → {s.depart.slice(5)}</span>
+                    <span className="hidden sm:inline">{s.arrive} → {s.depart}</span>
+                  </td>
+                  <td className="pr-2 sm:pr-4">{segNights(s)}</td>
+                  <td className="hidden pr-4 sm:table-cell">{TIER_LABELS[s.tier ?? 1] ?? s.tier}</td>
                   <td className="whitespace-nowrap">
                     <button onClick={() => setModal({ seg: s })} className="text-xs text-teal-600 hover:underline">edit</button>
-                    <button onClick={() => del(s.id)} className="ml-3 text-xs text-red-600 hover:underline">delete</button>
+                    <button onClick={() => del(s.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
                   </td>
                 </tr>
               )

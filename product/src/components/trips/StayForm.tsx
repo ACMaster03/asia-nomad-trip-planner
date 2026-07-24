@@ -50,6 +50,10 @@ export function StayForm({
           <select className={input} value={segId} onChange={(e) => setSegId(e.target.value)}>
             {segments.map((s) => <option key={s.id} value={s.id}>{s.city} ({s.arrive})</option>)}
           </select>
+          <span className="mt-1 block text-xs text-neutral-500">
+            Accommodation always belongs to a stop — the city, dates and nightly
+            budget math come from it. Missing a city? Add it under Stops first.
+          </span>
         </label>
         <label className="block text-sm">Name<input className={input} value={name} onChange={(e) => setName(e.target.value)} /></label>
         <div className="grid grid-cols-3 gap-3">

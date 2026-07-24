@@ -49,7 +49,7 @@ export function ExtrasTab() {
                 <td className="pr-4 text-neutral-500">{fmtHUF(toHUF(x.amount, x.cur, s.rates))}</td>
                 <td className="whitespace-nowrap">
                   <button onClick={() => setModal({ extra: x })} className="text-xs text-teal-600 hover:underline">edit</button>
-                  <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline">delete</button>
+                  <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
                 </td>
               </tr>
             ))}

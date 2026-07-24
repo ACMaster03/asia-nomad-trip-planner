@@ -37,25 +37,30 @@ export function StaysTab() {
       <SaveError show={mut.isError} error={mut.error} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
+          {/* Phone-width: stop+platform fold under the name, deadlines+status
+              hide — the row fits without sideways scrolling. */}
           <thead><tr className="text-left text-neutral-500">
-            <th className="py-1 pr-2">In</th><th className="pr-4">Stop</th><th className="pr-4">Name</th><th className="pr-4">Platform</th><th className="pr-4">Price/night</th><th className="pr-4">Deadlines</th><th className="pr-4">Status</th><th /></tr></thead>
+            <th className="py-1 pr-2">In</th><th className="hidden pr-4 sm:table-cell">Stop</th><th className="pr-4">Name</th><th className="hidden pr-4 sm:table-cell">Platform</th><th className="pr-4">Price/night</th><th className="hidden pr-4 sm:table-cell">Deadlines</th><th className="hidden pr-4 sm:table-cell">Status</th><th /></tr></thead>
           <tbody>
             {s.stays.map((x) => (
               <tr key={x.id} className={'border-t border-neutral-200 dark:border-neutral-800 ' + (x.include ? '' : 'opacity-50')}>
                 <td className="py-1 pr-2"><input type="checkbox" aria-label="Include in budget" checked={!!x.include} onChange={() => toggle(x.id)} /></td>
-                <td className="pr-4">{cityOf(x.segId)}</td>
-                <td className="pr-4 font-medium">{x.name}</td>
-                <td className="pr-4 text-neutral-500">{x.platform}</td>
-                <td className="pr-4 whitespace-nowrap">{x.ppn} {x.cur} <span className="text-xs text-neutral-500">({fmtHUF(toHUF(x.ppn, x.cur, s.rates))})</span></td>
-                <td className="pr-4 whitespace-nowrap text-xs text-neutral-500">
+                <td className="hidden pr-4 sm:table-cell">{cityOf(x.segId)}</td>
+                <td className="pr-4 font-medium">
+                  {x.name}
+                  <span className="block text-xs font-normal text-neutral-500 sm:hidden">{cityOf(x.segId)} · {x.status}</span>
+                </td>
+                <td className="hidden pr-4 text-neutral-500 sm:table-cell">{x.platform}</td>
+                <td className="pr-4 whitespace-nowrap">{x.ppn} {x.cur} <span className="hidden text-xs text-neutral-500 sm:inline">({fmtHUF(toHUF(x.ppn, x.cur, s.rates))})</span></td>
+                <td className="hidden whitespace-nowrap pr-4 text-xs text-neutral-500 sm:table-cell">
                   {x.cancelUntil && <span>free-cancel {x.cancelUntil}</span>}
                   {x.cancelUntil && x.chargeDate && ' · '}
                   {x.chargeDate && <span>charged {x.chargeDate}</span>}
                 </td>
-                <td className="pr-4">{x.status}</td>
+                <td className="hidden pr-4 sm:table-cell">{x.status}</td>
                 <td className="whitespace-nowrap">
                   <button onClick={() => setModal({ stay: x })} className="text-xs text-teal-600 hover:underline">edit</button>
-                  <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline">delete</button>
+                  <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
                 </td>
               </tr>
             ))}

@@ -50,7 +50,7 @@ export default function DashboardClient() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat k="Grand total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / usd)} />
-        <Stat k="Per day" v={fmtHUF(b.perDay)} sub="across all in-plan nights" />
+        <Stat k="Per day" v={fmtHUF(b.perDay)} sub={`grand total ÷ ${b.totalNights} nights`} />
         <Stat k="Per person" v={fmtHUF(b.perPerson)} />
         <Stat k="Stops" v={String(inPlan.length)} sub={b.totalNights + ' nights total'} />
       </div>

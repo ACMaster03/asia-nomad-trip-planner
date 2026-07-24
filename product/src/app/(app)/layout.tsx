@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveTrip } from '@/lib/trips/prefetch'
 import { TripScopeProvider } from '@/lib/trips/TripScope'
+import { OfflineWarmup } from '@/components/OfflineWarmup'
 
 // Server-side auth guard. The shared catalogue RLS is `to authenticated`, so an
 // unauthenticated visitor would get zero rows; require a session here instead.
@@ -28,6 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <TripScopeProvider initialTripId={activeTrip?.id ?? null}>
+      <OfflineWarmup />
       <div className="min-h-screen">
         <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
           <Link href="/dashboard" className="font-semibold">🧭 Asia Nomad Planner</Link>
