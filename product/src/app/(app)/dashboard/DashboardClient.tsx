@@ -49,9 +49,20 @@ export default function DashboardClient() {
       </p>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat k="Grand total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / usd)} />
-        <Stat k="Per day" v={fmtHUF(b.perDay)} sub={`grand total ÷ ${b.totalNights} nights`} />
-        <Stat k="Per person" v={fmtHUF(b.perPerson)} />
+        {/* Grand total = entered numbers only; missing stays are NAMED, not
+            guessed (owner decision 2026-07-24). Estimate fills the gaps. */}
+        <Stat
+          k="Grand total"
+          v={fmtHUF(b.committed)}
+          sub={
+            b.missingAccomStops.length
+              ? `⚠ ${b.missingAccomStops.length} stop${b.missingAccomStops.length > 1 ? 's' : ''} missing accommodation`
+              : 'all stops covered · excl. daily living'
+          }
+          color={b.missingAccomStops.length ? '#d97706' : undefined}
+        />
+        <Stat k="Estimated total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / usd) + ' · incl. city estimates'} />
+        <Stat k="Est. / day" v={fmtHUF(b.perDay)} sub={`estimated total ÷ ${b.totalNights} nights`} />
         <Stat k="Stops" v={String(inPlan.length)} sub={b.totalNights + ' nights total'} />
       </div>
 

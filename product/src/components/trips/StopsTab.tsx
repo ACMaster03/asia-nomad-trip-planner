@@ -4,6 +4,7 @@ import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { segNights, regColor, TIER_LABELS } from '@/lib/trips/format'
 import { SegmentForm } from '@/components/trips/SegmentForm'
+import { StayForm } from '@/components/trips/StayForm'
 import { SaveError } from '@/components/trips/SaveError'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import type { Segment } from '@/lib/trips/types'
@@ -12,6 +13,9 @@ export function StopsTab() {
   const { trip, cities, cityIdx } = useTripScreen()
   const mut = useTripMutation()
   const [modal, setModal] = useState<{ seg: Segment | null } | null>(null)
+  // "＋ stay" shortcut per row — add accommodation without switching tabs
+  // (owner request 2026-07-24).
+  const [stayFor, setStayFor] = useState<string | null>(null)
 
   const all = useMemo(() => {
     if (!trip.data) return []
@@ -120,7 +124,8 @@ export function StopsTab() {
                   <td className="pr-2 sm:pr-4">{segNights(s)}</td>
                   <td className="hidden pr-4 sm:table-cell">{TIER_LABELS[s.tier ?? 1] ?? s.tier}</td>
                   <td className="whitespace-nowrap">
-                    <button onClick={() => setModal({ seg: s })} className="text-xs text-teal-600 hover:underline">edit</button>
+                    <button onClick={() => setStayFor(s.id)} className="text-xs text-teal-600 hover:underline" title="Add accommodation for this stop">＋ stay</button>
+                    <button onClick={() => setModal({ seg: s })} className="ml-3 text-xs text-teal-600 hover:underline">edit</button>
                     <button onClick={() => del(s.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
                   </td>
                 </tr>
@@ -140,6 +145,19 @@ export function StopsTab() {
           defaultArrive={trip.data.state.meta.startDate || ''}
           onCancel={() => setModal(null)}
           onSave={upsert}
+        />
+      )}
+      {stayFor && (
+        <StayForm
+          initial={null}
+          segments={all}
+          defaultSegId={stayFor}
+          currencies={Object.keys(trip.data.state.rates)}
+          onCancel={() => setStayFor(null)}
+          onSave={(stay) => {
+            mut.mutate((s) => ({ ...s, stays: [...s.stays, stay] }))
+            setStayFor(null)
+          }}
         />
       )}
     </main>

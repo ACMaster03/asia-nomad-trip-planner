@@ -9,7 +9,7 @@ import CreateTripEmptyState from './CreateTripEmptyState'
 import type { Stay } from '@/lib/trips/types'
 
 export function StaysTab() {
-  const { trip } = useTripScreen()
+  const { trip, cities } = useTripScreen()
   const mut = useTripMutation()
   const [modal, setModal] = useState<{ stay: Stay | null } | null>(null)
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
@@ -17,6 +17,8 @@ export function StaysTab() {
   const s = trip.data.state
   const currencies = Object.keys(s.rates)
   const cityOf = (segId: string) => s.segments.find((x) => x.id === segId)?.city ?? '—'
+  const createStop = (seg: (typeof s.segments)[number]) =>
+    mut.mutate((st) => ({ ...st, segments: [...st.segments, seg] }))
 
   const upsert = (it: Stay) => {
     mut.mutate((st) => ({
@@ -68,7 +70,18 @@ export function StaysTab() {
           </tbody>
         </table>
       </div>
-      {modal && <StayForm initial={modal.stay} segments={s.segments} currencies={currencies} onCancel={() => setModal(null)} onSave={upsert} />}
+      {modal && (
+        <StayForm
+          initial={modal.stay}
+          segments={s.segments}
+          currencies={currencies}
+          cities={cities.data ?? []}
+          defaultArrive={s.meta.startDate || ''}
+          onCreateStop={createStop}
+          onCancel={() => setModal(null)}
+          onSave={upsert}
+        />
+      )}
     </main>
   )
 }

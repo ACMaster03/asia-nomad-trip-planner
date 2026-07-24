@@ -29,12 +29,24 @@ export function BudgetTab() {
         Totalled in HUF at your trip&apos;s FX rates. Only items marked in-plan count.
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat k="Grand total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / usd)} />
-        <Stat k="Accommodation" v={fmtHUF(b.accom)} sub={Math.round((b.accom / b.grand) * 100 || 0) + '% of total'} />
+        {/* Grand total = entered numbers ONLY; gaps are named, never guessed
+            (owner decision 2026-07-24). The blended figure is the estimate. */}
+        <Stat
+          k="Grand total"
+          v={fmtHUF(b.committed)}
+          sub={
+            b.missingAccomStops.length
+              ? `⚠ no stay yet: ${b.missingAccomStops.join(', ')}`
+              : 'all stops covered · excl. daily living'
+          }
+          color={b.missingAccomStops.length ? '#d97706' : undefined}
+        />
+        <Stat k="Estimated total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / usd) + ' · fills gaps with city estimates'} />
+        <Stat k="Accommodation" v={fmtHUF(b.accom)} sub={Math.round((b.accom / b.grand) * 100 || 0) + '% of estimate'} />
         <Stat k="Daily living" v={fmtHUF(b.live)} sub="food · local transport · activities" />
         <Stat k="Transport" v={fmtHUF(b.transport)} sub="legs marked in-plan" />
         <Stat k="One-off / extras" v={fmtHUF(b.extras)} sub="visas, insurance, gear" />
-        <Stat k="Per person" v={fmtHUF(b.perPerson)} sub={(trip.data.state.meta.travelers || 2) + ' travellers'} />
+        <Stat k="Per person" v={fmtHUF(b.perPerson)} sub={'estimate · ' + (trip.data.state.meta.travelers || 2) + ' travellers'} />
       </div>
       <div className="mt-4 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
         <b className="text-sm">Where the money goes</b>

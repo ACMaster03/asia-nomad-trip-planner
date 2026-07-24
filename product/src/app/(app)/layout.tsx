@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveTrip } from '@/lib/trips/prefetch'
 import { TripScopeProvider } from '@/lib/trips/TripScope'
+import { AppNav } from '@/components/AppNav'
 import { OfflineWarmup } from '@/components/OfflineWarmup'
 
 // Server-side auth guard. The shared catalogue RLS is `to authenticated`, so an
@@ -31,16 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <TripScopeProvider initialTripId={activeTrip?.id ?? null}>
       <OfflineWarmup />
       <div className="min-h-screen">
-        <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
-          <Link href="/dashboard" className="font-semibold">🧭 Asia Nomad Planner</Link>
-          <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-          {showLive && <Link href="/live" className="hover:underline">Live</Link>}
-          <Link href="/itinerary" className="hover:underline">Itinerary</Link>
-          <Link href="/money" className="hover:underline">Money</Link>
-          <Link href="/map" className="hover:underline">Map</Link>
-          <Link href="/knowledge" className="hover:underline">Explore</Link>
-          <Link href="/settings" className="ml-auto hover:underline">Settings</Link>
-        </nav>
+        <AppNav showLive={showLive} />
         {children}
       </div>
     </TripScopeProvider>

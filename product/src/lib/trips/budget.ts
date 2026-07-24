@@ -57,6 +57,12 @@ export interface PerSeg {
 export function computeBudget(state: TripState, cityIdx: Record<string, CityCost>) {
   const rates = state.rates
   let accom = 0, live = 0, transport = 0, extras = 0
+  // "Committed" view (2026-07-24 owner decision): the grand total must never
+  // silently include guesses — it sums only CHOSEN accommodation + entered
+  // transport/extras, and reports which stops still lack a stay instead of
+  // estimating them. The blended number lives on as `grand` = ESTIMATED total.
+  let committedAccom = 0
+  const missingAccomStops: string[] = []
   const perSeg: PerSeg[] = []
   state.segments
     .filter((s) => s.include !== false)
@@ -83,6 +89,8 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
       const lHUF = k ? usdToHUF(k.live[tier], rates) * nn : 0
       accom += aHUF
       live += lHUF
+      if (aSrc === 'included') committedAccom += aHUF
+      else missingAccomStops.push(s.city)
       perSeg.push({ seg: s, nights: nn, tier, accom: aHUF, accomSrc: aSrc, live: lHUF, total: aHUF + lHUF, kb: k })
     })
   state.transport.forEach((t) => { if (t.include) transport += toHUF(t.price, t.cur, rates) })
@@ -95,6 +103,10 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
     accom, live, transport, extras, grand, perSeg, totalNights,
     perPerson: grand / (state.meta.travelers || 1),
     perDay: totalNights ? grand / totalNights : 0,
+    // Committed view: your entered numbers only — no catalogue guesses, no
+    // daily-living estimate. missingAccomStops says what the number lacks.
+    committed: committedAccom + transport + extras,
+    missingAccomStops,
   }
 }
 
