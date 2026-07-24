@@ -371,6 +371,7 @@ main.screen { max-width: 620px; }
           <span><span style="color:var(--accent)">—</span> travelled</span>
           <span><span style="color:var(--faint)">┈</span> planned</span>
           <span><span style="color:var(--accent)">●</span> last seen (pulsing ring)</span>
+          <span style="margin-left:auto">drag to spin · pinch/scroll to zoom</span>
         </div>
         <div class="refresh-line">⟳ Updates automatically · last refreshed 24s ago</div>
         <div class="note">"Last seen" = timestamp of the latest <b>shared event</b> (check-in / arrival), NOT live GPS
@@ -554,10 +555,13 @@ main.screen { max-width: 620px; }
             <span class="label">Prefer email instead?</span>
             <span class="row">
               <input class="input" type="email" placeholder="mom@example.com" style="flex:1; min-width:180px">
+              <select class="select" style="width:auto"><option>Daily</option><option>Weekly</option></select>
               <button class="btn">Email me updates</button>
             </span>
           </label>
           <div class="tiny faint" style="margin-top:6px">We'll send a confirmation first. Unsubscribe link in every email.</div>
+          <div class="note">Owner decision 2026-07-24: digest frequency is the follower's choice — <b>daily</b> (sent
+            ~20:00 trip time) or <b>weekly</b>. Quiet days send nothing; the next digest covers the whole gap.</div>
         </div>
         <div class="note">Push = standard Web Push via the service worker; the browser permission prompt only fires after
           this explicit button tap (never on page load). <b>iOS Safari caveat:</b> web push only works if the page is

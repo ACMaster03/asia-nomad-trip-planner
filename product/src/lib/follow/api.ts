@@ -17,6 +17,8 @@ export interface SharedSummary {
   startDate: string
   endDate: string | null
   route: SharedRouteStop[]
+  /** owner paused all sharing — only tripName is populated (migration 16) */
+  paused?: boolean
 }
 
 export type SharedEventKind = 'checkin' | 'note' | 'arrived' | 'media' | 'location'
@@ -43,7 +45,33 @@ export async function fetchSharedSummary(
 ): Promise<SharedSummary | null> {
   const { data, error } = await sb.rpc('shared_trip_summary', { p_token: token })
   if (error) throw error
-  return (data as SharedSummary | null) ?? null
+  const s = data as SharedSummary | null
+  if (!s) return null
+  // Paused answers carry only {paused, tripName} — normalize the rest so the
+  // client never touches undefined route/dates.
+  if (s.paused) return { ...s, startDate: '', endDate: null, route: [] }
+  return s
+}
+
+// Email digest opt-in (daily/weekly) — handled by the `digest` Edge Function
+// (double opt-in via Resend; the anon key is enough, the share token is the
+// real credential).
+export async function subscribeDigest(
+  token: string,
+  email: string,
+  frequency: 'daily' | 'weekly',
+): Promise<'confirm-sent' | 'pending' | 'updated'> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/digest`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ action: 'subscribe', token, email, frequency }),
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(body.error ?? 'subscription failed')
+  return body.status
 }
 
 export async function fetchSharedFeed(

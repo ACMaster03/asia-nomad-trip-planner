@@ -71,12 +71,14 @@ Deno.serve(async (req) => {
   const tripName: string =
     (trip?.state as { meta?: { tripName?: string } })?.meta?.tripName ?? 'Trip update'
 
-  // Subscriptions of LIVE (unrevoked, unexpired) shares of this trip.
+  // Subscriptions of LIVE (unrevoked, unexpired, unpaused) shares of this
+  // trip. Paused shares keep their subscriptions but are muted (mock 09).
   const { data: subs, error: subErr } = await sb
     .from('push_subscriptions')
-    .select('id,endpoint,p256dh,auth,trip_shares!inner(trip_id,revoked_at,expires_at)')
+    .select('id,endpoint,p256dh,auth,trip_shares!inner(trip_id,revoked_at,expires_at,paused_at)')
     .eq('trip_shares.trip_id', ev.trip_id)
     .is('trip_shares.revoked_at', null)
+    .is('trip_shares.paused_at', null)
   if (subErr) return new Response(subErr.message, { status: 500 })
 
   const now = Date.now()

@@ -12,9 +12,10 @@ export interface TripShare {
   created_at: string
   expires_at: string | null
   revoked_at: string | null
+  paused_at: string | null
 }
 
-const SHARE_COLS = 'id, trip_id, token_prefix, label, created_at, expires_at, revoked_at'
+const SHARE_COLS = 'id, trip_id, token_prefix, label, created_at, expires_at, revoked_at, paused_at'
 
 export async function fetchShares(sb: SupabaseClient, tripId: string): Promise<TripShare[]> {
   const { data, error } = await sb
@@ -47,5 +48,31 @@ export async function revokeShare(sb: SupabaseClient, shareId: string): Promise<
     .from('trip_shares')
     .update({ revoked_at: new Date().toISOString() })
     .eq('id', shareId)
+  if (error) throw error
+}
+
+// ---- M3 polish (migration 16): follower counts + pause-all ----
+
+export interface ShareStats {
+  share_id: string
+  push: number
+  email: number
+}
+
+export async function fetchShareStats(sb: SupabaseClient, tripId: string): Promise<ShareStats[]> {
+  const { data, error } = await sb.rpc('share_follower_stats', { p_trip: tripId })
+  if (error) throw error
+  return (data ?? []) as ShareStats[]
+}
+
+// Pauses/resumes EVERY live link of the trip: followers get the "sharing
+// paused" page, push + digests are muted; opt-ins survive and un-mute on
+// resume.
+export async function setTripSharingPaused(
+  sb: SupabaseClient,
+  tripId: string,
+  paused: boolean,
+): Promise<void> {
+  const { error } = await sb.rpc('set_trip_sharing_paused', { p_trip: tripId, p_paused: paused })
   if (error) throw error
 }

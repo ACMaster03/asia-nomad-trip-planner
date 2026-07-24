@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
-import { fetchSharedFeed, fetchSharedSummary, followMediaUrl, type SharedEvent, type SharedSummary } from '@/lib/follow/api'
+import { fetchSharedFeed, fetchSharedSummary, followMediaUrl, subscribeDigest, type SharedEvent, type SharedSummary } from '@/lib/follow/api'
 import { disablePush, enablePush, getPushState, type PushState } from '@/lib/follow/push'
 import { nightsBetween } from '@/lib/trips/format'
 
@@ -80,6 +80,30 @@ export default function FollowClient({
     )
   }
 
+  // Owner paused all sharing: keep the trip title for context, reveal nothing
+  // else (mock 07 "Sharing paused" state). Notification opt-ins are retained
+  // server-side and un-mute automatically when sharing resumes.
+  if (s.paused) {
+    return (
+      <Shell>
+        <header className="mb-4">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">Following</div>
+          <h1 className="text-2xl font-semibold">{s.tripName}</h1>
+        </header>
+        <section className="rounded-xl border border-neutral-200 p-6 text-center dark:border-neutral-800">
+          <div className="text-4xl" aria-hidden>⏸️</div>
+          <h2 className="mt-3 text-lg font-semibold">Sharing is paused</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">
+            The travellers have paused sharing for a while — nothing is wrong, people sometimes
+            go off-grid on purpose. This page fills up again the moment sharing resumes, and
+            your notification settings are kept.
+          </p>
+          <p className="mt-3 text-xs text-neutral-400 dark:text-neutral-600">⟳ This page checks again automatically</p>
+        </section>
+      </Shell>
+    )
+  }
+
   const today = mounted ? localISODate() : s.startDate // pre-mount: stable SSR value
   const phase: 'pre' | 'live' | 'post' =
     today < s.startDate ? 'pre' : s.endDate && today > s.endDate ? 'post' : 'live'
@@ -128,15 +152,30 @@ export default function FollowClient({
           {/* mock 07: followers can arm notifications BEFORE departure */}
           <div className="mt-4 text-left">
             <NotifyCard sb={sb} token={token} />
+            <DigestCard token={token} />
           </div>
         </section>
       ) : (
         <>
           {/* globe */}
           {s.route.some((r) => r.lat != null) && (
-            <section className="h-72 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
-              <FollowGlobe route={s.route} currentCity={current?.city ?? null} />
-            </section>
+            <>
+              <section className="h-72 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+                <FollowGlobe
+                  route={s.route}
+                  currentCity={current?.city ?? null}
+                  todayISO={today}
+                  lastSeenCity={lastSeenCity}
+                  stale={quietDays !== null && quietDays >= 3}
+                />
+              </section>
+              <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 px-1 text-[11px] text-neutral-400 dark:text-neutral-600">
+                <span><span className="text-teal-600">●</span> visited</span>
+                <span><span className="text-amber-500">◉</span> last seen</span>
+                <span><span className="text-slate-400">○</span> upcoming</span>
+                <span className="ml-auto">drag to spin · pinch or scroll to zoom</span>
+              </p>
+            </>
           )}
 
           {/* current stop */}
@@ -153,6 +192,7 @@ export default function FollowClient({
           )}
 
           <NotifyCard sb={sb} token={token} />
+          <DigestCard token={token} />
 
           {/* quiet period */}
           {phase === 'live' && quietDays !== null && quietDays >= 3 && (
@@ -229,8 +269,85 @@ function Shell({ children }: { children: React.ReactNode }) {
   return <main className="mx-auto max-w-xl p-4 sm:p-6">{children}</main>
 }
 
-// Mock 07 "Notify me" card (variant A = enable, B = enabled/manage). The
-// email-digest alternative from the mock is a later phase.
+// Mock 07 email fallback: daily/weekly digest — the answer for iOS browser
+// tabs (no push without A2HS) and for family who just prefer email. Double
+// opt-in runs in the `digest` Edge Function.
+function DigestCard({ token }: { token: string }) {
+  const [email, setEmail] = useState('')
+  const [freq, setFreq] = useState<'daily' | 'weekly'>('daily')
+  const [status, setStatus] = useState<'idle' | 'busy' | 'sent' | 'updated' | 'error'>('idle')
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('busy')
+    try {
+      const r = await subscribeDigest(token, email, freq)
+      setStatus(r === 'updated' ? 'updated' : 'sent')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  if (status === 'sent' || status === 'updated') {
+    return (
+      <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+        <p className="text-sm">
+          {status === 'sent'
+            ? <>📬 Almost there — open the email we just sent to <strong>{email}</strong> and tap the confirmation link.</>
+            : <>✅ Done — <strong>{email}</strong> now gets a <strong>{freq}</strong> summary.</>}
+        </p>
+      </section>
+    )
+  }
+
+  return (
+    <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl" aria-hidden>📮</span>
+        <div className="min-w-0 grow">
+          <div className="font-medium">Prefer email?</div>
+          <p className="mt-0.5 text-sm text-neutral-500">
+            Get a summary of new check-ins and photos — no app, no push needed.
+          </p>
+          <form onSubmit={submit} className="mt-2 flex flex-wrap gap-2">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="min-w-0 grow rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            />
+            <select
+              value={freq}
+              onChange={(e) => setFreq(e.target.value as 'daily' | 'weekly')}
+              className="rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              aria-label="How often"
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+            <button
+              type="submit"
+              disabled={status === 'busy'}
+              className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {status === 'busy' ? '…' : 'Email me updates'}
+            </button>
+          </form>
+          {status === 'error' && (
+            <p className="mt-1.5 text-xs text-red-600">Could not subscribe — check the address and try again.</p>
+          )}
+          <p className="mt-1.5 text-xs text-neutral-400 dark:text-neutral-600">
+            We&apos;ll send a confirmation first · unsubscribe link in every email
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Mock 07 "Notify me" card (variant A = enable, B = enabled/manage).
 function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
   const [state, setState] = useState<PushState | 'loading'>('loading')
   const [busy, setBusy] = useState(false)

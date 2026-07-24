@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchTrip, fetchTrips, isRevConflict, setSelectedTripId } from '@/lib/trips/queries'
-import { createShareLink, fetchShares, revokeShare } from '@/lib/trips/shares'
+import { createShareLink, fetchShares, fetchShareStats, revokeShare, setTripSharingPaused } from '@/lib/trips/shares'
 import { tk } from '@/lib/trips/keys'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripScope } from '@/lib/trips/TripScope'
@@ -84,11 +84,11 @@ function ActiveTripCard() {
 }
 
 // Follow-links panel (approved endframe: design/mocks/09-settings.html,
-// "Sharing" state → Follow links card). v1 scope: create (label + optional
-// expiry, default trip end + 30 days), list, revoke, and the privacy grid.
-// Follower counts / notify opt-ins / pause-all arrive with the tracking
-// tables later in M3. Tokens are hashed at rest, so the link is copyable
-// ONCE at creation — the mock's per-row Copy can't exist (plan requirement).
+// "Sharing" state → hero card + Follow links card). Create (label + optional
+// expiry, default trip end + 30 days), list with follower counts, revoke,
+// pause-all switch, and the privacy grid. Tokens are hashed at rest, so the
+// link is copyable ONCE at creation — the mock's per-row Copy can't exist
+// (plan requirement).
 function SharingCard({ endDate }: { endDate?: string }) {
   const sb = createClient()
   const qc = useQueryClient()
@@ -96,6 +96,18 @@ function SharingCard({ endDate }: { endDate?: string }) {
   const shares = useQuery({
     queryKey: tk.shares(tripId ?? 'none'),
     queryFn: () => (tripId ? fetchShares(sb, tripId) : Promise.resolve([])),
+  })
+  const stats = useQuery({
+    queryKey: ['share-stats', tripId ?? 'none'],
+    queryFn: () => (tripId ? fetchShareStats(sb, tripId) : Promise.resolve([])),
+    refetchInterval: 60_000, // counts drift as family opts in
+  })
+  const pauseMut = useMutation({
+    mutationFn: (paused: boolean) => setTripSharingPaused(sb, tripId!, paused),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') })
+      qc.invalidateQueries({ queryKey: ['share-stats', tripId ?? 'none'] })
+    },
   })
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -137,6 +149,12 @@ function SharingCard({ endDate }: { endDate?: string }) {
   }
 
   const list = shares.data ?? []
+  const statFor = (id: string) => stats.data?.find((x) => x.share_id === id)
+  const totals = (stats.data ?? []).reduce(
+    (a, x) => ({ push: a.push + x.push, email: a.email + x.email }),
+    { push: 0, email: 0 },
+  )
+  const allPaused = list.length > 0 && list.every((s) => s.paused_at)
   const inputCls = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
 
   return (
@@ -152,6 +170,43 @@ function SharingCard({ endDate }: { endDate?: string }) {
         </button>
       </div>
 
+      {/* mock 09 hero card: always-visible follower count + pause-all */}
+      {list.length > 0 && (
+        <div
+          className={
+            allPaused
+              ? 'mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30'
+              : 'mb-3 rounded-lg border border-teal-200 bg-teal-50/50 p-3 dark:border-teal-900 dark:bg-teal-950/30'
+          }
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="min-w-0 grow">
+              <div className="text-sm font-medium">
+                {allPaused ? '⏸️ Sharing is paused' : '📡 Sharing is live'}
+              </div>
+              <div className="mt-0.5 text-xs text-neutral-500">
+                {allPaused
+                  ? 'Followers see a “sharing paused” page; push and email digests are muted. Opt-ins are kept.'
+                  : stats.data
+                    ? `${totals.push} device${totals.push === 1 ? '' : 's'} get push · ${totals.email} email digest${totals.email === 1 ? '' : 's'}`
+                    : 'Loading follower counts…'}
+              </div>
+            </div>
+            <button
+              onClick={() => pauseMut.mutate(!allPaused)}
+              disabled={pauseMut.isPending}
+              className={
+                allPaused
+                  ? 'rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50'
+                  : 'rounded border border-neutral-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-neutral-700'
+              }
+            >
+              {pauseMut.isPending ? '…' : allPaused ? 'Resume sharing' : 'Pause all sharing'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <ul className="divide-y divide-neutral-200 rounded border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
         {list.map((s) => (
           <li key={s.id} className="flex items-center gap-3 px-3 py-2.5">
@@ -159,10 +214,14 @@ function SharingCard({ endDate }: { endDate?: string }) {
               <div className="truncate text-sm font-medium">
                 {s.label || 'Follow link'}{' '}
                 <span className="font-mono text-xs text-neutral-500">/follow/{s.token_prefix ?? '??????'}…</span>
+                {s.paused_at && (
+                  <span className="ml-1 rounded-full border border-amber-400 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">paused</span>
+                )}
               </div>
               <div className="text-xs text-neutral-500">
                 created {new Date(s.created_at).toLocaleDateString()}
                 {s.expires_at ? ` · expires ${new Date(s.expires_at).toLocaleDateString()}` : ' · no expiry'}
+                {statFor(s.id) && ` · ${statFor(s.id)!.push} push · ${statFor(s.id)!.email} email`}
               </div>
             </div>
             <button
