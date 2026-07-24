@@ -25,6 +25,59 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Boot / update splash (server-rendered in the root layout, removed by
+   SWUpdate once React hydrates). The 150ms fade-IN delay means fast loads
+   never visibly flash it — only cold starts and update reloads show it. */
+#anp-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  opacity: 0;
+  animation: anp-splash-in 0.3s ease 0.15s forwards;
+  transition: opacity 0.35s ease;
+}
+#anp-splash.anp-hide {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+.anp-splash-inner {
+  text-align: center;
+}
+.anp-splash-icon {
+  font-size: 56px;
+  line-height: 1;
+  animation: anp-pulse 1.6s ease-in-out infinite;
+}
+.anp-splash-title {
+  margin-top: 14px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.anp-splash-sub {
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: 0.55;
+}
+.anp-splash-ver {
+  position: fixed;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.3;
+}
+@keyframes anp-splash-in {
+  to { opacity: 1; }
+}
+@keyframes anp-pulse {
+  50% { transform: scale(1.12); }
+}
+
 /* iOS Safari auto-zooms (and then STAYS zoomed / pans side-to-side) whenever
    a focused form control's font-size is under 16px. Our controls use text-sm
    (14px) — on touch-sized screens force 16px so focusing never zooms.

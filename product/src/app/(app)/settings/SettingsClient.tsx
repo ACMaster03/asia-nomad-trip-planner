@@ -359,6 +359,9 @@ export default function SettingsClient() {
 
       <SharingCard endDate={trip.data.state?.meta?.endDate} />
       <ActiveTripCard />
+      <p className="mt-10 text-center text-xs text-neutral-400 dark:text-neutral-600">
+        🧭 Asia Nomad Planner · build v{process.env.NEXT_PUBLIC_BUILD_SHA} · updates apply automatically
+      </p>
     </main>
   )
 }

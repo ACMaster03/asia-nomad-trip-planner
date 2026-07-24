@@ -14,7 +14,11 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    // Visible build identity (splash + Settings footer): lets the owner SEE
+    // that an auto-update landed. Vercel injects the commit sha at build time.
+    NEXT_PUBLIC_BUILD_SHA: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'dev',
+  },
 };
 
 export default process.env.NODE_ENV === "development" ? nextConfig : withSerwist(nextConfig);

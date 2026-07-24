@@ -13,6 +13,16 @@ import { useEffect } from 'react'
 //      the new worker — deferred while the user is mid-typing (reload happens
 //      when the app next goes to the background instead).
 export function SWUpdate() {
+  // Fade out the server-rendered boot splash once React is alive (it lives in
+  // the root layout, so this runs on every page).
+  useEffect(() => {
+    const splash = document.getElementById('anp-splash')
+    if (!splash) return
+    splash.classList.add('anp-hide')
+    const t = setTimeout(() => splash.remove(), 400)
+    return () => clearTimeout(t)
+  }, [])
+
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
 
@@ -24,6 +34,12 @@ export function SWUpdate() {
     const reload = () => {
       if (reloading) return
       reloading = true
+      try {
+        // tells the next load's splash to say "Updating…" instead of "Loading…"
+        sessionStorage.setItem('anp-updating', '1')
+      } catch {
+        /* private-mode storage failures never block the update */
+      }
       window.location.reload()
     }
     const onControllerChange = () => {
