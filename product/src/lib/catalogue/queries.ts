@@ -33,24 +33,34 @@ export async function fetchCountries(sb: SupabaseClient): Promise<Country[]> {
 
 const PLACE_COLS = 'id,city_id,name,kind,lat,lng,source,attributes'
 
-// Places for one city (the /live check-in picker). No GPS yet, so the stable
-// alphabetical order doubles as the "location denied" fallback from the mock.
-export async function fetchPlaces(sb: SupabaseClient, cityId: number): Promise<Place[]> {
-  const { data, error } = await sb
-    .from('places')
-    .select(PLACE_COLS)
-    .eq('city_id', cityId)
-    .order('name')
+// Places for one city (the /live check-in picker). Catalogue places match by
+// city_id; user places in NON-catalogue cities (e.g. a home-country stop —
+// dogfood 2026-07-24) match by the stored city NAME (migration 14). No GPS
+// yet, so the stable alphabetical order doubles as the "location denied"
+// fallback from the mock.
+export async function fetchPlaces(
+  sb: SupabaseClient,
+  city: { cityId: number | null; cityName: string },
+): Promise<Place[]> {
+  let q = sb.from('places').select(PLACE_COLS)
+  if (city.cityId != null) {
+    // PostgREST or(): values with commas would break the filter — city names
+    // don't contain them (both writes and reads use the segment's city string).
+    q = q.or(`city_id.eq.${city.cityId},and(city_id.is.null,city_name.eq.${city.cityName})`)
+  } else {
+    q = q.is('city_id', null).eq('city_name', city.cityName)
+  }
+  const { data, error } = await q.order('name')
   if (error) throw error
   return (data ?? []) as Place[]
 }
 
 // "Add a place here": RLS (migration 09) only accepts source='user' rows
-// attributed to the caller. cityId may be null when the current city isn't in
-// the catalogue (a gap stop) — the place still works as a check-in target.
+// attributed to the caller. cityName keeps the place findable on the NEXT
+// check-in even when the city has no catalogue row (cityId null).
 export async function insertUserPlace(
   sb: SupabaseClient,
-  input: { cityId: number | null; name: string; kind: PlaceKind },
+  input: { cityId: number | null; cityName: string; name: string; kind: PlaceKind },
 ): Promise<Place> {
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user?.id
@@ -59,6 +69,7 @@ export async function insertUserPlace(
     .from('places')
     .insert({
       city_id: input.cityId,
+      city_name: input.cityName.trim(),
       name: input.name.trim(),
       kind: input.kind,
       source: 'user',

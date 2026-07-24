@@ -175,6 +175,7 @@ export default function LiveClient() {
   const [checkinOpen, setCheckinOpen] = useState(false)
   const [noteOpen, setNoteOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
 
   // ---- derive today's picture from the plan ---------------------------------
   const s = trip.data?.state
@@ -254,22 +255,26 @@ export default function LiveClient() {
     // that survive IndexedDB; blobs would not. Offline → skip photos, the
     // check-in itself still queues.
     let photos: string[] | undefined
-    let photoError: string | null = null
     if (files.length && onlineManager.isOnline()) {
+      setUploadingPhotos(true)
       try {
         photos = await uploadCheckinPhotos(sb, tripId, id, files)
       } catch (e) {
-        photos = undefined // photo failure never blocks the check-in…
-        // …but it must never be silent OR vague — surface the stage-tagged
-        // message so a field report pinpoints the cause (dogfood 2026-07-24).
-        photoError = (e as Error)?.message ?? String(e)
+        // The USER decides what happens to a failed upload (owner decision
+        // 2026-07-24): post without photos, or go back and adjust — never
+        // post behind their back. The modal stays open on cancel.
+        const detail = (e as Error)?.message ?? String(e)
+        const postAnyway = confirm(
+          `The photos couldn't be uploaded (${detail}).\n\nOK = post the check-in WITHOUT photos.\nCancel = go back to the check-in to adjust.`,
+        )
+        if (!postAnyway) return
+        photos = undefined
+      } finally {
+        setUploadingPhotos(false)
       }
     }
     addCheckIn.mutate({ ...rest, id, tripId, photos })
     setCheckinOpen(false)
-    if (photoError) {
-      alert(`Check-in posted — but the photos didn't make it.\n\nDetail: ${photoError}`)
-    }
   }
 
   const mutErr = addCheckIn.isError
@@ -474,7 +479,7 @@ export default function LiveClient() {
         <CheckInModal
           cityName={checkinCity}
           cities={cities.data ?? []}
-          saving={addCheckIn.isPending}
+          saving={uploadingPhotos || addCheckIn.isPending}
           onClose={() => setCheckinOpen(false)}
           onSave={saveCheckIn}
         />

@@ -29,6 +29,30 @@ create policy trip_media_insert on storage.objects
     and public.can_edit_trip(((storage.foldername(name))[1])::uuid)
   );
 
+-- Storage's x-upsert path needs UPDATE **and SELECT** policies even when the
+-- object is NEW (the upsert machinery reads the target row) — without them,
+-- every client upload (storage-js upsert:true) failed with "new row violates
+-- row-level security policy" (dogfood 2026-07-24).
+drop policy if exists trip_media_select on storage.objects;
+create policy trip_media_select on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'trip-media'
+    and public.can_edit_trip(((storage.foldername(name))[1])::uuid)
+  );
+
+drop policy if exists trip_media_update on storage.objects;
+create policy trip_media_update on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'trip-media'
+    and public.can_edit_trip(((storage.foldername(name))[1])::uuid)
+  )
+  with check (
+    bucket_id = 'trip-media'
+    and public.can_edit_trip(((storage.foldername(name))[1])::uuid)
+  );
+
 drop policy if exists trip_media_delete on storage.objects;
 create policy trip_media_delete on storage.objects
   for delete to authenticated

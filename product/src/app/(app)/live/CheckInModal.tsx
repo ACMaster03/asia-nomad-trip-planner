@@ -65,9 +65,11 @@ export function CheckInModal({
   const cityId = city?.id ?? null
 
   const places = useQuery({
-    // -1 = "no catalogue city": resolves to an empty list, custom add still works.
-    queryKey: qk.places(cityId ?? -1),
-    queryFn: () => (cityId != null ? fetchPlaces(sb, cityId) : Promise.resolve([] as Place[])),
+    // Keyed by NAME: non-catalogue cities (cityId null) still own user places
+    // (migration 14) — they must reappear on every future check-in here.
+    queryKey: qk.places(cityName ?? ''),
+    queryFn: () =>
+      cityName ? fetchPlaces(sb, { cityId, cityName }) : Promise.resolve([] as Place[]),
   })
 
   const [q, setQ] = useState('')
@@ -83,9 +85,9 @@ export function CheckInModal({
   const [visibility, setVisibility] = useState<TripEventVisibility>('followers')
 
   const addPlace = useMutation({
-    mutationFn: () => insertUserPlace(sb, { cityId, name: newName, kind: newKind }),
+    mutationFn: () => insertUserPlace(sb, { cityId, cityName: cityName ?? '', name: newName, kind: newKind }),
     onSuccess: (p) => {
-      qc.invalidateQueries({ queryKey: qk.places(cityId ?? -1) })
+      qc.invalidateQueries({ queryKey: qk.places(cityName ?? '') })
       setSel(p) // returns to check-in with this place selected, per the mock
       setAdding(false)
       setNewName('')
@@ -265,7 +267,6 @@ export function CheckInModal({
                 <input
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   multiple
                   className="hidden"
                   onChange={(e) => {
