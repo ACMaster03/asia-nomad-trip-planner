@@ -25,7 +25,11 @@ export function AppNav({ showLive }: { showLive: boolean }) {
     isActive(href) ? 'font-semibold text-teal-600' : 'hover:underline'
 
   return (
-    <nav className="border-b border-neutral-200 text-sm dark:border-neutral-800">
+    // relative + z-40 + solid bg: the map page paints a FIXED globe overlay
+    // below the bar — without a stacking context the open phone menu (and, on
+    // wrapped navs, the second row) rendered UNDER it (dogfood 2026-07-24:
+    // "trapped on the map page").
+    <nav className="relative z-40 border-b border-neutral-200 bg-white text-sm dark:border-neutral-800 dark:bg-neutral-950">
       {/* phone: brand + hamburger */}
       <div className="flex items-center justify-between px-4 py-3 sm:hidden">
         <Link href="/dashboard" className="font-semibold" onClick={() => setOpen(false)}>

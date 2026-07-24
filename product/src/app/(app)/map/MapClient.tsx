@@ -17,9 +17,11 @@ export default function MapClient() {
   const { trip, cities, cityIdx } = useTripScreen()
   const { data: countries = [] } = useQuery({ queryKey: qk.countries, queryFn: () => fetchCountries(sb) })
   const state = trip.data?.state
-  // top-[57px] aligns under the (app) nav (single-row at >=md; it can wrap on very narrow viewports).
+  // top-14 tucks the overlay under the nav bar; the nav itself is z-40 with a
+  // solid background, so any small overlap (or the open phone menu) always
+  // paints ABOVE the globe — no more being trapped on this page.
   return (
-    <div className="fixed inset-x-0 bottom-0 top-[57px] bg-[#0b0f14]">
+    <div className="fixed inset-x-0 bottom-0 top-14 bg-[#0b0f14]">
       <GlobeView
         cities={cities.data ?? []}
         countries={countries}
