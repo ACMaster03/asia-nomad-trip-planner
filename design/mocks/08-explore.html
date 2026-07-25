@@ -663,6 +663,109 @@ body.hide-notes .note { display: none; }
       </section>
 
       <!-- ============ STATE: admin (catalogue editing) ============ -->
+
+      <!-- ============================================================
+           TIER 2 · SEARCHING — results come from the SERVER (migration 20)
+           ============================================================ -->
+      <section data-state="searching">
+        <div class="row">
+          <div>
+            <div class="h1">Explore</div>
+            <div class="muted small">Country &amp; city knowledge base — catalogue facts, with your own notes layered on top.</div>
+          </div>
+        </div>
+
+        <div class="searchbar">
+          <input class="input" value="chiang" placeholder="🔍 Search countries, cities or places…">
+          <button class="btn sm ghost hide-phone">Filters</button>
+        </div>
+        <div class="muted tiny" style="margin:-4px 0 12px">Showing 4 of 4 matches · searched on the server</div>
+
+        <div class="sec"><h2 class="h2">Cities</h2></div>
+        <div class="card">
+          <div class="list-row"><div class="grow"><div class="title">🇹🇭 Chiang Mai</div><div class="meta">Thailand · Northern Thailand · $38/day</div></div><button class="btn sm">Open</button></div>
+          <div class="list-row"><div class="grow"><div class="title">🇹🇭 Chiang Rai</div><div class="meta">Thailand · Northern Thailand · $32/day</div></div><button class="btn sm">Open</button></div>
+        </div>
+
+        <div class="sec"><h2 class="h2">Places</h2></div>
+        <div class="card">
+          <div class="list-row"><div class="grow"><div class="title">📍 Chiang Mai Old City</div><div class="meta">Chiang Mai · landmark</div></div><button class="btn sm">Open</button></div>
+          <div class="list-row"><div class="grow"><div class="title">📍 Chiang Mai Night Bazaar</div><div class="meta">Chiang Mai · market</div></div><button class="btn sm">Open</button></div>
+        </div>
+
+        <div class="note">
+          <b>This is the Tier-2 read.</b> Results come from <span class="faint">search_cities()</span>
+          (migration 20, pg_trgm) — the catalogue is NEVER downloaded to the device. Rows carry
+          light columns only; the fat <span class="faint">attributes</span> blob is fetched for
+          ONE city when you open it.
+        </div>
+        <div class="note">
+          Ranking is exact-prefix first, then fuzzy: typing “ban” must give Bangkok before Bandung.
+          Capped at 20 results with the count shown, so “showing 4 of 4” never silently hides matches.
+        </div>
+        <div class="note">
+          Debounced ~250ms. Every keystroke is a round trip, so the input stays responsive while
+          the list lags slightly behind — never block typing on the request.
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TIER 2 · NO RESULTS
+           ============================================================ -->
+      <section data-state="noresults">
+        <div class="row">
+          <div><div class="h1">Explore</div></div>
+        </div>
+        <div class="searchbar">
+          <input class="input" value="ulaanbaatar" placeholder="🔍 Search countries, cities or places…">
+          <button class="btn sm ghost hide-phone">Filters</button>
+        </div>
+        <div class="empty">
+          <div class="glyph">🔍</div>
+          <h3>Nothing matches “ulaanbaatar”</h3>
+          <p class="muted">The catalogue covers 26 cities across 8 countries so far. It grows as
+             the trip does — and you can still add a stop anywhere, catalogued or not.</p>
+        </div>
+        <div class="note">
+          Says what the catalogue DOES cover rather than just “no results” — otherwise a miss reads
+          as a broken search instead of a gap in the data.
+        </div>
+        <div class="note">
+          Explicitly reassures that a missing city does not block planning: stops accept any city
+          name, and user places attach by name (migration 14).
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TIER 2 · OFFLINE — the constraint the tier split introduces
+           ============================================================ -->
+      <section data-state="offline">
+        <div class="row">
+          <div><div class="h1">Explore</div></div>
+        </div>
+        <div class="empty">
+          <div class="glyph">📴</div>
+          <h3>Explore needs a connection</h3>
+          <p class="muted">The world catalogue lives on the server — it is far too big to keep on
+             your phone. Your own trip works fully offline: stops, stays, budget, check-ins and
+             your saved notes are all still there.</p>
+          <div style="margin-top:14px"><button class="btn">Go to Today →</button></div>
+        </div>
+        <div class="note">
+          <b>THE tier rule, stated to the user:</b> offline-first applies to YOUR TRIP, not to the
+          world. This is the one screen that legitimately requires signal, and it says why instead
+          of appearing broken.
+        </div>
+        <div class="note">
+          Cities already on the route are Tier 1 and stay cached, so their facts remain readable
+          from the trip screens even here. Only browsing the wider catalogue needs the network.
+        </div>
+        <div class="note">
+          This is also the natural paywall boundary if world data ever becomes a paid feature —
+          the offline trip stays free either way.
+        </div>
+      </section>
+
       <section data-state="admin">
         <div class="crumbs"><a href="#">Explore</a><span class="sep">›</span><a href="#">🇹🇭 Thailand</a><span class="sep">›</span><span class="cur">Bangkok</span><span class="sep">·</span><span class="badge gold">editing</span></div>
 
@@ -748,6 +851,9 @@ const MOCK = {
     { id: 'start', label: 'Start (empty)', desc: 'Patrik (owner), pre-trip planning in July 2026 — first landing on Explore this session: nothing selected, pick a country.' },
     { id: 'country', label: 'Country: Thailand', desc: 'Patrik (owner) tapped Thailand while planning the Oct route — comparing cities; ✎ badges mark cities with their own notes.' },
     { id: 'city', label: 'City: Bangkok', desc: 'Anna (co-editor) mid-September, during the Bangkok stay — checking transport facts, their own notes, and checking in via Live.' },
+    { id: 'searching', label: 'Searching', desc: 'Typed a query — results come from the server RPC, grouped; the catalogue is never downloaded.' },
+    { id: 'noresults', label: 'No results', desc: 'Query matched nothing — says what the catalogue does cover, and that you can still plan there.' },
+    { id: 'offline', label: 'Offline', desc: 'Tier 2 needs signal. Explains why, and points back at the fully-offline trip.' },
     { id: 'admin', label: 'Admin edit', desc: 'Admin maintaining the catalogue on the same Bangkok page — editing fields, adding cities/fields; DB-driven, no deploy.' },
   ],
 };
