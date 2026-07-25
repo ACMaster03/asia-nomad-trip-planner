@@ -7,4 +7,7 @@ export const qk = {
   // NAME: non-catalogue cities (e.g. a home-country stop) have no city id but
   // still own user places (migration 14).
   places: (cityName: string) => ['places', cityName.toLowerCase()] as const,
+  // FX snapshot + status (migration 19). World data like the catalogue, so it
+  // is shared across trips rather than keyed per trip.
+  fx: ['fx'] as const,
 }

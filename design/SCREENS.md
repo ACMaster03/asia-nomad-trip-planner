@@ -19,6 +19,7 @@ Legend: ☐ mock pending · ☑ mock done · ✅ approved by owner
 | 9 | `09-settings.html` | Settings | ☐ trip meta + FX · ☐ sharing panel (links create/revoke, follower count, co-editors) · ☐ theme & accent/destination palettes · ☐ danger zone (delete/leave trip) |
 | 10 | `10-later-phases.html` | Later-phase endframes | ☐ public place page /p/[country]/[place] · ☐ public trip journal · ☐ Expo app 4 tabs (Today/Map/Feed/Money) · ☐ moderation queue (admin) |
 | 11 | `11-digest-links.html` | Digest links: /digest/confirm, /digest/unsubscribe, the emails | ✅ confirmed · ✅ already confirmed · ✅ expired/invalid link · ✅ unsubscribed · ✅ undo taken · ✅ one-click (RFC 8058) · ✅ server error · ✅ the two plain-text emails |
+| 12 | `12-fx-rates.html` | FX rates panel in Settings (M4) — **supersedes the FX half of row 9**: rates are no longer owner-editable | ✅ fresh · ✅ refreshing · ✅ stale >48h · ✅ fetch failed · ✅ manage currency list (+accepted-in) · ✅ auto-added from itinerary · ✅ new-country banner · ✅ offline |
 
 Global requirements for every mock:
 - Desktop AND phone viewport must both look intentional (container queries; check both).

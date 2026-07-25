@@ -9,6 +9,16 @@ export interface TripMeta {
   startDate: string
   endDate?: string // optional — open-ended trips have none (wizard step 1)
   homeBase?: string // e.g. "Budapest, Hungary" (wizard step 2, optional)
+  // Currencies the owner removed by hand. Auto-add (from a new country on the
+  // route) must never resurrect these — a dismissal outranks the itinerary.
+  fxDismissed?: CurrencyCode[]
+  // Countries whose "new on your route" banner has already been shown, so it
+  // fires once per country rather than on every stop saved there.
+  fxSeenCountries?: string[]
+  // What the last banner should say. Written in the SAME mutation that adds the
+  // currencies, so the message survives a reload and the banner needs no local
+  // state; cleared on dismiss.
+  fxLastAdded?: { country: string; codes: CurrencyCode[] }
 }
 export type Tier = 0 | 1 | 2
 
@@ -65,7 +75,12 @@ export interface Extra {
 }
 export interface TripState {
   meta: TripMeta
-  rates: Record<CurrencyCode, number> // Ft per 1 unit; rates.HUF === 1
+  // The trip's WATCHLIST: keys are the currencies this trip uses (also the
+  // currency picker list in Stays/Transport/Extras/Ledger). Values are the last
+  // known rate in baseCurrency per 1 unit, refreshed from fx_rates on every load
+  // (useTripScreen) and cached here purely so an offline launch still totals.
+  // Nobody types them — migration 19.
+  rates: Record<CurrencyCode, number>
   segments: Segment[]
   stays: Stay[]
   transport: TransportLeg[]

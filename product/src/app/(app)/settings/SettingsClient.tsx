@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { fetchTrip, fetchTrips, isRevConflict, setSelectedTripId } from '@/lib/trips/queries'
 import { createShareLink, fetchShares, fetchShareStats, revokeShare, setTripSharingPaused } from '@/lib/trips/shares'
 import { tk } from '@/lib/trips/keys'
+import FxPanel from '@/components/trips/FxPanel'
+import { fetchFx } from '@/lib/catalogue/fx'
+import { qk } from '@/lib/catalogue/keys'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripScope } from '@/lib/trips/TripScope'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -316,6 +319,21 @@ export default function SettingsClient() {
     queryFn: () => fetchTrip(sb, tripId!),
     enabled: tripId !== null,
   })
+  // This screen reads the RAW trip document on purpose: FxPanel edits the
+  // watchlist itself and derives live values from the snapshot below, so the
+  // merged view from useTripScreen would just be a detour.
+  const fx = useQuery({ queryKey: qk.fx, queryFn: () => fetchFx(sb), staleTime: 60 * 60_000 })
+  const [online, setOnline] = useState(true)
+  useEffect(() => {
+    const sync = () => setOnline(navigator.onLine)
+    sync()
+    window.addEventListener('online', sync)
+    window.addEventListener('offline', sync)
+    return () => {
+      window.removeEventListener('online', sync)
+      window.removeEventListener('offline', sync)
+    }
+  }, [])
   const mut = useTripMutation()
 
   // local draft, synced from the loaded trip; saved on demand (one write, not per keystroke)
@@ -324,7 +342,6 @@ export default function SettingsClient() {
   const [budgetCap, setBudgetCap] = useState(0)
   const [startDate, setStartDate] = useState('')
   const [baseCurrency, setBaseCurrency] = useState('HUF')
-  const [rates, setRates] = useState<Record<string, number>>({})
   const [saved, setSaved] = useState(false)
   const loadedVer = useRef<string | null>(null)
 
@@ -343,7 +360,6 @@ export default function SettingsClient() {
     setBudgetCap(m.budgetCap)
     setStartDate(m.startDate)
     setBaseCurrency(m.baseCurrency)
-    setRates(trip.data.state.rates)
   }, [trip.data])
 
   if (tripId === null) return <CreateTripEmptyState />
@@ -355,7 +371,8 @@ export default function SettingsClient() {
       (s) => ({
         ...s,
         meta: { ...s.meta, tripName: name, travelers, budgetCap, startDate, baseCurrency },
-        rates: { ...rates, HUF: 1 }, // base currency is always 1
+        // rates deliberately untouched: they are refreshed from fx_rates and
+        // the watchlist is edited in FxPanel (migration 19).
       }),
       {
         onSuccess: () => {
@@ -366,7 +383,7 @@ export default function SettingsClient() {
     )
   }
 
-  const curList = Object.keys(rates).sort((a, b) => (a === 'HUF' ? -1 : b === 'HUF' ? 1 : a.localeCompare(b)))
+  const curList = Object.keys(trip.data.state.rates ?? {}).sort((a, b) => (a === 'HUF' ? -1 : b === 'HUF' ? 1 : a.localeCompare(b)))
 
   return (
     <main className="mx-auto max-w-3xl p-6">
@@ -385,22 +402,7 @@ export default function SettingsClient() {
         </label>
       </div>
 
-      <h2 className="mb-2 mt-6 text-lg font-semibold">FX rates <span className="text-sm font-normal text-neutral-500">(Ft per 1 unit)</span></h2>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {curList.map((c) => (
-          <label key={c} className="block text-sm">
-            {c}
-            <input
-              type="number"
-              step="any"
-              className={input}
-              value={c === 'HUF' ? 1 : (rates[c] ?? 0)}
-              disabled={c === 'HUF'}
-              onChange={(e) => setRates({ ...rates, [c]: Number(e.target.value) || 0 })}
-            />
-          </label>
-        ))}
-      </div>
+      <FxPanel state={trip.data.state} fx={fx.data} online={online} />
 
       <div className="mt-6 flex items-center gap-3">
         <button onClick={save} disabled={mut.isPending} className="rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">

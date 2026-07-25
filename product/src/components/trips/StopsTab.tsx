@@ -1,4 +1,5 @@
 'use client'
+import NewCountryBanner from './NewCountryBanner'
 import { useMemo, useState } from 'react'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
@@ -61,6 +62,7 @@ export function StopsTab() {
           + Add stop
         </button>
       </div>
+      {trip.data && <NewCountryBanner state={trip.data.state} />}
       <p className="mb-4 text-sm text-neutral-500">Your stops in date order. Toggle the checkbox to include a stop in the plan &amp; budget.</p>
 
       <SaveError show={mut.isError} error={mut.error} />
