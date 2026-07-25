@@ -169,7 +169,12 @@ def main() -> None:
         w = csv.writer(fh)
         w.writerow(['osm_type', 'osm_id', 'name', 'kind', 'country_code', 'lat', 'lng'])
         seen = set()
-        for iso2 in COUNTRIES:
+        # SARs FIRST. China's OSM area includes Hong Kong and Macau, so CN's
+        # tiles capture their POIs too; merging CN first would let the dedupe
+        # drop HK's own rows and label all 620 of them "CN". Whoever is merged
+        # first wins the label, so the more specific territory goes first.
+        order = sorted(COUNTRIES, key=lambda c: (c not in NO_ADMIN_LEVEL, c))
+        for iso2 in order:
             path = os.path.join(out_dir, f'{iso2}.csv')
             if not os.path.exists(path):
                 continue

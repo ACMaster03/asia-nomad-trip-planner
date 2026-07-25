@@ -239,3 +239,7 @@ an OSM row. `in_catalogue = false` rows must never be treated as a `places.id`.
   POIs, and results are de-duplicated because a way can straddle two tiles. If
   even tiles fail, raise `TILE_GRID` or fall back to a Geofabrik extract with
   osmium.
+* **China's OSM area includes Hong Kong and Macau.** CN's tiles therefore
+  capture their POIs too, and whichever country is merged first wins the label —
+  merging CN first silently relabelled all 620 HK rows as CN. The merge now
+  orders SARs before their parent country.
