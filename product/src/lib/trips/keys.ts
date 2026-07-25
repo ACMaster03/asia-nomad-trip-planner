@@ -10,4 +10,8 @@ export const tk = {
   events: (tripId: string) => ['trip-events', tripId] as const,
   // Active follow links for the Settings sharing panel (migration 11).
   shares: (tripId: string) => ['trip-shares', tripId] as const,
+  // The caller's role on a trip (owner/editor/viewer/none). Separate key from
+  // the trip document so revalidating access doesn't refetch the whole state
+  // blob — and so a revoked co-editor's role can go stale on its own schedule.
+  role: (tripId: string) => ['trip-role', tripId] as const,
 }

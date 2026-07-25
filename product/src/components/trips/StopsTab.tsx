@@ -7,12 +7,15 @@ import { segNights, regColor, TIER_LABELS } from '@/lib/trips/format'
 import { SegmentForm } from '@/components/trips/SegmentForm'
 import { StayForm } from '@/components/trips/StayForm'
 import { SaveError } from '@/components/trips/SaveError'
+import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
+import { useTripRole } from '@/lib/trips/useTripRole'
 import type { Segment } from '@/lib/trips/types'
 
 export function StopsTab() {
   const { trip, cities, cityIdx } = useTripScreen()
   const mut = useTripMutation()
+  const { canEdit } = useTripRole()
   const [modal, setModal] = useState<{ seg: Segment | null } | null>(null)
   // "＋ stay" shortcut per row — add accommodation without switching tabs
   // (owner request 2026-07-24).
@@ -58,12 +61,18 @@ export function StopsTab() {
     <main className="mx-auto max-w-5xl p-6">
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Stops</h1>
-        <button onClick={() => setModal({ seg: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">
-          + Add stop
-        </button>
+        {canEdit && (
+          <button onClick={() => setModal({ seg: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">
+            + Add stop
+          </button>
+        )}
       </div>
       {trip.data && <NewCountryBanner state={trip.data.state} />}
-      <p className="mb-4 text-sm text-neutral-500">Your stops in date order. Toggle the checkbox to include a stop in the plan &amp; budget.</p>
+      <ViewerNotice />
+      <p className="mb-4 text-sm text-neutral-500">
+        Your stops in date order.
+        {canEdit && ' Toggle the checkbox to include a stop in the plan & budget.'}
+      </p>
 
       <SaveError show={mut.isError} error={mut.error} />
 
@@ -112,7 +121,13 @@ export function StopsTab() {
               return (
                 <tr key={s.id} className={'border-t border-neutral-200 dark:border-neutral-800 ' + (inPlan ? '' : 'opacity-50')}>
                   <td className="py-1 pr-2">
-                    <input type="checkbox" aria-label="Include in plan" checked={inPlan} onChange={() => toggle(s.id)} />
+                    <input
+                      type="checkbox"
+                      aria-label="Include in plan"
+                      checked={inPlan}
+                      disabled={!canEdit}
+                      onChange={() => toggle(s.id)}
+                    />
                   </td>
                   <td className="pr-4 font-medium">
                     {s.city}
@@ -126,15 +141,19 @@ export function StopsTab() {
                   <td className="pr-2 sm:pr-4">{segNights(s)}</td>
                   <td className="hidden pr-4 sm:table-cell">{TIER_LABELS[s.tier ?? 1] ?? s.tier}</td>
                   <td className="whitespace-nowrap">
-                    <button onClick={() => setStayFor(s.id)} className="text-xs text-teal-600 hover:underline" title="Add accommodation for this stop">＋ stay</button>
-                    <button onClick={() => setModal({ seg: s })} className="ml-3 text-xs text-teal-600 hover:underline">edit</button>
-                    <button onClick={() => del(s.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
+                    {canEdit && (
+                      <>
+                        <button onClick={() => setStayFor(s.id)} className="text-xs text-teal-600 hover:underline" title="Add accommodation for this stop">＋ stay</button>
+                        <button onClick={() => setModal({ seg: s })} className="ml-3 text-xs text-teal-600 hover:underline">edit</button>
+                        <button onClick={() => del(s.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
+                      </>
+                    )}
                   </td>
                 </tr>
               )
             })}
             {!all.length && (
-              <tr><td colSpan={7} className="py-3 text-neutral-500">No stops yet — add your first one.</td></tr>
+              <tr><td colSpan={7} className="py-3 text-neutral-500">{canEdit ? 'No stops yet — add your first one.' : 'No stops yet.'}</td></tr>
             )}
           </tbody>
         </table>

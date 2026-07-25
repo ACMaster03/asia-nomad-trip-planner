@@ -6,13 +6,16 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { toBase } from '@/lib/trips/format'
 import { StayForm } from './StayForm'
 import { SaveError } from './SaveError'
+import { ViewerNotice } from './ViewerNotice'
 import CreateTripEmptyState from './CreateTripEmptyState'
+import { useTripRole } from '@/lib/trips/useTripRole'
 import type { Stay } from '@/lib/trips/types'
 
 export function StaysTab() {
   const { fmt } = useMoney()
   const { trip, cities } = useTripScreen()
   const mut = useTripMutation()
+  const { canEdit } = useTripRole()
   const [modal, setModal] = useState<{ stay: Stay | null } | null>(null)
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data) return <CreateTripEmptyState />
@@ -35,9 +38,15 @@ export function StaysTab() {
   return (
     <main className="mx-auto max-w-5xl px-6 pb-6">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm text-neutral-500">Accommodation options per stop. Tick one to count it in the budget (instead of the estimate).</p>
-        <button onClick={() => setModal({ stay: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
+        <p className="text-sm text-neutral-500">
+          Accommodation options per stop.
+          {canEdit && ' Tick one to count it in the budget (instead of the estimate).'}
+        </p>
+        {canEdit && (
+          <button onClick={() => setModal({ stay: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
+        )}
       </div>
+      <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -48,7 +57,7 @@ export function StaysTab() {
           <tbody>
             {s.stays.map((x) => (
               <tr key={x.id} className={'border-t border-neutral-200 dark:border-neutral-800 ' + (x.include ? '' : 'opacity-50')}>
-                <td className="py-1 pr-2"><input type="checkbox" aria-label="Include in budget" checked={!!x.include} onChange={() => toggle(x.id)} /></td>
+                <td className="py-1 pr-2"><input type="checkbox" aria-label="Include in budget" checked={!!x.include} disabled={!canEdit} onChange={() => toggle(x.id)} /></td>
                 <td className="hidden pr-4 sm:table-cell">{cityOf(x.segId)}</td>
                 <td className="pr-4 font-medium">
                   {x.name}
@@ -63,8 +72,12 @@ export function StaysTab() {
                 </td>
                 <td className="hidden pr-4 sm:table-cell">{x.status}</td>
                 <td className="whitespace-nowrap">
-                  <button onClick={() => setModal({ stay: x })} className="text-xs text-teal-600 hover:underline">edit</button>
-                  <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
+                  {canEdit && (
+                    <>
+                      <button onClick={() => setModal({ stay: x })} className="text-xs text-teal-600 hover:underline">edit</button>
+                      <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

@@ -6,13 +6,16 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { toBase } from '@/lib/trips/format'
 import { TransportForm } from './TransportForm'
 import { SaveError } from './SaveError'
+import { ViewerNotice } from './ViewerNotice'
 import CreateTripEmptyState from './CreateTripEmptyState'
+import { useTripRole } from '@/lib/trips/useTripRole'
 import type { TransportLeg } from '@/lib/trips/types'
 
 export function TransportTab() {
   const { fmt } = useMoney()
   const { trip } = useTripScreen()
   const mut = useTripMutation()
+  const { canEdit } = useTripRole()
   const [modal, setModal] = useState<{ leg: TransportLeg | null } | null>(null)
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data) return <CreateTripEmptyState />
@@ -32,9 +35,15 @@ export function TransportTab() {
   return (
     <main className="mx-auto max-w-5xl px-6 pb-6">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm text-neutral-500">Flights and other legs between stops. Tick to count a leg in the budget.</p>
-        <button onClick={() => setModal({ leg: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
+        <p className="text-sm text-neutral-500">
+          Flights and other legs between stops.
+          {canEdit && ' Tick to count a leg in the budget.'}
+        </p>
+        {canEdit && (
+          <button onClick={() => setModal({ leg: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
+        )}
       </div>
+      <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -45,7 +54,7 @@ export function TransportTab() {
           <tbody>
             {s.transport.map((x) => (
               <tr key={x.id} className={'border-t border-neutral-200 dark:border-neutral-800 ' + (x.include ? '' : 'opacity-50')}>
-                <td className="py-1 pr-2"><input type="checkbox" aria-label="Include in budget" checked={!!x.include} onChange={() => toggle(x.id)} /></td>
+                <td className="py-1 pr-2"><input type="checkbox" aria-label="Include in budget" checked={!!x.include} disabled={!canEdit} onChange={() => toggle(x.id)} /></td>
                 <td className="hidden pr-4 sm:table-cell">{x.type}</td>
                 <td className="pr-4 font-medium whitespace-nowrap">
                   {x.from} → {x.to}
@@ -58,8 +67,12 @@ export function TransportTab() {
                 <td className="pr-4 whitespace-nowrap">{x.price} {x.cur} <span className="hidden text-xs text-neutral-500 sm:inline">({fmt(toBase(x.price, x.cur, s.rates))})</span></td>
                 <td className="hidden pr-4 sm:table-cell">{x.status}</td>
                 <td className="whitespace-nowrap">
-                  <button onClick={() => setModal({ leg: x })} className="text-xs text-teal-600 hover:underline">edit</button>
-                  <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
+                  {canEdit && (
+                    <>
+                      <button onClick={() => setModal({ leg: x })} className="text-xs text-teal-600 hover:underline">edit</button>
+                      <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

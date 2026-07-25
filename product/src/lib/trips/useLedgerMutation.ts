@@ -1,7 +1,7 @@
 'use client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { ledgerUpsertEntry, ledgerDeleteEntry, writeLedger } from './queries'
+import { ledgerUpsertEntry, ledgerDeleteEntry, writeLedger, isPermissionDenied } from './queries'
 import { tk } from './keys'
 import { useTripScope } from './TripScope'
 import type { Ledger, LedgerEntry, Trip } from './types'
@@ -58,8 +58,10 @@ export function useLedgerMutation() {
       if (prev) qc.setQueryData<Trip>(key, { ...prev, ledger: applyOp(prev.ledger, op) })
       return { prev }
     },
-    onError: (_e, _v, ctx) => {
+    onError: (e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(key, ctx.prev)
+      // Revoked mid-session — re-resolve the role (see useTripMutation).
+      if (isPermissionDenied(e)) qc.invalidateQueries({ queryKey: tk.role(tripId ?? 'none') })
     },
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
   })

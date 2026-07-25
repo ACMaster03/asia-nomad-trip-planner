@@ -9,7 +9,9 @@ import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { toBase, monthLabel } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import { SaveError } from '@/components/trips/SaveError'
+import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
+import { useTripRole } from '@/lib/trips/useTripRole'
 import type { LedgerEntry } from '@/lib/trips/types'
 
 const newId = (p: string) => p + crypto.randomUUID()
@@ -22,6 +24,7 @@ export function LedgerTab() {
   const { trip, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
   const stateMut = useTripMutation()
+  const { canEdit } = useTripRole()
   // date starts empty to avoid an SSR/hydration mismatch (todayISO is clock-dependent);
   // filled on mount. add() also falls back to todayISO() so submission is always dated.
   const [form, setForm] = useState({ date: '', type: 'income', cat: '', amount: '', cur: '', note: '' })
@@ -38,12 +41,15 @@ export function LedgerTab() {
   const autoImport = trip.data?.state.autoImport
   useEffect(() => {
     if (!imp) return
+    // A viewer must never trigger this: the writes would all bounce off RLS and
+    // paint a save-error banner every time they merely OPENED the Money screen.
+    if (!canEdit) return
     // Corrections to already-imported rows always apply (one-way sync + orphan
     // flags); NEW rows only flow automatically once the user opted in.
     const ops = [...imp.updates, ...imp.orphans, ...(autoImport ? imp.candidates : [])]
     ops.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is stable; imp derives from trip.data
-  }, [imp, autoImport])
+  }, [imp, autoImport, canEdit])
 
   const view = useMemo(() => {
     if (!trip.data) return null
@@ -130,6 +136,7 @@ export function LedgerTab() {
       <p className="mb-4 text-sm text-neutral-500">
         Log what you actually earn and spend to see, month by month, whether you&apos;re turning a profit.
       </p>
+      <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />
       <SaveError show={stateMut.isError} error={stateMut.error} />
 
@@ -140,7 +147,7 @@ export function LedgerTab() {
         <Stat k="Planned trip cost" v={fmt(v.plan)} sub="your itinerary estimate" />
       </div>
 
-      {imp && imp.candidates.length > 0 && !autoImport && (
+      {canEdit && imp && imp.candidates.length > 0 && !autoImport && (
         <div className="mt-4 rounded-lg border border-teal-600/40 bg-teal-50 p-4 dark:bg-teal-950/30">
           <div className="font-medium">
             Import your {imp.candidates.length} booked cost{imp.candidates.length > 1 ? 's' : ''}?
@@ -160,6 +167,8 @@ export function LedgerTab() {
         </div>
       )}
 
+      {canEdit && (
+        <>
       <h2 className="mb-2 mt-6 text-lg font-semibold">Add an entry</h2>
       <div className="flex flex-wrap items-end gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
         <input aria-label="Date" type="date" className={input} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
@@ -180,10 +189,16 @@ export function LedgerTab() {
           + Add
         </button>
       </div>
+        </>
+      )}
 
       <h2 className="mb-2 mt-6 text-lg font-semibold">Monthly profit &amp; loss</h2>
       {!v.rows.length ? (
-        <p className="text-sm text-neutral-500">No data yet — add an entry above, or build your itinerary so planned spend shows here.</p>
+        <p className="text-sm text-neutral-500">
+          {canEdit
+            ? 'No data yet — add an entry above, or build your itinerary so planned spend shows here.'
+            : 'No data yet.'}
+        </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -258,7 +273,9 @@ export function LedgerTab() {
                     <td className="pr-4 text-neutral-500">{fmt(toBase(e.amount, e.currency, v.rates))}</td>
                     <td className="pr-4 text-neutral-500">{e.note}</td>
                     <td>
-                      <button onClick={() => del(e.id)} className="text-xs text-red-600 hover:underline">delete</button>
+                      {canEdit && (
+                        <button onClick={() => del(e.id)} className="text-xs text-red-600 hover:underline">delete</button>
+                      )}
                     </td>
                   </tr>
                 )

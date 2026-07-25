@@ -4,7 +4,7 @@ import { useOnline } from '@/lib/useOnline'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchTrip, fetchTrips, isRevConflict, setSelectedTripId } from '@/lib/trips/queries'
+import { fetchTrip, fetchTrips, isRevConflict, isPermissionDenied, setSelectedTripId } from '@/lib/trips/queries'
 import { createShareLink, fetchShares, fetchShareStats, revokeShare, setTripSharingPaused } from '@/lib/trips/shares'
 import { tk } from '@/lib/trips/keys'
 import FxPanel from '@/components/trips/FxPanel'
@@ -12,6 +12,9 @@ import { fetchFx } from '@/lib/catalogue/fx'
 import { qk } from '@/lib/catalogue/keys'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripScope } from '@/lib/trips/TripScope'
+import { useTripRole } from '@/lib/trips/useTripRole'
+import { roleLabel } from '@/lib/trips/role'
+import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { OnboardingWizard } from '@/components/trips/OnboardingWizard'
 import { Modal } from '@/components/trips/Modal'
@@ -326,6 +329,7 @@ export default function SettingsClient() {
   const fx = useQuery({ queryKey: qk.fx, queryFn: () => fetchFx(sb), staleTime: 60 * 60_000 })
   const online = useOnline()
   const mut = useTripMutation()
+  const { role, canEdit } = useTripRole()
 
   // local draft, synced from the loaded trip; saved on demand (one write, not per keystroke)
   const [name, setName] = useState('')
@@ -378,38 +382,58 @@ export default function SettingsClient() {
 
   return (
     <main className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-1 text-2xl font-semibold">Settings</h1>
+      <div className="mb-1 flex items-center gap-3">
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        {/* Your standing on this trip. Shown to everyone, not just viewers: on a
+            shared trip "who am I here" is worth stating even when the answer is
+            Owner — it's the anchor the read-only states refer back to. */}
+        {role !== 'unknown' && role !== 'none' && (
+          <span className="rounded-full border border-neutral-300 px-2 py-0.5 text-xs text-neutral-500 dark:border-neutral-700">
+            {roleLabel(role)}
+          </span>
+        )}
+      </div>
       <p className="mb-4 text-sm text-neutral-500">Trip basics and the FX rates used to total everything in {baseCurrency}.</p>
 
+      <ViewerNotice />
+
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm">Trip name<input className={input} value={name} onChange={(e) => setName(e.target.value)} /></label>
-        <label className="block text-sm">Travellers<input type="number" min={1} className={input} value={travelers} onChange={(e) => setTravelers(Number(e.target.value) || 1)} /></label>
-        <label className="block text-sm">Budget cap ({baseCurrency})<input type="number" min={0} className={input} value={budgetCap} onChange={(e) => setBudgetCap(Number(e.target.value) || 0)} /></label>
-        <label className="block text-sm">Start date<input type="date" className={input} value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
+        <label className="block text-sm">Trip name<input className={input} disabled={!canEdit} value={name} onChange={(e) => setName(e.target.value)} /></label>
+        <label className="block text-sm">Travellers<input type="number" min={1} className={input} disabled={!canEdit} value={travelers} onChange={(e) => setTravelers(Number(e.target.value) || 1)} /></label>
+        <label className="block text-sm">Budget cap ({baseCurrency})<input type="number" min={0} className={input} disabled={!canEdit} value={budgetCap} onChange={(e) => setBudgetCap(Number(e.target.value) || 0)} /></label>
+        <label className="block text-sm">Start date<input type="date" className={input} disabled={!canEdit} value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
         <label className="block text-sm">Base currency
-          <select className={input} value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)}>
+          <select className={input} disabled={!canEdit} value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)}>
             {curList.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </label>
       </div>
 
-      <FxPanel state={trip.data.state} fx={fx.data} online={online} />
+      <FxPanel state={trip.data.state} fx={fx.data} online={online} canEdit={canEdit} />
 
-      <div className="mt-6 flex items-center gap-3">
-        <button onClick={save} disabled={mut.isPending} className="rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
-          {mut.isPending ? 'Saving…' : 'Save changes'}
-        </button>
-        {saved && <span className="text-sm text-emerald-600">✓ Saved</span>}
-        {mut.isError && (
-          <span className="text-sm text-red-600">
-            {isRevConflict(mut.error)
-              ? 'Someone else saved this trip first — the latest version was loaded. Please redo your edit.'
-              : 'Save failed — try again.'}
-          </span>
-        )}
-      </div>
+      {canEdit && (
+        <div className="mt-6 flex items-center gap-3">
+          <button onClick={save} disabled={mut.isPending} className="rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+            {mut.isPending ? 'Saving…' : 'Save changes'}
+          </button>
+          {saved && <span className="text-sm text-emerald-600">✓ Saved</span>}
+          {mut.isError && (
+            <span className="text-sm text-red-600">
+              {isPermissionDenied(mut.error)
+                ? 'Your edit access to this trip was removed — the change was rolled back.'
+                : isRevConflict(mut.error)
+                  ? 'Someone else saved this trip first — the latest version was loaded. Please redo your edit.'
+                  : 'Save failed — try again.'}
+            </span>
+          )}
+        </div>
+      )}
 
-      <SharingCard endDate={trip.data.state?.meta?.endDate} />
+      {/* Editors, not just the owner — create_share_link and
+          set_trip_sharing_paused both gate on can_edit_trip (migrations 11/16),
+          so hiding this from a co-editor would be the UI inventing a rule the
+          database doesn't have. Viewers get nothing. */}
+      {canEdit && <SharingCard endDate={trip.data.state?.meta?.endDate} />}
       <ActiveTripCard />
       <p className="mt-10 text-center text-xs text-neutral-400 dark:text-neutral-600">
         🧭 Asia Nomad Planner · build v{process.env.NEXT_PUBLIC_BUILD_SHA} · updates apply automatically

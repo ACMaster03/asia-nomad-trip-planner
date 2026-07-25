@@ -38,10 +38,14 @@ export default function FxPanel({
   state,
   fx,
   online,
+  // Viewers see the rates (they total the trip they're looking at) but cannot
+  // change WHICH currencies the trip watches — that edits trips.state.
+  canEdit = true,
 }: {
   state: TripState
   fx: FxSnapshot | undefined
   online: boolean
+  canEdit?: boolean
 }) {
   const sb = createClient()
   const qc = useQueryClient()
@@ -201,7 +205,7 @@ export default function FxPanel({
                     {code === base ? 1 : shown ? shown.toFixed(4) : '—'}
                   </td>
                   <td className="p-2.5 text-right">
-                    {code !== base && (
+                    {canEdit && code !== base && (
                       <button
                         type="button"
                         onClick={() => removeCurrency(code)}
@@ -219,6 +223,7 @@ export default function FxPanel({
         </table>
       </div>
 
+      {canEdit && (
       <div className="mt-3 flex flex-wrap items-end gap-2">
         <label className="block text-sm">
           <span className="mb-1 block text-xs uppercase tracking-wide text-neutral-500">
@@ -247,6 +252,7 @@ export default function FxPanel({
           ＋ Add
         </button>
       </div>
+      )}
     </>
   )
 }

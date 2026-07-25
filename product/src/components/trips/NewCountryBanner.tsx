@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
+import { useTripRole } from '@/lib/trips/useTripRole'
 import { countryCurrencies } from '@/lib/catalogue/countryCurrencies'
 import type { TripState } from '@/lib/trips/types'
 
@@ -40,6 +41,7 @@ function nextUnseen(state: TripState): { country: string; codes: string[] } | nu
 
 export default function NewCountryBanner({ state }: { state: TripState }) {
   const mut = useTripMutation()
+  const { canEdit } = useTripRole()
   const handled = useRef<string | null>(null)
 
   const pending = nextUnseen(state)
@@ -48,6 +50,9 @@ export default function NewCountryBanner({ state }: { state: TripState }) {
   // Side effect only — the ref stops a re-render from repeating the write while
   // the mutation is still in flight.
   useEffect(() => {
+    // Viewers must not trigger it: the write would fail against RLS, and the
+    // watchlist isn't theirs to extend. They still see the resulting rates.
+    if (!canEdit) return
     if (!pending || handled.current === pending.country) return
     handled.current = pending.country
     const { country, codes } = pending
@@ -65,8 +70,9 @@ export default function NewCountryBanner({ state }: { state: TripState }) {
         },
       }
     })
-  }, [pending, mut])
+  }, [pending, mut, canEdit])
 
+  if (!canEdit) return null
   if (!announced || announced.codes.length === 0) return null
 
   return (

@@ -1,7 +1,7 @@
 'use client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { writeState } from './queries'
+import { writeState, isPermissionDenied } from './queries'
 import { tk } from './keys'
 import { useTripScope } from './TripScope'
 import type { TripState, Trip } from './types'
@@ -50,10 +50,14 @@ export function useTripMutation() {
       if (prev) qc.setQueryData<Trip>(key, { ...prev, state: updater(prev.state) })
       return { prev }
     },
-    onError: (_e, _v, ctx) => {
+    onError: (e, _v, ctx) => {
       // Roll back the optimistic update (incl. after a rev conflict); onSettled's
       // invalidate then refetches the authoritative document + fresh rev.
       if (ctx?.prev) qc.setQueryData(key, ctx.prev)
+      // Access was revoked or downgraded while this tab was open: re-resolve the
+      // role so the screen switches to read-only instead of offering buttons
+      // that will keep failing.
+      if (isPermissionDenied(e)) qc.invalidateQueries({ queryKey: tk.role(tripId ?? 'none') })
     },
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
   })

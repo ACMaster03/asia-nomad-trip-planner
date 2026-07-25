@@ -6,13 +6,16 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { toBase } from '@/lib/trips/format'
 import { ExtraForm } from './ExtraForm'
 import { SaveError } from './SaveError'
+import { ViewerNotice } from './ViewerNotice'
 import CreateTripEmptyState from './CreateTripEmptyState'
+import { useTripRole } from '@/lib/trips/useTripRole'
 import type { Extra } from '@/lib/trips/types'
 
 export function ExtrasTab() {
   const { fmt } = useMoney()
   const { trip } = useTripScreen()
   const mut = useTripMutation()
+  const { canEdit } = useTripRole()
   const [modal, setModal] = useState<{ extra: Extra | null } | null>(null)
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data) return <CreateTripEmptyState />
@@ -34,8 +37,11 @@ export function ExtrasTab() {
     <main className="mx-auto max-w-5xl px-6 pb-6">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-sm text-neutral-500">One-off, upfront costs (visas, insurance, gear). Included total: <b>{fmt(total)}</b>.</p>
-        <button onClick={() => setModal({ extra: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
+        {canEdit && (
+          <button onClick={() => setModal({ extra: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
+        )}
       </div>
+      <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -44,14 +50,18 @@ export function ExtrasTab() {
           <tbody>
             {s.extras.map((x) => (
               <tr key={x.id} className={'border-t border-neutral-200 dark:border-neutral-800 ' + (x.include ? '' : 'opacity-50')}>
-                <td className="py-1 pr-2"><input type="checkbox" aria-label="Include in budget" checked={!!x.include} onChange={() => toggle(x.id)} /></td>
+                <td className="py-1 pr-2"><input type="checkbox" aria-label="Include in budget" checked={!!x.include} disabled={!canEdit} onChange={() => toggle(x.id)} /></td>
                 <td className="pr-4 font-medium">{x.label}</td>
                 <td className="pr-4 text-neutral-500">{x.category}</td>
                 <td className="pr-4 whitespace-nowrap">{x.amount} {x.cur}</td>
                 <td className="pr-4 text-neutral-500">{fmt(toBase(x.amount, x.cur, s.rates))}</td>
                 <td className="whitespace-nowrap">
-                  <button onClick={() => setModal({ extra: x })} className="text-xs text-teal-600 hover:underline">edit</button>
-                  <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
+                  {canEdit && (
+                    <>
+                      <button onClick={() => setModal({ extra: x })} className="text-xs text-teal-600 hover:underline">edit</button>
+                      <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
