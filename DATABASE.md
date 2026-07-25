@@ -231,6 +231,11 @@ an OSM row. `in_catalogue = false` rows must never be treated as a `places.id`.
   country-level areas in OSM, so the usual selector matched nothing and returned
   a valid, empty result. `NO_ADMIN_LEVEL` in the fetcher drops the filter for
   those.
-* **504s are routine** for large countries; the backoff usually gets there. CN
-  and IN are big enough that Overpass may refuse them entirely — if so, use a
-  Geofabrik regional extract with osmium rather than the API.
+* **504s are routine** for large countries; the backoff usually gets there.
+* **Some countries never fit in one query.** China and India fail with
+  `Query timed out after 181 seconds` no matter how often you retry. They are
+  listed in `TILED` and fetched as a 3x3 grid of bbox tiles INTERSECTED with the
+  country area — the area filter stays, so tiles never pick up a neighbour's
+  POIs, and results are de-duplicated because a way can straddle two tiles. If
+  even tiles fail, raise `TILE_GRID` or fall back to a Geofabrik extract with
+  osmium.

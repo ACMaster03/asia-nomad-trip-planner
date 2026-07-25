@@ -44,24 +44,47 @@ MAX_RETRIES = 4
 # drops the admin_level filter.
 NO_ADMIN_LEVEL = {'HK', 'MO'}
 
+# Countries too large for one Overpass query — measured 2026-07-25, both fail
+# with "Query timed out after 181 seconds" however many times you retry. Each is
+# fetched as a grid of bbox tiles INTERSECTED with the country area, so the tiles
+# stay inside the border and never pick up a neighbour's POIs.
+# (south, west, north, east), generously padded.
+TILED = {
+    'CN': (17.0, 73.0, 54.0, 135.5),
+    'IN': (6.0, 68.0, 36.0, 97.5),
+}
+TILE_GRID = 3   # 3x3 = 9 queries per tiled country
 
-def query_for(iso2: str) -> str:
+
+def query_for(iso2: str, bbox=None) -> str:
     kinds = '|'.join(KINDS)
     area = f'area["ISO3166-1"="{iso2}"]' + ('' if iso2 in NO_ADMIN_LEVEL else '[admin_level=2]')
+    # A tile is applied IN ADDITION to the area, never instead of it.
+    box = f'({bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]})' if bbox else ''
     # `out center` gives ways/relations a representative point, so an attraction
     # mapped as a building is not lost.
     return f'''[out:json][timeout:180];
 {area}->.a;
 (
-  node["tourism"~"^({kinds})$"]["name"](area.a);
-  way["tourism"~"^({kinds})$"]["name"](area.a);
-  relation["tourism"~"^({kinds})$"]["name"](area.a);
+  node["tourism"~"^({kinds})$"]["name"](area.a){box};
+  way["tourism"~"^({kinds})$"]["name"](area.a){box};
+  relation["tourism"~"^({kinds})$"]["name"](area.a){box};
 );
 out center tags;'''
 
 
-def fetch(iso2: str) -> list:
-    body = urllib.parse.urlencode({'data': query_for(iso2)}).encode()
+def tiles_for(iso2: str):
+    """Bounding boxes to split an oversized country into, or [None] for one query."""
+    if iso2 not in TILED:
+        return [None]
+    s, w, n, e = TILED[iso2]
+    dlat, dlng = (n - s) / TILE_GRID, (e - w) / TILE_GRID
+    return [(s + r * dlat, w + c * dlng, s + (r + 1) * dlat, w + (c + 1) * dlng)
+            for r in range(TILE_GRID) for c in range(TILE_GRID)]
+
+
+def fetch_one(iso2: str, bbox) -> list:
+    body = urllib.parse.urlencode({'data': query_for(iso2, bbox)}).encode()
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             req = urllib.request.Request(ENDPOINT, data=body,
@@ -91,8 +114,28 @@ def main() -> None:
         if os.path.exists(path):
             print(f'{iso2}: already fetched, skipping')
             continue
-        print(f'{iso2}: fetching…', flush=True)
-        els = fetch(iso2)
+        boxes = tiles_for(iso2)
+        print(f'{iso2}: fetching…' + (f' ({len(boxes)} tiles)' if len(boxes) > 1 else ''), flush=True)
+        els, failed = [], 0
+        for bi, box in enumerate(boxes):
+            got = fetch_one(iso2, box)
+            if not got and box is not None:
+                failed += 1
+                print(f'    {iso2} tile {bi + 1}/{len(boxes)}: nothing')
+            els.extend(got)
+            if box is not None and bi < len(boxes) - 1:
+                time.sleep(8)
+        if failed:
+            print(f'{iso2}: {failed}/{len(boxes)} tiles empty or failed')
+        # De-duplicate: a way can straddle two tiles.
+        seen_ids, uniq = set(), []
+        for e in els:
+            k = (e.get('type'), e.get('id'))
+            if k in seen_ids:
+                continue
+            seen_ids.add(k)
+            uniq.append(e)
+        els = uniq
         if not els:
             print(f'{iso2}: NOTHING RETURNED — rerun to retry this country')
             continue
