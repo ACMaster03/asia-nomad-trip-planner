@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -10,7 +11,8 @@ import { nightsBetween } from '@/lib/trips/format'
 
 // /follow/[token] — the no-account family view (approved endframe: mock 07).
 // States: invalid link · pre-trip countdown · live (globe + current stop +
-// feed, polled ~45s — Postgres Changes can't reach anon under closed RLS) ·
+// feed, polled ~45s as the floor, plus a Realtime ping that usually beats it
+// to ~1s — Postgres Changes can't reach anon under closed RLS) ·
 // post-trip. Everything rendered here comes from the sanitized RPCs; there is
 // nothing more to find in dev-tools than what this page shows.
 
@@ -46,6 +48,7 @@ export default function FollowClient({
   token, initialSummary,
 }: { token: string; initialSummary: SharedSummary | null }) {
   const sb = createClient()
+  const qc = useQueryClient()
 
   // "today" is clock-dependent → compute after mount (SSR/hydration safety).
   const [mounted, setMounted] = useState(false)
@@ -64,6 +67,25 @@ export default function FollowClient({
     enabled: !!summary.data,
     refetchInterval: 45_000, // the plan's 30-60s polling window
   })
+
+  // Realtime nudge (migration 18). The ping carries NOTHING — it just says
+  // "re-read", and the sanitized RPCs stay the only data path. Polling above is
+  // deliberately kept as the floor: if the socket is down, blocked by a captive
+  // portal, or the topic is stale after a resume, the page still catches up.
+  const topic = summary.data?.broadcastTopic
+  useEffect(() => {
+    if (!topic) return
+    const channel = sb.channel(topic)
+    channel
+      .on('broadcast', { event: 'trip_update' }, () => {
+        qc.invalidateQueries({ queryKey: ['shared-feed', token] })
+        qc.invalidateQueries({ queryKey: ['shared-summary', token] })
+      })
+      .subscribe()
+    return () => {
+      sb.removeChannel(channel)
+    }
+  }, [sb, qc, topic, token])
 
   const s = summary.data
   if (!s) {

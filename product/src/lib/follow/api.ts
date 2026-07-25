@@ -19,6 +19,11 @@ export interface SharedSummary {
   route: SharedRouteStop[]
   /** owner paused all sharing — only tripName is populated (migration 16) */
   paused?: boolean
+  /**
+   * Realtime channel to listen on for "something changed" pings (migration 18).
+   * Absent while paused — a paused link is not told its topic either.
+   */
+  broadcastTopic?: string
 }
 
 export type SharedEventKind = 'checkin' | 'note' | 'arrived' | 'media' | 'location'

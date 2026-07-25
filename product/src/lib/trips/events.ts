@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { broadcastTripUpdate, isFollowerVisible } from './broadcast'
 
 // ============================================================================
 // Lived-trip event rows (migrations 09/10) — the /live feed's query layer.
@@ -74,6 +75,9 @@ export async function insertTripEvent(
     payload?: Record<string, unknown>
     visibility?: TripEventVisibility
   },
+  // insertCheckIn sets this: it pings itself once the check_ins row lands, so
+  // followers never refetch into a half-written check-in with no rating.
+  opts?: { skipBroadcast?: boolean },
 ): Promise<void> {
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user?.id
@@ -87,6 +91,9 @@ export async function insertTripEvent(
     visibility: input.visibility ?? 'trip', // default is Trip only — sharing is opt-in
   })
   if (error) throw error
+  if (!opts?.skipBroadcast && isFollowerVisible(input.visibility)) {
+    await broadcastTripUpdate(sb, input.tripId)
+  }
 }
 
 // Check-in = trip_events row + check_ins row sharing the SAME client-generated
@@ -115,7 +122,7 @@ export async function insertCheckIn(
       ...(input.photos?.length ? { photos: input.photos } : {}),
     },
     visibility: input.visibility,
-  })
+  }, { skipBroadcast: true })
   const { error } = await sb.from('check_ins').insert({
     event_id: input.id,
     trip_id: input.tripId,
@@ -127,6 +134,7 @@ export async function insertCheckIn(
     await sb.from('trip_events').delete().eq('id', input.id) // best-effort undo
     throw error
   }
+  if (isFollowerVisible(input.visibility)) await broadcastTripUpdate(sb, input.tripId)
 }
 
 // Undo: authors delete their own events (RLS-enforced); check_ins cascades.
@@ -147,7 +155,7 @@ export async function updateTripEvent(
     visibility: TripEventVisibility
   },
 ): Promise<void> {
-  const { error } = await sb
+  const { data, error } = await sb
     .from('trip_events')
     .update({
       payload: input.payload,
@@ -155,16 +163,25 @@ export async function updateTripEvent(
       edited_at: new Date().toISOString(),
     })
     .eq('id', input.id)
+    .select('trip_id')
+    .single()
   if (error) throw error
+  // Pinged unconditionally, including for edits that RETRACT an event to
+  // trip-only: without it a note the traveller just hid would sit on the
+  // follower's screen until the next poll.
+  if (data?.trip_id) await broadcastTripUpdate(sb, data.trip_id as string)
 }
 
 export async function updateCheckInDetails(
   sb: SupabaseClient,
   input: { eventId: string; rating: number | null; comment: string | null },
 ): Promise<void> {
-  const { error } = await sb
+  const { data, error } = await sb
     .from('check_ins')
     .update({ rating: input.rating, comment: input.comment?.trim() || null })
     .eq('event_id', input.eventId)
+    .select('trip_id')
+    .single()
   if (error) throw error
+  if (data?.trip_id) await broadcastTripUpdate(sb, data.trip_id as string)
 }
