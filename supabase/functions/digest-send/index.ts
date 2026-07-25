@@ -17,6 +17,7 @@
 // defaults to the production domain; project-wide, already set for alerts).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { sendEmail } from '../_shared/resend.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const CRON_SECRET = Deno.env.get('CRON_SECRET')!
@@ -141,21 +142,17 @@ Deno.serve(async (req) => {
       `${SITE}/digest/unsubscribe?t=${s.unsub_token}`,
     )
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: FROM,
-        to: s.email,
-        subject: `🧭 ${tripName} — ${events.length} update${events.length > 1 ? 's' : ''}`,
-        text: body.join('\n'),
-        // RFC 8058. The POST arm is what makes the client's own Unsubscribe
-        // button a true opt-out rather than a link it merely offers to open.
-        headers: {
-          'List-Unsubscribe': `<${oneClickUrl}>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-        },
-      }),
+    const res = await sendEmail(RESEND_API_KEY, {
+      from: FROM,
+      to: s.email,
+      subject: `🧭 ${tripName} — ${events.length} update${events.length > 1 ? 's' : ''}`,
+      text: body.join('\n'),
+      // RFC 8058. The POST arm is what makes the client's own Unsubscribe
+      // button a true opt-out rather than a link it merely offers to open.
+      headers: {
+        'List-Unsubscribe': `<${oneClickUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
     })
     if (res.ok) {
       await sb.from('digest_subscriptions')
@@ -164,7 +161,9 @@ Deno.serve(async (req) => {
       sent++
       results.push(`${s.frequency} -> ${s.email}: ${events.length} events`)
     } else {
-      results.push(`FAILED ${s.email}: ${res.status}`) // last_sent_at untouched → retries tomorrow
+      // This endpoint is cron-secret protected, so the provider's own words can
+      // go straight into the response — that is the whole point of the fix.
+      results.push(`FAILED ${s.email}: ${res.error}`) // last_sent_at untouched → retries tomorrow
     }
   }
 

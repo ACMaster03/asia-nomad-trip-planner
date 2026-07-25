@@ -12,6 +12,7 @@
 // Email: Resend (https://resend.com) — free tier is plenty for two travellers.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { sendEmail } from '../_shared/resend.ts'
 
 type Stay = {
   id: string
@@ -97,22 +98,18 @@ Deno.serve(async (req) => {
         if (logErr) continue // unique violation → already sent
 
         const tripName = trip.state?.meta?.tripName ?? trip.name
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            from: FROM,
-            to: email,
-            subject: `⏰ ${item.stay.name}: ${item.label} (${item.date})`,
-            text: [
-              `Heads-up from your trip "${tripName}":`,
-              ``,
-              `Stay: ${item.stay.name}`,
-              `Deadline: ${item.date} — ${item.label}.`,
-              ``,
-              `Open the planner to review or act on it.`,
-            ].join('\n'),
-          }),
+        const res = await sendEmail(RESEND_API_KEY, {
+          from: FROM,
+          to: email,
+          subject: `⏰ ${item.stay.name}: ${item.label} (${item.date})`,
+          text: [
+            `Heads-up from your trip "${tripName}":`,
+            ``,
+            `Stay: ${item.stay.name}`,
+            `Deadline: ${item.date} — ${item.label}.`,
+            ``,
+            `Open the planner to review or act on it.`,
+          ].join('\n'),
         })
         if (res.ok) {
           sent++
@@ -120,7 +117,8 @@ Deno.serve(async (req) => {
         } else {
           // roll the dedupe row back so a transient Resend failure retries tomorrow
           await admin.from('alert_log').delete().match({ trip_id: trip.id, item_id: item.stay.id, kind: item.kind, sent_to: email })
-          results.push(`FAILED ${item.kind} ${item.stay.name} -> ${email}: ${res.status}`)
+          // Cron-secret protected → surface the provider's reason verbatim.
+          results.push(`FAILED ${item.kind} ${item.stay.name} -> ${email}: ${res.error}`)
         }
       }
     }

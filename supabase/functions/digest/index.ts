@@ -22,6 +22,7 @@
 // production domain; SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY auto-provided).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { sendEmail } from '../_shared/resend.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const FROM = Deno.env.get('ALERTS_FROM') ?? 'Nomad Planner <onboarding@resend.dev>'
@@ -66,14 +67,10 @@ async function tripNameForShare(shareId: string): Promise<string> {
   return (trip?.state as { meta?: { tripName?: string } })?.meta?.tripName ?? 'the trip'
 }
 
-async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM, to, subject, text }),
-  })
-  return res.ok
-}
+// The follower gets a deliberately vague message (they can't act on a provider
+// error), but _shared/resend.ts logs the full reason + hint to the function log.
+const send = (to: string, subject: string, text: string) =>
+  sendEmail(RESEND_API_KEY, { from: FROM, to, subject, text })
 
 async function subscribe(req: Request): Promise<Response> {
   const { token, email, frequency } = await req.json().catch(() => ({}))
@@ -135,7 +132,7 @@ async function subscribe(req: Request): Promise<Response> {
   if (upErr || !saved) return json({ error: 'try again' }, 500)
 
   const tripName = await tripNameForShare(share.id)
-  const ok = await sendEmail(
+  const sent = await send(
     normEmail,
     `Confirm: ${freq} updates from "${tripName}"`,
     [
@@ -151,7 +148,7 @@ async function subscribe(req: Request): Promise<Response> {
       `Didn't request this? Ignore this email and nothing will be sent.`,
     ].join('\n'),
   )
-  if (!ok) return json({ error: 'email failed — try again' }, 502)
+  if (!sent.ok) return json({ error: 'email failed — try again' }, 502)
   // Cooldown stamp only AFTER a successful send — a Resend failure must not
   // block the follower's immediate retry.
   await sb.from('digest_subscriptions')
