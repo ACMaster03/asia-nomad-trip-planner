@@ -162,6 +162,16 @@ export default function KnowledgeClient() {
         </>
       )}
 
+      {searching && (
+        <p className="mt-6 text-xs text-neutral-400 dark:text-neutral-600">
+          World city data from{' '}
+          <a href="https://www.geonames.org" className="underline" rel="noreferrer" target="_blank">
+            GeoNames
+          </a>
+          , licensed CC BY 4.0.
+        </p>
+      )}
+
       {openCity !== null && (
         <div className="mt-6">
           {detail.isPending && <p className="text-sm text-neutral-500">Loading…</p>}
@@ -177,24 +187,46 @@ export default function KnowledgeClient() {
 function CityRows({ cities, onOpen }: { cities: CityLite[]; onOpen: (id: number) => void }) {
   return (
     <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
-      {cities.map((c) => (
-        <button
-          key={c.id}
-          onClick={() => onOpen(c.id)}
-          className="flex w-full items-center gap-3 border-b border-neutral-100 px-3 py-2.5 text-left last:border-0 hover:bg-neutral-50 dark:border-neutral-900 dark:hover:bg-neutral-900"
-        >
-          <span>{countryFlag(c.country)}</span>
-          <span className="flex-1">
-            <span className="text-sm font-medium">{c.city}</span>
-            <span className="block text-xs text-neutral-500">
-              {[c.country, c.region_name].filter(Boolean).join(' · ')}
+      {cities.map((c) => {
+        // World rows carry a GEONAMEID, a different id space from cities.id —
+        // opening one would fetch the wrong record or nothing, so only curated
+        // cities are clickable. World rows are informational.
+        const curated = c.in_catalogue !== false
+        const body = (
+          <>
+            <span>{countryFlag(c.country)}</span>
+            <span className="flex-1">
+              <span className="text-sm font-medium">{c.city}</span>
+              <span className="block text-xs text-neutral-500">
+                {[c.country, c.region_name].filter(Boolean).join(' · ')}
+              </span>
             </span>
-          </span>
-          {c.daily_living_mid != null && (
-            <span className="text-xs text-neutral-500">${c.daily_living_mid}/day</span>
-          )}
-        </button>
-      ))}
+            {curated && c.daily_living_mid != null && (
+              <span className="text-xs text-neutral-500">${c.daily_living_mid}/day</span>
+            )}
+            {!curated && (
+              <span className="text-xs text-neutral-500">
+                {c.population ? `${Math.round(c.population / 1000)}k people` : 'not catalogued'}
+              </span>
+            )}
+          </>
+        )
+        const cls =
+          'flex w-full items-center gap-3 border-b border-neutral-100 px-3 py-2.5 text-left last:border-0 dark:border-neutral-900'
+        return curated ? (
+          <button
+            key={c.id}
+            onClick={() => onOpen(c.id)}
+            className={`${cls} hover:bg-neutral-50 dark:hover:bg-neutral-900`}
+          >
+            {body}
+          </button>
+        ) : (
+          <div key={`g${c.id}`} className={cls}>
+            {body}
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -35,6 +35,14 @@ export interface CityLite {
   lng: number | null
   daily_living_mid: number | null
   accom_mid: number | null
+  /**
+   * search_cities only (migration 23): false means the row came from the
+   * imported GeoNames world layer, which has no editorial attributes and whose
+   * `id` is a GEONAMEID — a different id space from cities.id, so it must
+   * never be passed to fetchCityDetail.
+   */
+  in_catalogue?: boolean
+  population?: number | null
 }
 
 export interface City {

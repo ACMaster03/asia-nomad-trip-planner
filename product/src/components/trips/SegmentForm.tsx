@@ -115,9 +115,17 @@ export function SegmentForm({
                     {[c.country, c.region_name].filter(Boolean).join(' · ')}
                   </span>
                 </span>
-                <span className="rounded-full border border-teal-500 px-2 py-0.5 text-[11px] text-teal-700 dark:text-teal-400">
-                  in catalogue
-                </span>
+                {/* Curated cities can price a budget; imported GeoNames ones
+                    cannot, and saying so is the honest signal (mock 03). */}
+                {c.in_catalogue === false ? (
+                  <span className="text-[11px] text-neutral-500">
+                    {c.population ? `${Math.round(c.population / 1000)}k` : 'world'}
+                  </span>
+                ) : (
+                  <span className="rounded-full border border-teal-500 px-2 py-0.5 text-[11px] text-teal-700 dark:text-teal-400">
+                    in catalogue
+                  </span>
+                )}
               </button>
             ))}
             {/* MANDATORY, not a nicety: Erd is not in the catalogue and user

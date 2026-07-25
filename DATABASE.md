@@ -156,3 +156,36 @@ work for nested structures, exactly as with `cities.attributes`
 Migration 22 ships five starter definitions with NO values — plugs, tipping,
 tap_water, sim, emergency. The content is editorial and deliberately left to the
 owner; verify anything safety-related before relying on it.
+
+## GeoNames world layer (migration 23)
+
+`geo_cities` (34 043 cities, population > 15 000) and `geo_countries` (252, with
+capitals) are the Tier-2 world layer. **Attribution is required**: data from
+[GeoNames](https://www.geonames.org), CC BY 4.0 — credited in the Explore UI.
+
+They are deliberately SEPARATE from `public.cities`, which stays the curated
+46-row editorial catalogue. `fetchCityList()` still downloads only those 46
+(~8 kB); the world layer is reachable only through `search_cities()`.
+
+To refresh the import:
+
+```bash
+cd /tmp
+curl -sLO https://download.geonames.org/export/dump/cities15000.zip
+curl -sLO https://download.geonames.org/export/dump/countryInfo.txt
+unzip -o cities15000.zip
+python3 tools/import-geonames.py /tmp
+```
+
+then per environment:
+
+```sql
+truncate public.geo_cities;
+truncate public.geo_countries cascade;
+\copy public.geo_countries from '/tmp/geo_countries.csv' csv header
+\copy public.geo_cities    from '/tmp/geo_cities.csv'    csv header
+```
+
+`geo_cities.id` is a GEONAMEID — a different id space from `cities.id`. Rows
+where `search_cities` returns `in_catalogue = false` must never be passed to
+`fetchCityDetail`.
