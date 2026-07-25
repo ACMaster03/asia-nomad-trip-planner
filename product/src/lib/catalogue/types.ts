@@ -78,3 +78,15 @@ export interface Country {
   safety: string | null
   extras: Record<string, unknown>
 }
+
+/** A place search result (migration 21). Spans catalogue rows AND user places. */
+export interface PlaceHit {
+  id: string
+  name: string
+  kind: string
+  city_id: number | null
+  city_name: string | null
+  lat: number | null
+  lng: number | null
+  source: string | null
+}

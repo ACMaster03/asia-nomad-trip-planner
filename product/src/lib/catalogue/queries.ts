@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CatalogueField, City, CityLite, Country, Place, PlaceKind } from './types'
+import type { CatalogueField, City, CityLite, Country, Place, PlaceHit, PlaceKind } from './types'
 
 export async function fetchFields(sb: SupabaseClient): Promise<CatalogueField[]> {
   // order by sort_order only: the seed assigns contiguous ranges per group
@@ -52,6 +52,22 @@ export async function searchCities(
   const { data, error } = await sb.rpc('search_cities', { p_q: q, p_limit: limit })
   if (error) throw error
   return (data ?? []) as CityLite[]
+}
+
+/**
+ * TIER 2 — server-side place search (migration 21), spanning the catalogue and
+ * the couple's own places. A blank query returns nothing on purpose: an empty
+ * Explore box should browse countries, not dump the table.
+ */
+export async function searchPlaces(
+  sb: SupabaseClient,
+  q: string,
+  limit = 20,
+): Promise<PlaceHit[]> {
+  if (!q.trim()) return []
+  const { data, error } = await sb.rpc('search_places', { p_q: q, p_limit: limit })
+  if (error) throw error
+  return (data ?? []) as PlaceHit[]
 }
 
 /** The full record for ONE city, including attributes — fetched on demand. */

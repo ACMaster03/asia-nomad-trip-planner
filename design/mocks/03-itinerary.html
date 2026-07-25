@@ -550,9 +550,9 @@ body.hide-notes .note { display: none; }
             <label class="field"><span class="label">City</span>
               <input class="input" value="chiang" placeholder="Type a city…"></label>
             <div class="card" style="margin:-6px 0 12px;padding:4px 10px">
-              <div class="list-row"><div class="grow"><div class="title">Chiang Mai</div><div class="meta">Thailand · Northern Thailand</div></div><span class="badge accent">in catalogue</span></div>
-              <div class="list-row"><div class="grow"><div class="title">Chiang Rai</div><div class="meta">Thailand · Northern Thailand</div></div><span class="badge accent">in catalogue</span></div>
-              <div class="list-row"><div class="grow"><div class="title muted">Use “chiang” as typed</div><div class="meta">Not in the catalogue — costs won’t be estimated</div></div><button class="btn sm ghost">Use anyway</button></div>
+              <div class="list-row"><div class="grow"><div class="title">🇹🇭 Chiang Mai</div><div class="meta">Thailand · Northern Thailand</div></div><span class="badge accent">in catalogue</span></div>
+              <div class="list-row"><div class="grow"><div class="title">🇹🇭 Chiang Rai</div><div class="meta">Thailand · Northern Thailand</div></div><span class="badge accent">in catalogue</span></div>
+              <div class="list-row"><div class="grow"><div class="title muted">🏳️ Use “chiang” as typed</div><div class="meta">Not in the catalogue — costs won’t be estimated</div></div><button class="btn sm ghost">Use anyway</button></div>
             </div>
             <div class="grid c2">
               <label class="field"><span class="label">Arrive</span><input class="input" type="date" value="2026-10-01"></label>
@@ -575,6 +575,11 @@ body.hide-notes .note { display: none; }
           The <b>in catalogue</b> badge is the honest signal: picking one means the budget can
           estimate accommodation and daily living from city costs; typing your own means it can't,
           and the budget will show that stop as missing rather than guessing.
+        </div>
+        <div class="note">
+          Flags come from the vendored country map (mock 12's mledoze extract), so they render
+          offline and cover all 246 countries — not just the 18 in the curated catalogue.
+          A free-text city with no recognised country shows the neutral 🏳️.
         </div>
         <div class="note">
           Country is filled automatically from the chosen city — that is what triggers the FX

@@ -1,5 +1,9 @@
 'use client'
-import { useId, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
+import { searchCities } from '@/lib/catalogue/queries'
+import { countryFlag } from '@/lib/catalogue/countryCurrencies'
 import type { CityLite } from '@/lib/catalogue/types'
 import type { Segment, Tier } from '@/lib/trips/types'
 import { Modal } from './Modal'
@@ -26,14 +30,54 @@ export function SegmentForm({
   const [arrive, setArrive] = useState(initial?.arrive ?? defaultArrive ?? '')
   const [depart, setDepart] = useState(initial?.depart ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
-  const dlId = useId()
+  const sb = createClient()
+
+  // Approved endframe: mock 03 "City picker". Replaces a <datalist> holding
+  // EVERY city — fine at 46, impossible once the world import lands. Debounced
+  // so typing never waits on a round trip.
+  const [q, setQ] = useState('')
+  const [picked, setPicked] = useState(!!initial?.city)
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (debounce.current) clearTimeout(debounce.current)
+    debounce.current = setTimeout(() => setQ(city.trim()), 250)
+    return () => { if (debounce.current) clearTimeout(debounce.current) }
+  }, [city])
+
+  const [online, setOnline] = useState(true)
+  useEffect(() => {
+    const sync = () => setOnline(navigator.onLine)
+    sync()
+    window.addEventListener('online', sync)
+    window.addEventListener('offline', sync)
+    return () => {
+      window.removeEventListener('online', sync)
+      window.removeEventListener('offline', sync)
+    }
+  }, [])
+
+  const hits = useQuery({
+    queryKey: ['city-search', q],
+    queryFn: () => searchCities(sb, q, 8),
+    enabled: online && q.length >= 2 && !picked,
+    staleTime: 5 * 60_000,
+  })
+  // Offline the RPC is unavailable, so fall back to the lite list already in
+  // cache. Adding a stop must never require signal (mock 03 "Picker offline").
+  const offlineHits: CityLite[] =
+    !online && q.length >= 2 && !picked
+      ? cities.filter((c) => c.city.toLowerCase().startsWith(q.toLowerCase())).slice(0, 8)
+      : []
+  const results = online ? (hits.data ?? []) : offlineHits
 
   function onCityChange(v: string) {
     setCity(v)
-    if (!country) {
-      const m = cities.find((c) => c.city === v)
-      if (m) setCountry(m.country) // auto-fill country from the catalogue, like the static app
-    }
+    setPicked(false)
+  }
+  function choose(c: CityLite) {
+    setCity(c.city)
+    setCountry(c.country)   // drives the FX watchlist auto-add + banner (mock 12)
+    setPicked(true)
   }
   function submit() {
     if (!city.trim()) { alert('Enter a city'); return }
@@ -51,11 +95,58 @@ export function SegmentForm({
       <div className="space-y-3">
         <label className="block text-sm">
           City
-          <input className={input} list={dlId} value={city} onChange={(e) => onCityChange(e.target.value)} />
+          <input
+            className={input}
+            value={city}
+            placeholder="Type a city…"
+            autoComplete="off"
+            onChange={(e) => onCityChange(e.target.value)}
+          />
         </label>
-        <datalist id={dlId}>
-          {cities.map((c) => <option key={c.id} value={c.city} />)}
-        </datalist>
+        {!picked && city.trim().length >= 2 && (
+          <div className="-mt-1 overflow-hidden rounded border border-neutral-200 dark:border-neutral-800">
+            {!online && (
+              <div className="border-b border-neutral-200 px-3 py-2 text-xs text-amber-600 dark:border-neutral-800 dark:text-amber-500">
+                📴 Offline — suggestions are limited. Type the name and it will be saved as-is.
+              </div>
+            )}
+            {results.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => choose(c)}
+                className="flex w-full items-center gap-2 border-b border-neutral-100 px-3 py-2 text-left last:border-0 hover:bg-neutral-50 dark:border-neutral-900 dark:hover:bg-neutral-900"
+              >
+                <span>{countryFlag(c.country)}</span>
+                <span className="flex-1">
+                  <span className="text-sm font-medium">{c.city}</span>
+                  <span className="block text-xs text-neutral-500">
+                    {[c.country, c.region_name].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
+                <span className="rounded-full border border-teal-500 px-2 py-0.5 text-[11px] text-teal-700 dark:text-teal-400">
+                  in catalogue
+                </span>
+              </button>
+            ))}
+            {/* MANDATORY, not a nicety: Erd is not in the catalogue and user
+                places attach by city NAME (migration 14), so free text must
+                keep working or existing trips break. */}
+            <button
+              type="button"
+              onClick={() => setPicked(true)}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900"
+            >
+              <span>🏳️</span>
+              <span className="flex-1">
+                <span className="text-sm text-neutral-500">Use “{city.trim()}” as typed</span>
+                <span className="block text-xs text-neutral-500">
+                  Not in the catalogue — costs won’t be estimated
+                </span>
+              </span>
+            </button>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-sm">
             Country

@@ -788,3 +788,26 @@ export function currencyCountries(code: string): string[] {
   }
   return inverse.get(code) ?? []
 }
+
+// ISO2 for a country name — powers flags in search results and the city picker.
+// Built from the same table, so it covers all 246 countries offline, not just
+// the 18 in the curated catalogue.
+let byName: Map<string, string> | null = null
+
+export function countryIso2(name: string | undefined | null): string | null {
+  if (!name) return null
+  const raw = name.trim()
+  if (/^[A-Za-z]{2}$/.test(raw) && COUNTRY_NAME[raw.toUpperCase()]) return raw.toUpperCase()
+  if (!byName) {
+    byName = new Map()
+    for (const [iso2, n] of Object.entries(COUNTRY_NAME)) byName.set(n.toLowerCase(), iso2)
+  }
+  return byName.get(raw.toLowerCase()) ?? null
+}
+
+/** Emoji flag for a country name. Falls back to a neutral flag, never empty. */
+export function countryFlag(name: string | undefined | null): string {
+  const iso = countryIso2(name)
+  if (!iso) return '🏳️'
+  return iso.replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+}
