@@ -2,7 +2,7 @@
 import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchCountries } from '@/lib/catalogue/queries'
+import { fetchCities, fetchCountries } from '@/lib/catalogue/queries'
 import { qk } from '@/lib/catalogue/keys'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 
@@ -14,7 +14,15 @@ const GlobeView = dynamic(() => import('@/components/Globe'), {
 
 export default function MapClient() {
   const sb = createClient()
-  const { trip, cities, cityIdx } = useTripScreen()
+  const { trip, cityIdx } = useTripScreen()
+  // The globe renders hover cards with wifi/landmarks/weather, so this screen
+  // still needs the FULL rows. It keeps its own query (already prefetched by
+  // map/page.tsx) rather than making every other screen pay for attributes.
+  const cities = useQuery({
+    queryKey: qk.cities,
+    queryFn: () => fetchCities(sb),
+    staleTime: 6 * 60 * 60_000,
+  })
   const { data: countries = [] } = useQuery({ queryKey: qk.countries, queryFn: () => fetchCountries(sb) })
   const state = trip.data?.state
   // top-14 tucks the overlay under the nav bar; the nav itself is z-40 with a

@@ -21,6 +21,22 @@ export interface CatalogueField {
   item_fields: ItemField[] | null
 }
 
+/**
+ * A city WITHOUT its attributes blob — the Tier-2 shape (migration 20).
+ * attributes is ~92% of a city row, and a browse/search list never renders it.
+ */
+export interface CityLite {
+  id: number
+  country: string
+  city: string
+  region: string | null
+  region_name: string | null
+  lat: number | null
+  lng: number | null
+  daily_living_mid: number | null
+  accom_mid: number | null
+}
+
 export interface City {
   id: number
   country: string

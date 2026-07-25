@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchTrip } from './queries'
-import { fetchCities } from '@/lib/catalogue/queries'
+import { fetchCityList, fetchCitiesByName } from '@/lib/catalogue/queries'
 import { fetchFx, crossRate } from '@/lib/catalogue/fx'
 import { tk } from './keys'
 import { qk } from '@/lib/catalogue/keys'
@@ -20,12 +20,26 @@ export function useTripScreen() {
     queryKey: tk.trip(tripId ?? 'none'),
     queryFn: () => (tripId ? fetchTrip(sb, tripId) : Promise.resolve(null)),
   })
-  // World data changes rarely and weighs ~100 kB — fetch client-side once and
-  // let the persisted cache (IndexedDB, 24 h) carry it; the server deliberately
-  // does not prefetch it (see prefetch.ts).
+  // TIER 2 (migration 20): the LIGHT city list — no attributes, ~8 kB instead
+  // of ~102 kB. Enough for the stop picker and for matching a stop's city to
+  // its places; nothing on these screens renders catalogue attributes.
   const cities = useQuery({
-    queryKey: qk.cities,
-    queryFn: () => fetchCities(sb),
+    queryKey: qk.citiesLite,
+    queryFn: () => fetchCityList(sb),
+    staleTime: 6 * 60 * 60_000,
+  })
+
+  // TIER 1: full rows, but ONLY for the cities on this route — the budget needs
+  // their costs.accomPerNight / costs.dailyLiving. Scoped like this it stays
+  // small and precacheable no matter how large the catalogue grows.
+  const routeCities = useMemo(
+    () => [...new Set((trip.data?.state.segments ?? []).map((s) => s.city).filter(Boolean))],
+    [trip.data],
+  )
+  const tripCities = useQuery({
+    queryKey: qk.tripCities(routeCities),
+    queryFn: () => fetchCitiesByName(sb, routeCities),
+    enabled: routeCities.length > 0,
     staleTime: 6 * 60 * 60_000,
   })
   // FX snapshot (migration 19). Owner decision 2026-07-25: rates are data, not
@@ -35,7 +49,7 @@ export function useTripScreen() {
     queryFn: () => fetchFx(sb),
     staleTime: 60 * 60_000,
   })
-  const cityIdx = useMemo(() => buildCityIndex(cities.data ?? []), [cities.data])
+  const cityIdx = useMemo(() => buildCityIndex(tripCities.data ?? []), [tripCities.data])
 
   // THE MERGE. state.rates does double duty: Object.keys() is the currency
   // picker list in Stays/Transport/Extras/Stops/Ledger, while the values feed
@@ -57,5 +71,5 @@ export function useTripScreen() {
     return { ...trip, data: { ...trip.data, state: { ...trip.data.state, rates } } }
   }, [trip, fx.data])
 
-  return { trip: merged, cities, cityIdx, fx }
+  return { trip: merged, cities, tripCities, cityIdx, fx }
 }

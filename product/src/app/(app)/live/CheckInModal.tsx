@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchPlaces, insertUserPlace } from '@/lib/catalogue/queries'
 import { qk } from '@/lib/catalogue/keys'
-import type { City, Place, PlaceKind } from '@/lib/catalogue/types'
+import type {Place, PlaceKind, CityLite } from '@/lib/catalogue/types'
 import type { TripEventVisibility } from '@/lib/trips/events'
 import { Modal } from '@/components/trips/Modal'
 
@@ -45,7 +45,7 @@ export function CheckInModal({
   onSave,
 }: {
   cityName: string | null
-  cities: City[]
+  cities: CityLite[]
   saving: boolean
   onClose: () => void
   onSave: (v: CheckInInput) => void

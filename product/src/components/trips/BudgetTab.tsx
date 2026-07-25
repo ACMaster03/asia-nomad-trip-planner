@@ -28,7 +28,9 @@ export function BudgetTab() {
     <main className="mx-auto max-w-5xl p-6">
       <h1 className="mb-1 text-2xl font-semibold">Budget</h1>
       <p className="mb-4 text-sm text-neutral-500">
-        Totalled in {base} at your trip&apos;s FX rates. Only items marked in-plan count.
+        {/* One expression, not text+{base}+text: adjacent JSX text nodes lose the
+            space around the expression once server-rendered. */}
+        {`Totalled in ${base} at your trip\u2019s FX rates. Only items marked in-plan count.`}
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {/* Grand total = entered numbers ONLY; gaps are named, never guessed

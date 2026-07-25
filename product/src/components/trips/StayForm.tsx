@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import type { City } from '@/lib/catalogue/types'
+import type {CityLite } from '@/lib/catalogue/types'
 import type { Segment, Stay } from '@/lib/trips/types'
 import { Modal } from './Modal'
 import { SegmentForm } from './SegmentForm'
@@ -21,7 +21,7 @@ export function StayForm({
   onSave: (s: Stay) => void
   /** preselect a stop (e.g. the "＋ stay" shortcut on a Stops row) */
   defaultSegId?: string
-  cities?: City[]
+  cities?: CityLite[]
   defaultArrive?: string
   /** create a stop without leaving the form (owner request 2026-07-24) */
   onCreateStop?: (seg: Segment) => void

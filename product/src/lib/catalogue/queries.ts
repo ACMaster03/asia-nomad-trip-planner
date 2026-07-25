@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CatalogueField, City, Country, Place, PlaceKind } from './types'
+import type { CatalogueField, City, CityLite, Country, Place, PlaceKind } from './types'
 
 export async function fetchFields(sb: SupabaseClient): Promise<CatalogueField[]> {
   // order by sort_order only: the seed assigns contiguous ranges per group
@@ -23,6 +23,58 @@ export async function fetchCities(sb: SupabaseClient): Promise<City[]> {
     .order('city')
   if (error) throw error
   return data as City[]
+}
+
+const CITY_LITE_COLS = 'id,country,city,region,region_name,lat,lng,daily_living_mid,accom_mid'
+
+/**
+ * TIER 2 — browse/search list. Excludes the attributes jsonb, which is ~92% of
+ * a city row (102 kB -> 8.3 kB across the 46-city catalogue, and the gap only
+ * widens with the world import). Anything that needs the full record fetches
+ * ONE city with fetchCityDetail.
+ */
+export async function fetchCityList(sb: SupabaseClient): Promise<CityLite[]> {
+  const { data, error } = await sb
+    .from('cities')
+    .select(CITY_LITE_COLS)
+    .order('country')
+    .order('city')
+  if (error) throw error
+  return (data ?? []) as CityLite[]
+}
+
+/** TIER 2 — server-side search (migration 20, pg_trgm). Never downloads the set. */
+export async function searchCities(
+  sb: SupabaseClient,
+  q: string,
+  limit = 20,
+): Promise<CityLite[]> {
+  const { data, error } = await sb.rpc('search_cities', { p_q: q, p_limit: limit })
+  if (error) throw error
+  return (data ?? []) as CityLite[]
+}
+
+/** The full record for ONE city, including attributes — fetched on demand. */
+export async function fetchCityDetail(sb: SupabaseClient, id: number): Promise<City | null> {
+  const { data, error } = await sb.from('cities').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return (data as City) ?? null
+}
+
+/**
+ * TIER 1 — the trip's own cities, WITH attributes, because the budget needs
+ * costs.accomPerNight / costs.dailyLiving (buildCityIndex). Scoped to the route,
+ * so this stays small and precacheable however big the catalogue grows.
+ */
+export async function fetchCitiesByName(
+  sb: SupabaseClient,
+  names: string[],
+): Promise<City[]> {
+  const wanted = [...new Set(names.filter(Boolean))]
+  if (wanted.length === 0) return []
+  const { data, error } = await sb.from('cities').select('*').in('city', wanted)
+  if (error) throw error
+  return (data ?? []) as City[]
 }
 
 export async function fetchCountries(sb: SupabaseClient): Promise<Country[]> {

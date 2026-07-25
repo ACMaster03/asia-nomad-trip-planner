@@ -1,6 +1,6 @@
 'use client'
 import { useId, useState } from 'react'
-import type { City } from '@/lib/catalogue/types'
+import type { CityLite } from '@/lib/catalogue/types'
 import type { Segment, Tier } from '@/lib/trips/types'
 import { Modal } from './Modal'
 
@@ -15,7 +15,7 @@ export function SegmentForm({
   onSave,
 }: {
   initial: Segment | null
-  cities: City[]
+  cities: CityLite[]
   defaultArrive: string
   onCancel: () => void
   onSave: (s: Segment) => void
