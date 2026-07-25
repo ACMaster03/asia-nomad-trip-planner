@@ -9,7 +9,9 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // `follow` is the public no-account page — an auth-refresh roundtrip
-    // would be pure latency for followers who never have a session.
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|follow|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // would be pure latency for followers who never have a session. Same for
+    // `digest` (confirm/unsubscribe landings) and `api/digest` — the one-click
+    // POST arrives from a mail provider's servers, which have no cookies at all.
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|follow|digest|api/digest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

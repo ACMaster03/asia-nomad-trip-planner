@@ -8,14 +8,21 @@
 // NOT advance last_sent_at, so the next digest covers the whole gap
 // (capped at 8 days).
 //
-// Secrets: RESEND_API_KEY, CRON_SECRET, ALERTS_FROM (project-wide, already
-// set for the alerts function).
+// Every email carries a working live-page link (the subscriber's own view
+// token, migration 17) and RFC 8058 one-click unsubscribe headers, so Gmail
+// and Apple Mail offer their own native Unsubscribe control and treat it as a
+// real opt-out instead of leaving the reader to reach for the spam button.
+//
+// Secrets: RESEND_API_KEY, CRON_SECRET, ALERTS_FROM, SITE_URL (optional —
+// defaults to the production domain; project-wide, already set for alerts).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const CRON_SECRET = Deno.env.get('CRON_SECRET')!
 const FROM = Deno.env.get('ALERTS_FROM') ?? 'Nomad Planner <onboarding@resend.dev>'
+const FALLBACK_SITE = 'https://asia-nomad-trip-planner.vercel.app'
+const SITE = (Deno.env.get('SITE_URL') ?? FALLBACK_SITE).replace(/\/+$/, '')
 
 const sb = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -33,6 +40,7 @@ interface SubRow {
   confirmed_at: string
   last_sent_at: string | null
   unsub_token: string
+  view_token: string
   trip_shares: { trip_id: string; revoked_at: string | null; expires_at: string | null; paused_at: string | null }
 }
 
@@ -62,8 +70,9 @@ Deno.serve(async (req) => {
 
   const { data: subs, error } = await sb
     .from('digest_subscriptions')
-    .select('id,email,frequency,confirmed_at,last_sent_at,unsub_token,trip_shares!inner(trip_id,revoked_at,expires_at,paused_at)')
+    .select('id,email,frequency,confirmed_at,last_sent_at,unsub_token,view_token,trip_shares!inner(trip_id,revoked_at,expires_at,paused_at)')
     .not('confirmed_at', 'is', null)
+    .is('unsubscribed_at', null)
     .is('trip_shares.revoked_at', null)
     .is('trip_shares.paused_at', null)
   if (error) return new Response(error.message, { status: 500 })
@@ -122,11 +131,14 @@ Deno.serve(async (req) => {
       body.push(new Date(day + 'T00:00:00Z').toDateString())
       body.push(...evs.map(eventLine), '')
     }
+    const oneClickUrl = `${SITE}/api/digest/unsubscribe?t=${s.unsub_token}`
     body.push(
-      `Photos and the live map are on the follow page link you were given.`,
+      `See the photos and where they are right now:`,
+      `${SITE}/follow/${s.view_token}`,
       ``,
       `—`,
-      `Unsubscribe: ${Deno.env.get('SUPABASE_URL')}/functions/v1/digest?action=unsub&t=${s.unsub_token}`,
+      `Unsubscribe:`,
+      `${SITE}/digest/unsubscribe?t=${s.unsub_token}`,
     )
 
     const res = await fetch('https://api.resend.com/emails', {
@@ -137,6 +149,12 @@ Deno.serve(async (req) => {
         to: s.email,
         subject: `🧭 ${tripName} — ${events.length} update${events.length > 1 ? 's' : ''}`,
         text: body.join('\n'),
+        // RFC 8058. The POST arm is what makes the client's own Unsubscribe
+        // button a true opt-out rather than a link it merely offers to open.
+        headers: {
+          'List-Unsubscribe': `<${oneClickUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       }),
     })
     if (res.ok) {

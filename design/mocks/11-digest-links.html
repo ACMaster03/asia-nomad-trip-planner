@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Digest links</title>
+<style>
+/* ============================================================
+   NOMAD MOCK KIT — shared design system. DO NOT EDIT this block
+   in screen mocks; add screen-specific CSS in the marked section
+   at the bottom of this <style> tag only.
+   ============================================================ */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root, :root[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #141414; --surface2: #1d1d1f;
+  --border: #2a2a2c; --border-strong: #3a3a3d;
+  --text: #ededed; --muted: #9a9aa2; --faint: #6b6b74;
+  --accent: #2dd4bf; --accent-strong: #14b8a6; --accent-ink: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --ok: #34d399; --warn: #fbbf24; --danger: #f87171; --gold: #eab308;
+  --note-bg: #2b2410; --note-border: #7c6a1e; --note-text: #ffe9a8;
+  --shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] {
+  --bg: #fafafa; --surface: #ffffff; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-strong: #d4d4d8;
+  --text: #171717; --muted: #6b7280; --faint: #a1a1aa;
+  --accent: #0d9488; --accent-strong: #0f766e; --accent-ink: #ffffff;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --ok: #059669; --warn: #d97706; --danger: #dc2626; --gold: #ca8a04;
+  --note-bg: #fef9c3; --note-border: #eab308; --note-text: #713f12;
+  --shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3 { margin: 0; }
+
+/* ---- mock control bar (not part of the app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; background: #101623; border-bottom: 1px solid #26314a;
+  color: #cbd5e1; font-size: 12px;
+}
+:root[data-theme="light"] .mockbar { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.mockbar .mock-title { font-weight: 700; letter-spacing: .02em; margin-right: 6px; }
+.mockbar .mock-title small { opacity: .65; font-weight: 400; }
+.statepill {
+  border: 1px solid #3b82f6; background: transparent; color: inherit;
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+.statepill.active { background: #3b82f6; color: #fff; }
+.mocktool { margin-left: 0; border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; opacity: .85; }
+.mockbar .spacer { flex: 1; }
+.statedesc { width: 100%; opacity: .75; font-size: 11.5px; }
+
+/* ---- viewport frame ---- */
+.frame { margin: 18px auto; max-width: 1100px; transition: max-width .2s ease; padding: 0 12px; }
+.frame.phone { max-width: 414px; padding: 0; }
+.frame.phone .app { border: 6px solid #333; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
+:root[data-theme="light"] .frame.phone .app { border-color: #d4d4d8; }
+.app { background: var(--bg); container-type: inline-size; }
+
+/* ---- app chrome ---- */
+.appnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 13.5px;
+}
+.appnav .brand { font-weight: 700; margin-right: 4px; }
+.appnav a { color: var(--muted); } .appnav a.on { color: var(--text); font-weight: 600; }
+.appnav .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+@container (max-width: 500px) {
+  .appnav { padding: 10px 12px; gap: 2px 10px; font-size: 12.5px; }
+  .appnav .hide-phone { display: none; }
+}
+main.screen { padding: 18px 16px 40px; max-width: 960px; margin: 0 auto; }
+@container (max-width: 500px) { main.screen { padding: 14px 12px 90px; } }
+
+/* ---- primitives ---- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.card.pad-lg { padding: 20px; }
+.card.hero { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.stat.big .v { font-size: 28px; }
+.stat.accent { border-color: var(--accent); } .stat.accent .v { color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface2); color: var(--text); border-radius: 8px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--accent-ink); font-weight: 600; }
+:root[data-theme="dark"] .btn.primary { color: #04211d; background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.tab { border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; margin-bottom: -1px; }
+.tab.on { border-bottom-color: var(--accent); color: var(--accent); }
+
+.badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+  background: var(--surface2); border: 1px solid var(--border-strong); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: transparent; }
+.badge.warn { color: var(--warn); border-color: var(--warn); background: transparent; }
+.badge.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.badge.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.badge.gold { color: var(--gold); border-color: var(--gold); }
+
+.field { display: block; margin-bottom: 12px; }
+.field .label { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 4px; }
+.input, .select, textarea.input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: 0; }
+
+.list-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .meta { color: var(--muted); font-size: 12px; margin-top: 1px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  border: 1px solid var(--accent); flex: none; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; border: 1px solid var(--border); }
+.progress > i { display: block; height: 100%; background: var(--accent); }
+
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+.stars .off { color: var(--border-strong); }
+
+.modal-backdrop { position: relative; padding: 30px 12px; background:
+  repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.04) 10px 20px); border-radius: 12px;
+  border: 1px dashed var(--border-strong); display: flex; justify-content: center; }
+.modal { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 18px; width: 100%; max-width: 430px; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+
+.fab { position: sticky; bottom: 18px; float: right; margin-right: 4px; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #04211d; border: 0; font-size: 24px; font-weight: 700;
+  box-shadow: var(--shadow); cursor: pointer; }
+
+.empty { text-align: center; padding: 46px 18px; color: var(--muted); }
+.empty .glyph { font-size: 38px; margin-bottom: 10px; }
+.empty h3 { color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+.toast { display: inline-flex; gap: 8px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; box-shadow: var(--shadow); }
+.toast.warn { border-left-color: var(--warn); } .toast.danger { border-left-color: var(--danger); }
+
+/* map / globe placeholder */
+.map-ph { position: relative; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  background: radial-gradient(circle at 55% 42%, #123 0, #0a1420 55%, #060b12 100%); min-height: 320px;
+  display: flex; align-items: center; justify-content: center; color: #7d93ad; }
+:root[data-theme="light"] .map-ph { background: radial-gradient(circle at 55% 42%, #dbeafe 0, #eff6ff 55%, #e0e7ff 100%); color: #64748b; }
+.map-ph .globe { width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2e5f52 0 18%, transparent 19%),
+              radial-gradient(circle at 62% 55%, #2e5f52 0 12%, transparent 13%),
+              radial-gradient(circle at 48% 70%, #2e5f52 0 8%, transparent 9%),
+              radial-gradient(circle at 30% 30%, #1c8a86 0, #0f3f4d 60%, #0a2836 100%);
+  box-shadow: inset -18px -14px 40px rgba(0,0,0,.5), 0 0 40px rgba(45,212,191,.15); }
+.map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 20px; }
+.map-overlay { position: absolute; }
+
+/* annotation notes (toggleable) */
+.note { background: var(--note-bg); border: 1px solid var(--note-border); color: var(--note-text);
+  border-radius: 8px; padding: 8px 11px; font-size: 12.5px; margin: 10px 0; }
+.note::before { content: "✎ "; font-weight: 700; }
+body.hide-notes .note { display: none; }
+
+/* layout utils */
+.grid { display: grid; gap: 12px; }
+.grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
+@container (max-width: 500px) {
+  .grid.c3, .grid.c4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.c2.stack-phone { grid-template-columns: 1fr; }
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 12px; } .tiny { font-size: 11px; }
+.h1 { font-size: 20px; font-weight: 700; } .h2 { font-size: 16px; font-weight: 650; }
+.sec { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.sec .h2 { flex: none; }
+.mt0 { margin-top: 0; } .mb0 { margin-bottom: 0; }
+.accent { color: var(--accent); } .ok { color: var(--ok); } .warn { color: var(--warn); }
+.danger { color: var(--danger); } .gold { color: var(--gold); }
+.right { text-align: right; }
+.hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
+
+/* ============================================================
+   SCREEN-SPECIFIC CSS — add below this line only
+   ============================================================ */
+
+/* These are standalone public pages (no app nav, no account) —
+   the follower lands here straight from an email client. */
+.pubpage {
+  min-height: 460px; display: flex; align-items: center; justify-content: center;
+  padding: 44px 18px;
+}
+.pubcard {
+  width: 100%; max-width: 30rem; text-align: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 34px 26px; box-shadow: var(--shadow);
+}
+.pubcard .glyph { font-size: 44px; line-height: 1; }
+.pubcard h1 { font-size: 21px; font-weight: 700; margin: 14px 0 8px; }
+.pubcard .lede { color: var(--muted); font-size: 14.5px; margin: 0 0 6px; }
+.pubcard .lede + .lede { margin-top: 10px; }
+.pubcard .actions { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.pubcard .actions .btn { width: 100%; max-width: 17rem; justify-content: center; }
+.pubcard .footnote {
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
+  color: var(--faint); font-size: 11.5px;
+}
+.pubcard .brandline { color: var(--faint); font-size: 12px; letter-spacing: .04em; }
+
+/* recovery box on dead-end states */
+.recovery {
+  margin-top: 18px; text-align: left; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px;
+  font-size: 13px; color: var(--muted);
+}
+.recovery b { color: var(--text); font-weight: 600; }
+.recovery ol { margin: 8px 0 0; padding-left: 20px; }
+.recovery li { margin-bottom: 4px; }
+
+/* email preview panes */
+.mailwrap { max-width: 620px; margin: 0 auto; }
+.mail {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+}
+.mail .hdr {
+  padding: 12px 15px; border-bottom: 1px solid var(--border); background: var(--surface2);
+  font-size: 12.5px; color: var(--muted);
+}
+.mail .hdr .subj { color: var(--text); font-weight: 650; font-size: 14px; margin-bottom: 3px; }
+.mail .hdr .kv { display: flex; gap: 6px; }
+.mail .hdr .kv .k { color: var(--faint); min-width: 3.2rem; }
+.mail pre {
+  margin: 0; padding: 16px 15px; font: 12.5px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap; word-break: break-word; color: var(--text);
+}
+.mail pre .url { color: var(--accent); }
+.mail pre .dim { color: var(--faint); }
+.rawhdr {
+  background: var(--surface2); border: 1px solid var(--border-strong); border-radius: 10px;
+  padding: 13px 15px; margin-bottom: 20px;
+  font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap; word-break: break-word; color: var(--muted);
+}
+.rawhdr b { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="mock-title">🧭 MOCK <small>· Digest links</small></span>
+  <span id="statePills"></span>
+  <span class="spacer"></span>
+  <button class="mocktool" id="notesBtn" onclick="toggleNotes()">✎ notes</button>
+  <button class="mocktool" id="vpBtn" onclick="toggleViewport()">📱 phone</button>
+  <button class="mocktool" onclick="toggleTheme()">◐ theme</button>
+  <span class="statedesc" id="stateDesc"></span>
+</header>
+
+<div class="frame" id="frame">
+  <div class="app">
+    <!-- No app nav on purpose: these pages live OUTSIDE (app), like /follow/[token].
+         The visitor has no account and may never have opened the app. -->
+    <main class="screen" id="screen">
+
+      <!-- ============================================================
+           1 · CONFIRMED — /digest/confirm?t=… , token matched, first click
+           ============================================================ -->
+      <section data-state="confirmed">
+        <div class="pubpage">
+          <div class="pubcard">
+            <div class="glyph">🎉</div>
+            <div class="brandline">Asia 2026–27</div>
+            <h1>You’re in</h1>
+            <p class="lede">
+              You’ll get a <b>weekly</b> email summary of the trip at
+              <b>mom@example.com</b>.
+            </p>
+            <p class="lede">
+              Quiet weeks send nothing at all — the next email just covers a longer stretch.
+            </p>
+            <div class="actions">
+              <a class="btn primary lg" href="#">Open the live page →</a>
+            </div>
+            <div class="footnote">
+              Every summary has a one-click unsubscribe link at the bottom.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          Frequency (<b>weekly</b>) and the masked email come from the subscription row the
+          confirm token resolved to — never from the URL.
+        </div>
+        <div class="note">
+          “Open the live page” uses the subscriber’s own <b>view token</b> (migration 17), so it
+          is a real working link. It dies when the share is revoked, and is deleted on unsubscribe.
+        </div>
+      </section>
+
+      <!-- ============================================================
+           2 · ALREADY CONFIRMED — same link clicked a second time
+           ============================================================ -->
+      <section data-state="already">
+        <div class="pubpage">
+          <div class="pubcard">
+            <div class="glyph">✅</div>
+            <div class="brandline">Asia 2026–27</div>
+            <h1>Already confirmed</h1>
+            <p class="lede">
+              <b>mom@example.com</b> is already signed up for <b>weekly</b> updates.
+              Nothing changed.
+            </p>
+            <div class="actions">
+              <a class="btn primary lg" href="#">Open the live page →</a>
+            </div>
+            <div class="footnote">
+              Every summary has a one-click unsubscribe link at the bottom.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          Confirming twice must never look like an error — mail clients and link scanners
+          pre-fetch URLs, so the second hit is often a machine, not a person.
+        </div>
+      </section>
+
+      <!-- ============================================================
+           3 · EXPIRED / INVALID — the state Patrik actually hit
+           ============================================================ -->
+      <section data-state="expired">
+        <div class="pubpage">
+          <div class="pubcard">
+            <div class="glyph">⏳</div>
+            <div class="brandline">Asia 2026–27</div>
+            <h1>This confirmation link has expired</h1>
+            <p class="lede">
+              Confirmation links work once. This one was already used, replaced by a newer
+              request, or the subscription was cancelled.
+            </p>
+            <div class="recovery">
+              <b>To start getting emails again</b>
+              <ol>
+                <li>Open your follow link — the live page your family sent you.
+                    It’s also in the confirmation email, under the confirm button.</li>
+                <li>Scroll to <b>Get email updates</b> at the bottom.</li>
+                <li>Enter your address again — a fresh confirmation arrives in a minute.</li>
+              </ol>
+            </div>
+            <div class="footnote">
+              Nothing was sent to you and nothing was changed.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <b>No button here on purpose.</b> The token didn’t resolve, so the server genuinely
+          has no idea which trip or which follower this was — offering an “Open the live page”
+          link would mean guessing. Text recovery is the honest option.
+        </div>
+        <div class="note">
+          Replaces today’s dead end: a bare <span class="faint">*.supabase.co/functions/v1/digest?…</span>
+          URL rendering four unstyled lines that say “Link not valid” and stop there.
+        </div>
+      </section>
+
+      <!-- ============================================================
+           4 · UNSUBSCRIBED — clicked the link in a digest
+           ============================================================ -->
+      <section data-state="unsubbed">
+        <div class="pubpage">
+          <div class="pubcard">
+            <div class="glyph">👋</div>
+            <div class="brandline">Asia 2026–27</div>
+            <h1>Unsubscribed</h1>
+            <p class="lede">
+              No more email summaries will be sent to <b>mom@example.com</b>.
+            </p>
+            <p class="lede">
+              The live page still works — unsubscribing only stops the emails, it doesn’t
+              take away your access.
+            </p>
+            <div class="actions">
+              <a class="btn primary lg" href="#">Open the live page →</a>
+              <button class="btn ghost">Actually, keep sending them</button>
+            </div>
+            <div class="footnote">
+              Changed your mind later? Re-subscribe from the live page any time.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          The row is read <b>before</b> it is deleted, so the view token is still in hand for
+          the live-page button. Undo (“keep sending them”) re-inserts a
+          <b>confirmed</b> row — the address already proved itself, so no second opt-in.
+        </div>
+        <div class="note">
+          <b>Unknown-token variant:</b> an already-deleted or bogus token shows this same page
+          minus both buttons and the trip name. An unsubscribe link must always succeed —
+          never “link not valid”.
+        </div>
+      </section>
+
+      <!-- ============================================================
+           4b · UNDO TAKEN — "Actually, keep sending them" was clicked
+           ============================================================ -->
+      <section data-state="resubbed">
+        <div class="pubpage">
+          <div class="pubcard">
+            <div class="glyph">📮</div>
+            <div class="brandline">Asia 2026–27</div>
+            <h1>You’re still subscribed</h1>
+            <p class="lede">
+              Nothing changed after all — <b>weekly</b> summaries will keep arriving at
+              <b>mom@example.com</b>.
+            </p>
+            <div class="actions">
+              <a class="btn primary lg" href="#">Open the live page →</a>
+            </div>
+            <div class="footnote">
+              Every summary has a one-click unsubscribe link at the bottom.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          The undo replaces the WHOLE card. Leaving “no more summaries will be sent” on screen
+          above a “back on” line reads as a contradiction — the wrong doubt to leave someone
+          with on a confirmation screen.
+        </div>
+        <div class="note">
+          If the undo fails, the card stays on state 4 and an amber line points at the live
+          page instead. It never silently pretends to have worked.
+        </div>
+      </section>
+
+      <!-- ============================================================
+           5 · ONE-CLICK (RFC 8058) — what the mail client does itself
+           ============================================================ -->
+      <section data-state="oneclick">
+        <div class="mailwrap">
+          <div class="h1" style="margin-bottom:6px">Gmail / Apple Mail one-click unsubscribe</div>
+          <p class="muted small mt0">
+            The headers below make the mail client show its own native
+            <b>Unsubscribe</b> control next to the sender name — and trust it. No page is
+            shown to the reader; the client POSTs in the background and reports success itself.
+          </p>
+
+          <div class="rawhdr">From: Asia 2026–27 &lt;trip@nomad.example&gt;
+To: mom@example.com
+Subject: 🧭 Asia 2026–27 — 3 updates
+<b>List-Unsubscribe:</b> &lt;https://asia-nomad-trip-planner.vercel.app/api/digest/unsubscribe?t=c41a…&gt;
+<b>List-Unsubscribe-Post:</b> List-Unsubscribe=One-Click</div>
+
+          <div class="card">
+            <div class="h2" style="margin-bottom:8px">What has to be true</div>
+            <table class="table">
+              <tr><td><b>POST</b> endpoint</td><td class="muted">Same token, no confirmation page, returns 200 with an empty body.</td></tr>
+              <tr><td>No auth, no cookies</td><td class="muted">The POST comes from Google’s servers, not the reader’s browser.</td></tr>
+              <tr><td>Idempotent</td><td class="muted">Repeat POSTs return 200 even when the row is already gone.</td></tr>
+              <tr><td>Takes effect at once</td><td class="muted">Deleted immediately, so the next cron run can’t send one more.</td></tr>
+              <tr><td>GET still human</td><td class="muted">The same URL opened by a person renders the Unsubscribed page (state 4).</td></tr>
+            </table>
+          </div>
+
+          <div class="note">
+            This is what turns “an ugly page that says unsubscribed” into a real unsubscribe
+            that Gmail and Apple Mail recognise — and it protects sender reputation, because
+            readers reach for the client’s own button instead of the spam button.
+          </div>
+          <div class="note">
+            Sent on <b>digest emails only</b>. The confirmation email is transactional and
+            has nothing to unsubscribe from yet.
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           6 · SERVER ERROR
+           ============================================================ -->
+      <section data-state="error">
+        <div class="pubpage">
+          <div class="pubcard">
+            <div class="glyph">⚠️</div>
+            <div class="brandline">Asia 2026–27</div>
+            <h1>Something went wrong</h1>
+            <p class="lede">
+              We couldn’t reach the trip just now. <b>Nothing about your subscription
+              changed.</b>
+            </p>
+            <p class="lede">Try the link from your email again in a minute.</p>
+            <div class="footnote">
+              Still stuck after a few tries? Reply to the email that brought you here.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          Shown on 5xx / network failure talking to the digest function. It must never claim
+          success — an unsubscribe that silently failed is the worst outcome of all.
+        </div>
+      </section>
+
+      <!-- ============================================================
+           7 · THE EMAILS — plain text, with the links that actually work
+           ============================================================ -->
+      <section data-state="emails">
+        <div class="mailwrap">
+
+          <div class="h1" style="margin-bottom:10px">Confirmation email</div>
+          <div class="mail">
+            <div class="hdr">
+              <div class="subj">Confirm: weekly updates from “Asia 2026–27”</div>
+              <div class="kv"><span class="k">From</span><span>Asia 2026–27 &lt;trip@nomad.example&gt;</span></div>
+              <div class="kv"><span class="k">To</span><span>mom@example.com</span></div>
+            </div>
+            <pre>You asked for a weekly email summary of "Asia 2026–27".
+
+Confirm your subscription:
+<span class="url">https://asia-nomad-trip-planner.vercel.app/digest/confirm?t=8f3c…</span>
+
+Your live page — photos, the map and the latest check-ins:
+<span class="url">https://asia-nomad-trip-planner.vercel.app/follow/2b9e…</span>
+<span class="dim">(bookmark this one — it works even without the emails)</span>
+
+Didn't request this? Ignore this email and nothing will be sent.</pre>
+          </div>
+          <div class="note">
+            Both links now point at the <b>app domain</b>, not <span class="faint">*.supabase.co</span>.
+            The live-page URL is the fix for today’s literal <span class="faint">/follow/…</span>
+            placeholder — the ellipsis Patrik spotted, which was never a real URL.
+          </div>
+
+          <div class="h1" style="margin:26px 0 10px">Weekly digest</div>
+          <div class="mail">
+            <div class="hdr">
+              <div class="subj">🧭 Asia 2026–27 — 3 updates</div>
+              <div class="kv"><span class="k">From</span><span>Asia 2026–27 &lt;trip@nomad.example&gt;</span></div>
+              <div class="kv"><span class="k">To</span><span>mom@example.com</span></div>
+            </div>
+            <pre>This week on "Asia 2026–27":
+
+Thu Sep 10 2026
+  📍 Jay Fai ★★★★ — "Crab omelette worth the two-hour queue." (1 photo)
+
+Fri Sep 11 2026
+  📍 Wat Pho ★★★★★ — "Reclining Buddha is unreal. Go before 9am — no crowds." (1 photo)
+
+Sat Sep 12 2026
+  📍 Chatuchak Weekend Market ★★★★★ — "Bought two bags of things we
+     absolutely do not have room for." (2 photos)
+
+See the photos and where they are right now:
+<span class="url">https://asia-nomad-trip-planner.vercel.app/follow/2b9e…</span>
+
+—
+Unsubscribe:
+<span class="url">https://asia-nomad-trip-planner.vercel.app/digest/unsubscribe?t=c41a…</span></pre>
+          </div>
+          <div class="note">
+            Replaces “Photos and the live map are on the follow page link you were given” —
+            a sentence with no link in it at all.
+          </div>
+          <div class="note">
+            Event lines, ratings, comments and photo counts are unchanged from the shipped
+            <span class="faint">digest-send</span> builder. Content per
+            <b>FIXTURES.md</b> (Jay Fai · Wat Pho · Chatuchak, Sep 10–12).
+          </div>
+          <div class="note">
+            <b>Still plain text</b> by owner decision (2026-07-25) — revisit with HTML emails
+            once the project has its own verified domain in Resend.
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== MOCK CONFIG — edit per screen ====== */
+const MOCK = {
+  screen: 'Digest links (confirm · unsubscribe · emails)',
+  states: [
+    { id: 'confirmed', label: 'Confirmed',      desc: 'Follower clicks Confirm in the opt-in email. First click, token valid.' },
+    { id: 'already',   label: 'Already done',   desc: 'Same confirm link clicked again — or pre-fetched by a mail client scanner.' },
+    { id: 'expired',   label: 'Expired link',   desc: 'Confirm token no longer resolves. THE state Patrik hit on 2026-07-25.' },
+    { id: 'unsubbed',  label: 'Unsubscribed',   desc: 'Follower clicked Unsubscribe at the bottom of a digest, in a browser.' },
+    { id: 'resubbed',  label: 'Undo taken',     desc: 'They hit "Actually, keep sending them" on the Unsubscribed card.' },
+    { id: 'oneclick',  label: 'One-click',      desc: 'RFC 8058 headers — the mail client unsubscribes for them, no page shown.' },
+    { id: 'error',     label: 'Server error',   desc: 'Digest function unreachable. Never claims the change succeeded.' },
+    { id: 'emails',    label: '✉️ The emails',   desc: 'Plain-text bodies with the links that actually work.' },
+  ],
+};
+/* ====== harness (do not edit) ====== */
+let cur = location.hash.slice(1) || MOCK.states[0].id;
+if (!MOCK.states.some(s => s.id === cur)) cur = MOCK.states[0].id;
+function renderPills() {
+  document.getElementById('statePills').innerHTML = MOCK.states.map(s =>
+    `<button class="statepill${s.id === cur ? ' active' : ''}" onclick="setState('${s.id}')">${s.label}</button>`).join(' ');
+  const st = MOCK.states.find(s => s.id === cur);
+  document.getElementById('stateDesc').textContent = st.desc || '';
+  document.querySelectorAll('[data-state]').forEach(el => {
+    const ids = el.getAttribute('data-state').split(/\s+/);
+    el.style.display = (ids.includes('*') || ids.includes(cur)) ? '' : 'none';
+  });
+}
+function setState(id) { cur = id; history.replaceState(null, '', '#' + id); renderPills(); }
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleViewport() {
+  const f = document.getElementById('frame');
+  f.classList.toggle('phone');
+  document.getElementById('vpBtn').textContent = f.classList.contains('phone') ? '🖥 desktop' : '📱 phone';
+}
+function toggleNotes() { document.body.classList.toggle('hide-notes'); }
+document.querySelector('.mock-title small').textContent = '· ' + MOCK.screen;
+document.title = 'MOCK — ' + MOCK.screen;
+renderPills();
+</script>
+</body>
+</html>
