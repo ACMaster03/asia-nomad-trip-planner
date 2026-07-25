@@ -24,6 +24,11 @@ function readValue(field: CatalogueField, city: City, country: Country | undefin
       return (city as unknown as Record<string, unknown>)[field.key]
     case 'country':
       return country ? (country as unknown as Record<string, unknown>)[field.key] : undefined
+    // Country facts held in countries.extras jsonb (migration 22) — the same
+    // dotted-path treatment cities get, so a new country fact is one
+    // catalogue_fields row and a value, with no migration and no deploy.
+    case 'country_attribute':
+      return country ? getAtJsonPath(country.extras, field.key) : undefined
     case 'attribute':
     default:
       return getAtJsonPath(city.attributes, field.key) // supports dotted keys e.g. costs.dailyLiving

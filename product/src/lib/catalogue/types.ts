@@ -1,5 +1,5 @@
 export type FieldType = 'text' | 'number' | 'range' | 'list' | 'object'
-export type FieldSource = 'attribute' | 'column' | 'country'
+export type FieldSource = 'attribute' | 'column' | 'country' | 'country_attribute'
 
 export interface ItemField {
   key: string

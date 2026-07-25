@@ -126,3 +126,33 @@ realtime updates + smarter merging.)
   out of the browser. (It's not needed for this app.)
 - ✅ `.gitignore` already excludes `.env*` and `.vercel` so local secrets don't get
   committed.
+
+## Adding a country fact (migration 22)
+
+Country facts live in `countries.extras` jsonb and are declared in
+`catalogue_fields` with `source = 'country_attribute'` — the same data-driven
+path city facts use. **No migration and no deploy is needed for a new fact.**
+
+Declare it once:
+
+```sql
+insert into catalogue_fields (key, label, field_group, type, source, sort_order, show_in_list)
+values ('dress_code', 'Temple dress code', 'Country', 'text', 'country_attribute', 79, false);
+```
+
+Then fill it per country:
+
+```sql
+update countries
+   set extras = extras || jsonb_build_object('dress_code', 'Shoulders and knees covered.')
+ where code = 'Thailand';
+```
+
+Fields with no value render nothing at all (`FieldRenderer` returns null), so a
+declared-but-unfilled field is invisible rather than an empty row. Dotted keys
+work for nested structures, exactly as with `cities.attributes`
+(e.g. `'sim.providers'`).
+
+Migration 22 ships five starter definitions with NO values — plugs, tipping,
+tap_water, sim, emergency. The content is editorial and deliberately left to the
+owner; verify anything safety-related before relying on it.
