@@ -87,14 +87,20 @@ export interface Country {
   extras: Record<string, unknown>
 }
 
-/** A place search result (migration 21). Spans catalogue rows AND user places. */
+/**
+ * A place search result (migrations 21/24). Spans the couple's own places AND
+ * the imported OSM attraction layer.
+ *
+ * `id` is text because the two halves live in different id spaces: a uuid for
+ * public.places, "way/12345" for an OSM row. in_catalogue says which, and an
+ * imported id must never be treated as a places.id.
+ */
 export interface PlaceHit {
   id: string
   name: string
-  kind: string
-  city_id: number | null
+  kind: string | null
   city_name: string | null
   lat: number | null
   lng: number | null
-  source: string | null
+  in_catalogue: boolean
 }

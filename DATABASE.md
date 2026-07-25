@@ -189,3 +189,34 @@ truncate public.geo_countries cascade;
 `geo_cities.id` is a GEONAMEID — a different id space from `cities.id`. Rows
 where `search_cities` returns `in_catalogue = false` must never be passed to
 `fetchCityDetail`.
+
+## OSM attractions (migration 24)
+
+`geo_places` is the Tier-2 world attraction layer: `tourism=attraction|museum|
+viewpoint|artwork|zoo|theme_park|gallery`, name required, ways and relations
+reduced to a centre point. **Attribution is required**: © OpenStreetMap
+contributors, ODbL 1.0 — credited in the Explore UI. Note ODbL's SHARE-ALIKE
+clause, which is stronger than GeoNames' CC BY and matters for the P3 community
+phase.
+
+Restaurants are deliberately NOT imported. Measured 2026-07-25: Thailand has
+19 456 `amenity=restaurant` nodes against 2 781 `tourism=attraction`, and a
+restaurant with no hours, photos or reviews is weaker than a map app.
+
+Refresh (resumable — a country whose CSV exists is skipped, so a rate-limit just
+means running it again):
+
+```bash
+python3 tools/fetch-osm-attractions.py /tmp/osm          # all trip countries
+python3 tools/fetch-osm-attractions.py /tmp/osm CN IN    # just the stragglers
+```
+
+then per environment:
+
+```sql
+truncate public.geo_places;
+\copy public.geo_places from '/tmp/osm/geo_places.csv' csv header
+```
+
+`search_places` returns a TEXT id: a uuid for `public.places`, `"way/12345"` for
+an OSM row. `in_catalogue = false` rows must never be treated as a `places.id`.

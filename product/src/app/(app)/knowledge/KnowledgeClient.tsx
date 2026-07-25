@@ -164,11 +164,15 @@ export default function KnowledgeClient() {
 
       {searching && (
         <p className="mt-6 text-xs text-neutral-400 dark:text-neutral-600">
-          World city data from{' '}
+          World data from{' '}
           <a href="https://www.geonames.org" className="underline" rel="noreferrer" target="_blank">
             GeoNames
-          </a>
-          , licensed CC BY 4.0.
+          </a>{' '}
+          (CC BY 4.0) and ©{' '}
+          <a href="https://www.openstreetmap.org/copyright" className="underline" rel="noreferrer" target="_blank">
+            OpenStreetMap
+          </a>{' '}
+          contributors (ODbL).
         </p>
       )}
 
@@ -292,6 +296,9 @@ function SearchResults({
                     {[p.city_name, p.kind].filter(Boolean).join(' · ')}
                   </span>
                 </span>
+                {/* Imported OSM rows carry an OSM id, not a places.id — marked
+                    so they are never mistaken for the couple's own places. */}
+                {!p.in_catalogue && <span className="text-xs text-neutral-500">OSM</span>}
               </div>
             ))}
           </div>
