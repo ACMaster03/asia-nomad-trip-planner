@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useOnline } from '@/lib/useOnline'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { searchCities } from '@/lib/catalogue/queries'
@@ -44,17 +45,7 @@ export function SegmentForm({
     return () => { if (debounce.current) clearTimeout(debounce.current) }
   }, [city])
 
-  const [online, setOnline] = useState(true)
-  useEffect(() => {
-    const sync = () => setOnline(navigator.onLine)
-    sync()
-    window.addEventListener('online', sync)
-    window.addEventListener('offline', sync)
-    return () => {
-      window.removeEventListener('online', sync)
-      window.removeEventListener('offline', sync)
-    }
-  }, [])
+  const online = useOnline()
 
   const hits = useQuery({
     queryKey: ['city-search', q],

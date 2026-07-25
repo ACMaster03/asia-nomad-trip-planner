@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useOnline } from '@/lib/useOnline'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
@@ -323,17 +324,7 @@ export default function SettingsClient() {
   // watchlist itself and derives live values from the snapshot below, so the
   // merged view from useTripScreen would just be a detour.
   const fx = useQuery({ queryKey: qk.fx, queryFn: () => fetchFx(sb), staleTime: 60 * 60_000 })
-  const [online, setOnline] = useState(true)
-  useEffect(() => {
-    const sync = () => setOnline(navigator.onLine)
-    sync()
-    window.addEventListener('online', sync)
-    window.addEventListener('offline', sync)
-    return () => {
-      window.removeEventListener('online', sync)
-      window.removeEventListener('offline', sync)
-    }
-  }, [])
+  const online = useOnline()
   const mut = useTripMutation()
 
   // local draft, synced from the loaded trip; saved on demand (one write, not per keystroke)
