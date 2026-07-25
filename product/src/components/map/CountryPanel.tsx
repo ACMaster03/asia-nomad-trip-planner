@@ -1,7 +1,8 @@
 import { Modal } from '@/components/trips/Modal'
+import { useMoney } from '@/lib/trips/Money'
 import type { City, Country } from '@/lib/catalogue/types'
 import type { Segment } from '@/lib/trips/types'
-import { fmtHUF } from '@/lib/trips/format'
+
 import { COUNTRY_ALIAS, isoToFlag } from '@/lib/map/globeData'
 
 export function CountryPanel({
@@ -14,6 +15,7 @@ export function CountryPanel({
   rates: Record<string, number>
   onClose: () => void
 }) {
+  const { fmt } = useMoney()
   const neName = feat.properties?.name ?? ''
   const neIso = feat.properties?.iso ?? ''
   const name = COUNTRY_ALIAS[neName] ?? neName
@@ -29,7 +31,7 @@ export function CountryPanel({
       {co?.currency && (
         <div className="text-sm text-neutral-400">
           Currency: <b>{co.currency}</b>
-          {rates[co.currency] ? ` · 1 ${co.currency} ≈ ${fmtHUF(rates[co.currency])}` : ''}
+          {rates[co.currency] ? ` · 1 ${co.currency} ≈ ${fmt(rates[co.currency])}` : ''}
         </div>
       )}
       {co?.visa && <p className="my-2 text-sm"><b>Visa:</b> {co.visa}</p>}

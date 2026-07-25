@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveTrip } from '@/lib/trips/prefetch'
 import { TripScopeProvider } from '@/lib/trips/TripScope'
+import { MoneyProvider } from '@/lib/trips/Money'
 import { AppNav } from '@/components/AppNav'
 import { OfflineWarmup } from '@/components/OfflineWarmup'
 
@@ -29,11 +30,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <TripScopeProvider initialTripId={activeTrip?.id ?? null}>
-      <OfflineWarmup />
-      <div className="min-h-screen">
-        <AppNav showLive={showLive} />
-        {children}
-      </div>
+      {/* Seeded from the trip already resolved above, so the first paint is in
+          the right currency instead of flashing a default. */}
+      <MoneyProvider initialBase={meta?.baseCurrency ?? 'HUF'}>
+        <OfflineWarmup />
+        <div className="min-h-screen">
+          <AppNav showLive={showLive} />
+          {children}
+        </div>
+      </MoneyProvider>
     </TripScopeProvider>
   )
 }

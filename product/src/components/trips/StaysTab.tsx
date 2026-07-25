@@ -1,14 +1,16 @@
 'use client'
 import { useState } from 'react'
+import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
-import { fmtHUF, toHUF } from '@/lib/trips/format'
+import { toBase } from '@/lib/trips/format'
 import { StayForm } from './StayForm'
 import { SaveError } from './SaveError'
 import CreateTripEmptyState from './CreateTripEmptyState'
 import type { Stay } from '@/lib/trips/types'
 
 export function StaysTab() {
+  const { fmt } = useMoney()
   const { trip, cities } = useTripScreen()
   const mut = useTripMutation()
   const [modal, setModal] = useState<{ stay: Stay | null } | null>(null)
@@ -53,7 +55,7 @@ export function StaysTab() {
                   <span className="block text-xs font-normal text-neutral-500 sm:hidden">{cityOf(x.segId)} · {x.status}</span>
                 </td>
                 <td className="hidden pr-4 text-neutral-500 sm:table-cell">{x.platform}</td>
-                <td className="pr-4 whitespace-nowrap">{x.ppn} {x.cur} <span className="hidden text-xs text-neutral-500 sm:inline">({fmtHUF(toHUF(x.ppn, x.cur, s.rates))})</span></td>
+                <td className="pr-4 whitespace-nowrap">{x.ppn} {x.cur} <span className="hidden text-xs text-neutral-500 sm:inline">({fmt(toBase(x.ppn, x.cur, s.rates))})</span></td>
                 <td className="hidden whitespace-nowrap pr-4 text-xs text-neutral-500 sm:table-cell">
                   {x.cancelUntil && <span>free-cancel {x.cancelUntil}</span>}
                   {x.cancelUntil && x.chargeDate && ' · '}

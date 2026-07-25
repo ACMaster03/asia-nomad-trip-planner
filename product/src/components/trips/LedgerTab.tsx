@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { computeBudget, ledgerByMonth, plannedByMonth } from '@/lib/trips/budget'
 import { planImports, sourceKey } from '@/lib/trips/importCosts'
-import { fmtHUF, toHUF, monthLabel } from '@/lib/trips/format'
+import { toBase, monthLabel } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import { SaveError } from '@/components/trips/SaveError'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -17,6 +18,7 @@ const GOOD = 'text-emerald-600'
 const BAD = 'text-red-600'
 
 export function LedgerTab() {
+  const { fmt } = useMoney()
   const { trip, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
   const stateMut = useTripMutation()
@@ -50,7 +52,7 @@ export function LedgerTab() {
     const rates = s.rates
     let totalInc = 0, totalExp = 0
     ledger.forEach((e) => {
-      const huf = toHUF(e.amount, e.currency, rates)
+      const huf = toBase(e.amount, e.currency, rates)
       if (e.type === 'expense') totalExp += huf
       else totalInc += huf
     })
@@ -132,10 +134,10 @@ export function LedgerTab() {
       <SaveError show={stateMut.isError} error={stateMut.error} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat k="Total income" v={fmtHUF(v.totalInc)} sub={'~$' + Math.round(v.totalInc / usd)} />
-        <Stat k="Total spend" v={fmtHUF(v.totalExp)} sub={'~$' + Math.round(v.totalExp / usd)} />
-        <Stat k="Net profit / loss" v={(v.net >= 0 ? '+' : '') + fmtHUF(v.net)} sub={v.net >= 0 ? 'surplus' : 'shortfall'} color={v.net >= 0 ? '#059669' : '#dc2626'} />
-        <Stat k="Planned trip cost" v={fmtHUF(v.plan)} sub="your itinerary estimate" />
+        <Stat k="Total income" v={fmt(v.totalInc)} sub={'~$' + Math.round(v.totalInc / usd)} />
+        <Stat k="Total spend" v={fmt(v.totalExp)} sub={'~$' + Math.round(v.totalExp / usd)} />
+        <Stat k="Net profit / loss" v={(v.net >= 0 ? '+' : '') + fmt(v.net)} sub={v.net >= 0 ? 'surplus' : 'shortfall'} color={v.net >= 0 ? '#059669' : '#dc2626'} />
+        <Stat k="Planned trip cost" v={fmt(v.plan)} sub="your itinerary estimate" />
       </div>
 
       {imp && imp.candidates.length > 0 && !autoImport && (
@@ -199,18 +201,18 @@ export function LedgerTab() {
               {v.rows.map((r) => (
                 <tr key={r.k} className="border-t border-neutral-200 dark:border-neutral-800">
                   <td className="py-1 pr-4 font-medium">{r.label}</td>
-                  <td className="pr-4">{r.inc ? fmtHUF(r.inc) : '—'}</td>
-                  <td className="pr-4">{r.exp ? fmtHUF(r.exp) : '—'}</td>
-                  <td className={'pr-4 ' + (r.n >= 0 ? GOOD : BAD)}>{(r.n >= 0 ? '+' : '') + fmtHUF(r.n)}</td>
-                  <td className={'pr-4 ' + (r.cum >= 0 ? GOOD : BAD)}>{(r.cum >= 0 ? '+' : '') + fmtHUF(r.cum)}</td>
-                  <td className="text-neutral-500">{r.planned ? fmtHUF(r.planned) : '—'}</td>
+                  <td className="pr-4">{r.inc ? fmt(r.inc) : '—'}</td>
+                  <td className="pr-4">{r.exp ? fmt(r.exp) : '—'}</td>
+                  <td className={'pr-4 ' + (r.n >= 0 ? GOOD : BAD)}>{(r.n >= 0 ? '+' : '') + fmt(r.n)}</td>
+                  <td className={'pr-4 ' + (r.cum >= 0 ? GOOD : BAD)}>{(r.cum >= 0 ? '+' : '') + fmt(r.cum)}</td>
+                  <td className="text-neutral-500">{r.planned ? fmt(r.planned) : '—'}</td>
                 </tr>
               ))}
               <tr className="border-t border-neutral-300 font-semibold dark:border-neutral-700">
                 <td className="py-1 pr-4">Total</td>
-                <td className="pr-4">{fmtHUF(v.totalInc)}</td>
-                <td className="pr-4">{fmtHUF(v.totalExp)}</td>
-                <td className={'pr-4 ' + (v.net >= 0 ? GOOD : BAD)}>{(v.net >= 0 ? '+' : '') + fmtHUF(v.net)}</td>
+                <td className="pr-4">{fmt(v.totalInc)}</td>
+                <td className="pr-4">{fmt(v.totalExp)}</td>
+                <td className={'pr-4 ' + (v.net >= 0 ? GOOD : BAD)}>{(v.net >= 0 ? '+' : '') + fmt(v.net)}</td>
                 <td />
                 <td />
               </tr>
@@ -253,7 +255,7 @@ export function LedgerTab() {
                       )}
                     </td>
                     <td className="pr-4 whitespace-nowrap">{e.amount} {e.currency}</td>
-                    <td className="pr-4 text-neutral-500">{fmtHUF(toHUF(e.amount, e.currency, v.rates))}</td>
+                    <td className="pr-4 text-neutral-500">{fmt(toBase(e.amount, e.currency, v.rates))}</td>
                     <td className="pr-4 text-neutral-500">{e.note}</td>
                     <td>
                       <button onClick={() => del(e.id)} className="text-xs text-red-600 hover:underline">delete</button>

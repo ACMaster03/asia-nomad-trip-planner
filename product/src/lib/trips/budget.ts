@@ -1,7 +1,7 @@
 import type { City } from '@/lib/catalogue/types'
 import { getAtJsonPath } from '@/lib/catalogue/getAtJsonPath'
 import type { TripState, LedgerEntry, Segment } from './types'
-import { toHUF, usdToHUF, segNights } from './format'
+import { toBase, usdToBase, segNights } from './format'
 
 // A city's cost profile, built ONLY from the catalogue attributes (the full nested
 // cost objects). If a city lacks them it is OMITTED from the index, so a lookup
@@ -75,26 +75,26 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
       let aSrc: PerSeg['accomSrc']
       if (inc.length) {
         aHUF = inc.reduce(
-          (a, st) => a + toHUF(st.ppn, st.cur, rates) * (st.nights != null ? st.nights : nn),
+          (a, st) => a + toBase(st.ppn, st.cur, rates) * (st.nights != null ? st.nights : nn),
           0,
         )
         aSrc = 'included'
       } else if (k) {
-        aHUF = usdToHUF(k.accom[tier], rates) * nn
+        aHUF = usdToBase(k.accom[tier], rates) * nn
         aSrc = 'estimate'
       } else {
         aHUF = 0
         aSrc = 'none'
       }
-      const lHUF = k ? usdToHUF(k.live[tier], rates) * nn : 0
+      const lHUF = k ? usdToBase(k.live[tier], rates) * nn : 0
       accom += aHUF
       live += lHUF
       if (aSrc === 'included') committedAccom += aHUF
       else missingAccomStops.push(s.city)
       perSeg.push({ seg: s, nights: nn, tier, accom: aHUF, accomSrc: aSrc, live: lHUF, total: aHUF + lHUF, kb: k })
     })
-  state.transport.forEach((t) => { if (t.include) transport += toHUF(t.price, t.cur, rates) })
-  state.extras.forEach((e) => { if (e.include) extras += toHUF(e.amount, e.cur, rates) })
+  state.transport.forEach((t) => { if (t.include) transport += toBase(t.price, t.cur, rates) })
+  state.extras.forEach((e) => { if (e.include) extras += toBase(e.amount, e.cur, rates) })
   const grand = accom + live + transport + extras
   const totalNights = state.segments
     .filter((s) => s.include !== false)
@@ -120,7 +120,7 @@ export function ledgerByMonth(ledger: LedgerEntry[], rates: Record<string, numbe
   }
   ledger.forEach((e) => {
     if (!e.date) return
-    const huf = toHUF(e.amount, e.currency, rates)
+    const huf = toBase(e.amount, e.currency, rates)
     if (e.type === 'expense') bucket(e.date.slice(0, 7)).exp += huf
     else bucket(e.date.slice(0, 7)).inc += huf
   })
@@ -147,12 +147,12 @@ export function monthlyBuckets(state: TripState, cityIdx: Record<string, CityCos
       const chosen = state.stays.filter((st) => st.segId === s.id && st.include)
       const accomTotal = chosen.length
         ? chosen.reduce(
-            (a, st) => a + toHUF(st.ppn, st.cur, rates) * (st.nights != null ? st.nights : nn),
+            (a, st) => a + toBase(st.ppn, st.cur, rates) * (st.nights != null ? st.nights : nn),
             0,
           )
-        : k ? usdToHUF(k.accom[tier], rates) * nn : 0
+        : k ? usdToBase(k.accom[tier], rates) * nn : 0
       const accomPN = accomTotal / nn
-      const livePN = k ? usdToHUF(k.live[tier], rates) : 0
+      const livePN = k ? usdToBase(k.live[tier], rates) : 0
       const d = new Date(s.arrive + 'T00:00:00') // LOCAL parse for month walk
       for (let i = 0; i < nn; i++) {
         const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
@@ -165,7 +165,7 @@ export function monthlyBuckets(state: TripState, cityIdx: Record<string, CityCos
     })
   state.transport
     .filter((t) => t.include && t.date)
-    .forEach((t) => { bucket(t.date!.slice(0, 7)).transport += toHUF(t.price, t.cur, rates) })
+    .forEach((t) => { bucket(t.date!.slice(0, 7)).transport += toBase(t.price, t.cur, rates) })
   order.sort()
   return { M, order }
 }

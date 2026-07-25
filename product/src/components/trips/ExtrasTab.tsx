@@ -1,14 +1,16 @@
 'use client'
 import { useState } from 'react'
+import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
-import { fmtHUF, toHUF } from '@/lib/trips/format'
+import { toBase } from '@/lib/trips/format'
 import { ExtraForm } from './ExtraForm'
 import { SaveError } from './SaveError'
 import CreateTripEmptyState from './CreateTripEmptyState'
 import type { Extra } from '@/lib/trips/types'
 
 export function ExtrasTab() {
+  const { fmt } = useMoney()
   const { trip } = useTripScreen()
   const mut = useTripMutation()
   const [modal, setModal] = useState<{ extra: Extra | null } | null>(null)
@@ -16,7 +18,7 @@ export function ExtrasTab() {
   if (!trip.data) return <CreateTripEmptyState />
   const s = trip.data.state
   const currencies = Object.keys(s.rates)
-  const total = s.extras.filter((e) => e.include).reduce((a, e) => a + toHUF(e.amount, e.cur, s.rates), 0)
+  const total = s.extras.filter((e) => e.include).reduce((a, e) => a + toBase(e.amount, e.cur, s.rates), 0)
 
   const upsert = (it: Extra) => {
     mut.mutate((st) => ({
@@ -31,7 +33,7 @@ export function ExtrasTab() {
   return (
     <main className="mx-auto max-w-5xl px-6 pb-6">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm text-neutral-500">One-off, upfront costs (visas, insurance, gear). Included total: <b>{fmtHUF(total)}</b>.</p>
+        <p className="text-sm text-neutral-500">One-off, upfront costs (visas, insurance, gear). Included total: <b>{fmt(total)}</b>.</p>
         <button onClick={() => setModal({ extra: null })} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">+ Add</button>
       </div>
       <SaveError show={mut.isError} error={mut.error} />
@@ -46,7 +48,7 @@ export function ExtrasTab() {
                 <td className="pr-4 font-medium">{x.label}</td>
                 <td className="pr-4 text-neutral-500">{x.category}</td>
                 <td className="pr-4 whitespace-nowrap">{x.amount} {x.cur}</td>
-                <td className="pr-4 text-neutral-500">{fmtHUF(toHUF(x.amount, x.cur, s.rates))}</td>
+                <td className="pr-4 text-neutral-500">{fmt(toBase(x.amount, x.cur, s.rates))}</td>
                 <td className="whitespace-nowrap">
                   <button onClick={() => setModal({ extra: x })} className="text-xs text-teal-600 hover:underline">edit</button>
                   <button onClick={() => del(x.id)} className="ml-3 text-xs text-red-600 hover:underline"><span className="sm:hidden" aria-label="delete">✕</span><span className="hidden sm:inline">delete</span></button>

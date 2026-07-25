@@ -388,12 +388,12 @@ export default function SettingsClient() {
   return (
     <main className="mx-auto max-w-3xl p-6">
       <h1 className="mb-1 text-2xl font-semibold">Settings</h1>
-      <p className="mb-4 text-sm text-neutral-500">Trip basics and the FX rates used to total everything in HUF.</p>
+      <p className="mb-4 text-sm text-neutral-500">Trip basics and the FX rates used to total everything in {baseCurrency}.</p>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block text-sm">Trip name<input className={input} value={name} onChange={(e) => setName(e.target.value)} /></label>
         <label className="block text-sm">Travellers<input type="number" min={1} className={input} value={travelers} onChange={(e) => setTravelers(Number(e.target.value) || 1)} /></label>
-        <label className="block text-sm">Budget cap (Ft)<input type="number" min={0} className={input} value={budgetCap} onChange={(e) => setBudgetCap(Number(e.target.value) || 0)} /></label>
+        <label className="block text-sm">Budget cap ({baseCurrency})<input type="number" min={0} className={input} value={budgetCap} onChange={(e) => setBudgetCap(Number(e.target.value) || 0)} /></label>
         <label className="block text-sm">Start date<input type="date" className={input} value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
         <label className="block text-sm">Base currency
           <select className={input} value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)}>

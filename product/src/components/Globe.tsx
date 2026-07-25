@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useMoney } from '@/lib/trips/Money'
 import { useRouter } from 'next/navigation'
 import Globe from 'globe.gl'
 import type { City, Country } from '@/lib/catalogue/types'
 import type { Segment, TransportLeg } from '@/lib/trips/types'
 import type { CityCost } from '@/lib/trips/budget'
-import { regColor, regName, fmtHUF, toHUF } from '@/lib/trips/format'
+import { regColor, regName, toBase } from '@/lib/trips/format'
 import { getAtJsonPath } from '@/lib/catalogue/getAtJsonPath'
 import {
   type MapOpts, type GlobePoint, type Hazard,
@@ -28,6 +29,7 @@ const POV = { lat: 28, lng: 92, altitude: 2.4 }
 let _featsCache: unknown[] | null = null // module cache for the borders geojson features
 
 export default function GlobeView({ cities, countries, cityIdx, segments, transport, rates }: GlobeProps) {
+  const { fmt } = useMoney()
   const router = useRouter()
   const boxRef = useRef<HTMLDivElement>(null)
   const instRef = useRef<Inst | null>(null)
@@ -75,7 +77,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     let body: string
     if (d.flight) {
       const f = d.flight
-      body = `<div>${esc(f.type || 'Flight')} · ${esc(String(f.price))} ${esc(f.cur)} <span style="color:#8fa0b0">(~${fmtHUF(toHUF(f.price, f.cur, ratesRef.current))})</span></div>`
+      body = `<div>${esc(f.type || 'Flight')} · ${esc(String(f.price))} ${esc(f.cur)} <span style="color:#8fa0b0">(~${fmt(toBase(f.price, f.cur, ratesRef.current))})</span></div>`
         + `<div style="margin-top:2px">${d.booked ? '<span style="color:#f0a83c">✅ booked</span>' : '<span style="color:#8fa0b0">~ estimate</span>'}${f.provider ? ` · ${esc(f.provider)}` : ''}</div>`
     } else body = '<div style="color:#8fa0b0">no flight logged for this hop</div>'
     return box(head + body)

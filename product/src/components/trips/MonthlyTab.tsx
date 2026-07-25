@@ -1,12 +1,14 @@
 'use client'
 import { useMemo } from 'react'
+import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { monthlyBuckets } from '@/lib/trips/budget'
-import { fmtHUF, toHUF, monthLabel, monthShort } from '@/lib/trips/format'
+import { toBase, monthLabel, monthShort } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
 export function MonthlyTab() {
+  const { fmt } = useMoney()
   const { trip, cityIdx } = useTripScreen()
 
   const view = useMemo(() => {
@@ -22,7 +24,7 @@ export function MonthlyTab() {
     })
     const extrasTotal = s.extras
       .filter((e) => e.include)
-      .reduce((a, e) => a + toHUF(e.amount, e.cur, s.rates), 0)
+      .reduce((a, e) => a + toBase(e.amount, e.cur, s.rates), 0)
     const recMonthly = (totalNights ? (totA + totL) / totalNights : 0) * 365 / 12
     const allInMonthly = (totalNights ? (totA + totL + totT) / totalNights : 0) * 365 / 12
     const max = order.reduce((m, k) => Math.max(m, M[k].accom + M[k].live + M[k].transport), 0)
@@ -43,9 +45,9 @@ export function MonthlyTab() {
       </p>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Stat k="Earn target / month" v={fmtHUF(v.recMonthly)} sub={'~$' + Math.round(v.recMonthly / usd) + ' — rent + daily living'} />
-        <Stat k="All-in / month" v={fmtHUF(v.allInMonthly)} sub={'~$' + Math.round(v.allInMonthly / usd) + ' — incl. flights'} />
-        <Stat k="One-off costs (upfront)" v={fmtHUF(v.extrasTotal)} sub="insurance, gear, visas" />
+        <Stat k="Earn target / month" v={fmt(v.recMonthly)} sub={'~$' + Math.round(v.recMonthly / usd) + ' — rent + daily living'} />
+        <Stat k="All-in / month" v={fmt(v.allInMonthly)} sub={'~$' + Math.round(v.allInMonthly / usd) + ' — incl. flights'} />
+        <Stat k="One-off costs (upfront)" v={fmt(v.extrasTotal)} sub="insurance, gear, visas" />
       </div>
 
       {!v.order.length ? (
@@ -72,20 +74,20 @@ export function MonthlyTab() {
                     <tr key={k} className="border-t border-neutral-200 dark:border-neutral-800">
                       <td className="py-1 pr-4 font-medium">{monthLabel(k)}</td>
                       <td className="pr-4">{b.nights}</td>
-                      <td className="pr-4">{fmtHUF(b.accom)}</td>
-                      <td className="pr-4">{fmtHUF(b.live)}</td>
-                      <td className="pr-4">{b.transport ? fmtHUF(b.transport) : '—'}</td>
-                      <td className="font-semibold">{fmtHUF(mt)}</td>
+                      <td className="pr-4">{fmt(b.accom)}</td>
+                      <td className="pr-4">{fmt(b.live)}</td>
+                      <td className="pr-4">{b.transport ? fmt(b.transport) : '—'}</td>
+                      <td className="font-semibold">{fmt(mt)}</td>
                     </tr>
                   )
                 })}
                 <tr className="border-t border-neutral-300 dark:border-neutral-700 font-semibold">
                   <td className="py-1 pr-4">Total</td>
                   <td className="pr-4">{v.totalNights}</td>
-                  <td className="pr-4">{fmtHUF(v.totA)}</td>
-                  <td className="pr-4">{fmtHUF(v.totL)}</td>
-                  <td className="pr-4">{fmtHUF(v.totT)}</td>
-                  <td>{fmtHUF(v.totA + v.totL + v.totT)}</td>
+                  <td className="pr-4">{fmt(v.totA)}</td>
+                  <td className="pr-4">{fmt(v.totL)}</td>
+                  <td className="pr-4">{fmt(v.totT)}</td>
+                  <td>{fmt(v.totA + v.totL + v.totT)}</td>
                 </tr>
               </tbody>
             </table>
@@ -102,17 +104,17 @@ export function MonthlyTab() {
                   <div className="h-3 flex-1 rounded bg-neutral-100 dark:bg-neutral-900">
                     <span className="block h-3 rounded bg-teal-500" style={{ width: (v.max ? (mt / v.max) * 100 : 0) + '%' }} />
                   </div>
-                  <span className="w-28 shrink-0 text-right">{fmtHUF(mt)}</span>
+                  <span className="w-28 shrink-0 text-right">{fmt(mt)}</span>
                 </div>
               )
             })}
           </div>
 
           <div className="mt-4 rounded-lg border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">
-            <b>Earning target:</b> aim to earn at least <b>{fmtHUF(v.recMonthly)}/month</b> (~$
+            <b>Earning target:</b> aim to earn at least <b>{fmt(v.recMonthly)}/month</b> (~$
             {Math.round(v.recMonthly / usd)}) between you to cover day-to-day costs. The{' '}
-            {fmtHUF(v.extrasTotal)} of one-off costs sit on top — ideally saved before you go, or ~
-            {fmtHUF(v.order.length ? v.extrasTotal / v.order.length : 0)}/month.
+            {fmt(v.extrasTotal)} of one-off costs sit on top — ideally saved before you go, or ~
+            {fmt(v.order.length ? v.extrasTotal / v.order.length : 0)}/month.
           </div>
         </>
       )}

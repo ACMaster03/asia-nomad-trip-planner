@@ -1,14 +1,16 @@
 'use client'
 import { useState } from 'react'
+import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
-import { fmtHUF, toHUF } from '@/lib/trips/format'
+import { toBase } from '@/lib/trips/format'
 import { TransportForm } from './TransportForm'
 import { SaveError } from './SaveError'
 import CreateTripEmptyState from './CreateTripEmptyState'
 import type { TransportLeg } from '@/lib/trips/types'
 
 export function TransportTab() {
+  const { fmt } = useMoney()
   const { trip } = useTripScreen()
   const mut = useTripMutation()
   const [modal, setModal] = useState<{ leg: TransportLeg | null } | null>(null)
@@ -53,7 +55,7 @@ export function TransportTab() {
                   <span className="sm:hidden">{x.date ? x.date.slice(5) : '—'}</span>
                   <span className="hidden sm:inline">{x.date || '—'}</span>
                 </td>
-                <td className="pr-4 whitespace-nowrap">{x.price} {x.cur} <span className="hidden text-xs text-neutral-500 sm:inline">({fmtHUF(toHUF(x.price, x.cur, s.rates))})</span></td>
+                <td className="pr-4 whitespace-nowrap">{x.price} {x.cur} <span className="hidden text-xs text-neutral-500 sm:inline">({fmt(toBase(x.price, x.cur, s.rates))})</span></td>
                 <td className="hidden pr-4 sm:table-cell">{x.status}</td>
                 <td className="whitespace-nowrap">
                   <button onClick={() => setModal({ leg: x })} className="text-xs text-teal-600 hover:underline">edit</button>

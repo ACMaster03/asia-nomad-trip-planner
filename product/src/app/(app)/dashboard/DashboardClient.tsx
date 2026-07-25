@@ -1,12 +1,14 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget, type CityCost } from '@/lib/trips/budget'
-import { fmtHUF, fmtUSD } from '@/lib/trips/format'
+import { fmtUSD } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
 export default function DashboardClient() {
+  const { fmt, base } = useMoney()
   const { trip, cityIdx } = useTripScreen()
   // "next stop" depends on the current clock → compute only after mount to avoid an
   // SSR/hydration mismatch (and the date-only-string UTC vs local off-by-one).
@@ -53,7 +55,7 @@ export default function DashboardClient() {
             guessed (owner decision 2026-07-24). Estimate fills the gaps. */}
         <Stat
           k="Grand total"
-          v={fmtHUF(b.committed)}
+          v={fmt(b.committed)}
           sub={
             b.missingAccomStops.length
               ? `⚠ ${b.missingAccomStops.length} stop${b.missingAccomStops.length > 1 ? 's' : ''} missing accommodation`
@@ -61,8 +63,8 @@ export default function DashboardClient() {
           }
           color={b.missingAccomStops.length ? '#d97706' : undefined}
         />
-        <Stat k="Estimated total" v={fmtHUF(b.grand)} sub={'≈ ' + fmtUSD(b.grand / usd) + ' · incl. city estimates'} />
-        <Stat k="Est. / day" v={fmtHUF(b.perDay)} sub={`estimated total ÷ ${b.totalNights} nights`} />
+        <Stat k="Estimated total" v={fmt(b.grand)} sub={(base === 'USD' ? '' : '≈ ' + fmtUSD(b.grand / usd) + ' ') + 'incl. city estimates'} />
+        <Stat k="Est. / day" v={fmt(b.perDay)} sub={`estimated total ÷ ${b.totalNights} nights`} />
         <Stat k="Stops" v={String(inPlan.length)} sub={b.totalNights + ' nights total'} />
       </div>
 
@@ -70,7 +72,7 @@ export default function DashboardClient() {
         <div className="mb-1 flex justify-between text-sm">
           <b>Budget cap</b>
           <span className={over ? 'text-red-600' : 'text-neutral-500'}>
-            {fmtHUF(b.grand)} / {fmtHUF(cap)}
+            {fmt(b.grand)} / {fmt(cap)}
           </span>
         </div>
         <div className="h-3 overflow-hidden rounded bg-neutral-200 dark:bg-neutral-800">
@@ -79,7 +81,7 @@ export default function DashboardClient() {
             style={{ width: pct + '%', background: over ? '#e0655c' : '#37b3a4' }}
           />
         </div>
-        {over && <div className="mt-1 text-xs text-red-600">Over cap by {fmtHUF(b.grand - cap)}</div>}
+        {over && <div className="mt-1 text-xs text-red-600">Over cap by {fmt(b.grand - cap)}</div>}
       </div>
 
       {upcoming && (

@@ -1,12 +1,42 @@
 import type { Segment } from './types'
 
-export const fmtHUF = (n: number) =>
-  Math.round(Number(n) || 0).toLocaleString('en-US').replace(/,/g, ' ') + ' Ft'
+// Money formatting is BASE-CURRENCY AWARE (2026-07-25). Before this, fmtHUF
+// appended a literal " Ft" to everything: meta.baseCurrency was stored and the
+// Settings dropdown let you change it, but switching base RELABELLED every
+// number without converting it. Wrong totals, silently.
+//
+// Locale is chosen per currency so each one reads the way its users expect —
+// hu-HU renders HUF as "1 234 567 Ft", exactly the old output, while everything
+// else falls back to en-US narrow symbols ($, €, ฿, ₫, ៛, ₭).
+const MONEY_LOCALE: Record<string, string> = { HUF: 'hu-HU' }
+
+export function fmtMoney(n: number, currency: string): string {
+  const v = Math.round(Number(n) || 0)
+  const locale = MONEY_LOCALE[currency] ?? 'en-US'
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      currencyDisplay: 'narrowSymbol',
+      maximumFractionDigits: 0,
+    }).format(v)
+  } catch {
+    // Unknown/invalid code — never throw in a render path.
+    return `${v.toLocaleString('en-US')} ${currency}`
+  }
+}
+
 export const fmtUSD = (n: number) => '$' + Math.round(Number(n) || 0)
 
-export const toHUF = (amt: number, cur: string, rates: Record<string, number>) =>
+// Convert an amount in `cur` into the trip's BASE currency. rates are
+// base-per-unit (useTripScreen merges them from fx_rates), so this is already
+// base-correct — only the name used to say HUF.
+export const toBase = (amt: number, cur: string, rates: Record<string, number>) =>
   (Number(amt) || 0) * (rates[cur] || 0)
-export const usdToHUF = (u: number, rates: Record<string, number>) =>
+
+// Catalogue city costs are denominated in USD (cities.json is $/day), so this
+// converts THAT reference into base. Unrelated to the trip's base choice.
+export const usdToBase = (u: number, rates: Record<string, number>) =>
   (Number(u) || 0) * (rates.USD || 0)
 
 export const nightsBetween = (a?: string, b?: string) => {
