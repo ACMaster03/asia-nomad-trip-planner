@@ -220,3 +220,17 @@ truncate public.geo_places;
 
 `search_places` returns a TEXT id: a uuid for `public.places`, `"way/12345"` for
 an OSM row. `in_catalogue = false` rows must never be treated as a `places.id`.
+
+### Overpass gotchas (learned the hard way, 2026-07-25)
+
+* **A 200 response is not success.** Overpass answers HTTP 200 with a `remark`
+  field when a query exhausts its time or memory budget. Treating that as "no
+  results" is why China and India first looked like empty countries rather than
+  failed ones. The fetcher now raises on `remark`.
+* **`admin_level=2` does not match SARs.** Hong Kong and Macau are not
+  country-level areas in OSM, so the usual selector matched nothing and returned
+  a valid, empty result. `NO_ADMIN_LEVEL` in the fetcher drops the filter for
+  those.
+* **504s are routine** for large countries; the backoff usually gets there. CN
+  and IN are big enough that Overpass may refuse them entirely — if so, use a
+  Geofabrik regional extract with osmium rather than the API.

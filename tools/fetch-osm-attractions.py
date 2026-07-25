@@ -39,12 +39,19 @@ PAUSE_BETWEEN = 25   # seconds between countries
 MAX_RETRIES = 4
 
 
+# Hong Kong and Macau are SARs, not admin_level=2 areas, so the usual selector
+# silently matches nothing and returns a valid empty result. Anything listed here
+# drops the admin_level filter.
+NO_ADMIN_LEVEL = {'HK', 'MO'}
+
+
 def query_for(iso2: str) -> str:
     kinds = '|'.join(KINDS)
+    area = f'area["ISO3166-1"="{iso2}"]' + ('' if iso2 in NO_ADMIN_LEVEL else '[admin_level=2]')
     # `out center` gives ways/relations a representative point, so an attraction
     # mapped as a building is not lost.
     return f'''[out:json][timeout:180];
-area["ISO3166-1"="{iso2}"][admin_level=2]->.a;
+{area}->.a;
 (
   node["tourism"~"^({kinds})$"]["name"](area.a);
   way["tourism"~"^({kinds})$"]["name"](area.a);
@@ -60,7 +67,13 @@ def fetch(iso2: str) -> list:
             req = urllib.request.Request(ENDPOINT, data=body,
                                          headers={'User-Agent': 'asia-nomad-planner/1.0'})
             with urllib.request.urlopen(req, timeout=300) as r:
-                return json.load(r).get('elements', [])
+                payload = json.load(r)
+            # Overpass answers 200 with a `remark` when a query runs out of time
+            # or memory. Treating that as "no results" is how CN and IN looked
+            # like empty countries instead of failed ones.
+            if 'remark' in payload:
+                raise TimeoutError(f"overpass remark: {payload['remark'][:120]}")
+            return payload.get('elements', [])
         except (urllib.error.HTTPError, urllib.error.URLError, json.JSONDecodeError, TimeoutError) as e:
             wait = 30 * attempt
             print(f'    {iso2} attempt {attempt}/{MAX_RETRIES} failed ({e}); waiting {wait}s')
