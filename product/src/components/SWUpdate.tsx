@@ -15,12 +15,18 @@ import { useEffect } from 'react'
 export function SWUpdate() {
   // Fade out the server-rendered boot splash once React is alive (it lives in
   // the root layout, so this runs on every page).
+  //
+  // HIDE IT WITH CSS, NEVER .remove(). The splash is rendered by React in the
+  // root layout, and <Providers> emits no DOM element, so the page's top-level
+  // nodes are the splash's SIBLINGS inside <body> — one shared container.
+  // Deleting the node out-of-band left React's fiber pointing at a node that
+  // was no longer a child of <body>, so the next client-side navigation threw
+  // NotFoundError from insertOrAppendPlacementNodeIntoContainer and Next showed
+  // "This page couldn't load". A full reload always looked fine because the
+  // document was re-parsed and hydrated consistently — then broke again 400ms
+  // later. (Prod bug, 2026-07-26.)
   useEffect(() => {
-    const splash = document.getElementById('anp-splash')
-    if (!splash) return
-    splash.classList.add('anp-hide')
-    const t = setTimeout(() => splash.remove(), 400)
-    return () => clearTimeout(t)
+    document.getElementById('anp-splash')?.classList.add('anp-hide')
   }, [])
 
   useEffect(() => {

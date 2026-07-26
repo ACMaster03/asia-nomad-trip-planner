@@ -40,6 +40,10 @@ body {
   animation: anp-splash-in 0.3s ease 0.15s forwards;
   transition: opacity 0.35s ease;
 }
+/* The faded-out splash STAYS IN THE DOM — removing it corrupts React's view of
+   <body>, see SWUpdate.tsx. It is inert where it lies: aria-hidden on the
+   element keeps it out of the accessibility tree, and pointer-events cascades
+   to the children, so it is never a hit target. */
 #anp-splash.anp-hide {
   opacity: 0 !important;
   pointer-events: none;
