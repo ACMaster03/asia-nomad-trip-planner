@@ -44,16 +44,19 @@ self.addEventListener("message", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open("pages");
-      await Promise.all(
-        urls.map(async (url) => {
-          try {
-            const resp = await fetch(url, { credentials: "same-origin" });
-            if (resp.ok && !resp.redirected) await cache.put(url, resp);
-          } catch {
-            /* offline while warming — never mind */
-          }
-        }),
-      );
+      // SEQUENTIALLY, not Promise.all. Seven parallel authenticated document
+      // fetches from a phone saturate the connection and compete with the
+      // navigation the user is actually waiting on — which the NetworkFirst
+      // handler below then gives up on, showing the offline page while online.
+      // Warming is background work; it has no business winning that race.
+      for (const url of urls) {
+        try {
+          const resp = await fetch(url, { credentials: "same-origin" });
+          if (resp.ok && !resp.redirected) await cache.put(url, resp);
+        } catch {
+          /* offline while warming — never mind */
+        }
+      }
     })(),
   );
 });
@@ -101,7 +104,11 @@ const serwist = new Serwist({
       matcher: ({ request, sameOrigin }) => sameOrigin && request.mode === "navigate",
       handler: new NetworkFirst({
         cacheName: "pages",
-        networkTimeoutSeconds: 10,
+        // 10s was too aggressive: a cold Vercel lambda plus a phone on mobile
+        // data can legitimately exceed it, and the fallback then claims the
+        // user is OFFLINE while they are not. The timeout exists so a truly
+        // dead network reaches the cache quickly, not to police slow ones.
+        networkTimeoutSeconds: 25,
         plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 30 * 24 * 60 * 60 })],
       }),
     },
