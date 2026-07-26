@@ -3,6 +3,7 @@ import { defaultCache } from "@serwist/next/worker";
 import {
   ExpirationPlugin,
   NetworkFirst,
+  NetworkOnly,
   Serwist,
   type PrecacheEntry,
   type SerwistGlobalConfig,
@@ -112,6 +113,23 @@ const serwist = new Serwist({
         plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 30 * 24 * 60 * 60 })],
       }),
     },
+    // NEVER CACHE RSC PAYLOADS. Serwist's defaultCache keeps them for 24h in
+    // "pages-rsc" and "pages-rsc-prefetch", but an RSC payload is bound to the
+    // Next.js BUILD ID that produced it. After a deploy the client shell is the
+    // new build while the cache still holds the old build's payloads, so a
+    // client-side nav link hands the router something it cannot reconcile and
+    // Next renders "This page couldn't load. Reload to try again, or go back."
+    // A full reload was always fine because that is a document request.
+    //
+    // Reported on prod 2026-07-25 across iOS Safari and macOS Safari after
+    // seven deploys in a day. Caching them buys nothing anyway: they are
+    // useless offline (the router needs the shell, which IS cached above) and
+    // stale the moment we ship.
+    {
+      matcher: ({ request, sameOrigin }) =>
+        sameOrigin && request.headers.get("RSC") === "1",
+      handler: new NetworkOnly(),
+    },
     ...defaultCache,
   ],
   // Never show the browser's dinosaur: a navigation with no cached copy gets
@@ -124,6 +142,20 @@ const serwist = new Serwist({
       },
     ],
   },
+});
+
+// Drop the RSC caches a previous worker filled. Nothing reads them any more
+// (the NetworkOnly matcher above wins), but devices that already hit the bug
+// are carrying build-stale payloads and the space they occupy is dead weight.
+// Safe to remove permanently: RSC payloads are per-build and never reusable.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      await Promise.all(
+        ["pages-rsc", "pages-rsc-prefetch"].map((name) => caches.delete(name)),
+      );
+    })(),
+  );
 });
 
 serwist.addEventListeners();
