@@ -4,7 +4,8 @@ import { useOnline } from '@/lib/useOnline'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchTrip, fetchTrips, isRevConflict, isPermissionDenied, setSelectedTripId } from '@/lib/trips/queries'
+import { fetchTrip, fetchTrips, isRevConflict, isPermissionDenied, setSelectedTripId, createInvite } from '@/lib/trips/queries'
+import { fetchSentInvites, revokeInvite } from '@/lib/trips/invites'
 import { createShareLink, fetchShares, fetchShareStats, revokeShare, setTripSharingPaused } from '@/lib/trips/shares'
 import { tk } from '@/lib/trips/keys'
 import FxPanel from '@/components/trips/FxPanel'
@@ -25,6 +26,104 @@ const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm
 // "Active trip" card). Selection is per ACCOUNT (profiles.active_trip_id,
 // migration 07) so phone and laptop always show the same trip; on a pre-07 DB
 // persisting fails silently and the switch is per-device for the session.
+// "People on this trip" — the INVITER's half of the invite flow (migration 25).
+//
+// Until now the only way to invite anyone was step 3 of the onboarding wizard,
+// which hardcoded 'editor'. That made the viewer role unreachable through the
+// app entirely: you could not invite a viewer, and nobody could accept
+// anything. This card is where an existing trip gains people.
+//
+// Editors, not just the owner: invites_insert gates on can_edit_trip.
+function PeopleCard() {
+  const sb = createClient()
+  const qc = useQueryClient()
+  const { tripId } = useTripScope()
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState<'editor' | 'viewer'>('editor')
+
+  const sent = useQuery({
+    queryKey: tk.sentInvites(tripId ?? 'none'),
+    queryFn: () => (tripId ? fetchSentInvites(sb, tripId) : Promise.resolve([])),
+  })
+  const invite = useMutation({
+    mutationFn: () => createInvite(sb, tripId!, email, role),
+    onSuccess: () => {
+      setEmail('')
+      qc.invalidateQueries({ queryKey: tk.sentInvites(tripId ?? 'none') })
+    },
+  })
+  const revoke = useMutation({
+    mutationFn: (id: string) => revokeInvite(sb, id),
+    onSettled: () => qc.invalidateQueries({ queryKey: tk.sentInvites(tripId ?? 'none') }),
+  })
+
+  const pending = sent.data ?? []
+  const valid = /.+@.+\..+/.test(email.trim())
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-1 text-lg font-semibold">People on this trip</h2>
+      <p className="mb-3 text-sm text-neutral-500">
+        Invite by email. They join by signing in with that address — the invite appears at the top
+        of their screen and they accept it there.
+      </p>
+
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="block grow text-sm">
+          Email
+          <input
+            type="email"
+            className={input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="partner@example.com"
+          />
+        </label>
+        <label className="block text-sm">
+          Can
+          <select className={input} value={role} onChange={(e) => setRole(e.target.value as 'editor' | 'viewer')}>
+            <option value="editor">Edit the trip</option>
+            <option value="viewer">View only</option>
+          </select>
+        </label>
+        <button
+          onClick={() => invite.mutate()}
+          disabled={!valid || invite.isPending}
+          className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+        >
+          {invite.isPending ? 'Inviting…' : 'Send invite'}
+        </button>
+      </div>
+      {invite.isError && (
+        <p className="mt-2 text-sm text-red-600">Could not create the invite — try again.</p>
+      )}
+
+      {pending.length > 0 && (
+        <ul className="mt-3 divide-y divide-neutral-200 rounded border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+          {pending.map((i) => (
+            <li key={i.id} className="flex items-center gap-3 px-3 py-2.5">
+              <span aria-hidden>✉️</span>
+              <div className="min-w-0 grow">
+                <div className="truncate text-sm font-medium">{i.email}</div>
+                <div className="text-xs text-neutral-500">
+                  invited as {i.role === 'editor' ? 'co-editor' : 'viewer'} · not accepted yet
+                </div>
+              </div>
+              <button
+                onClick={() => revoke.mutate(i.id)}
+                disabled={revoke.isPending}
+                className="rounded border border-neutral-300 px-2 py-1 text-xs disabled:opacity-50 dark:border-neutral-700"
+              >
+                Withdraw
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 function ActiveTripCard() {
   const sb = createClient()
   const router = useRouter()
@@ -433,6 +532,7 @@ export default function SettingsClient() {
           set_trip_sharing_paused both gate on can_edit_trip (migrations 11/16),
           so hiding this from a co-editor would be the UI inventing a rule the
           database doesn't have. Viewers get nothing. */}
+      {canEdit && <PeopleCard />}
       {canEdit && <SharingCard endDate={trip.data.state?.meta?.endDate} />}
       <ActiveTripCard />
       <p className="mt-10 text-center text-xs text-neutral-400 dark:text-neutral-600">

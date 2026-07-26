@@ -14,4 +14,9 @@ export const tk = {
   // the trip document so revalidating access doesn't refetch the whole state
   // blob — and so a revoked co-editor's role can go stale on its own schedule.
   role: (tripId: string) => ['trip-role', tripId] as const,
+  // Invites addressed to the signed-in user, across ALL trips — deliberately
+  // not trip-scoped: you are invited to trips you cannot see yet.
+  pendingInvites: ['pending-invites'] as const,
+  // Invites this trip has sent that nobody has answered (the inviter's list).
+  sentInvites: (tripId: string) => ['sent-invites', tripId] as const,
 }

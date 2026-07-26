@@ -60,16 +60,55 @@ the ledger's plan-import sync (`LedgerTab`) and the FX watchlist top-up
   worse failure than a viewer seeing buttons whose writes the DB refuses. The
   `/live` nav item and the `/live` route guard make the same call.
 
-## ⚠️ Known hole: nobody can accept an invite
+## How someone becomes a viewer (migration 25)
 
-`createInvite` writes a `trip_invites` row, and migrations 02/06 make joining
-role-safe — but **no code anywhere inserts into `trip_members`**. There is no
-acceptance UI, so today no co-editor *or* viewer can join a trip through the
-app at all. The wizard's step-3 invite records a row that nothing consumes.
+Originally this section documented a hole: `createInvite` wrote a `trip_invites`
+row and **nothing anywhere inserted into `trip_members`**, so no co-editor or
+viewer could join a trip through the app at all. Migration 25 closes it.
 
-This predates the viewer role and is why the role work above cannot yet be
-exercised end to end without SQL. Until an acceptance flow exists, create a
-viewer by hand:
+**Inviting** — Settings → *People on this trip*: email plus a role picker
+(*Edit the trip* / *View only*). Editors can invite, not just the owner, because
+`invites_insert` gates on `can_edit_trip`. Pending invites are listed there and
+can be withdrawn. (The onboarding wizard still invites as an editor — at that
+point you're adding your travel partner.)
+
+**Accepting** — the invitee signs in with that address and gets a banner above
+every app screen (`PendingInvites`, mounted in the `(app)` layout, because an
+invite is to a trip you cannot navigate to yet). Accept switches them to the
+new trip; Decline clears it.
+
+Three RPCs back it, all `SECURITY DEFINER` because a pending invitee has no
+access to the trip yet — `can_view_trip` is false until the membership row
+exists, so even the trip's *name* is unreadable to the person being asked to
+join it:
+
+| Function | Does |
+|---|---|
+| `pending_invites()` | invites addressed to your verified email — trip name, role, inviter's display name, nothing more |
+| `accept_invite(id)` | inserts the membership row **then** marks the invite accepted |
+| `decline_invite(id)` | marks it revoked |
+
+Two things in there are load-bearing:
+
+- **Order.** The membership row must land *before* the status flips.
+  `members_insert` authorises the self-insert via `pending_invite_role()`, which
+  only sees invites still marked `pending` — flip the status first and the role
+  lookup returns null and the insert is refused.
+- **The role comes from the invite row, never from an argument**, so accepting
+  can't become a way to pick yourself a better role. Migration 25 also widens
+  06's `guard_invite_update` trigger by exactly one transition
+  (`pending → revoked` by the addressed invitee, i.e. declining) while keeping
+  every field-immutability check 06 had — and hoisting them so they now cover
+  both transitions rather than only acceptance.
+
+`25-TESTPLAN.sql` asserts all of it against staging: invited-as-viewer joins as
+viewer, no self-upgrade, no accepting someone else's invite, double-accept is a
+no-op, declined invites are dead, a decline can't fake an acceptance, and
+`pending_invites()` tells a bystander nothing.
+
+## Creating a viewer by hand
+
+Still useful for testing without a second email account:
 
 ```sql
 -- make an existing user a VIEWER on a trip (run in the SQL editor)

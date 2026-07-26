@@ -6,6 +6,7 @@ import { TripScopeProvider } from '@/lib/trips/TripScope'
 import { MoneyProvider } from '@/lib/trips/Money'
 import { AppNav } from '@/components/AppNav'
 import { OfflineWarmup } from '@/components/OfflineWarmup'
+import { PendingInvites } from '@/components/trips/PendingInvites'
 
 // Server-side auth guard. The shared catalogue RLS is `to authenticated`, so an
 // unauthenticated visitor would get zero rows; require a session here instead.
@@ -56,6 +57,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <OfflineWarmup />
         <div className="min-h-screen">
           <AppNav showLive={showLive} />
+          {/* Above every screen: an invite is to a trip you cannot navigate to
+              yet, so it has no page of its own to live on. Renders nothing
+              unless you actually have one. */}
+          <PendingInvites />
           {children}
         </div>
       </MoneyProvider>
