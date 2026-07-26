@@ -20,9 +20,9 @@ begin;
 -- Three users: an owner, an invitee, and a bystander. auth.uid()/auth.jwt()
 -- are faked with request.jwt.claims, the same way 06/17/18's testplans do.
 insert into auth.users (id, email, raw_user_meta_data)
-values ('11111111-1111-1111-1111-111111111111', 'owner@test.local',     '{"display_name":"Owner"}'),
-       ('22222222-2222-2222-2222-222222222222', 'invitee@test.local',   '{}'),
-       ('33333333-3333-3333-3333-333333333333', 'bystander@test.local', '{}')
+values ('11111111-1111-1111-1111-111111111111', 'owner@tp25.local',     '{"display_name":"Owner"}'),
+       ('22222222-2222-2222-2222-222222222222', 'invitee@tp25.local',   '{}'),
+       ('33333333-3333-3333-3333-333333333333', 'bystander@tp25.local', '{}')
 on conflict (id) do nothing;
 
 insert into public.profiles (id, display_name)
@@ -34,12 +34,25 @@ values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
         '11111111-1111-1111-1111-111111111111', 'Testplan Trip', '{}'::jsonb, '[]'::jsonb)
 on conflict (id) do nothing;
 
+-- Faking the JWT claims alone is NOT enough: the SQL Editor / Management API
+-- runs as a table-owning role, and table owners bypass RLS entirely. Every
+-- "must be blocked" assertion below is only meaningful under SET ROLE
+-- authenticated, so be() switches role as well as claims, and god() drops
+-- back to the privileged login role for fixture setup and state assertions.
 create or replace function pg_temp.be(p_uid uuid, p_email text) returns void
 language sql as $$
   select set_config('request.jwt.claims',
     json_build_object('sub', p_uid::text, 'email', p_email, 'role', 'authenticated')::text, true);
+  select set_config('role', 'authenticated', true);
 $$;
 
+create or replace function pg_temp.god() returns void
+language sql as $$ select set_config('role', 'none', true); $$;
+
+-- NB: new_invite() must be called with god() already in effect. A role switch
+-- INSIDE this function would come too late: language-sql functions plan every
+-- statement at function entry, under the entry role, so an authenticated
+-- caller would get the insert planned WITH their RLS baked in.
 create or replace function pg_temp.new_invite(p_role text, p_email text) returns uuid
 language sql as $$
   insert into public.trip_invites (trip_id, email, role, invited_by, status)
@@ -52,9 +65,11 @@ $$;
 do $$
 declare v_invite uuid; v_role text;
 begin
-  v_invite := pg_temp.new_invite('viewer', 'invitee@test.local');
-  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@test.local');
+  perform pg_temp.god();
+  v_invite := pg_temp.new_invite('viewer', 'invitee@tp25.local');
+  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@tp25.local');
   perform public.accept_invite(v_invite);
+  perform pg_temp.god();  -- state assertions must see the whole table
   select role into v_role from public.trip_members
    where trip_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
      and user_id = '22222222-2222-2222-2222-222222222222';
@@ -73,8 +88,9 @@ end $$;
 do $$
 declare v_invite uuid;
 begin
-  v_invite := pg_temp.new_invite('viewer', 'invitee@test.local');
-  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@test.local');
+  perform pg_temp.god();
+  v_invite := pg_temp.new_invite('viewer', 'invitee@tp25.local');
+  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@tp25.local');
   perform public.accept_invite(v_invite);
   begin
     perform public.accept_invite(v_invite);
@@ -90,11 +106,12 @@ end $$;
 do $$
 declare v_invite uuid;
 begin
+  perform pg_temp.god();
   delete from public.trip_members
    where trip_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
      and user_id = '22222222-2222-2222-2222-222222222222';
-  v_invite := pg_temp.new_invite('viewer', 'invitee@test.local');
-  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@test.local');
+  v_invite := pg_temp.new_invite('viewer', 'invitee@tp25.local');
+  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@tp25.local');
   begin
     insert into public.trip_members (trip_id, user_id, role)
     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -109,14 +126,16 @@ end $$;
 do $$
 declare v_invite uuid;
 begin
-  v_invite := pg_temp.new_invite('editor', 'invitee@test.local');
-  perform pg_temp.be('33333333-3333-3333-3333-333333333333', 'bystander@test.local');
+  perform pg_temp.god();
+  v_invite := pg_temp.new_invite('editor', 'invitee@tp25.local');
+  perform pg_temp.be('33333333-3333-3333-3333-333333333333', 'bystander@tp25.local');
   begin
     perform public.accept_invite(v_invite);
     raise exception 'FAIL 3: a bystander accepted an invite addressed to someone else';
   exception when insufficient_privilege then
     null; -- expected
   end;
+  perform pg_temp.god();  -- the bystander could not SEE the row either way
   if exists (select 1 from public.trip_members
               where trip_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
                 and user_id = '33333333-3333-3333-3333-333333333333') then
@@ -128,11 +147,12 @@ end $$;
 do $$
 declare v_invite uuid;
 begin
+  perform pg_temp.god();
   delete from public.trip_members
    where trip_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
      and user_id = '22222222-2222-2222-2222-222222222222';
-  v_invite := pg_temp.new_invite('editor', 'invitee@test.local');
-  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@test.local');
+  v_invite := pg_temp.new_invite('editor', 'invitee@tp25.local');
+  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@tp25.local');
   perform public.decline_invite(v_invite);
   if (select status from public.trip_invites where id = v_invite) <> 'revoked' then
     raise exception 'FAIL 5: declining did not revoke the invite';
@@ -149,8 +169,9 @@ end $$;
 do $$
 declare v_invite uuid;
 begin
-  v_invite := pg_temp.new_invite('editor', 'invitee@test.local');
-  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@test.local');
+  perform pg_temp.god();
+  v_invite := pg_temp.new_invite('editor', 'invitee@tp25.local');
+  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@tp25.local');
   begin
     update public.trip_invites
        set status = 'revoked', accepted_by = '22222222-2222-2222-2222-222222222222'
@@ -165,13 +186,14 @@ end $$;
 do $$
 declare v_rows int;
 begin
-  perform pg_temp.new_invite('editor', 'invitee@test.local');
-  perform pg_temp.be('33333333-3333-3333-3333-333333333333', 'bystander@test.local');
+  perform pg_temp.god();
+  perform pg_temp.new_invite('editor', 'invitee@tp25.local');
+  perform pg_temp.be('33333333-3333-3333-3333-333333333333', 'bystander@tp25.local');
   select count(*) into v_rows from public.pending_invites();
   if v_rows <> 0 then
     raise exception 'FAIL 7: pending_invites() returned % rows to a bystander', v_rows;
   end if;
-  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@test.local');
+  perform pg_temp.be('22222222-2222-2222-2222-222222222222', 'invitee@tp25.local');
   select count(*) into v_rows from public.pending_invites();
   if v_rows = 0 then
     raise exception 'FAIL 7: pending_invites() hid the invitee''s own invite';
