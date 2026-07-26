@@ -85,7 +85,9 @@ Your real booked stay has cancel/charge dates. On the right T-7/T-3/T-1 morning 
 
 ## F9 · Cleanup
 
-- Settings → delete/leave the "Phone test" trip (or tell me and I'll clean it up).
+- Settings → **Danger zone** → *Delete trip…* → type the trip's name → delete the "Phone test" trip.
+  (This step was impossible until 2026-07-26 — `deleteTrip` did not exist, so **the test trips from
+  the 07-24 pass are still in production** and should be cleaned up on the next run.)
 - Revoke any leftover test follow links.
 - Keep the PWA installed — it's the real thing now.
 

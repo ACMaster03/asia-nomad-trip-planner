@@ -16,6 +16,7 @@ import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { roleLabel } from '@/lib/trips/role'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
+import { DangerZone } from '@/components/trips/DangerZone'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { OnboardingWizard } from '@/components/trips/OnboardingWizard'
 import { Modal } from '@/components/trips/Modal'
@@ -535,6 +536,10 @@ export default function SettingsClient() {
       {canEdit && <PeopleCard />}
       {canEdit && <SharingCard endDate={trip.data.state?.meta?.endDate} />}
       <ActiveTripCard />
+      {/* Last on the page, per mock 09 — irreversible actions never sit above
+          the things people came here to do. Viewers see it too: leaving a trip
+          is the one destructive action a viewer legitimately has. */}
+      <DangerZone tripName={trip.data.state?.meta?.tripName ?? name} />
       <p className="mt-10 text-center text-xs text-neutral-400 dark:text-neutral-600">
         🧭 Asia Nomad Planner · build v{process.env.NEXT_PUBLIC_BUILD_SHA} · updates apply automatically
       </p>
