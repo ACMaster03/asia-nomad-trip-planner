@@ -6,8 +6,12 @@ import { usePathname } from 'next/navigation'
 // App navigation. Desktop keeps the horizontal bar; phones get a hamburger
 // sheet — the full link list wrapped to two crowded rows on small screens
 // (dogfood 2026-07-24). showLive comes from the server layout's trip gate.
+//
+// Every link here except Account is trip-scoped, which is why Account sits
+// apart under the avatar (mock 13): it is the one destination that still works
+// when there is no readable trip.
 
-export function AppNav({ showLive }: { showLive: boolean }) {
+export function AppNav({ showLive, userEmail }: { showLive: boolean; userEmail?: string }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
@@ -18,11 +22,12 @@ export function AppNav({ showLive }: { showLive: boolean }) {
     ['/money', 'Money'],
     ['/map', 'Map'],
     ['/knowledge', 'Explore'],
-    ['/settings', 'Settings'],
+    ['/settings', 'Trip settings'],
   ]
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
   const linkCls = (href: string) =>
     isActive(href) ? 'font-semibold text-teal-600' : 'hover:underline'
+  const initial = (userEmail?.trim()[0] ?? '?').toUpperCase()
 
   return (
     // relative + z-40 + solid bg: the map page paints a FIXED globe overlay
@@ -56,6 +61,22 @@ export function AppNav({ showLive }: { showLive: boolean }) {
               {label}
             </Link>
           ))}
+          <Link
+            href="/account"
+            onClick={() => setOpen(false)}
+            className={
+              'mt-1 flex items-center gap-2 border-t border-neutral-200 pt-3 text-base dark:border-neutral-800 ' +
+              linkCls('/account')
+            }
+          >
+            <span
+              aria-hidden
+              className="flex h-7 w-7 flex-none items-center justify-center rounded-full border border-teal-500 bg-teal-500/10 text-xs font-bold text-teal-700 dark:text-teal-400"
+            >
+              {initial}
+            </span>
+            Account
+          </Link>
         </div>
       )}
 
@@ -65,7 +86,17 @@ export function AppNav({ showLive }: { showLive: boolean }) {
         {links.slice(0, -1).map(([href, label]) => (
           <Link key={href} href={href} className={linkCls(href)}>{label}</Link>
         ))}
-        <Link href="/settings" className={'ml-auto ' + linkCls('/settings')}>Settings</Link>
+        <Link href="/settings" className={'ml-auto ' + linkCls('/settings')}>Trip settings</Link>
+        <Link href="/account" aria-label="Account" title={userEmail || 'Account'}>
+          <span
+            className={
+              'flex h-8 w-8 items-center justify-center rounded-full border bg-teal-500/10 text-xs font-bold text-teal-700 dark:text-teal-400 ' +
+              (isActive('/account') ? 'border-teal-600 ring-2 ring-teal-600/30' : 'border-teal-500')
+            }
+          >
+            {initial}
+          </span>
+        </Link>
       </div>
     </nav>
   )

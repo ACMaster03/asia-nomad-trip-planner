@@ -329,7 +329,7 @@ body.hide-notes .note { display: none; }
       <span class="brand">🧭 Nomad</span>
       <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
       <a href="#">Map</a><a href="#">Explore</a>
-      <span class="right"><a href="#" class="on">Settings</a><span class="avatar">P</span></span>
+      <span class="right"><a href="#" class="on">Trip settings</a><a href="#"><span class="avatar">P</span></a></span>
     </nav>
     <main class="screen" id="screen">
 
@@ -337,13 +337,17 @@ body.hide-notes .note { display: none; }
       <section data-state="*">
         <div class="row">
           <div>
-            <div class="h1">Settings</div>
+            <div class="h1">Trip settings</div>
             <div class="small muted">Asia 2026–27 · signed in as Patrik <span class="badge accent">owner</span></div>
           </div>
         </div>
-        <div class="note">In the real app Settings is <b>one scrollable page</b> with an anchor rail on desktop
-          (Trip · Sharing · Appearance · Danger zone) and sticky section chips on phone. The mock splits the
-          sections into switcher states so each can be reviewed in isolation.</div>
+        <div class="note">In the real app Trip settings is <b>one scrollable page</b> with an anchor rail on desktop
+          (Trip · Sharing · Danger zone) and sticky section chips on phone. The mock splits the
+          sections into switcher states so each can be reviewed in isolation.
+          <b>SPLIT (2026-07-26, approved direction):</b> everything about the PERSON — sign out, appearance,
+          language, delete account — moved to the new <b>Account</b> page (mock 13, /account, entered via the
+          nav avatar), because account actions must not require a loaded trip. The nav item for THIS page is
+          relabelled "Trip settings". The states below cover only what stays.</div>
       </section>
 
       <!-- ============================================================
@@ -626,6 +630,10 @@ body.hide-notes .note { display: none; }
       <section data-state="appearance">
         <div class="stack">
 
+          <div class="note"><b>MOVED → mock 13 (Account).</b> Appearance is a property of the person's device,
+            not of a trip, so it belongs on the trip-less Account page. The design below is unchanged and still
+            canonical — it just ships under /account when built. Kept here so the review history stays whole.</div>
+
           <div class="card pad-lg">
             <div class="sethead">
               <h2 class="h2">Theme</h2>
@@ -745,18 +753,11 @@ body.hide-notes .note { display: none; }
               </div>
               <button class="btn">⭳ Export JSON</button>
             </div>
-            <div class="drow">
-              <div class="grow">
-                <div class="dt">Sign out</div>
-                <div class="dd">Signs this device out of Patrik's account.</div>
-              </div>
-              <button class="btn ghost">Sign out</button>
-            </div>
             <div class="note">Export is generated server-side and downloaded directly (no email) — doubles as the
               GDPR data-portability answer. It contains <b>only the requesting user's trips</b>; Anna's private
-              profile data is not included even though she's on the trip. <b>Open question:</b> signing out of the
-              PWA while offline check-ins are still queued (see mock 06) could lose them — block sign-out with a
-              warning until the queue is flushed? Mock assumption: yes, warn + offer "sync now".</div>
+              profile data is not included even though she's on the trip. <b>Sign out MOVED → mock 13
+              (Account)</b> — it acts on the person, not the trip; its offline-queue warning moved with it.
+              Export STAYS here: it exports trip data.</div>
           </div>
 
           <div class="card pad-lg danger-card">
@@ -829,6 +830,59 @@ body.hide-notes .note { display: none; }
         </div>
       </section>
 
+      <!-- ============================================================
+           STATE: gone — the scoped trip became unreadable mid-session
+           ============================================================ -->
+      <section data-state="gone">
+        <div class="stack">
+
+          <div class="card pad-lg">
+            <div class="toast danger" style="display:flex; margin-bottom:14px;">🚪
+              <span><b>You no longer have access to the selected trip.</b> It may have been deleted, or your
+              invite was withdrawn. Switch to another trip below, or start your own.</span></div>
+            <div class="sethead">
+              <h2 class="h2">Active trip</h2>
+            </div>
+            <div class="empty" style="padding: 26px 18px;">
+              <div class="glyph">🧭</div>
+              <h3>No trips of your own yet</h3>
+              <div class="small muted">Trips you were invited to appear here once you accept an invite.</div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="btn primary">＋ New trip</button>
+              <span class="small muted">launches the onboarding wizard (mock 01)</span>
+            </div>
+          </div>
+
+          <div class="note">This state exists because of a dogfood finding (2026-07-26): a viewer whose access
+            was revoked mid-session was dumped into the ZERO-TRIPS wizard — "you have no access anymore" and
+            "you are a brand-new user" were sharing one screen. The guard now distinguishes three cases:
+            no trip selected → wizard (mock 01) · trip still loading → hold the frame · trip became
+            unreadable → THIS. Account actions are NOT here — the nav avatar (Account, mock 13) stays
+            reachable, which is the other half of the same finding.</div>
+
+          <div>
+            <div class="sec"><h2 class="h2">Same moment, on any other screen</h2>
+              <span class="small muted">Dashboard, Itinerary, Money, Map…</span></div>
+            <div class="card pad-lg">
+              <div class="empty" style="padding: 30px 18px;">
+                <div class="glyph">🚪</div>
+                <h3>You no longer have access to this trip</h3>
+                <div class="small muted" style="margin-bottom: 14px;">It may have been deleted, or your invite
+                  was withdrawn. Ask the owner if you think this is a mistake.</div>
+                <button class="btn primary">Pick another trip or start your own</button>
+              </div>
+            </div>
+            <div class="note">One shared endframe for every non-settings screen; the button lands on Trip
+              settings (this page, "gone" state above), which keeps the switcher usable. A failed SAVE on an
+              open editor tab resolves to this same state — the inline "your edit access was removed" error
+              only flashes if the trip document is still readable (downgrade to viewer), never for a full
+              revoke.</div>
+          </div>
+
+        </div>
+      </section>
+
     </main>
   </div>
 </div>
@@ -836,12 +890,13 @@ body.hide-notes .note { display: none; }
 <script>
 /* ====== MOCK CONFIG — edit per screen ====== */
 const MOCK = {
-  screen: 'Settings',
+  screen: 'Trip settings',
   states: [
     { id: 'trip', label: 'Trip & FX', desc: 'Owner (Patrik), a few weeks before departure, reviewing trip meta, exchange rates and the active-trip switcher.' },
     { id: 'sharing', label: 'Sharing', desc: 'Owner managing who can see the trip — Anna as co-editor, follow links already shared with family (Mom follows).' },
-    { id: 'appearance', label: 'Appearance', desc: 'Either traveller personalising theme + accent palette on their own device, any time.' },
-    { id: 'danger', label: 'Danger zone', desc: 'Owner scrolled to the bottom: export / sign out / delete — includes the co-editor "leave trip" variant and the delete confirmation modal.' },
+    { id: 'appearance', label: 'Appearance (moved)', desc: 'MOVED to Account (mock 13) — design unchanged, kept here for reference until built.' },
+    { id: 'danger', label: 'Danger zone', desc: 'Owner scrolled to the bottom: export / delete trip — includes the co-editor "leave trip" variant and the delete confirmation modal. Account deletion + sign out moved to mock 13.' },
+    { id: 'gone', label: 'Access lost', desc: 'A viewer whose access was just revoked (or whose trip was deleted) — the switcher stays usable, and the same moment on non-settings screens.' },
   ],
 };
 /* ====== harness (do not edit) ====== */

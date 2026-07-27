@@ -56,13 +56,67 @@ function ConfirmBox({
   )
 }
 
+// ACCOUNT: everything, everywhere. Lives on /account rather than in the trip
+// Danger zone below, because it must stay reachable WITHOUT a loaded trip:
+// deleting your last trip — or losing access to the active one — must never
+// take the "erase me" button with it (dogfood 2026-07-26, mock 13).
+export function AccountDeletion() {
+  const sb = createClient()
+  const qc = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const delAccount = useMutation({
+    mutationFn: () => deleteAccount(sb),
+    onSuccess: () => {
+      qc.clear()
+      // Full reload, not a router push: everything in memory belongs to a user
+      // who no longer exists.
+      window.location.href = '/login'
+    },
+    onError: () => setError('Could not delete your account — please try again.'),
+  })
+
+  return (
+    <section className="mt-10 rounded-lg border border-red-300 p-4 dark:border-red-900">
+      <h2 className="text-lg font-semibold text-red-700 dark:text-red-400">Danger zone</h2>
+      <p className="mb-4 mt-1 text-sm text-neutral-500">This cannot be undone.</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-0 grow">
+          <div className="text-sm font-medium">Delete my account</div>
+          <div className="text-xs text-neutral-500">
+            Deletes every trip you own and all of their photos, removes you from trips you
+            joined, and erases your sign-in. You will be signed out immediately.
+          </div>
+        </div>
+        <button
+          onClick={() => setOpen(!open)}
+          className="rounded border border-red-400 px-3 py-1.5 text-sm text-red-700 dark:text-red-400"
+        >
+          Delete account…
+        </button>
+      </div>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {open && (
+        <ConfirmBox
+          phrase="DELETE MY ACCOUNT"
+          label={<>Type <b>DELETE MY ACCOUNT</b> to confirm</>}
+          cta="Permanently delete my account"
+          busy={delAccount.isPending}
+          onConfirm={() => delAccount.mutate()}
+        />
+      )}
+    </section>
+  )
+}
+
 export function DangerZone({ tripName }: { tripName: string }) {
   const sb = createClient()
   const qc = useQueryClient()
   const router = useRouter()
   const { tripId, setTripId } = useTripScope()
   const { role, canAdminister, isResolved } = useTripRole()
-  const [open, setOpen] = useState<null | 'trip' | 'leave' | 'account'>(null)
+  const [open, setOpen] = useState<null | 'trip' | 'leave'>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Both trip paths end with this screen gone: Settings renders the
@@ -88,21 +142,10 @@ export function DangerZone({ tripName }: { tripName: string }) {
     onError: () => setError('Could not leave the trip — please try again.'),
   })
 
-  const delAccount = useMutation({
-    mutationFn: () => deleteAccount(sb),
-    onSuccess: () => {
-      qc.clear()
-      // Full reload, not a router push: everything in memory belongs to a user
-      // who no longer exists.
-      window.location.href = '/login'
-    },
-    onError: () => setError('Could not delete your account — please try again.'),
-  })
-
   // Withheld until the role is known, so nobody is offered "Leave trip" for a
   // trip they own or "Delete trip" for one they don't.
   if (!isResolved) return null
-  const busy = delTrip.isPending || leave.isPending || delAccount.isPending
+  const busy = delTrip.isPending || leave.isPending
 
   return (
     <section className="mt-10 rounded-lg border border-red-300 p-4 dark:border-red-900">
@@ -176,33 +219,6 @@ export function DangerZone({ tripName }: { tripName: string }) {
         </div>
       )}
 
-      {/* ACCOUNT: everything, everywhere. */}
-      <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="min-w-0 grow">
-            <div className="text-sm font-medium">Delete my account</div>
-            <div className="text-xs text-neutral-500">
-              Deletes every trip you own and all of their photos, removes you from trips you
-              joined, and erases your sign-in. You will be signed out immediately.
-            </div>
-          </div>
-          <button
-            onClick={() => setOpen(open === 'account' ? null : 'account')}
-            className="rounded border border-red-400 px-3 py-1.5 text-sm text-red-700 dark:text-red-400"
-          >
-            Delete account…
-          </button>
-        </div>
-        {open === 'account' && (
-          <ConfirmBox
-            phrase="DELETE MY ACCOUNT"
-            label={<>Type <b>DELETE MY ACCOUNT</b> to confirm</>}
-            cta="Permanently delete my account"
-            busy={busy}
-            onConfirm={() => delAccount.mutate()}
-          />
-        )}
-      </div>
     </section>
   )
 }

@@ -56,7 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <MoneyProvider initialBase={meta?.baseCurrency ?? 'HUF'}>
         <OfflineWarmup />
         <div className="min-h-screen">
-          <AppNav showLive={showLive} />
+          <AppNav showLive={showLive} userEmail={data.claims.email as string | undefined} />
           {/* Above every screen: an invite is to a trip you cannot navigate to
               yet, so it has no page of its own to live on. Renders nothing
               unless you actually have one. */}

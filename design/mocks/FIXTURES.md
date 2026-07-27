@@ -153,3 +153,11 @@ Same date/time/author/rating and ONE canonical comment string each:
   implementation for the real app. 03's `.sw`, 05's `.tgl` etc. are static visual stand-ins —
   cosmetic variance is acceptable at mock stage.
 - Class-name collisions across mock files are fine — every file is standalone.
+
+## Account (mock 13)
+
+- Patrik signs in with **patrik@nomad.example** (magic link — no password exists anywhere).
+- The Account page (/account, nav avatar) is app-level: identical and reachable with a live trip,
+  zero trips, mid-onboarding, or freshly-revoked access. Trip-scoped settings stay on Trip settings (09).
+- Delete-account consequences (confirm state): **1 owned trip (Asia 2026–27) · 34 ledger entries ·
+  every photo**; seats on joined trips are freed; owners keep their trips.

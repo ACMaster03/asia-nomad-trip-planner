@@ -459,7 +459,23 @@ export default function SettingsClient() {
 
   if (tripId === null) return <CreateTripEmptyState />
   if (trip.isPending) return <main className="mx-auto max-w-3xl p-6">Loading…</main>
-  if (!trip.data) return <CreateTripEmptyState />
+  if (!trip.data)
+    // The scoped trip vanished mid-session (deleted, or access revoked). The
+    // generic no-access screen points HERE to recover, so this page must keep
+    // the switcher usable rather than bouncing to that same screen.
+    return (
+      <main className="mx-auto max-w-3xl p-6">
+        <h1 className="mb-1 text-xl font-semibold">Trip settings</h1>
+        <div className="mt-4 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
+          <span className="font-medium text-neutral-800 dark:text-neutral-200">
+            You no longer have access to the selected trip.
+          </span>{' '}
+          It may have been deleted, or your invite was withdrawn. Switch to another trip below,
+          or start your own.
+        </div>
+        <ActiveTripCard />
+      </main>
+    )
 
   function save() {
     mut.mutate(
@@ -483,7 +499,7 @@ export default function SettingsClient() {
   return (
     <main className="mx-auto max-w-3xl p-6">
       <div className="mb-1 flex items-center gap-3">
-        <h1 className="text-2xl font-semibold">Settings</h1>
+        <h1 className="text-2xl font-semibold">Trip settings</h1>
         {/* Your standing on this trip. Shown to everyone, not just viewers: on a
             shared trip "who am I here" is worth stating even when the answer is
             Owner — it's the anchor the read-only states refer back to. */}
