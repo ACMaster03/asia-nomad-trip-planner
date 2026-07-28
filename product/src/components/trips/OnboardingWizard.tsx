@@ -53,8 +53,15 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
 
   // Step 1 — the hard commit. Cache + per-account selection update mirror
   // CreateTripEmptyState's old flow; the wizard then continues onto the trip.
+  //
+  // newTripId is the create's idempotency key: ONE id per wizard mount, so a
+  // double-fired submit (double click / Enter+click in the same frame, before
+  // isPending disables the button) or a retry after a lost response inserts
+  // the same primary key and resolves to the already-created trip instead of
+  // making a sibling. See createTrip in lib/trips/queries.ts.
+  const [newTripId] = useState(() => crypto.randomUUID())
   const create = useMutation({
-    mutationFn: (values: NewTripInput) => createTrip(sb, values),
+    mutationFn: (values: NewTripInput) => createTrip(sb, values, newTripId),
     onSuccess: async (t) => {
       qc.setQueryData(tk.trip(t.id), t)
       qc.invalidateQueries({ queryKey: tk.trips })
@@ -104,7 +111,7 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
       {step === 1 && (
         <div className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
           <h2 className="mb-3 text-lg font-semibold">Trip basics</h2>
-          <TripMetaForm onSubmit={(v) => create.mutate(v)} busy={create.isPending} />
+          <TripMetaForm onSubmit={(v) => { if (!create.isPending) create.mutate(v) }} busy={create.isPending} />
           {create.isError && <p className="mt-3 text-sm text-red-600">Could not create the trip — try again.</p>}
         </div>
       )}

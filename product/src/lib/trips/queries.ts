@@ -117,16 +117,34 @@ export async function resolveActiveTrip(sb: SupabaseClient): Promise<Trip | null
 // columns (travelers, rates, …) live inside `state` and must not be duplicated.
 // Seeds from the wizard's inputs via makeNewTripState — never from the owner's
 // real trip data (the old makeDefaultState seed leaked booking confirmations).
-export async function createTrip(sb: SupabaseClient, input: NewTripInput): Promise<Trip> {
+//
+// IDEMPOTENCY (same pattern as the outbox, lib/trips/outbox.ts): the caller
+// passes a client-generated `id` that is stable for the whole create attempt
+// (one per wizard mount). If the insert fires twice — double-fired submit, a
+// retry after a lost response, an auth-event replay — the second insert hits
+// the primary key, Postgres answers 23505, and we resolve to the row that is
+// already there instead of creating a sibling. One submit → exactly one trip.
+// (The July 2026 "four identical trips" incident was the legacy static app's
+// seed-on-empty race — js/cloud.js, since made read-only — but the guarantee
+// belongs on this path too: creating a trip is the first thing every new
+// account does.)
+export async function createTrip(sb: SupabaseClient, input: NewTripInput, id?: string): Promise<Trip> {
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user!.id
   const seed = makeNewTripState(input)
   const { data, error } = await sb
     .from('trips')
-    .insert({ owner: uid, name: seed.meta.tripName, state: seed, ledger: [] })
+    .insert({ ...(id ? { id } : {}), owner: uid, name: seed.meta.tripName, state: seed, ledger: [] })
     .select(TRIP_COLS)
     .single()
-  if (error) throw error
+  if (error) {
+    if (id && error.code === '23505') {
+      // duplicate key on our own id = this create already landed → return it
+      const existing = await fetchTrip(sb, id)
+      if (existing) return existing
+    }
+    throw error
+  }
   return data as Trip
 }
 
