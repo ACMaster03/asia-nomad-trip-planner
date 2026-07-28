@@ -243,7 +243,9 @@ body.hide-notes .note { display: none; }
 
 <div class="frame" id="frame">
   <div class="app">
-    <nav class="appnav">
+    <!-- hidden on "goodbye": that screen is SIGNED OUT — the account is gone,
+         so there is no app nav to show. -->
+    <nav class="appnav" data-state="account confirm">
       <span class="brand">🧭 Nomad</span>
       <a href="#">Dashboard</a><a href="#">Itinerary</a><a href="#">Money</a>
       <a href="#">Map</a><a href="#">Explore</a>
@@ -252,7 +254,7 @@ body.hide-notes .note { display: none; }
     <main class="screen" id="screen">
 
       <!-- ============ shared header ============ -->
-      <section data-state="*">
+      <section data-state="account confirm">
         <div class="row">
           <div>
             <div class="h1">Account</div>
@@ -380,6 +382,46 @@ body.hide-notes .note { display: none; }
         </div>
       </section>
 
+      <!-- ============================================================
+           STATE: goodbye — the receipt, after the account is erased
+           ============================================================ -->
+      <section data-state="goodbye">
+        <div style="max-width: 460px; margin: 40px auto;">
+          <div class="card pad-lg" style="text-align:center;">
+            <div style="font-size: 40px; line-height:1; margin-bottom: 12px;">👋</div>
+            <div class="h1" style="margin-bottom: 6px;">Your account is deleted</div>
+            <div class="small muted" style="margin-bottom: 18px;">Sorry to see you go.</div>
+
+            <div style="text-align:left; border-top: 1px solid var(--border); padding-top: 14px;">
+              <div class="small" style="font-weight:600; margin-bottom: 6px;">What was erased</div>
+              <ul class="consequences" style="margin-top:0;">
+                <li>the trips you owned, with their photos</li>
+                <li>your seat on trips you had joined</li>
+                <li>your sign-in — <b>patrik@nomad.example</b></li>
+              </ul>
+              <div class="small muted">Nothing is kept, and there is nothing to restore. You can start fresh
+                with the same email whenever you like — it just begins empty.</div>
+            </div>
+
+            <div class="row" style="justify-content:center; margin-top: 18px;">
+              <button class="btn primary">Back to sign in</button>
+            </div>
+          </div>
+
+          <div class="note">Route <b>/goodbye</b>, deliberately OUTSIDE the authenticated (app) group — by the
+            time this paints the session is gone, so anything trip-scoped or auth-guarded would bounce
+            straight to /login and the person would never see it. That bounce is exactly today's behaviour
+            and it reads as "you got logged out", not "it worked".
+            <br><br>
+            This screen is the ONLY receipt: deletion sends no email and has no undo, so the copy states
+            plainly that nothing is recoverable rather than softening it. The list is generic, not live
+            counts — the rows it would count no longer exist by the time we could render them.
+            <br><br>
+            Reachable only right after a deletion (no nav, no link anywhere). Visiting /goodbye directly
+            shows the same thing — harmless, and cheaper than guarding a page with no secrets on it.</div>
+        </div>
+      </section>
+
     </main>
   </div>
 </div>
@@ -391,6 +433,7 @@ const MOCK = {
   states: [
     { id: 'account', label: 'Account', desc: 'Patrik opens Account from the nav avatar — the page is identical with a live trip, zero trips, or freshly-revoked access.' },
     { id: 'confirm', label: 'Delete confirm', desc: 'The delete-account confirmation is open; typing the exact phrase arms the button.' },
+    { id: 'goodbye', label: 'Goodbye', desc: 'Immediately after the account is erased — signed out, no app nav. The only receipt the person ever gets.' },
   ],
 };
 /* ====== harness (do not edit) ====== */

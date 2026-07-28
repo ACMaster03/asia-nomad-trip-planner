@@ -70,9 +70,11 @@ export function AccountDeletion() {
     mutationFn: () => deleteAccount(sb),
     onSuccess: () => {
       qc.clear()
-      // Full reload, not a router push: everything in memory belongs to a user
-      // who no longer exists.
-      window.location.href = '/login'
+      // /goodbye, not /login: this is the only confirmation there is (no email,
+      // no undo), and landing on a sign-in form reads as "you got logged out"
+      // rather than "it worked". Full reload, not a router push — everything in
+      // memory belongs to a user who no longer exists.
+      window.location.href = '/goodbye'
     },
     onError: () => setError('Could not delete your account — please try again.'),
   })
