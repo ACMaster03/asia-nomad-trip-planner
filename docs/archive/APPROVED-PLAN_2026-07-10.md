@@ -1,5 +1,13 @@
 # Asia Nomad Trip Planner → Trip Planner + Live Trip Follower
 
+> ⚠️ **PARTIALLY SUPERSEDED (2026-07-28).** The mobile strategy in §"Decisions made" and
+> §P1–P2 below has changed: **the Expo companion app is dropped**. Android ships as a
+> **Trusted Web Activity** over the PWA; iOS ships as a **native SwiftUI app**; both are
+> targeted *before* departure rather than post-trip. React Native and NativeWind are out of
+> the roadmap. Everything else here — the three data regimes, milestones M0–M4, the
+> mock-first design gate, the security ordering — still stands.
+> See **[`../PLATFORM-DECISION_2026-07-28.md`](../PLATFORM-DECISION_2026-07-28.md)**.
+
 ## Context
 
 The repo at `/Users/grohmannpatrik/Claude/Projects/Ázsia nomad trip planning/asia-nomad-planner` contains a working Next.js 16 + React 19 + Supabase trip-planner (`product/`) that fully replaced the original static app. The owner wants to evolve it into a **trip planner + live trip follower**: real-time check-ins with ratings/comments, a way for family to follow the trip live (no account needed), photo/video sharing, and — later — public community data and light monetization.

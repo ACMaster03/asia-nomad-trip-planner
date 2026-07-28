@@ -50,6 +50,13 @@ adversarially critiqued), Patrik chose:
   (SDK 56+, NativeWind, MapLibre flat map — the 3D globe stays web-only).
 - **Rejected:** Expo-only web (SEO second-class in 2026); shared-UI frameworks (Tamagui/RSD).
 
+> ⚠️ **AMENDED 2026-07-28 — the Expo companion is dropped.** Android now ships as a
+> **Trusted Web Activity** wrapping the PWA, iOS as a **native SwiftUI app**, both targeted
+> before departure. React Native / NativeWind leave the roadmap entirely, and the monorepo
+> extraction loses its forcing function. The pre-trip Next.js/PWA line above is unchanged.
+> Rationale, costs, and the App-Review latency caveat:
+> **[`PLATFORM-DECISION_2026-07-28.md`](PLATFORM-DECISION_2026-07-28.md)**.
+
 **Three data regimes** (deliberate, do not "normalize" everything):
 1. **Plan** stays `jsonb` last-write-wins (never normalize).
 2. **Lived trip** is born relational + append-only (`places`, `trip_events`, `check_ins`,
