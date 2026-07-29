@@ -127,14 +127,32 @@ end $$;
 -- 6. is_admin still guarded despite the update policy carrying the new columns
 -- ---------------------------------------------------------------------------
 select pg_temp.be('22222222-2222-2222-2222-222222222227', 'patrik@tp27.local');
-do $$ begin
+-- The guard may refuse either way: column revoke (42501) or the
+-- guard_profile_admin_flag trigger (P0001 raise_exception). Our own FAIL is
+-- ALSO P0001, so it must be raised OUTSIDE the handler that treats P0001 as
+-- success — hence the flag, not a raise inside the inner block.
+do $$
+declare v_blocked boolean := false;
+begin
   begin
     update public.profiles set is_admin = true
       where id = '22222222-2222-2222-2222-222222222227';
-    raise exception 'TP27-6 FAIL: is_admin was self-served';
-  exception when insufficient_privilege then null; -- expected (column revoke / guard)
+  exception when insufficient_privilege or raise_exception then v_blocked := true; -- expected
   end;
+  if not v_blocked then
+    raise exception 'TP27-6 FAIL: is_admin update was not refused';
+  end if;
 end $$;
+
+-- belt over braces: whatever the refusal path, the flag must still be false
+select pg_temp.god();
+do $$ begin
+  if (select is_admin from public.profiles
+      where id = '22222222-2222-2222-2222-222222222227') then
+    raise exception 'TP27-6b FAIL: is_admin is true despite the refusal';
+  end if;
+end $$;
+select pg_temp.be('22222222-2222-2222-2222-222222222227', 'patrik@tp27.local');
 
 -- ---------------------------------------------------------------------------
 -- 7. account deletion cascades subscriptions
