@@ -98,10 +98,8 @@ export async function disableUserPush(sb: SupabaseClient): Promise<UserPushState
 }
 
 // ---------------------------------------------------------------------------
-// Notification preferences (profiles.notify_*, migration 27). select('*')
-// keeps working on a pre-27 DB — the fields are undefined and the UI shows
-// the defaults. TODO(migration-27): explicit column list once 27 is applied
-// everywhere.
+// Notification preferences (profiles.notify_*, migration 27 — applied to
+// prod and staging 2026-07-29).
 // ---------------------------------------------------------------------------
 export type NotifyPrefs = { notifyDeadlinePush: boolean; notifyEventPush: boolean }
 
@@ -109,7 +107,7 @@ export async function fetchNotifyPrefs(sb: SupabaseClient): Promise<NotifyPrefs>
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user?.id
   if (!uid) throw new Error('Not signed in')
-  const { data, error } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle()
+  const { data, error } = await sb.from('profiles').select('notify_deadline_push,notify_event_push').eq('id', uid).maybeSingle()
   if (error) throw error
   const row = data as { notify_deadline_push?: boolean; notify_event_push?: boolean } | null
   return {
