@@ -83,6 +83,30 @@ Traveller = your iPhone ("Phone test" trip active). Follower = laptop incognito 
 
 Your real booked stay has cancel/charge dates. On the right T-7/T-3/T-1 morning (07:00 UTC ≈ 09:00 home time) an email lands at patrikgrohmann@gmail.com. Nothing to do now — just notice whether it arrives on the right day, once.
 
+## F10 · Traveller push 🔔 *(gap 4 — added 2026-07-29)*
+
+Backend shipped 2026-07-29 (migration 27 + Edge Functions + Settings test block). Needs the
+**installed** app (push never works in a Safari tab) and a second account on a shared trip.
+
+1. Installed app → Settings → **Notifications** → *Enable push on this device*.
+   **⚠️ The iOS permission prompt must appear on that tap** — if nothing appears, that's the
+   transient-activation bug again (like the follower flow's 07-24 dogfood); report it.
+2. Second account (Petra's phone, or a browser signed into another account) → post a
+   check-in or note on the shared trip → **your phone buzzes within a few seconds**;
+   tapping the notification opens the app on **/live**.
+3. Post a check-in from **your own** phone → **no buzz on your phone** (the author is
+   excluded by design), but the *other* subscribed account gets one.
+4. Settings → untick *Trip updates from co-travellers* → second account posts again →
+   **no buzz**; re-tick → buzz returns. (Prefs mute delivery without unsubscribing the device.)
+5. Make an event **private** (visibility "just us") from the second account → travellers
+   still get the push, follower devices must NOT.
+6. *(passive, like F8)* On a T-7 or T-1 morning for a real stay deadline the email arrives
+   **and** the phone buzzes; tapping the deadline notification opens **/itinerary**.
+   T-3 stays email-only on purpose.
+
+**Report:** which step, what you saw — especially step 1 (no prompt) and step 5 (a follower
+device buzzing on a private event would be a privacy bug, report immediately).
+
 ## F9 · Cleanup
 
 - Settings → **Danger zone** → *Delete trip…* → type the trip's name → delete the "Phone test" trip.
@@ -101,5 +125,6 @@ Your real booked stay has cancel/charge dates. On the right T-7/T-3/T-1 morning 
 | F2 | any dead taps left, cold-start feel |
 | F5 | step 1 (no Safari error) and step 4 (queue survives force-quit) |
 | F7 | notification arrives; revoke kills everything |
+| F10 | step 1 (prompt on tap), step 5 (private events must never reach followers) |
 
 Anything that annoys you counts as a finding too — "works but feels wrong" is exactly the dogfood we want before Bangkok. 🛫
