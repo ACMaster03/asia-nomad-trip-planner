@@ -65,7 +65,7 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
     onSuccess: async (t) => {
       qc.setQueryData(tk.trip(t.id), t)
       qc.invalidateQueries({ queryKey: tk.trips })
-      await setSelectedTripId(sb, t.id).catch(() => {}) // pre-07 DB: local-only
+      await setSelectedTripId(sb, t.id).catch(() => {}) // best-effort — local scope carries on
       setTrip(t)
       setTripId(t.id)
       // Re-render the server layout: the nav's Live-tab gate reads the active
@@ -81,7 +81,7 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
       if (!trip) throw new Error('No trip yet')
       const next = { ...trip.state, meta: { ...trip.state.meta, homeBase: homeBase.trim() } }
       const newRev = await writeState(sb, trip.id, next, trip.state_rev)
-      const updated: Trip = { ...trip, state: next, ...(newRev !== undefined ? { state_rev: newRev } : {}) }
+      const updated: Trip = { ...trip, state: next, state_rev: newRev }
       setTrip(updated)
       qc.setQueryData(tk.trip(trip.id), updated)
     },

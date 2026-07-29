@@ -1,7 +1,7 @@
 'use client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { ledgerUpsertEntry, ledgerDeleteEntry, writeLedger, isPermissionDenied } from './queries'
+import { ledgerUpsertEntry, ledgerDeleteEntry, isPermissionDenied } from './queries'
 import { tk } from './keys'
 import { useTripScope } from './TripScope'
 import type { Ledger, LedgerEntry, Trip } from './types'
@@ -12,7 +12,7 @@ import type { Ledger, LedgerEntry, Trip } from './types'
 // no longer wipe each other's entries.
 export type LedgerOp = { kind: 'upsert'; entry: LedgerEntry } | { kind: 'delete'; id: string }
 
-// Same op applied locally for the optimistic cache update (and the legacy path).
+// Same op applied locally for the optimistic cache update.
 function applyOp(ledger: Ledger, op: LedgerOp): Ledger {
   return op.kind === 'delete'
     ? ledger.filter((e) => e.id !== op.id)
@@ -35,14 +35,6 @@ export function useLedgerMutation() {
       // state-mutation twin had a real double-apply bug from doing so.)
       const trip = qc.getQueryData<Trip>(key)
       if (!trip) throw new Error('No active trip')
-      // LEGACY FALLBACK: no ledger_rev column → migration 06 not applied yet →
-      // the RPCs don't exist either. Keep the old whole-array last-write-wins
-      // write so the app still works. TODO(migration-06): drop this branch once
-      // 06-security.sql is applied in prod.
-      if (trip.ledger_rev === undefined) {
-        await writeLedger(sb, trip.id, trip.ledger)
-        return trip.ledger
-      }
       const newRev =
         op.kind === 'delete'
           ? await ledgerDeleteEntry(sb, trip.id, op.id)

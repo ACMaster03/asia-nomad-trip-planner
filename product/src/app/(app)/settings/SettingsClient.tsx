@@ -26,8 +26,8 @@ const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm
 
 // The active-trip switcher card (approved endframe: design/mocks/09-settings.html,
 // "Active trip" card). Selection is per ACCOUNT (profiles.active_trip_id,
-// migration 07) so phone and laptop always show the same trip; on a pre-07 DB
-// persisting fails silently and the switch is per-device for the session.
+// migration 07) so phone and laptop always show the same trip; if persisting
+// fails (offline), the switch still applies per-device for the session.
 // "People on this trip" — the INVITER's half of the invite flow (migration 25).
 //
 // Until now the only way to invite anyone was step 3 of the onboarding wizard,
@@ -133,7 +133,7 @@ function ActiveTripCard() {
   const trips = useQuery({ queryKey: tk.trips, queryFn: () => fetchTrips(sb) })
   const switchMut = useMutation({
     mutationFn: async (id: string) => {
-      await setSelectedTripId(sb, id).catch(() => {}) // pre-07 DB: local-only switch
+      await setSelectedTripId(sb, id).catch(() => {}) // best-effort — offline keeps a local-only switch
       return id
     },
     onSuccess: (id) => {

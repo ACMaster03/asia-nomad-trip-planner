@@ -35,13 +35,10 @@ export function useTripMutation() {
       const trip = qc.getQueryData<Trip>(key)
       if (!trip) throw new Error('No active trip')
       const next = trip.state
-      // trip.state_rev is undefined on a pre-migration-06 DB → legacy direct write.
       const newRev = await writeState(sb, trip.id, next, trip.state_rev)
       // Sync the cached rev immediately: the next queued write (scope-serialized)
       // reads it from cache before the onSettled refetch has landed.
-      if (newRev !== undefined) {
-        qc.setQueryData<Trip>(key, (t) => (t ? { ...t, state_rev: newRev } : t))
-      }
+      qc.setQueryData<Trip>(key, (t) => (t ? { ...t, state_rev: newRev } : t))
       return next
     },
     onMutate: async (updater: StateUpdater) => {

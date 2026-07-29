@@ -1,14 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Trip, Ledger, LedgerEntry, TripState } from './types'
+import type { Trip, LedgerEntry, TripState } from './types'
 import { makeNewTripState, type NewTripInput } from './newTrip'
 
-// select('*') on purpose: the rev columns (state_rev/ledger_rev) only exist once
-// supabase/migrations/06-security.sql is applied. '*' works on both schemas —
-// pre-migration the fields are simply undefined on the row, which is exactly the
-// signal the write paths use to fall back to legacy direct updates.
-// TODO(migration-06): switch back to an explicit column list incl. state_rev,
-// ledger_rev once 06 is applied everywhere.
-const TRIP_COLS = '*'
+// Explicit columns (2026-07-29 cleanup — migration 06 is applied everywhere):
+// selecting '*' was only ever the pre-06 compatibility trick. Explicit keeps a
+// future column addition from silently widening every trip payload.
+const TRIP_COLS = 'id,owner,name,state,ledger,updated_at,created_at,state_rev,ledger_rev'
 
 // Typed conflict error: a write lost the optimistic-concurrency race (someone
 // else wrote the trip since we last read it). Callers roll back the optimistic
@@ -67,23 +64,19 @@ export async function fetchTrips(sb: SupabaseClient): Promise<TripListItem[]> {
 }
 
 // The user's per-ACCOUNT trip selection (profiles.active_trip_id, migration 07):
-// phone and laptop always show the same trip. select('*') keeps working on a
-// pre-migration-07 DB — the field is just undefined → callers fall back.
-// TODO(migration-07): switch to an explicit column list once 07 is applied.
+// phone and laptop always show the same trip.
 async function fetchSelectedTripId(sb: SupabaseClient): Promise<string | null> {
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user?.id
   if (!uid) return null
-  const { data, error } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle()
+  const { data, error } = await sb.from('profiles').select('active_trip_id').eq('id', uid).maybeSingle()
   if (error) throw error
   return (data as { active_trip_id?: string | null } | null)?.active_trip_id ?? null
 }
 
 // Persist the selection. Errors are surfaced (the 07 guard trigger refuses
-// trips the user cannot see). No-ops harmlessly on a pre-migration-07 DB?
-// No — updating a missing column errors; callers only invoke this from the
-// switcher UI, which is only reachable when a selection exists (post-07) or
-// degrades to a local-only switch via the catch in SettingsClient.
+// trips the user cannot see); callers that treat the selection as best-effort
+// (the wizard) catch and carry on with their local scope.
 export async function setSelectedTripId(sb: SupabaseClient, tripId: string): Promise<void> {
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user?.id
@@ -92,9 +85,9 @@ export async function setSelectedTripId(sb: SupabaseClient, tripId: string): Pro
   if (error) throw error
 }
 
-// Resolve the working trip: profile selection first; if unset, invisible or
-// pre-migration-07, fall back to the newest RLS-visible trip (the pre-multi-trip
-// behaviour). null → user has no trips at all → empty/create state.
+// Resolve the working trip: profile selection first; if unset or invisible,
+// fall back to the newest RLS-visible trip (the pre-multi-trip behaviour).
+// null → user has no trips at all → empty/create state.
 export async function resolveActiveTrip(sb: SupabaseClient): Promise<Trip | null> {
   const selectedId = await fetchSelectedTripId(sb).catch(() => null)
   if (selectedId) {
@@ -168,30 +161,13 @@ export async function createInvite(sb: SupabaseClient, tripId: string, email: st
 // we throw RevConflictError instead of silently clobbering their edit.
 // Returns the new state_rev so the caller can keep its cache in sync between
 // serialized writes (the refetch may not have landed yet).
-//
-// LEGACY FALLBACK: expectedRev === undefined means the trip row had no
-// state_rev column, i.e. migration 06 is not applied to this database yet.
-// In that case use the old direct last-write-wins update so the app keeps
-// working. TODO(migration-06): drop this fallback (and the parameter's
-// undefined case) once 06-security.sql is applied in prod.
 export async function writeState(
   sb: SupabaseClient,
   tripId: string,
   state: TripState,
-  expectedRev?: number,
-): Promise<number | undefined> {
+  expectedRev: number,
+): Promise<number> {
   const name = state.meta?.tripName ?? 'Trip'
-  if (expectedRev === undefined) {
-    // LEGACY path only. Note it cannot detect a permission failure: a viewer's
-    // UPDATE simply matches zero rows under RLS and reports success. That's one
-    // more reason this fallback dies with the migration-06 rollout.
-    const { error } = await sb
-      .from('trips')
-      .update({ state, name, updated_at: new Date().toISOString() })
-      .eq('id', tripId)
-    if (error) throw error
-    return undefined
-  }
   const { data, error } = await sb.rpc('write_state', {
     trip: tripId,
     new_state: state,
@@ -226,15 +202,4 @@ export async function ledgerDeleteEntry(sb: SupabaseClient, tripId: string, entr
     throw error
   }
   return data as number
-}
-
-// LEGACY whole-array ledger write — pre-migration-06 databases only (no
-// ledger_rev column → no RPCs either). Last-write-wins across devices.
-// TODO(migration-06): drop once 06-security.sql is applied in prod.
-export async function writeLedger(sb: SupabaseClient, tripId: string, ledger: Ledger): Promise<void> {
-  const { error } = await sb
-    .from('trips')
-    .update({ ledger, updated_at: new Date().toISOString() })
-    .eq('id', tripId)
-  if (error) throw error
 }
