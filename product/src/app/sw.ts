@@ -63,7 +63,7 @@ self.addEventListener("message", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let data: { title?: string; body?: string } = {};
+  let data: { title?: string; body?: string; url?: string } = {};
   try {
     data = event.data?.json() ?? {};
   } catch {
@@ -74,14 +74,28 @@ self.addEventListener("push", (event) => {
       body: data.body ?? "",
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
+      // Traveller pushes carry their click target ('/live', '/itinerary' —
+      // gap 4). Follower pushes carry none: their target is the follow URL
+      // this device stored at subscribe time (the DB never holds raw tokens).
+      data: data.url ? { url: data.url } : undefined,
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const payloadUrl = (event.notification.data as { url?: string } | undefined)?.url;
   event.waitUntil(
     (async () => {
+      if (payloadUrl) {
+        // traveller notification → focus any open app window on that path,
+        // else open one
+        const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+        const existing = wins.find((w) => new URL(w.url).pathname === payloadUrl);
+        if (existing) return existing.focus();
+        return self.clients.openWindow(payloadUrl);
+      }
+      // follower notification → the device-local way home (see above)
       const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       const existing = wins.find((w) => w.url.includes("/follow/"));
       if (existing) return existing.focus();

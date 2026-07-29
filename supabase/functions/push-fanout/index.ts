@@ -1,22 +1,22 @@
-// push-fanout — sends Web Push for one follower-visible trip event.
-// Invoked by the trip_events_push_fanout trigger (migration 13) via pg_net
-// with the shared x-cron-secret. Free-tier: VAPID only, no vendor.
+// push-fanout — sends Web Push for one trip event.
+// Invoked by the trip_events_push_fanout trigger (migrations 13 + 27) via
+// pg_net with the shared x-cron-secret. Free-tier: VAPID only, no vendor.
+//
+// Two audiences, decided here (the trigger fires for EVERY insert since 27):
+//   followers  — share-link subscriptions (13), only for follower-visible
+//                events; paused/revoked/expired shares are muted. Payload
+//                mirrors the shared_feed whitelist.
+//   travellers — the trip owner + members (27), for ALL visibilities, minus
+//                the event's author (you don't need a push about your own
+//                check-in), gated on profiles.notify_event_push.
 //
 // Secrets (per project): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT,
 // CRON_SECRET (+ SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY, auto-provided).
-//
-// Payload sent to the browser mirrors the shared_feed whitelist — nothing a
-// follower couldn't already see on the page.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import webpush from 'npm:web-push@3'
+import { sendWebPush, type WebPushTarget } from '../_shared/webpush.ts'
 
 const CRON_SECRET = Deno.env.get('CRON_SECRET')!
-webpush.setVapidDetails(
-  Deno.env.get('VAPID_SUBJECT') ?? 'mailto:patrik@keepyourhabits.com',
-  Deno.env.get('VAPID_PUBLIC_KEY')!,
-  Deno.env.get('VAPID_PRIVATE_KEY')!,
-)
 
 const sb = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -26,6 +26,7 @@ const sb = createClient(
 interface EventRow {
   id: string
   trip_id: string
+  author: string | null
   kind: string
   payload: { placeName?: string; text?: string; city?: string }
   visibility: string
@@ -58,53 +59,81 @@ Deno.serve(async (req) => {
 
   const { data: ev, error } = await sb
     .from('trip_events')
-    .select('id,trip_id,kind,payload,visibility,check_ins(rating,comment)')
+    .select('id,trip_id,author,kind,payload,visibility,check_ins(rating,comment)')
     .eq('id', event_id)
     .maybeSingle<EventRow>()
   if (error) return new Response(error.message, { status: 500 })
-  if (!ev || !['followers', 'public'].includes(ev.visibility)) {
-    return Response.json({ sent: 0, reason: 'not follower-visible' })
-  }
+  if (!ev) return Response.json({ sent: 0, reason: 'no such event' })
 
   const { data: trip } = await sb
-    .from('trips').select('state').eq('id', ev.trip_id).maybeSingle()
+    .from('trips').select('owner,state').eq('id', ev.trip_id).maybeSingle()
   const tripName: string =
     (trip?.state as { meta?: { tripName?: string } })?.meta?.tripName ?? 'Trip update'
 
-  // Subscriptions of LIVE (unrevoked, unexpired, unpaused) shares of this
-  // trip. Paused shares keep their subscriptions but are muted (mock 09).
-  const { data: subs, error: subErr } = await sb
-    .from('push_subscriptions')
-    .select('id,endpoint,p256dh,auth,trip_shares!inner(trip_id,revoked_at,expires_at,paused_at)')
-    .eq('trip_shares.trip_id', ev.trip_id)
-    .is('trip_shares.revoked_at', null)
-    .is('trip_shares.paused_at', null)
-  if (subErr) return new Response(subErr.message, { status: 500 })
+  const note = notification(ev, tripName)
 
-  const now = Date.now()
-  const live = (subs ?? []).filter((s) => {
-    const share = s.trip_shares as unknown as { expires_at: string | null }
-    return !share.expires_at || +new Date(share.expires_at) > now
-  })
-
-  const note = JSON.stringify(notification(ev, tripName))
-  let sent = 0, dropped = 0
-  await Promise.all(live.map(async (s) => {
-    try {
-      await webpush.sendNotification(
-        { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-        note,
-      )
-      sent++
-    } catch (e) {
-      const code = (e as { statusCode?: number }).statusCode
-      if (code === 404 || code === 410) {
-        // endpoint gone (unsubscribed / browser reset) → prune
-        await sb.from('push_subscriptions').delete().eq('id', s.id)
-        dropped++
+  // ---- audience 1: followers (share-link subs, follower-visible only) ------
+  const followerTargets: WebPushTarget[] = []
+  if (['followers', 'public'].includes(ev.visibility)) {
+    // Subscriptions of LIVE (unrevoked, unexpired, unpaused) shares of this
+    // trip. Paused shares keep their subscriptions but are muted (mock 09).
+    const { data: subs, error: subErr } = await sb
+      .from('push_subscriptions')
+      .select('id,endpoint,p256dh,auth,trip_shares!inner(trip_id,revoked_at,expires_at,paused_at)')
+      .eq('trip_shares.trip_id', ev.trip_id)
+      .is('trip_shares.revoked_at', null)
+      .is('trip_shares.paused_at', null)
+    if (subErr) return new Response(subErr.message, { status: 500 })
+    const now = Date.now()
+    for (const s of subs ?? []) {
+      const share = s.trip_shares as unknown as { expires_at: string | null }
+      if (!share.expires_at || +new Date(share.expires_at) > now) {
+        followerTargets.push({ ...s, table: 'push_subscriptions' })
       }
     }
-  }))
+  }
 
-  return Response.json({ event: ev.kind, subs: live.length, sent, dropped })
+  // ---- audience 2: travellers (owner + members, minus author, prefs on) ----
+  const { data: members } = await sb
+    .from('trip_members').select('user_id').eq('trip_id', ev.trip_id)
+  const memberIds = [...new Set(
+    [trip?.owner, ...(members ?? []).map((m: { user_id: string }) => m.user_id)]
+      .filter((id): id is string => !!id && id !== ev.author),
+  )]
+
+  const travellerTargets: WebPushTarget[] = []
+  if (memberIds.length) {
+    const { data: prefs } = await sb
+      .from('profiles').select('id,notify_event_push').in('id', memberIds)
+    const wantsPush = new Set(
+      (prefs ?? []).filter((p) => p.notify_event_push).map((p) => p.id),
+    )
+    if (wantsPush.size) {
+      const { data: userSubs } = await sb
+        .from('user_push_subscriptions')
+        .select('id,user_id,endpoint,p256dh,auth')
+        .eq('transport', 'webpush')
+        .in('user_id', [...wantsPush])
+      for (const s of userSubs ?? []) {
+        travellerTargets.push({
+          id: s.id, endpoint: s.endpoint, p256dh: s.p256dh!, auth: s.auth!,
+          table: 'user_push_subscriptions',
+        })
+      }
+    }
+  }
+
+  // Follower clicks route via device-local state (their device stored the
+  // follow URL at subscribe time — the DB never holds raw tokens, so we
+  // can't put their URL in a payload). Traveller clicks open /live.
+  const [followers, travellers] = await Promise.all([
+    sendWebPush(sb, followerTargets, note),
+    sendWebPush(sb, travellerTargets, { ...note, url: '/live' }),
+  ])
+
+  return Response.json({
+    event: ev.kind,
+    followers: { subs: followerTargets.length, ...followers },
+    travellers: { subs: travellerTargets.length, ...travellers },
+  })
 })

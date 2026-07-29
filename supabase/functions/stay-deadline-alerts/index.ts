@@ -1,11 +1,17 @@
-// Stay-deadline email alerts (M1 item 8) — Supabase Edge Function (Deno).
+// Stay-deadline alerts (M1 item 8, push added for M0-gate gap 4) —
+// Supabase Edge Function (Deno).
 //
 // Invoked daily by pg_cron (see README.md next to this file). Scans every
-// trip's state.stays for approaching deadlines and emails the trip's members:
-//   - cancelUntil (free-cancellation deadline): T-7, T-3, T-1 days before
-//   - chargeDate (card charged): T-1 day before
+// trip's state.stays for approaching deadlines and alerts the trip's members:
+//   - cancelUntil (free-cancellation deadline): email T-7, T-3, T-1
+//   - chargeDate (card charged): email T-1
+//   - PUSH mirrors the email on T-7 and T-1 only (gap 4 decision) — a phone
+//     buzz for the endpoints of the window, email for everything. Push is
+//     gated on profiles.notify_deadline_push and is best-effort; email stays
+//     unconditional because a cancel-by date is real money.
 // Dedupe: public.alert_log (migration 08) — one row per (trip, stay, kind,
-// recipient); an alert is sent at most once, ever.
+// recipient); an alert is sent at most once, ever. Push rows use
+// sent_to = 'push:<user_id>' so the two channels dedupe independently.
 //
 // Auth: verify_jwt is disabled for cron invocation; instead the caller must
 // send the shared secret header (x-cron-secret) set via `supabase secrets`.
@@ -13,6 +19,7 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendEmail } from '../_shared/resend.ts'
+import { sendWebPush, type WebPushTarget } from '../_shared/webpush.ts'
 
 type Stay = {
   id: string
@@ -37,6 +44,9 @@ const FROM = Deno.env.get('ALERTS_FROM') ?? 'Nomad Planner <onboarding@resend.de
 // kind → how many days before the date the alert fires
 const CANCEL_OFFSETS: Record<string, number> = { 'cancel-7': 7, 'cancel-3': 3, 'cancel-1': 1 }
 const CHARGE_OFFSETS: Record<string, number> = { 'charge-1': 1 }
+// kinds that ALSO push (email covers all of them) — gap 4: buzz at the window's
+// endpoints, not on every ping
+const PUSH_KINDS = new Set(['cancel-7', 'cancel-1', 'charge-1'])
 
 function daysUntil(iso: string, today: Date): number {
   const target = new Date(iso + 'T00:00:00Z')
@@ -82,11 +92,31 @@ Deno.serve(async (req) => {
     // Recipients: owner + all members (editor AND viewer — a viewer partner
     // still wants the warning). Emails come from auth.users via the admin API.
     const { data: members } = await admin.from('trip_members').select('user_id').eq('trip_id', trip.id)
-    const userIds = [trip.owner, ...(members ?? []).map((m: { user_id: string }) => m.user_id)]
+    const userIds = [...new Set([trip.owner, ...(members ?? []).map((m: { user_id: string }) => m.user_id)])]
     const emails: string[] = []
-    for (const uid of [...new Set(userIds)]) {
+    for (const uid of userIds) {
       const { data: u } = await admin.auth.admin.getUserById(uid)
       if (u?.user?.email) emails.push(u.user.email)
+    }
+
+    // Push targets per user (gap 4): only users who kept notify_deadline_push
+    // on AND have registered a device. Missing on both counts is the norm —
+    // push is an extra buzz on top of the guaranteed email.
+    const { data: prefs } = await admin
+      .from('profiles').select('id,notify_deadline_push').in('id', userIds)
+    const pushUids = (prefs ?? []).filter((p) => p.notify_deadline_push).map((p) => p.id)
+    const subsByUid = new Map<string, WebPushTarget[]>()
+    if (pushUids.length) {
+      const { data: userSubs } = await admin
+        .from('user_push_subscriptions')
+        .select('id,user_id,endpoint,p256dh,auth')
+        .eq('transport', 'webpush')
+        .in('user_id', pushUids)
+      for (const s of userSubs ?? []) {
+        const list = subsByUid.get(s.user_id) ?? []
+        list.push({ id: s.id, endpoint: s.endpoint, p256dh: s.p256dh!, auth: s.auth!, table: 'user_push_subscriptions' })
+        subsByUid.set(s.user_id, list)
+      }
     }
 
     for (const item of due) {
@@ -119,6 +149,30 @@ Deno.serve(async (req) => {
           await admin.from('alert_log').delete().match({ trip_id: trip.id, item_id: item.stay.id, kind: item.kind, sent_to: email })
           // Cron-secret protected → surface the provider's reason verbatim.
           results.push(`FAILED ${item.kind} ${item.stay.name} -> ${email}: ${res.error}`)
+        }
+      }
+
+      // Push mirror — T-7 and T-1 kinds only (gap 4 decision).
+      if (!PUSH_KINDS.has(item.kind)) continue
+      for (const [uid, targets] of subsByUid) {
+        // same dedupe discipline as email: claim the log row first
+        const { error: logErr } = await admin.from('alert_log').insert({
+          trip_id: trip.id, item_id: item.stay.id, kind: item.kind, sent_to: `push:${uid}`,
+        })
+        if (logErr) continue // unique violation → already pushed
+        const tripName = trip.state?.meta?.tripName ?? trip.name
+        const { sent: ok } = await sendWebPush(admin, targets, {
+          title: `⏰ ${item.stay.name}`,
+          body: `${item.label} (${item.date}) — ${tripName}`,
+          url: '/itinerary',
+        })
+        if (ok > 0) {
+          sent++
+          results.push(`${item.kind} ${item.stay.name} -> push:${uid} (${ok} device${ok > 1 ? 's' : ''})`)
+        } else {
+          // every device failed (or none left after pruning) → let tomorrow retry
+          await admin.from('alert_log').delete().match({ trip_id: trip.id, item_id: item.stay.id, kind: item.kind, sent_to: `push:${uid}` })
+          results.push(`push skipped ${item.kind} ${item.stay.name} -> ${uid} (no delivery)`)
         }
       }
     }
