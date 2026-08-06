@@ -243,3 +243,37 @@ an OSM row. `in_catalogue = false` rows must never be treated as a `places.id`.
   capture their POIs too, and whichever country is merged first wins the label —
   merging CN first silently relabelled all 620 HK rows as CN. The merge now
   orders SARs before their parent country.
+
+---
+
+## Running migrations from the terminal (`tools/db.sh`)
+
+Pasting into the SQL Editor still works, but migrations 25+ ship assertion
+scripts that are tedious to run by hand. `tools/db.sh` applies files and runs
+the testplans over `psql`.
+
+**One-time setup.** Supabase → Project Settings → Database → Connection string
+→ **URI**, and write it to a gitignored file (`supabase/.*-conn` is globbed, so
+new targets can't be committed by accident):
+
+```bash
+printf '%s' 'postgresql://postgres:PASSWORD@db.PROJECT.supabase.co:5432/postgres' \
+  > supabase/.staging-conn
+```
+
+Use the **direct** connection (port 5432), not the pooler — the testplans
+create fixtures in `auth.users`, which the pooled role may not be allowed to do.
+
+```bash
+tools/db.sh apply 25 26 27  # apply migrations by number, staging by default
+tools/db.sh test  25 26 27  # run the TESTPLANs — each rolls itself back
+tools/db.sh check           # audit every SECURITY DEFINER function: grants + search_path
+tools/db.sh trips           # every trip + its photo count (and orphaned folders)
+tools/db.sh shell           # interactive psql
+```
+
+`--prod` switches to `supabase/.prod-conn`; `apply` and `sql` against prod
+prompt for the word `PROD` first. Everything runs with `ON_ERROR_STOP=1`, so a
+failed assertion exits non-zero instead of scrolling past.
+
+**Order:** staging → `test` → dump prod → prod. Never the other way round.

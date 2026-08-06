@@ -7,7 +7,9 @@ node_modules/
 
 # Raw Claude transcripts — may contain secrets, never push
 docs/archive/transcripts/
-supabase/.staging-conn
+# Database connection strings for tools/db.sh — .staging-conn, .prod-conn.
+# Globbed, not listed: a new target must never be committable by omission.
+supabase/.*-conn
 supabase/backups/
 
 # Serwist build output — regenerated every `next build --webpack`
