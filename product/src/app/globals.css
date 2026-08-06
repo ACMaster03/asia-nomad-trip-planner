@@ -198,6 +198,20 @@ h3 {
   animation: lv-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 1.75s both;
 }
 
+/* Money bars grow from zero on every landing (rig's dcGrow). */
+@keyframes lv-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.lv-grow {
+  transform-origin: left;
+  animation: lv-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 /* Pulsing mark on the auth-callback beat (rig's dcShimmer). */
 @keyframes lv-shimmer {
   0%,

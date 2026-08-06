@@ -3,9 +3,13 @@ import { useMemo } from 'react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { monthlyBuckets } from '@/lib/trips/budget'
-import { toBase, monthLabel, monthShort } from '@/lib/trips/format'
-import { Stat } from '@/components/trips/Stat'
+import { toBase, monthShort } from '@/lib/trips/format'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
+
+// Money · Monthly (handoff frame 17). Structure: earn-target hero → month
+// bars (label · bar · total per calendar month) → earning-target note. The
+// buckets themselves are unchanged — rent/daily spread across nights,
+// flights in the month they happen.
 
 export function MonthlyTab() {
   const { fmt } = useMoney()
@@ -31,89 +35,66 @@ export function MonthlyTab() {
     return { s, M, order, totalNights, totA, totL, totT, extrasTotal, recMonthly, allInMonthly, max }
   }, [trip.data, cityIdx])
 
-  if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
+  if (trip.isPending) return <main className="mx-auto max-w-xl p-6">Loading…</main>
   if (!trip.data || !view) return <CreateTripEmptyState />
   const v = view
-  const usd = v.s.rates.USD || 1
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-1 text-2xl font-semibold">Monthly spending</h1>
-      <p className="mb-4 text-sm text-neutral-500">
-        How much cash goes out each calendar month, so you can set an earning target. Rent &amp; daily
-        living are spread across each stay&apos;s nights; flights land in the month they happen.
-      </p>
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px] text-tx">
+      <div>
+        <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">Monthly</h1>
+        <p className="mt-1 text-base leading-normal text-tx2">
+          What has to come in each month. Rent and daily living spread across a stay&apos;s nights; flights land in the
+          month they happen.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Stat k="Earn target / month" v={fmt(v.recMonthly)} sub={'~$' + Math.round(v.recMonthly / usd) + ' — rent + daily living'} />
-        <Stat k="All-in / month" v={fmt(v.allInMonthly)} sub={'~$' + Math.round(v.allInMonthly / usd) + ' — incl. flights'} />
-        <Stat k="One-off costs (upfront)" v={fmt(v.extrasTotal)} sub="insurance, gear, visas" />
+      {/* hero — the earn target */}
+      <div className="lv-enter rounded-[var(--r)] bg-sf p-5">
+        <div className="text-base font-medium uppercase tracking-[.11em] text-tx2">Earn target / month</div>
+        <div className="mt-1 text-[32px] font-semibold leading-[1.1] tracking-[-.02em]">{fmt(v.recMonthly)}</div>
+        <p className="mt-1.5 text-base text-tx2">rent + daily living, before flights</p>
+        <div className="mt-3.5 border-t border-ln pt-3.5">
+          <div className="flex justify-between gap-3 text-base">
+            <span className="text-tx2">All-in with flights</span>
+            <span className="font-semibold">{fmt(v.allInMonthly)}</span>
+          </div>
+          <div className="mt-2 flex justify-between gap-3 text-base">
+            <span className="text-tx2">One-off costs upfront</span>
+            <span className="font-semibold">{fmt(v.extrasTotal)}</span>
+          </div>
+        </div>
       </div>
 
       {!v.order.length ? (
-        <p className="mt-6 text-sm text-neutral-500">No in-plan stops with nights yet.</p>
+        <p className="text-base text-tx2">No in-plan stops with nights yet.</p>
       ) : (
         <>
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-neutral-500">
-                  <th className="py-1 pr-4">Month</th>
-                  <th className="pr-4">Nights</th>
-                  <th className="pr-4">Rent</th>
-                  <th className="pr-4">Daily living</th>
-                  <th className="pr-4">Flights</th>
-                  <th>Month total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {v.order.map((k) => {
-                  const b = v.M[k]
-                  const mt = b.accom + b.live + b.transport
-                  return (
-                    <tr key={k} className="border-t border-neutral-200 dark:border-neutral-800">
-                      <td className="py-1 pr-4 font-medium">{monthLabel(k)}</td>
-                      <td className="pr-4">{b.nights}</td>
-                      <td className="pr-4">{fmt(b.accom)}</td>
-                      <td className="pr-4">{fmt(b.live)}</td>
-                      <td className="pr-4">{b.transport ? fmt(b.transport) : '—'}</td>
-                      <td className="font-semibold">{fmt(mt)}</td>
-                    </tr>
-                  )
-                })}
-                <tr className="border-t border-neutral-300 dark:border-neutral-700 font-semibold">
-                  <td className="py-1 pr-4">Total</td>
-                  <td className="pr-4">{v.totalNights}</td>
-                  <td className="pr-4">{fmt(v.totA)}</td>
-                  <td className="pr-4">{fmt(v.totL)}</td>
-                  <td className="pr-4">{fmt(v.totT)}</td>
-                  <td>{fmt(v.totA + v.totL + v.totT)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <h2 className="mb-2 mt-6 text-lg font-semibold">Monthly cash-out</h2>
-          <div className="space-y-1">
-            {v.order.map((k) => {
-              const b = v.M[k]
-              const mt = b.accom + b.live + b.transport
-              return (
-                <div key={k} className="flex items-center gap-2 text-xs">
-                  <span className="w-16 shrink-0 text-neutral-500">{monthShort(k)}</span>
-                  <div className="h-3 flex-1 rounded bg-neutral-100 dark:bg-neutral-900">
-                    <span className="block h-3 rounded bg-teal-500" style={{ width: (v.max ? (mt / v.max) * 100 : 0) + '%' }} />
+          {/* month bars */}
+          <div className="lv-enter rounded-[var(--r)] bg-sf p-5">
+            <div className="flex flex-col gap-3">
+              {v.order.map((k, i) => {
+                const b = v.M[k]
+                const mt = b.accom + b.live + b.transport
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <span className="w-[58px] flex-none text-base text-tx2">{monthShort(k)}</span>
+                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-fill2">
+                      <div
+                        className="lv-grow h-full rounded-full bg-ac"
+                        style={{ width: Math.round((v.max ? mt / v.max : 0) * 100) + '%', animationDelay: `${i * 0.06}s` }}
+                      />
+                    </div>
+                    <span className="flex-none text-right text-base font-semibold">{fmt(mt)}</span>
                   </div>
-                  <span className="w-28 shrink-0 text-right">{fmt(mt)}</span>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
 
-          <div className="mt-4 rounded-lg border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">
-            <b>Earning target:</b> aim to earn at least <b>{fmt(v.recMonthly)}/month</b> (~$
-            {Math.round(v.recMonthly / usd)}) between you to cover day-to-day costs. The{' '}
-            {fmt(v.extrasTotal)} of one-off costs sit on top — ideally saved before you go, or ~
+          <div className="rounded-[var(--r)] bg-tag px-4 py-3.5 text-base leading-normal text-tag-ink">
+            <b>Earning target:</b> aim to earn at least <b>{fmt(v.recMonthly)}/month</b> between you to cover
+            day-to-day costs. The {fmt(v.extrasTotal)} of one-off costs sit on top - ideally saved before you go, or ~
             {fmt(v.order.length ? v.extrasTotal / v.order.length : 0)}/month.
           </div>
         </>

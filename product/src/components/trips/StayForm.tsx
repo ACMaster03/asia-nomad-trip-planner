@@ -6,7 +6,9 @@ import { Modal } from './Modal'
 import { SegmentForm } from './SegmentForm'
 
 const uid = (p: string) => p + crypto.randomUUID()
-const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
+const label = 'block text-base font-medium text-tx2'
+const input =
+  'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base font-medium text-tx outline-none transition-colors duration-[180ms] focus:border-ac'
 
 const NEW_STOP = '__new-stop__'
 
@@ -19,7 +21,7 @@ export function StayForm({
   currencies: string[]
   onCancel: () => void
   onSave: (s: Stay) => void
-  /** preselect a stop (e.g. the "＋ stay" shortcut on a Stops row) */
+  /** preselect a stop (e.g. the "＋ stay" shortcut on a Stops card) */
   defaultSegId?: string
   cities?: CityLite[]
   defaultArrive?: string
@@ -59,7 +61,7 @@ export function StayForm({
   return (
     <Modal title={initial ? 'Edit accommodation' : 'Add accommodation'} onClose={onCancel}>
       <div className="space-y-3">
-        <label className="block text-sm">Stop
+        <label className={label}>Stop
           <select
             className={input}
             value={segId}
@@ -72,39 +74,39 @@ export function StayForm({
             {segments.map((s) => <option key={s.id} value={s.id}>{s.city} ({s.arrive})</option>)}
             {onCreateStop && <option value={NEW_STOP}>＋ New stop…</option>}
           </select>
-          <span className="mt-1 block text-xs text-neutral-500">
+          <span className="mt-1 block text-base font-normal text-tx3">
             Accommodation always belongs to a stop — the city, dates and nightly
             budget math come from it.
           </span>
         </label>
-        <label className="block text-sm">Name<input className={input} value={name} onChange={(e) => setName(e.target.value)} /></label>
+        <label className={label}>Name<input className={input} value={name} onChange={(e) => setName(e.target.value)} /></label>
         <div className="grid grid-cols-3 gap-3">
-          <label className="block text-sm">Platform<input className={input} value={platform} onChange={(e) => setPlatform(e.target.value)} /></label>
-          <label className="block text-sm">Status
+          <label className={label}>Platform<input className={input} value={platform} onChange={(e) => setPlatform(e.target.value)} /></label>
+          <label className={label}>Status
             <select className={input} value={status} onChange={(e) => setStatus(e.target.value)}>
               {['idea', 'shortlist', 'chosen'].map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </label>
-          <label className="block text-sm">Rating<input type="number" step="any" min="0" max="10" className={input} value={rating} onChange={(e) => setRating(e.target.value)} /></label>
+          <label className={label}>Rating<input type="number" step="any" min="0" max="10" className={input} value={rating} onChange={(e) => setRating(e.target.value)} /></label>
         </div>
-        <label className="block text-sm">Link<input className={input} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Booking / Airbnb URL" /></label>
+        <label className={label}>Link<input className={input} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Booking / Airbnb URL" /></label>
         <div className="grid grid-cols-3 gap-3">
-          <label className="block text-sm">Price / night<input type="number" step="any" className={input} value={ppn} onChange={(e) => setPpn(e.target.value)} /></label>
-          <label className="block text-sm">Currency
+          <label className={label}>Price / night<input type="number" step="any" className={input} value={ppn} onChange={(e) => setPpn(e.target.value)} /></label>
+          <label className={label}>Currency
             <select className={input} value={cur} onChange={(e) => setCur(e.target.value)}>
               {currencies.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
-          <label className="block text-sm">Nights<input type="number" className={input} value={nights} onChange={(e) => setNights(e.target.value)} placeholder="auto" /></label>
+          <label className={label}>Nights<input type="number" className={input} value={nights} onChange={(e) => setNights(e.target.value)} placeholder="auto" /></label>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block text-sm">Free cancel until<input type="date" className={input} value={cancelUntil} onChange={(e) => setCancelUntil(e.target.value)} /></label>
-          <label className="block text-sm">Card charged on<input type="date" className={input} value={chargeDate} onChange={(e) => setChargeDate(e.target.value)} /></label>
+          <label className={label}>Free cancel until<input type="date" className={input} value={cancelUntil} onChange={(e) => setCancelUntil(e.target.value)} /></label>
+          <label className={label}>Card charged on<input type="date" className={input} value={chargeDate} onChange={(e) => setChargeDate(e.target.value)} /></label>
         </div>
-        <label className="block text-sm">Notes<textarea rows={2} className={input} value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
+        <label className={label}>Notes<textarea rows={2} className={input} value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
         <div className="flex gap-2 pt-1">
-          <button onClick={submit} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">Save</button>
-          <button onClick={onCancel} className="rounded border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700">Cancel</button>
+          <button onClick={submit} className="flex-1 rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-base font-semibold text-on">Save</button>
+          <button onClick={onCancel} className="rounded-[calc(var(--r)-2px)] border-[1.5px] border-ln3 px-5 py-3.5 text-base font-semibold text-tx2">Cancel</button>
         </div>
       </div>
       {stopFormOpen && onCreateStop && (
