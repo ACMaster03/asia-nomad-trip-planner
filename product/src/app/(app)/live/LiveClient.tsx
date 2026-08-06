@@ -7,6 +7,15 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
+import {
+  Hourglass,
+  Image as ImageIcon,
+  MapPin,
+  NotebookPen,
+  PlaneLanding,
+  SatelliteDish,
+  type LucideIcon,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripScope } from '@/lib/trips/TripScope'
@@ -32,13 +41,19 @@ import { CheckInModal, type CheckInInput } from './CheckInModal'
 import { EditEventModal } from './EditEventModal'
 import type { Segment, Stay, TripState } from '@/lib/trips/types'
 
-const EVENT_ICON: Record<TripEventKind, string> = {
-  checkin: '📍',
-  note: '📝',
-  arrived: '🛬',
-  media: '🖼️',
-  location: '📡',
+const EVENT_ICON: Record<TripEventKind, LucideIcon> = {
+  checkin: MapPin,
+  note: NotebookPen,
+  arrived: PlaneLanding,
+  media: ImageIcon,
+  location: SatelliteDish,
 }
+
+// LIVHOLD vocabulary (frames 08/24): bg-sf cards, hunter=check-in, mauve=
+// links/memories, amber=warn/queued. Data logic, optimistic updates and the
+// offline outbox are untouched — this file only re-skins them.
+const card = 'rounded-[var(--r)] bg-sf text-tx'
+const pill = 'rounded-full border-[1.4px] px-2.5 py-0.5 text-base font-semibold'
 
 // Local (device-timezone) YYYY-MM-DD — comparable to the segment date strings.
 function localISODate(d = new Date()) {
@@ -47,16 +62,19 @@ function localISODate(d = new Date()) {
 }
 
 const fmtDayKicker = (d: Date) =>
-  d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
+  d.toLocaleDateString('en-GB', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
 
 const fmtEventTime = (iso: string) =>
-  new Date(iso).toLocaleString('en-US', {
+  new Date(iso).toLocaleString('en-GB', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   })
+
+const fmtShort = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 // A stay that is actually committed (StayForm statuses are idea/shortlist/
 // chosen; 'booked' kept for forward-compat with the booking flow).
@@ -76,10 +94,9 @@ export default function LiveClient() {
 
   // Everything on this screen depends on "today" → compute only after mount to
   // avoid an SSR/hydration mismatch (same pattern as DashboardClient).
-  const [mounted, setMounted] = useState(false)
+  const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
   const [uid, setUid] = useState<string | null>(null)
   useEffect(() => {
-    setMounted(true)
     sb.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -142,7 +159,9 @@ export default function LiveClient() {
   })
 
   // Offline awareness: TanStack's onlineManager is the same signal that pauses
-  // the outbox mutations — subscribing to it keeps banner and behavior in sync.
+  // the outbox mutations — subscribing to it keeps banner and behavior in sync
+  // (useSyncExternalStore, DashboardClient pattern; onlineManager tracks
+  // navigator.onLine).
   const online = useSyncExternalStore(
     (cb) => onlineManager.subscribe(cb),
     () => onlineManager.isOnline(),
@@ -217,7 +236,7 @@ export default function LiveClient() {
   }, [mounted, s])
 
   if (!mounted || trip.isPending)
-    return <main className="mx-auto max-w-xl p-6">Loading…</main>
+    return <main className="mx-auto max-w-xl p-6 text-base text-tx2">Loading…</main>
   if (!trip.data || !s || !derived) return <CreateTripEmptyState />
 
   const { todayStr, inPlan, curIdx, current, next, previous, phase, dayNum, totalDays, daysToGo } = derived
@@ -225,6 +244,17 @@ export default function LiveClient() {
   // City scope for the check-in place list: the current stop; in a gap you're
   // most likely still around the previous stop, else early at the next one.
   const checkinCity = current?.city ?? previous?.city ?? next?.city ?? null
+
+  // Recency chips for the check-in sheet: distinct recent check-in place
+  // names, newest first (the sheet caps them at 2 after exclusions).
+  const recentPlaces = Array.from(
+    new Set(
+      (events.data ?? [])
+        .filter((e) => e.kind === 'checkin')
+        .map((e) => e.payload.placeName)
+        .filter((x): x is string => typeof x === 'string' && x.trim() !== ''),
+    ),
+  ).slice(0, 6)
 
   // Plan-vs-actual: latest 'arrived' event vs the planned current stop.
   const lastArrivedCity = (events.data ?? []).find((e) => e.kind === 'arrived')?.payload?.city as
@@ -287,19 +317,19 @@ export default function LiveClient() {
 
   return (
     // Live is phone-first: desktop is the same centered narrow column (mock).
-    <main className="mx-auto max-w-xl p-4 sm:p-6">
+    <main className="mx-auto max-w-xl px-[18px] pb-6 pt-[18px]">
       {/* date row */}
       <div className="mb-4">
-        <div className="text-xs uppercase tracking-wide text-neutral-500">
+        <div className="text-base font-medium uppercase tracking-[.14em] text-ac2-deep">
           {fmtDayKicker(new Date())}
         </div>
-        <h1 className="text-xl font-semibold">
+        <h1 className="mt-1 font-serif text-[28px] font-semibold leading-[1.12] tracking-[-.01em]">
           {phase === 'pre' && s.meta.tripName}
           {phase === 'post' && `${s.meta.tripName} — trip complete`}
           {phase === 'live' && (
             <>
               Day {dayNum}
-              {totalDays ? <span className="font-normal text-neutral-500"> of {totalDays}</span> : null}
+              {totalDays ? <span className="font-normal text-tx3"> of {totalDays}</span> : null}
               {' · '}
               {current ? current.city : previous ? 'between stops' : next ? 'on the way' : 'on the road'}
             </>
@@ -308,8 +338,11 @@ export default function LiveClient() {
       </div>
 
       {!online && (
-        <div className="mb-3 rounded-lg border border-amber-600/60 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-          📡 You&apos;re offline — check-ins are saved on this phone and will sync when you&apos;re back.
+        <div className="lv-enter mb-3 flex items-start gap-2.5 rounded-[var(--r)] border-[1.5px] border-warn-line bg-sf p-3.5">
+          <SatelliteDish aria-hidden className="mt-0.5 size-4 flex-none text-warn" strokeWidth={2} />
+          <p className="flex-1 text-base font-medium leading-normal text-warn">
+            You&apos;re offline - check-ins are saved on this phone and will sync when you&apos;re back.
+          </p>
         </div>
       )}
       <SaveError show={addCheckIn.isError || addEvent.isError || delEvent.isError} error={mutErr} />
@@ -329,26 +362,26 @@ export default function LiveClient() {
               todayStr={todayStr}
             />
           ) : (
-            <div className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
-              <div className="text-xs uppercase tracking-wide text-neutral-500">
+            <div className={card + ' p-5'}>
+              <div className="text-base font-semibold uppercase tracking-[.11em] text-tx2">
                 {phase === 'post' ? 'Home again' : 'Between stops'}
               </div>
-              <div className="mt-1 text-base font-semibold">
+              <div className="mt-2 font-serif text-[22px] font-semibold leading-[1.3]">
                 {phase === 'post'
-                  ? '🎉 The trip is over — the feed below keeps the memories.'
+                  ? 'The trip is over - the feed below keeps the memories.'
                   : previous && next
-                    ? `✈️ ${previous.city} → ${next.city}`
+                    ? `${previous.city} → ${next.city}`
                     : next
-                      ? `✈️ Next up: ${next.city}`
-                      : '📍 No planned stop today'}
+                      ? `Next up: ${next.city}`
+                      : 'No planned stop today'}
               </div>
               {phase !== 'post' && next && (
-                <div className="mt-1 text-sm text-neutral-500">
-                  {next.city}, {next.country} from {next.arrive}
+                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-base text-tx2">
+                  {next.city}, {next.country} from {fmtShort(next.arrive)}
                   {bookedStay(s.stays, next.id) ? (
-                    <span className="ml-2 rounded-full border border-emerald-600 px-2 py-0.5 text-xs font-semibold text-emerald-600">booked</span>
+                    <span className={pill + ' border-ac-line text-ac'}>booked</span>
                   ) : (
-                    <span className="ml-2 rounded-full border border-amber-600 px-2 py-0.5 text-xs font-semibold text-amber-600">planned · not booked</span>
+                    <span className={pill + ' border-warn-line text-warn'}>planned · not booked</span>
                   )}
                 </div>
               )}
@@ -360,25 +393,28 @@ export default function LiveClient() {
             <div className="mt-3">
               <button
                 onClick={() => setCheckinOpen(true)}
-                className="w-full rounded-xl bg-teal-600 px-4 py-3 text-base font-semibold text-white hover:bg-teal-700"
+                className="flex w-full items-center justify-center gap-2 rounded-[var(--r)] bg-ac py-[17px] text-lg font-semibold text-on"
               >
-                📍 Check in — where are you?
+                <MapPin aria-hidden className="size-5" strokeWidth={2} /> Check in - where are you?
               </button>
-              <div className="mt-1 text-center text-xs text-neutral-500">
+              <div className="mt-1.5 text-center text-base text-tx3">
                 One tap · rating and comment optional
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="mt-2 grid grid-cols-2 gap-2.5">
                 <button
                   onClick={doArrived}
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+                  className="flex items-center justify-center gap-2 rounded-[var(--rCtl)] border-[1.5px] border-ln2 bg-sf py-3 text-base font-medium"
                 >
-                  🛬 Arrived{current ? ` in ${current.city}` : next ? ` in ${next.city}` : ''}
+                  <PlaneLanding aria-hidden className="size-[18px] flex-none" strokeWidth={2} />
+                  <span className="truncate">
+                    Arrived{current ? ` in ${current.city}` : next ? ` in ${next.city}` : ''}
+                  </span>
                 </button>
                 <button
                   onClick={() => setNoteOpen(true)}
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+                  className="flex items-center justify-center gap-2 rounded-[var(--rCtl)] border-[1.5px] border-ln2 bg-sf py-3 text-base font-medium"
                 >
-                  📝 Note
+                  <NotebookPen aria-hidden className="size-[18px] flex-none" strokeWidth={2} /> Note
                 </button>
               </div>
             </div>
@@ -386,16 +422,16 @@ export default function LiveClient() {
 
           {/* plan vs actual mini timeline */}
           {inPlan.length > 0 && (
-            <div className="mt-3 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
-              <div className="flex items-center justify-between">
-                <span className="text-xs uppercase tracking-wide text-neutral-500">Plan vs actual</span>
+            <div className={card + ' mt-3 p-4'}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-base font-semibold uppercase tracking-[.11em] text-tx2">Plan vs actual</span>
                 {offPlan ? (
-                  <span className="rounded-full border border-amber-600 px-2 py-0.5 text-xs font-semibold text-amber-600">off plan · last arrived {lastArrivedCity}</span>
+                  <span className={pill + ' border-warn-line text-warn'}>off plan · last arrived {lastArrivedCity}</span>
                 ) : (
-                  <span className="rounded-full border border-emerald-600 px-2 py-0.5 text-xs font-semibold text-emerald-600">on plan</span>
+                  <span className={pill + ' border-ac-line text-ac'}>on plan</span>
                 )}
               </div>
-              <div className="mt-2 flex gap-1">
+              <div className="mt-2.5 flex gap-1">
                 {inPlan.map((seg) => {
                   const n = Math.max(segNights(seg), 1)
                   const done = seg.depart <= todayStr
@@ -406,29 +442,27 @@ export default function LiveClient() {
                     : 0
                   return (
                     <div key={seg.id} className="min-w-0" style={{ flexGrow: n, flexBasis: 0 }}>
-                      <div className="mb-1 truncate text-center text-[9px] uppercase tracking-wide text-neutral-500">
+                      <div className="mb-1 truncate text-center text-[13px] uppercase tracking-wide text-tx3">
                         {seg.city.slice(0, 3)}
                       </div>
                       {done ? (
-                        <div className="h-2 rounded bg-teal-600" />
+                        <div className="h-2 rounded-full bg-ac" />
                       ) : cur ? (
-                        <div className="relative h-2 rounded border border-teal-600 bg-neutral-100 dark:bg-neutral-900">
+                        <div className="relative h-2 rounded-full border border-ac-line bg-track">
                           <span
-                            className="absolute inset-y-0 left-0 rounded-l bg-teal-600"
+                            className="absolute inset-y-0 left-0 rounded-l-full bg-ac"
                             style={{ width: pct + '%' }}
                           />
                           <span
-                            className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-teal-600 dark:border-neutral-950"
+                            className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-sf bg-ac"
                             style={{ left: pct + '%' }}
                           />
                         </div>
                       ) : (
                         <div
                           className={
-                            'h-2 rounded border bg-neutral-100 dark:bg-neutral-900 ' +
-                            (booked
-                              ? 'border-neutral-400 dark:border-neutral-600'
-                              : 'border-dashed border-neutral-300 dark:border-neutral-700')
+                            'h-2 rounded-full border bg-track ' +
+                            (booked ? 'border-ln3' : 'border-dashed border-ln2')
                           }
                         />
                       )}
@@ -436,7 +470,7 @@ export default function LiveClient() {
                   )
                 })}
               </div>
-              <div className="mt-2 text-[11px] text-neutral-500">
+              <div className="mt-2 text-[13px] text-tx3">
                 ● you are here · solid = booked · dashed = planned, unbooked · widths ∝ stop length
               </div>
             </div>
@@ -445,19 +479,19 @@ export default function LiveClient() {
       )}
 
       {/* today's feed */}
-      <div className="mt-6 mb-2 flex items-baseline justify-between">
-        <h2 className="text-base font-semibold">Recent activity</h2>
+      <div className="mb-2 mt-6 flex items-baseline justify-between">
+        <h2 className="font-sans text-base font-semibold uppercase tracking-[.12em] text-tx2">Recent activity</h2>
         {events.data && events.data.length > 0 && (
-          <span className="text-xs text-neutral-500">{events.data.length} events</span>
+          <span className="text-base text-tx3">{events.data.length} events</span>
         )}
       </div>
-      <div className="rounded-lg border border-neutral-200 px-3 dark:border-neutral-800">
-        {events.isPending && <div className="py-4 text-sm text-neutral-500">Loading…</div>}
+      <div className={card + ' overflow-hidden'}>
+        {events.isPending && <div className="px-3.5 py-4 text-base text-tx2">Loading…</div>}
         {events.isError && (
-          <div className="py-4 text-sm text-red-600">Couldn&apos;t load the feed — reload to retry.</div>
+          <div className="px-3.5 py-4 text-base text-warn">Couldn&apos;t load the feed - reload to retry.</div>
         )}
         {events.data && events.data.length === 0 && (
-          <div className="py-6 text-center text-sm text-neutral-500">
+          <div className="px-3.5 py-6 text-center text-base text-tx2">
             {phase === 'pre'
               ? 'Nothing yet — the feed wakes up with the trip.'
               : 'No check-ins yet — tap “Check in” when you get somewhere.'}
@@ -486,6 +520,8 @@ export default function LiveClient() {
         <CheckInModal
           cityName={checkinCity}
           cities={cities.data ?? []}
+          recent={recentPlaces}
+          online={online}
           saving={uploadingPhotos || addCheckIn.isPending}
           onClose={() => setCheckinOpen(false)}
           onSave={saveCheckIn}
@@ -493,26 +529,26 @@ export default function LiveClient() {
       )}
 
       {noteOpen && (
-        <Modal title="📝 Add a note" onClose={() => setNoteOpen(false)}>
+        <Modal title="Add a note" onClose={() => setNoteOpen(false)}>
           <textarea
             rows={3}
             autoFocus
-            className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            className="w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base outline-none transition-colors focus:border-ac"
             placeholder="What happened?"
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
           />
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex gap-2.5">
             <button
               onClick={saveNote}
               disabled={!noteText.trim()}
-              className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+              className="flex-1 rounded-[calc(var(--r)-2px)] bg-ac py-3 text-base font-semibold text-on disabled:opacity-50"
             >
               Save note
             </button>
             <button
               onClick={() => setNoteOpen(false)}
-              className="rounded border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
+              className="rounded-[calc(var(--r)-2px)] border-[1.5px] border-ln3 px-4 py-3 text-base font-medium text-tx2"
             >
               Cancel
             </button>
@@ -522,6 +558,12 @@ export default function LiveClient() {
     </main>
   )
 }
+
+// useSyncExternalStore helpers — module-level so their identities are stable
+// (DashboardClient pattern).
+const subscribeNever = () => () => {}
+const snapTrue = () => true
+const snapFalse = () => false
 
 // ---- pieces -----------------------------------------------------------------
 
@@ -546,49 +588,37 @@ function CurrentStopCard({
   const stay = bookedStay(stays, seg.id)
   const nextBooked = next ? bookedStay(stays, next.id) : undefined
   return (
-    <div className="rounded-xl border border-teal-600/70 bg-gradient-to-b from-teal-50 to-transparent p-4 dark:from-teal-950/30">
-      <div className="text-xs uppercase tracking-wide text-neutral-500">
-        Current stop · {idx + 1} of {count}
-      </div>
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <div className="text-base font-semibold">
-          🏙️ {stay ? `${stay.name} · ${seg.city}` : `${seg.city}, ${seg.country}`}
-        </div>
-        {stay ? (
-          <span className="rounded-full border border-emerald-600 px-2 py-0.5 text-xs font-semibold text-emerald-600">booked</span>
-        ) : (
-          <span className="rounded-full border border-amber-600 px-2 py-0.5 text-xs font-semibold text-amber-600">not booked</span>
-        )}
-      </div>
-      <div className="mt-0.5 mb-2 text-sm text-neutral-500">
-        {seg.arrive} → {seg.depart} · {n} nights
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
-        <span className="block h-full bg-teal-600" style={{ width: Math.round((night / n) * 100) + '%' }} />
-      </div>
-      <div className="mt-1.5 flex items-center gap-2 text-sm">
-        <span>
-          Night <b>{night}</b> of {n}
+    <div className={card + ' lv-enter p-5'}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          <span aria-hidden className="h-2 w-2 rounded-full bg-ac" />
+          <span className="text-base font-semibold uppercase tracking-[.11em] text-ac">Current stop</span>
         </span>
-        <span className="text-neutral-400">·</span>
-        <span className="font-semibold text-teal-700 dark:text-teal-400">{left} nights left</span>
+        <span className="text-base font-medium text-tx2">{idx + 1} of {count}</span>
+      </div>
+      <div className="mt-2 font-serif text-[26px] font-semibold leading-[1.2] tracking-[-.01em]">
+        {seg.city}, night {night}
+      </div>
+      <div className="mt-1 text-base text-tx2">
+        {stay ? `${stay.name} · booked` : `${seg.country} · not booked`} · leave {fmtShort(seg.depart)}
+      </div>
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-track">
+        <span className="block h-full rounded-full bg-ac" style={{ width: Math.round((night / n) * 100) + '%' }} />
+      </div>
+      <div className="mt-1.5 flex items-baseline justify-between text-base">
+        <span className="text-tx2">Night {night} of {n}</span>
+        <span className="font-semibold text-ac2">{left} nights left</span>
       </div>
       {next && (
-        <>
-          <hr className="my-3 border-neutral-200 dark:border-neutral-800" />
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-neutral-500">Next:</span>
-            <b>{next.city}</b>
-            <span className="text-neutral-500">· from {next.arrive}</span>
-            <span className="ml-auto">
-              {nextBooked ? (
-                <span className="rounded-full border border-emerald-600 px-2 py-0.5 text-xs font-semibold text-emerald-600">booked</span>
-              ) : (
-                <span className="rounded-full border border-amber-600 px-2 py-0.5 text-xs font-semibold text-amber-600">planned · not booked</span>
-              )}
+        <div className="mt-3 flex items-center justify-between gap-2.5 border-t border-ln pt-3">
+          <span className="min-w-0">
+            <span className="block text-base font-semibold">
+              Next: {next.city} · {fmtShort(next.arrive)}
             </span>
-          </div>
-        </>
+            {!nextBooked && <span className="block text-base text-warn">no stay yet</span>}
+          </span>
+          {nextBooked && <span className={pill + ' flex-none border-ac-line text-ac'}>booked</span>}
+        </div>
       )}
     </div>
   )
@@ -609,39 +639,43 @@ function PreTrip({
     .slice(0, 4)
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-teal-600/70 bg-gradient-to-b from-teal-50 to-transparent p-6 text-center dark:from-teal-950/30">
-        <div className="text-xs uppercase tracking-wide text-neutral-500">Departure in</div>
-        <div className="text-5xl font-extrabold tracking-tight">
-          {daysToGo} <span className="text-xl font-semibold">days</span>
+      <div className={card + ' lv-enter p-6 text-center'}>
+        <div className="text-base font-medium uppercase tracking-[.11em] text-tx2">Departure in</div>
+        <div className="mt-1">
+          <span className="text-[46px] font-semibold leading-none tracking-[-.03em] text-ac2">{daysToGo}</span>{' '}
+          <span className="text-lg font-medium text-tx2">days</span>
         </div>
-        <div className="mt-2 text-sm text-neutral-500">
+        <div className="mt-2 text-base text-tx2">
           {s.meta.homeBase ? s.meta.homeBase.split(',')[0] : 'Home'}
           {firstStop ? ` → ${firstStop.city}` : ''} · {s.meta.startDate}
         </div>
       </div>
-      <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-        <div className="mb-1 text-base font-semibold">🌙 Live mode starts with your trip</div>
-        <div className="text-sm text-neutral-500">
+      <div className={card + ' p-5'}>
+        <div className="text-base font-semibold">Live mode starts with your trip</div>
+        <div className="mt-1 text-base text-tx2">
           On {s.meta.startDate} this screen wakes up and becomes your daily home:
         </div>
-        <div className="mt-2 grid gap-1 text-sm">
-          <div>📍 One-tap check-ins with ratings &amp; comments</div>
-          <div>🏙️ Current stop, nights left, what&apos;s next</div>
-          <div>📈 Plan vs actual — are we still on the route we drew?</div>
-          <div>🛬 Arrival events that update the follower map (M3)</div>
+        <div className="mt-2 grid gap-1.5 text-base text-tx2">
+          <div>One-tap check-ins with ratings &amp; comments</div>
+          <div>Current stop, nights left, what&apos;s next</div>
+          <div>Plan vs actual — are we still on the route we drew?</div>
+          <div>Arrival events that update the follower map</div>
         </div>
       </div>
       {upcomingDeadlines.length > 0 && (
-        <div className="rounded-lg border border-neutral-200 px-3 dark:border-neutral-800">
-          <div className="pt-3 text-xs uppercase tracking-wide text-neutral-500">Before you fly</div>
-          {upcomingDeadlines.map((st) => (
+        <div className={card + ' px-4'}>
+          <div className="pt-3.5 text-base font-semibold uppercase tracking-[.11em] text-tx2">Before you fly</div>
+          {upcomingDeadlines.map((st, i) => (
             <div
               key={st.id}
-              className="flex items-center justify-between gap-3 border-b border-neutral-200 py-2.5 text-sm last:border-b-0 dark:border-neutral-800"
+              className={
+                'flex items-center justify-between gap-3 py-3 ' +
+                (i < upcomingDeadlines.length - 1 ? 'border-b border-ln' : '')
+              }
             >
               <div className="min-w-0">
-                <div className="truncate font-medium">{st.name}</div>
-                <div className="text-xs text-neutral-500">
+                <div className="truncate text-base font-semibold">{st.name}</div>
+                <div className="text-base text-tx2">
                   {st.cancelUntil ? `free cancel until ${st.cancelUntil}` : ''}
                   {st.cancelUntil && st.chargeDate ? ' · ' : ''}
                   {st.chargeDate ? `card charged ${st.chargeDate}` : ''}
@@ -671,63 +705,66 @@ function EventRow({ ev, mine, queued, onEdit, onDelete }: { ev: TripEvent; mine:
           : ev.kind === 'media'
             ? 'Media'
             : 'Location'
+  const Icon = EVENT_ICON[ev.kind] ?? MapPin
+  // "Only your words change": arrived/media/location rows carry nothing but
+  // place + time, so there is nothing left to edit — Delete stays available.
+  const editable = mine && (ev.kind === 'checkin' || ev.kind === 'note')
   return (
-    <div className="flex items-start gap-3 border-b border-neutral-200 py-3 last:border-b-0 dark:border-neutral-800">
-      <div className="flex h-11 w-11 flex-none items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-xl dark:border-neutral-800 dark:bg-neutral-900">
-        {EVENT_ICON[ev.kind] ?? '•'}
-      </div>
+    <div className="flex gap-[11px] border-b border-ln px-3.5 py-[13px] last:border-b-0">
+      <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[calc(var(--r)-2px)] bg-tag text-tag-ink">
+        <Icon aria-hidden className="size-5" strokeWidth={2} />
+      </span>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold">{title}</span>
+        <div className="flex flex-wrap items-center gap-x-[7px] gap-y-1">
+          <span className="text-base font-semibold">{title}</span>
           {queued && (
-            <span className="rounded-full border border-amber-600 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
-              ⏳ queued — will sync
+            <span className="inline-flex items-center gap-1 rounded-full border-[1.4px] border-warn-line px-2.5 py-0.5 text-base font-semibold text-warn">
+              <Hourglass aria-hidden className="size-3.5" strokeWidth={2} /> queued - will sync
             </span>
           )}
           {ev.visibility !== 'trip' && (
-            <span className="rounded-full border border-teal-600 px-2 py-0.5 text-[11px] font-semibold text-teal-600">
+            <span className="rounded-full border-[1.4px] border-ac-line px-2.5 py-0.5 text-base font-medium text-ac">
               {ev.visibility}
-            </span>
-          )}
-          {ev.kind !== 'checkin' && (
-            <span className="rounded-full border border-neutral-300 px-2 py-0.5 text-[11px] font-semibold text-neutral-500 dark:border-neutral-700">
-              event
             </span>
           )}
         </div>
         {rating != null && (
-          <div className="text-sm tracking-widest text-amber-500">
+          <div className="text-base tracking-[.1em] text-warn">
             {'★'.repeat(rating)}
-            <span className="text-neutral-300 dark:text-neutral-700">{'★'.repeat(5 - rating)}</span>
+            <span className="text-ln3">{'★'.repeat(5 - rating)}</span>
           </div>
         )}
-        {(comment || noteText) && <div className="mt-0.5 text-sm">&ldquo;{comment ?? noteText}&rdquo;</div>}
+        {(comment || noteText) && (
+          <div className="mt-0.5 text-base leading-snug text-tx2">&ldquo;{comment ?? noteText}&rdquo;</div>
+        )}
         {Array.isArray(ev.payload.photos) && ev.payload.photos.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {(ev.payload.photos as string[]).map((p) => (
               <a key={p} href={publicMediaUrl(p)} target="_blank" rel="noreferrer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={publicMediaUrl(p)} alt="" loading="lazy" className="h-20 w-20 rounded-lg object-cover" />
+                <img src={publicMediaUrl(p)} alt="" loading="lazy" className="h-20 w-20 rounded-[14px] object-cover" />
               </a>
             ))}
           </div>
         )}
-        <div className="mt-0.5 text-xs text-neutral-500">
-          {fmtEventTime(ev.occurred_at)}
-          {mine ? ' · you' : ''}
-          {ev.edited_at ? ' · edited' : ''}
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-base text-tx2">
+          <span>
+            {fmtEventTime(ev.occurred_at)}
+            {mine ? ' · you' : ''}
+            {ev.edited_at ? ' · edited' : ''}
+          </span>
+          {editable && (
+            <button onClick={onEdit} className="font-semibold text-ac2">
+              Edit
+            </button>
+          )}
+          {mine && (
+            <button onClick={onDelete} className="font-semibold text-ac2">
+              Delete
+            </button>
+          )}
         </div>
       </div>
-      {mine && (
-        <button onClick={onEdit} className="mr-3 text-xs text-teal-600 hover:underline">
-          edit
-        </button>
-      )}
-      {mine && (
-        <button onClick={onDelete} className="text-xs text-red-600 hover:underline">
-          undo
-        </button>
-      )}
     </div>
   )
 }

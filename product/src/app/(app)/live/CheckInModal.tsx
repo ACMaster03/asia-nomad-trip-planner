@@ -1,26 +1,16 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { MapPin, Send, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { fetchPlaces, insertUserPlace } from '@/lib/catalogue/queries'
 import { qk } from '@/lib/catalogue/keys'
-import type {Place, PlaceKind, CityLite } from '@/lib/catalogue/types'
+import type { Place, CityLite } from '@/lib/catalogue/types'
 import type { TripEventVisibility } from '@/lib/trips/events'
-import { Modal } from '@/components/trips/Modal'
+import { Sheet } from './Sheet'
 
-const input =
-  'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
-
-export const PLACE_KIND_ICON: Record<PlaceKind, string> = {
-  landmark: '🛕',
-  restaurant: '🍜',
-  cafe: '☕',
-  activity: '🎟️',
-  stay: '🛏️',
-  transporthub: '🚉',
-  other: '📌',
-}
-const PLACE_KINDS = Object.keys(PLACE_KIND_ICON) as PlaceKind[]
+const inputCls =
+  'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base outline-none transition-colors focus:border-ac'
 
 export type CheckInInput = {
   placeId: string | null
@@ -33,19 +23,31 @@ export type CheckInInput = {
   files: File[]
 }
 
-// Step 1 (pick a place, searchable, scoped to the current stop's city) +
-// step 2 (rating/comment/visibility — all optional) in one sheet, per the mock:
-// "select place → Save" is a valid 2-tap check-in. The "Add a place here"
-// mini-form (name + kind) inserts a source='user' place inline.
+// The picked place: a catalogue/user place (id) or a free-text one (id null —
+// the pinned city and offline custom adds; the check-in row stores placeName).
+type Sel = { placeId: string | null; placeName: string }
+
+const MAX_PHOTOS = 4
+
+// Frame 23 check-in sheet: GPS-first type-ahead. v1 has no GPS/place-guess
+// infrastructure, so the pinned one-tap row is the current planned stop city
+// (pre-selected — "open → Post" is a valid one-tap check-in), two recency
+// chips come from the feed, and "＋ Add as custom place" grows from the typed
+// query. Map picker deferred; video post-v1.
 export function CheckInModal({
   cityName,
   cities,
+  recent,
+  online,
   saving,
   onClose,
   onSave,
 }: {
   cityName: string | null
   cities: CityLite[]
+  // recent check-in place names, newest first (LiveClient derives from feed)
+  recent: string[]
+  online: boolean
   saving: boolean
   onClose: () => void
   onSave: (v: CheckInInput) => void
@@ -72,250 +74,270 @@ export function CheckInModal({
       cityName ? fetchPlaces(sb, { cityId, cityName }) : Promise.resolve([] as Place[]),
   })
 
+  const cityPin: Sel | null = cityName ? { placeId: null, placeName: cityName } : null
   const [q, setQ] = useState('')
-  const [sel, setSel] = useState<Place | null>(null)
-  const [adding, setAdding] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [newKind, setNewKind] = useState<PlaceKind>('landmark')
+  const [sel, setSel] = useState<Sel | null>(cityPin)
   const [rating, setRating] = useState<number | null>(null)
   const [comment, setComment] = useState('')
   const [files, setFiles] = useState<File[]>([])
   // Mock 06's sheet pre-selects "Trip + followers" — check-ins are what the
-  // family link exists for; 'trip' stays available for private ones.
+  // family link exists for; the toggle flips down to 'trip' for private ones.
   const [visibility, setVisibility] = useState<TripEventVisibility>('followers')
 
-  const addPlace = useMutation({
-    mutationFn: () => insertUserPlace(sb, { cityId, cityName: cityName ?? '', name: newName, kind: newKind }),
+  const pinActive = !!sel && !!cityPin && sel.placeId === null && sel.placeName === cityPin.placeName
+
+  // "＋ Add as custom place": one tap from the typed query. Online it lands in
+  // the catalogue as a source='user' place (so it reappears on future
+  // check-ins); offline — or on a failed insert — the typed name is selected
+  // as-is: the check-in stores placeName and still queues fine.
+  const addCustom = useMutation({
+    mutationFn: (name: string) =>
+      insertUserPlace(sb, { cityId, cityName: cityName ?? '', name, kind: 'other' }),
     onSuccess: (p) => {
       qc.invalidateQueries({ queryKey: qk.places(cityName ?? '') })
-      setSel(p) // returns to check-in with this place selected, per the mock
-      setAdding(false)
-      setNewName('')
+      setSel({ placeId: p.id, placeName: p.name })
+      setQ('')
     },
   })
+  const customPick = () => {
+    const name = q.trim()
+    if (!name) return
+    if (online)
+      addCustom.mutate(name, {
+        onError: () => {
+          setSel({ placeId: null, placeName: name })
+          setQ('')
+        },
+      })
+    else {
+      setSel({ placeId: null, placeName: name })
+      setQ('')
+    }
+  }
 
-  const filtered = useMemo(() => {
-    const list = places.data ?? []
+  // Recency chips pick by name; a match in the loaded place list keeps its id.
+  const pickByName = (name: string) => {
+    const hit = (places.data ?? []).find((p) => p.name.toLowerCase() === name.toLowerCase())
+    setSel({ placeId: hit?.id ?? null, placeName: hit?.name ?? name })
+    setQ('')
+  }
+
+  const results = useMemo(() => {
     const needle = q.trim().toLowerCase()
-    return needle ? list.filter((p) => p.name.toLowerCase().includes(needle)) : list
+    if (!needle) return []
+    return (places.data ?? []).filter((p) => p.name.toLowerCase().includes(needle)).slice(0, 4)
   }, [places.data, q])
 
+  // Up to 2 recent check-in places (never the pinned city); a picked place
+  // outside pin + recents shows as the active chip (rig behavior).
+  const chips: string[] = []
+  const seen = new Set<string>()
+  for (const name of recent) {
+    const k = name.toLowerCase()
+    if (cityPin && k === cityPin.placeName.toLowerCase()) continue
+    if (seen.has(k)) continue
+    seen.add(k)
+    chips.push(name)
+    if (chips.length === 2) break
+  }
+  if (sel && !pinActive && !seen.has(sel.placeName.toLowerCase())) chips.unshift(sel.placeName)
+
   return (
-    <Modal title={`📍 Check in${cityName ? ` — ${cityName}` : ''}`} onClose={onClose}>
-      <div className="space-y-4">
-        {/* step 1: pick a place */}
-        <div>
-          <div className="mb-1 text-xs uppercase tracking-wide text-neutral-500">
-            Step 1 · Where?
-          </div>
-          <input
-            className={input}
-            placeholder={cityName ? `🔎 Search places in ${cityName}…` : '🔎 Search places…'}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <div className="mt-2 max-h-56 divide-y divide-neutral-200 overflow-y-auto dark:divide-neutral-800">
-            {places.isPending && cityId != null && (
-              <div className="py-3 text-sm text-neutral-500">Loading places…</div>
-            )}
-            {!places.isPending && filtered.length === 0 && (
-              <div className="py-3 text-sm text-neutral-500">
-                {cityId == null
-                  ? 'This city isn’t in the catalogue yet — add your place below.'
-                  : q
-                    ? 'No match — add it below.'
-                    : 'No places here yet — add the first one below.'}
-              </div>
-            )}
-            {filtered.map((p) => {
-              const selected = sel?.id === p.id
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setSel(selected ? null : p)}
-                  className={
-                    'flex w-full items-center gap-3 px-2 py-2 text-left ' +
-                    (selected
-                      ? 'rounded border border-teal-600 bg-teal-50 dark:bg-teal-950/30'
-                      : 'hover:bg-neutral-50 dark:hover:bg-neutral-900')
-                  }
-                >
-                  <span className="text-xl">{PLACE_KIND_ICON[p.kind] ?? '📌'}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{p.name}</span>
-                    <span className="block text-xs text-neutral-500">
-                      {p.kind} · {p.source === 'catalogue' ? 'catalogue' : 'community'}
-                    </span>
-                  </span>
-                  {selected && <span className="text-teal-600">✓</span>}
-                </button>
-              )
-            })}
-          </div>
+    <Sheet label="Check in" onClose={onClose}>
+      <div className="flex items-center gap-2 font-serif text-[21px] font-semibold">
+        <MapPin aria-hidden className="size-5 flex-none" strokeWidth={2} /> Check in
+      </div>
 
-          {/* "Add a place here" inline mini-form */}
-          {adding ? (
-            <div className="mt-2 rounded border border-neutral-200 p-3 dark:border-neutral-800">
-              <div className="mb-1 text-xs uppercase tracking-wide text-neutral-500">
-                ＋ Add a place here
-              </div>
-              <label className="block text-sm">
-                Name
-                <input
-                  className={input}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  autoFocus
-                />
-              </label>
-              <label className="mt-2 block text-sm">
-                Kind
-                <select
-                  className={input}
-                  value={newKind}
-                  onChange={(e) => setNewKind(e.target.value as PlaceKind)}
-                >
-                  {PLACE_KINDS.map((k) => (
-                    <option key={k} value={k}>
-                      {PLACE_KIND_ICON[k]} {k}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {addPlace.isError && (
-                <div className="mt-2 text-xs text-red-600">
-                  Couldn&apos;t save the place — please retry.
-                </div>
-              )}
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => newName.trim() && addPlace.mutate()}
-                  disabled={!newName.trim() || addPlace.isPending}
-                  className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-                >
-                  {addPlace.isPending ? 'Saving…' : 'Save place'}
-                </button>
-                <button
-                  onClick={() => setAdding(false)}
-                  className="rounded border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => { setAdding(true); setNewName(q.trim()) }}
-              className="mt-2 text-sm text-teal-600 hover:underline"
-            >
-              ＋ Can&apos;t find it? Add a place here
-            </button>
-          )}
+      {/* where — pinned stop, type-ahead, recency chips, custom add */}
+      <div>
+        <div className="text-base font-medium text-tx2">
+          Where are you?{cityName ? ` · ${cityName}` : ''}
         </div>
-
-        {/* step 2: details — all optional */}
-        <div className="border-t border-neutral-200 pt-3 dark:border-neutral-800">
-          <div className="mb-2 text-xs uppercase tracking-wide text-neutral-500">
-            Step 2 · Details — all optional
-          </div>
-          <div className="text-sm">Rating</div>
-          <div className="mt-1 flex gap-2 text-2xl leading-none">
-            {[1, 2, 3, 4, 5].map((n) => (
+        {cityPin && (
+          <button
+            onClick={() => {
+              setSel(cityPin)
+              setQ('')
+            }}
+            className={
+              'mt-[6px] flex w-full items-center gap-2.5 rounded-[calc(var(--r)-3px)] border-[1.5px] bg-inp px-3 py-3 text-left transition-colors ' +
+              (pinActive ? 'border-ac' : 'border-ln2')
+            }
+          >
+            <Send aria-hidden className="size-[18px] flex-none" strokeWidth={2} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-semibold">{cityPin.placeName}</span>
+              <span className="mt-px block text-base text-tx3">Current stop on your plan</span>
+            </span>
+            {pinActive && <span className="flex-none text-base font-semibold text-ac">✓</span>}
+          </button>
+        )}
+        <input
+          className={inputCls + ' mt-[7px]'}
+          placeholder="Type to search places…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        {q.trim() ? (
+          <div className="mt-[7px] rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3">
+            {places.isPending && cityName && (
+              <div className="border-b border-ln py-3 text-base text-tx3">Loading places…</div>
+            )}
+            {results.map((p) => (
               <button
-                key={n}
-                aria-label={`${n} star${n > 1 ? 's' : ''}`}
-                onClick={() => setRating(rating === n ? null : n)} // tap again to clear
-                className={
-                  rating != null && n <= rating
-                    ? 'text-amber-500'
-                    : 'text-neutral-300 dark:text-neutral-700'
-                }
+                key={p.id}
+                onClick={() => {
+                  setSel({ placeId: p.id, placeName: p.name })
+                  setQ('')
+                }}
+                className="flex w-full items-center gap-2.5 border-b border-ln py-3 text-left"
               >
-                ★
+                <span className="min-w-0 flex-1 truncate text-base font-medium">{p.name}</span>
+                <span className="flex-none text-base text-tx3">
+                  {p.kind} · {p.source === 'catalogue' ? 'catalogue' : 'yours'}
+                </span>
               </button>
             ))}
-          </div>
-          <label className="mt-3 block text-sm">
-            Comment
-            <textarea
-              rows={2}
-              className={input}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-            />
-          </label>
-          <div className="mt-3 text-sm">Photos</div>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            {files.map((f, i) => (
-              <span key={i} className="relative">
-                {/* object URLs are tiny previews; revoked on unmount is skipped
-                    on purpose — the modal is short-lived */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={URL.createObjectURL(f)} alt="" className="h-14 w-14 rounded object-cover" />
-                <button
-                  aria-label="Remove photo"
-                  onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                  className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-neutral-800 text-[10px] leading-none text-white"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            {files.length < 4 && (
-              <label className="flex h-14 w-14 cursor-pointer items-center justify-center rounded border border-dashed border-neutral-300 text-xl text-neutral-400 dark:border-neutral-700">
-                ＋
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    const picked = [...(e.target.files ?? [])]
-                    setFiles([...files, ...picked].slice(0, 4))
-                    e.target.value = ''
-                  }}
-                />
-              </label>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-neutral-500">
-            Up to 4 — compressed on your phone before upload. Photos need signal; offline check-ins send without them.
-          </p>
-          <label className="mt-2 block text-sm">
-            Visible to
-            <select
-              className={input}
-              value={visibility}
-              onChange={(e) => setVisibility(e.target.value as TripEventVisibility)}
+            <button
+              onClick={customPick}
+              disabled={addCustom.isPending}
+              className="flex w-full py-3 text-left text-base font-medium text-ac2-deep disabled:opacity-50"
             >
-              <option value="trip">🔒 Trip only</option>
-              <option value="followers">👨‍👩‍👧 Trip + followers</option>
-              <option value="public" disabled>
-                🌍 Public — later phase
-              </option>
-            </select>
-          </label>
-        </div>
+              {addCustom.isPending ? 'Adding…' : `＋ Add "${q.trim()}" · custom place`}
+            </button>
+          </div>
+        ) : (
+          chips.length > 0 && (
+            <div className="mt-[9px] flex flex-wrap gap-[7px]">
+              {chips.map((c) => {
+                const active = !!sel && sel.placeName.toLowerCase() === c.toLowerCase()
+                return (
+                  <button
+                    key={c}
+                    onClick={() => pickByName(c)}
+                    className={
+                      'rounded-full px-3 py-2 text-base font-medium transition-colors ' +
+                      (active ? 'bg-ac2 text-on' : 'bg-tag text-tag-ink')
+                    }
+                  >
+                    {c}
+                  </button>
+                )
+              })}
+            </div>
+          )
+        )}
+      </div>
 
-        <div className="flex gap-2 pt-1">
-          <button
-            onClick={() =>
-              sel &&
-              onSave({ placeId: sel.id, placeName: sel.name, rating, comment, visibility, files })
-            }
-            disabled={!sel || saving}
-            className="rounded bg-teal-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : sel ? `Check in at ${sel.name}` : 'Pick a place first'}
-          </button>
-          <button
-            onClick={onClose}
-            className="rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700"
-          >
-            Cancel
-          </button>
+      {/* rating — pick pop via scale pulse */}
+      <div>
+        <div className="text-base font-medium text-tx2">Rating · optional</div>
+        <div className="mt-1 flex gap-1">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              aria-label={`${n} star${n > 1 ? 's' : ''}`}
+              onClick={() => setRating(rating === n ? null : n)} // tap again to clear
+              className={
+                'px-1 text-[30px] leading-none transition-[color,transform] duration-150 ease-out ' +
+                (rating != null && n <= rating ? 'scale-[1.12] text-warn' : 'text-ln3')
+              }
+            >
+              ★
+            </button>
+          ))}
         </div>
       </div>
-    </Modal>
+
+      <label className="block">
+        <span className="text-base font-medium text-tx2">Comment · optional</span>
+        <textarea
+          rows={2}
+          className={inputCls}
+          placeholder="How was it?"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+      </label>
+
+      {/* photos */}
+      <div>
+        <div className="text-base font-medium text-tx2">
+          Photos · {files.length} of {MAX_PHOTOS}
+        </div>
+        <div className="mt-[7px] flex flex-wrap items-center gap-[9px]">
+          {files.map((f, i) => (
+            <span key={i} className="relative">
+              {/* object URLs are tiny previews; revoked on unmount is skipped
+                  on purpose — the sheet is short-lived */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={URL.createObjectURL(f)}
+                alt=""
+                className="h-16 w-16 rounded-[calc(var(--r)-2px)] object-cover"
+              />
+              <button
+                aria-label="Remove photo"
+                onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                className="absolute -right-1.5 -top-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-ac2 text-on"
+              >
+                <X className="size-3.5" strokeWidth={2} />
+              </button>
+            </span>
+          ))}
+          {files.length < MAX_PHOTOS && (
+            <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-[calc(var(--r)-2px)] bg-ph text-xl text-tx2">
+              ＋
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const picked = [...(e.target.files ?? [])]
+                  setFiles([...files, ...picked].slice(0, MAX_PHOTOS))
+                  e.target.value = ''
+                }}
+              />
+            </label>
+          )}
+        </div>
+        <p className="mt-[7px] text-base leading-snug text-tx3">
+          Compressed on your phone before upload. Photos need signal - offline check-ins post
+          without them.
+        </p>
+      </div>
+
+      {/* share toggle → visibility field ('followers' on / 'trip' off) */}
+      <button
+        onClick={() => setVisibility(visibility === 'followers' ? 'trip' : 'followers')}
+        className="flex items-center gap-[9px] text-left text-base text-tx2"
+      >
+        <span
+          aria-hidden
+          className={
+            'flex h-[18px] w-[18px] flex-none items-center justify-center rounded-[5px] text-[13px] font-semibold transition-colors ' +
+            (visibility === 'followers' ? 'bg-ac text-on' : 'border-[1.5px] border-ln3')
+          }
+        >
+          {visibility === 'followers' ? '✓' : ''}
+        </span>
+        Share with followers
+      </button>
+
+      <button
+        onClick={() =>
+          sel &&
+          onSave({ placeId: sel.placeId, placeName: sel.placeName, rating, comment, visibility, files })
+        }
+        disabled={!sel || saving}
+        className={
+          'w-full rounded-[var(--r)] py-4 text-[17px] font-semibold text-on transition-colors disabled:opacity-50 ' +
+          (online ? 'bg-ac' : 'bg-warn')
+        }
+      >
+        {saving ? 'Saving…' : !sel ? 'Pick a place first' : online ? 'Post check-in' : 'Post - will queue offline'}
+      </button>
+    </Sheet>
   )
 }
