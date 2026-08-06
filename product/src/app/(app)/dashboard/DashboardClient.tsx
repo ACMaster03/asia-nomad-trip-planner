@@ -13,6 +13,7 @@ import { fetchTripEvents, type TripEvent } from '@/lib/trips/events'
 import { tk } from '@/lib/trips/keys'
 import { useTripScope } from '@/lib/trips/TripScope'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
+import { BeforeYouFly, ComingUp } from '../reminders/HomeReminders'
 
 // Home — the one phase-aware tab (handoff frames 07–10). The trip phase
 // (pre / arrive / live / off-plan / post) decides the whole layout:
@@ -22,8 +23,9 @@ import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 //   off    → live layout with the drift card (detected from the latest
 //            check-in naming a place that isn't the planned stop)
 //   post   → recap wash + stats + forward cards
-// "Before you fly" reminders (frames 25–26) are their own feature and land
-// with the reminders screens — the slot is reserved, not faked.
+// Reminders (frames 25–26) mount in two reserved slots via HomeReminders:
+// "Before you fly" pre-trip (above Estimated total) and "Coming up" while
+// live/arrive/off (between the check-in button and the trip strip).
 
 const card = 'rounded-[var(--r)] bg-sf p-4 text-tx'
 const kicker = 'text-base font-semibold uppercase tracking-[.12em] text-ac2-deep'
@@ -212,6 +214,7 @@ export default function DashboardClient({ userEmail }: { userEmail?: string }) {
             <div className="text-[26px] font-semibold">{b.totalNights} days</div>
           </div>
         </div>
+        <BeforeYouFly state={s} todayIso={todayIso} />
         <div className={card + ' p-5'}>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-medium uppercase tracking-[.11em] text-tx2">Estimated total</span>
@@ -360,6 +363,7 @@ export default function DashboardClient({ userEmail }: { userEmail?: string }) {
           <PlaneLanding aria-hidden className="size-5" strokeWidth={2} /> Arrived
         </Link>
       )}
+      <ComingUp state={s} todayIso={todayIso} />
 
       <div>
         <div className="h-1.5 overflow-hidden rounded-full bg-track">
