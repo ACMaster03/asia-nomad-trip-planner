@@ -34,8 +34,9 @@ export default function CreateTripEmptyState() {
   })
 
   if (tripId === null) {
+    // The wizard brings its own full-bleed 2b wash — no page padding here.
     return (
-      <main className="mx-auto max-w-2xl p-6">
+      <main>
         <OnboardingWizard />
       </main>
     )

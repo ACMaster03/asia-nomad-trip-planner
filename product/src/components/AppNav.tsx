@@ -29,6 +29,9 @@ export function AppNav({ showCheckIn }: { showCheckIn: boolean }) {
   const pathname = usePathname()
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
+  // The personalisation flow is a door, not a destination — no tab bar there.
+  if (pathname.startsWith('/welcome')) return null
+
   const tab = ({ href, label, Icon }: (typeof TABS)[number]) => {
     const active = isActive(href)
     return (

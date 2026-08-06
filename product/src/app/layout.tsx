@@ -42,7 +42,7 @@ export default function RootLayout({
             utilities never flash the wrong theme. suppressHydrationWarning on
             <html> because this attribute is set outside React. */}
         <Script id="lv-theme" strategy="beforeInteractive">
-          {"(function(){try{var t=localStorage.getItem('lv-theme');var d=t==='dark'||((!t||t==='system')&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')}catch(e){}})()"}
+          {"(function(){try{var t=localStorage.getItem('lv-theme');var d=t==='dark'||((!t||t==='system')&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');if(localStorage.getItem('lv-larger'))document.documentElement.setAttribute('data-large','')}catch(e){}})()"}
         </Script>
         {/* Boot/update splash: SERVER-rendered so it paints before any JS
             (cold PWA starts, auto-update reloads); SWUpdate fades it out on

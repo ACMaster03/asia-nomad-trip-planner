@@ -152,6 +152,12 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* "Larger text" (P6): every rem-based size steps up one notch. Set by the
+   personalisation flow / Settings via lv-larger + this attribute. */
+:root[data-large] {
+  font-size: 17.5px;
+}
+
 /* Lora carries headings/display; screens override size/weight per frame. */
 h1,
 h2,
