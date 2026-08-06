@@ -9,9 +9,11 @@ import type { SharedRouteStop } from '@/lib/follow/api'
 // points, arcs between consecutive stops, and a pulsing ring on the last-seen
 // stop. Phone-first: auto-rotating, drag-to-spin, pinch/scroll-to-zoom.
 //
-// Visual language (mock 07 legend): travelled = solid teal, upcoming = faint
-// dashed, last seen = pulsing amber ring (grey + slow when the feed has been
-// quiet for days).
+// Visual language (LIVHOLD frame 30 legend): travelled = solid hunter,
+// upcoming = faint dashed mauve (planned-stop pins are mauve, per the handoff
+// color semantics), last seen = pulsing amber ring (grey + slow when the feed
+// has been quiet for days). WebGL can't read CSS vars, so these are the
+// globe-legible literals of the token ramps.
 
 type Inst = InstanceType<typeof Globe>
 
@@ -26,11 +28,11 @@ interface Props {
   stale?: boolean
 }
 
-const TEAL = '#0d9488'
-const AMBER = '#f0a83c'
+const HUNTER = '#7fa37d'
+const AMBER = '#d9a85c'
 const GREY = '#9a9aa2'
-const FUTURE = 'rgba(148,163,184,0.75)'
-const FUTURE_ARC = 'rgba(148,163,184,0.5)'
+const MAUVE = 'rgba(208,135,149,0.9)'
+const MAUVE_ARC = 'rgba(208,135,149,0.55)'
 
 type Arc = { startLat: number; startLng: number; endLat: number; endLng: number; past: boolean }
 
@@ -60,7 +62,7 @@ export default function FollowGlobe({ route, currentCity, todayISO, lastSeenCity
       .width(el.clientWidth)
       .height(el.clientHeight)
       .showAtmosphere(true)
-      .atmosphereColor('#4fd1c5')
+      .atmosphereColor('#7fa37d')
       .atmosphereAltitude(0.18)
       .onGlobeReady(() => {
         readyRef.current = true
@@ -114,7 +116,7 @@ export default function FollowGlobe({ route, currentCity, todayISO, lastSeenCity
       .pointLng((d) => (d as SharedRouteStop).lng as number)
       .pointColor((d) => {
         const s = d as SharedRouteStop
-        return isCurrent(s) ? AMBER : isPast(s) ? TEAL : FUTURE
+        return isCurrent(s) ? AMBER : isPast(s) ? HUNTER : MAUVE
       })
       .pointAltitude(0.015)
       .pointRadius((d: object) => (isCurrent(d as SharedRouteStop) ? 0.65 : isPast(d as SharedRouteStop) ? 0.55 : 0.4))
@@ -131,7 +133,7 @@ export default function FollowGlobe({ route, currentCity, todayISO, lastSeenCity
         past: s.arrive <= todayISO,
       })) as object[],
     )
-      .arcColor((d: object) => ((d as Arc).past ? TEAL : FUTURE_ARC))
+      .arcColor((d: object) => ((d as Arc).past ? HUNTER : MAUVE_ARC))
       .arcStroke((d: object) => ((d as Arc).past ? 0.42 : 0.3))
       .arcAltitudeAutoScale(0.35)
       .arcDashLength((d: object) => ((d as Arc).past ? 1 : 0.6))

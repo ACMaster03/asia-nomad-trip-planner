@@ -2,14 +2,20 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { LucideIcon } from 'lucide-react'
+import {
+  Bell, CirclePause, Compass, Dot, Image as ImageIcon, Mail, MapPin,
+  NotebookPen, PlaneLanding, RadioTower,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { fetchSharedFeed, fetchSharedSummary, followMediaUrl, subscribeDigest, type SharedEvent, type SharedSummary } from '@/lib/follow/api'
 import { disablePush, enablePush, getPushState, type PushState } from '@/lib/follow/push'
 import { nightsBetween } from '@/lib/trips/format'
 
-// /follow/[token] — the no-account family view (approved endframe: mock 07).
+// /follow/[token] — the no-account family view (LIVHOLD handoff frame 30).
 // States: invalid link · pre-trip countdown · live (globe + current stop +
 // feed, polled ~45s as the floor, plus a Realtime ping that usually beats it
 // to ~1s — Postgres Changes can't reach anon under closed RLS) ·
@@ -19,13 +25,17 @@ import { nightsBetween } from '@/lib/trips/format'
 const FollowGlobe = dynamic(() => import('@/components/follow/FollowGlobe'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full items-center justify-center text-sm text-neutral-500">Loading globe…</div>
+    <div className="flex h-full items-center justify-center text-base text-tx3">Loading globe…</div>
   ),
 })
 
-const EVENT_ICON: Record<string, string> = {
-  checkin: '📍', note: '📝', arrived: '🛬', media: '🖼️', location: '📡',
+// mauve = people/memories accents (handoff color semantics)
+const EVENT_ICON: Record<string, LucideIcon> = {
+  checkin: MapPin, note: NotebookPen, arrived: PlaneLanding, media: ImageIcon, location: RadioTower,
 }
+
+const kicker = 'text-base font-medium uppercase tracking-[.14em] text-ac2-deep'
+const card = 'rounded-[var(--r)] bg-sf'
 
 function localISODate(d = new Date()) {
   const p = (n: number) => String(n).padStart(2, '0')
@@ -41,7 +51,7 @@ function timeAgo(iso: string) {
 }
 
 function Stars({ n }: { n: number }) {
-  return <span className="text-amber-500">{'★'.repeat(n)}<span className="text-neutral-300 dark:text-neutral-700">{'★'.repeat(5 - n)}</span></span>
+  return <span className="text-warn">{'★'.repeat(n)}<span className="text-ln3">{'★'.repeat(5 - n)}</span></span>
 }
 
 export default function FollowClient({
@@ -92,9 +102,9 @@ export default function FollowClient({
     return (
       <Shell>
         <div className="mt-16 text-center">
-          <div className="text-4xl">🧭</div>
-          <h1 className="mt-3 text-xl font-semibold">This link isn’t active</h1>
-          <p className="mx-auto mt-2 max-w-xs text-sm text-neutral-500">
+          <Compass size={40} strokeWidth={2} className="mx-auto text-ac2" aria-hidden />
+          <h1 className="mt-4 font-serif text-2xl font-semibold">This link isn’t active</h1>
+          <p className="mx-auto mt-2 max-w-xs text-base leading-[1.55] text-tx2">
             It may have been revoked or expired. Ask the traveller for a fresh link.
           </p>
         </div>
@@ -103,24 +113,24 @@ export default function FollowClient({
   }
 
   // Owner paused all sharing: keep the trip title for context, reveal nothing
-  // else (mock 07 "Sharing paused" state). Notification opt-ins are retained
+  // else ("Sharing paused" state). Notification opt-ins are retained
   // server-side and un-mute automatically when sharing resumes.
   if (s.paused) {
     return (
       <Shell>
         <header className="mb-4">
-          <div className="text-xs uppercase tracking-wide text-neutral-500">Following</div>
-          <h1 className="text-2xl font-semibold">{s.tripName}</h1>
+          <div className={kicker}>Following</div>
+          <h1 className="mt-1 font-serif text-[27px] font-semibold leading-[1.15] tracking-[-.01em]">{s.tripName}</h1>
         </header>
-        <section className="rounded-xl border border-neutral-200 p-6 text-center dark:border-neutral-800">
-          <div className="text-4xl" aria-hidden>⏸️</div>
-          <h2 className="mt-3 text-lg font-semibold">Sharing is paused</h2>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">
+        <section className={`${card} p-6 text-center`}>
+          <CirclePause size={36} strokeWidth={2} className="mx-auto text-ac2" aria-hidden />
+          <h2 className="mt-3 font-serif text-xl font-semibold">Sharing is paused</h2>
+          <p className="mx-auto mt-2 max-w-sm text-base leading-[1.55] text-tx2">
             The travellers have paused sharing for a while — nothing is wrong, people sometimes
             go off-grid on purpose. This page fills up again the moment sharing resumes, and
             your notification settings are kept.
           </p>
-          <p className="mt-3 text-xs text-neutral-400 dark:text-neutral-600">⟳ This page checks again automatically</p>
+          <p className="mt-3 text-base text-tx3">This page checks again automatically</p>
         </section>
       </Shell>
     )
@@ -142,36 +152,37 @@ export default function FollowClient({
 
   return (
     <Shell>
-      {/* header */}
+      {/* header (frame 30: mauve eyebrow, serif title, tag day pill) */}
       <header className="mb-4">
-        <div className="text-xs uppercase tracking-wide text-neutral-500">
+        <div className={kicker}>Following</div>
+        <h1 className="mt-1 font-serif text-[27px] font-semibold leading-[1.15] tracking-[-.01em]">{s.tripName}</h1>
+        <div className="mt-2.5 inline-flex items-center rounded-full bg-tag px-3.5 py-1.5 text-base font-medium text-tag-ink">
           {phase === 'pre' && 'Departure countdown'}
           {phase === 'live' && (totalDays ? `Day ${dayNum} of ${totalDays}` : `Day ${dayNum}`)}
           {phase === 'post' && 'Trip complete'}
         </div>
-        <h1 className="text-2xl font-semibold">{s.tripName}</h1>
         {phase === 'live' && lastSeenCity && latest && (
-          <p className="mt-1 text-sm text-neutral-500">
-            Last seen: <span className="font-medium text-neutral-700 dark:text-neutral-300">{lastSeenCity}</span> · {timeAgo(latest.occurred_at)}
+          <p className="mt-2 text-base text-tx2">
+            Last seen: <span className="font-medium text-tx">{lastSeenCity}</span> · {timeAgo(latest.occurred_at)}
           </p>
         )}
       </header>
 
       {phase === 'pre' ? (
-        <section className="rounded-xl border border-neutral-200 p-6 text-center dark:border-neutral-800">
-          <div className="text-5xl font-semibold text-teal-600">
+        <section className={`${card} p-6 text-center`}>
+          <div className="font-serif text-5xl font-semibold text-ac">
             {nightsBetween(today, s.startDate)}
           </div>
-          <div className="mt-1 text-sm text-neutral-500">days until departure · {s.startDate}</div>
+          <div className="mt-1 text-base text-tx2">days until departure · {s.startDate}</div>
           {s.route.length > 0 && (
-            <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
+            <p className="mt-4 text-base leading-[1.55] text-tx2">
               Planned route: {s.route.map((r) => r.city).join(' → ')}
             </p>
           )}
-          <p className="mt-3 text-xs text-neutral-500">
+          <p className="mt-3 text-base text-tx3">
             This page turns into the live feed the day the trip starts. Bookmark it!
           </p>
-          {/* mock 07: followers can arm notifications BEFORE departure */}
+          {/* followers can arm notifications BEFORE departure */}
           <div className="mt-4 text-left">
             <NotifyCard sb={sb} token={token} />
             <DigestCard token={token} />
@@ -182,7 +193,7 @@ export default function FollowClient({
           {/* globe */}
           {s.route.some((r) => r.lat != null) && (
             <>
-              <section className="h-72 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+              <section className={`${card} h-72 overflow-hidden`}>
                 <FollowGlobe
                   route={s.route}
                   currentCity={current?.city ?? null}
@@ -191,23 +202,23 @@ export default function FollowClient({
                   stale={quietDays !== null && quietDays >= 3}
                 />
               </section>
-              <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 px-1 text-[11px] text-neutral-400 dark:text-neutral-600">
-                <span><span className="text-teal-600">●</span> visited</span>
-                <span><span className="text-amber-500">◉</span> last seen</span>
-                <span><span className="text-slate-400">○</span> upcoming</span>
-                <span className="ml-auto">drag to spin · pinch or scroll to zoom</span>
+              <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 px-1 text-base text-tx2">
+                <span><span className="text-ac">●</span> visited</span>
+                <span><span className="text-warn">◉</span> last seen</span>
+                <span><span className="text-ac2">○</span> upcoming</span>
+                <span className="ml-auto text-tx3">drag to spin · pinch or scroll to zoom</span>
               </p>
             </>
           )}
 
           {/* current stop */}
           {current && (
-            <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
-              <div className="text-xs uppercase tracking-wide text-neutral-500">Now in</div>
-              <div className="text-lg font-semibold">
+            <section className={`${card} mt-3 p-4`}>
+              <div className="text-base font-medium uppercase tracking-[.12em] text-ac2-deep">Now in</div>
+              <div className="mt-0.5 text-[17px] font-semibold">
                 {current.city}, {current.country}
               </div>
-              <div className="text-sm text-neutral-500">
+              <div className="text-base text-tx2">
                 {current.arrive} → {current.depart}
               </div>
             </section>
@@ -218,80 +229,92 @@ export default function FollowClient({
 
           {/* quiet period */}
           {phase === 'live' && quietDays !== null && quietDays >= 3 && (
-            <p className="mt-3 rounded-lg bg-neutral-100 p-3 text-center text-sm text-neutral-500 dark:bg-neutral-900">
-              🌴 Quiet days on the road — no updates in {quietDays} days. No news is usually good news.
+            <p className="mt-3 rounded-[var(--r)] bg-tag p-4 text-center text-base leading-[1.55] text-tag-ink">
+              Quiet days on the road — no updates in {quietDays} days. No news is usually good news.
             </p>
           )}
 
           {/* feed */}
           <section className="mt-5">
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-500">
+            <h2 className="mb-2 text-base font-semibold uppercase tracking-[.12em] text-ac2-deep">
               Updates
             </h2>
-            {feed.isPending && <p className="text-sm text-neutral-500">Loading updates…</p>}
+            {feed.isPending && <p className="text-base text-tx2">Loading updates…</p>}
             {!feed.isPending && !events.length && (
-              <p className="text-sm text-neutral-500">
+              <p className="text-base text-tx2">
                 {phase === 'post' ? 'The journal has ended — thanks for following along!' : 'No updates yet — check back soon.'}
               </p>
             )}
             <ul className="space-y-2">
-              {events.map((e) => (
-                <li key={e.id} className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
-                  <div className="flex items-baseline gap-2">
-                    <span aria-hidden>{EVENT_ICON[e.kind] ?? '•'}</span>
-                    <div className="min-w-0 grow">
-                      {e.kind === 'checkin' && (
-                        <span className="text-sm font-medium">{e.payload.placeName ?? 'Checked in'}</span>
-                      )}
-                      {e.kind === 'arrived' && (
-                        <span className="text-sm font-medium">Arrived in {e.payload.city}</span>
-                      )}
-                      {e.kind === 'note' && <span className="text-sm">{e.payload.text}</span>}
-                      {e.rating != null && (
-                        <span className="ml-2 text-xs"><Stars n={e.rating} /></span>
-                      )}
-                      {e.comment && (
-                        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{e.comment}</p>
-                      )}
-                      {!!e.payload.photos?.length && (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {e.payload.photos.map((p) => (
-                            <a key={p} href={followMediaUrl(p)} target="_blank" rel="noreferrer">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={followMediaUrl(p)} alt="" loading="lazy" className="h-24 w-24 rounded-lg object-cover" />
-                            </a>
-                          ))}
-                        </div>
-                      )}
+              {events.map((e) => {
+                const Icon = EVENT_ICON[e.kind] ?? Dot
+                return (
+                  <li key={e.id} className={`${card} p-4`}>
+                    <div className="flex items-start gap-2.5">
+                      <Icon size={18} strokeWidth={2} className="mt-1 flex-none text-ac2" aria-hidden />
+                      <div className="min-w-0 grow">
+                        {e.kind === 'checkin' && (
+                          <span className="text-[17px] font-semibold">{e.payload.placeName ?? 'Checked in'}</span>
+                        )}
+                        {e.kind === 'arrived' && (
+                          <span className="text-[17px] font-semibold">Arrived in {e.payload.city}</span>
+                        )}
+                        {e.kind === 'note' && <span className="text-base">{e.payload.text}</span>}
+                        {e.rating != null && (
+                          <span className="ml-2 text-base"><Stars n={e.rating} /></span>
+                        )}
+                        {e.comment && (
+                          <p className="mt-1 text-base leading-[1.55] text-tx2">{e.comment}</p>
+                        )}
+                        {!!e.payload.photos?.length && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {e.payload.photos.map((p) => (
+                              <a key={p} href={followMediaUrl(p)} target="_blank" rel="noreferrer">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={followMediaUrl(p)} alt="" loading="lazy" className="h-24 w-24 rounded-[12px] object-cover" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-base text-tx3">{timeAgo(e.occurred_at)}</span>
                     </div>
-                    <span className="shrink-0 text-xs text-neutral-500">{timeAgo(e.occurred_at)}</span>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                )
+              })}
             </ul>
           </section>
         </>
       )}
 
-      {/* transparency footer (mock 09's privacy grid, follower-facing) */}
-      <footer className="mt-8 border-t border-neutral-200 pt-4 text-xs text-neutral-500 dark:border-neutral-800">
-        <p className="font-medium">What you can see here</p>
-        <p className="mt-1">
-          Route cities &amp; dates, check-ins and notes the travellers chose to share. Money,
-          bookings, exact locations and private notes are never part of this page.
+      {/* transparency footer (frame 30's tag-wash privacy note, follower-facing) */}
+      <footer className="mt-8 space-y-4">
+        <div className="rounded-[var(--r)] bg-tag p-4 text-base leading-[1.55] text-tag-ink">
+          <p className="font-medium">What you can see here</p>
+          <p className="mt-1">
+            Route cities &amp; dates, check-ins and notes the travellers chose to share. Money,
+            bookings, exact locations and private notes are never part of this page.
+          </p>
+        </div>
+        <p className="flex items-center justify-center gap-2 text-base text-tx3">
+          <Image src="/brand/livhold-mark.png" alt="" width={20} height={20} aria-hidden />
+          <span className="font-serif font-semibold tracking-[.08em]">LIVHOLD</span>
         </p>
-        <p className="mt-3">🧭 Asia Nomad Planner</p>
       </footer>
     </Shell>
   )
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
-  // Phone-first narrow column, same on desktop (mock 07).
-  return <main className="mx-auto max-w-xl p-4 sm:p-6">{children}</main>
+  // Phone-first narrow column on the honeydew page wash, same on desktop.
+  return (
+    <div className="min-h-dvh bg-pg text-tx">
+      <main className="lv-enter mx-auto max-w-xl px-4 py-6 sm:px-6">{children}</main>
+    </div>
+  )
 }
 
-// Mock 07 email fallback: daily/weekly digest — the answer for iOS browser
+// Email fallback: daily/weekly digest — the answer for iOS browser
 // tabs (no push without A2HS) and for family who just prefer email. Double
 // opt-in runs in the `digest` Edge Function.
 function DigestCard({ token }: { token: string }) {
@@ -312,38 +335,38 @@ function DigestCard({ token }: { token: string }) {
 
   if (status === 'sent' || status === 'updated') {
     return (
-      <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
-        <p className="text-sm">
+      <section className={`${card} mt-3 p-4`}>
+        <p className="text-base leading-[1.55]">
           {status === 'sent'
-            ? <>📬 Almost there — open the email we just sent to <strong>{email}</strong> and tap the confirmation link.</>
-            : <>✅ Done — <strong>{email}</strong> now gets a <strong>{freq}</strong> summary.</>}
+            ? <>Almost there — open the email we just sent to <strong>{email}</strong> and tap the confirmation link.</>
+            : <>Done — <strong>{email}</strong> now gets a <strong>{freq}</strong> summary.</>}
         </p>
       </section>
     )
   }
 
   return (
-    <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+    <section className={`${card} mt-3 p-4`}>
       <div className="flex items-start gap-3">
-        <span className="text-2xl" aria-hidden>📮</span>
+        <Mail size={22} strokeWidth={2} className="mt-0.5 flex-none text-ac2" aria-hidden />
         <div className="min-w-0 grow">
-          <div className="font-medium">Prefer email?</div>
-          <p className="mt-0.5 text-sm text-neutral-500">
+          <div className="font-serif text-lg font-semibold">Prefer email?</div>
+          <p className="mt-0.5 text-base leading-[1.5] text-tx2">
             Get a summary of new check-ins and photos — no app, no push needed.
           </p>
-          <form onSubmit={submit} className="mt-2 flex flex-wrap gap-2">
+          <form onSubmit={submit} className="mt-2.5 flex flex-wrap gap-2">
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="min-w-0 grow rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              className="min-w-0 grow rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-2.5 text-base"
             />
             <select
               value={freq}
               onChange={(e) => setFreq(e.target.value as 'daily' | 'weekly')}
-              className="rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              className="rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-2.5 text-base"
               aria-label="How often"
             >
               <option value="daily">Daily</option>
@@ -352,15 +375,15 @@ function DigestCard({ token }: { token: string }) {
             <button
               type="submit"
               disabled={status === 'busy'}
-              className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-[calc(var(--r)-3px)] bg-ac px-4 py-2.5 text-base font-semibold text-on disabled:opacity-50"
             >
               {status === 'busy' ? '…' : 'Email me updates'}
             </button>
           </form>
           {status === 'error' && (
-            <p className="mt-1.5 text-xs text-red-600">Could not subscribe — check the address and try again.</p>
+            <p className="mt-1.5 text-base text-warn">Could not subscribe — check the address and try again.</p>
           )}
-          <p className="mt-1.5 text-xs text-neutral-400 dark:text-neutral-600">
+          <p className="mt-1.5 text-base text-tx3">
             We&apos;ll send a confirmation first · unsubscribe link in every email
           </p>
         </div>
@@ -369,7 +392,7 @@ function DigestCard({ token }: { token: string }) {
   )
 }
 
-// Mock 07 "Notify me" card (variant A = enable, B = enabled/manage).
+// "Notify me" card (variant A = enable, B = enabled/manage).
 function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
   const [state, setState] = useState<PushState | 'loading'>('loading')
   const [busy, setBusy] = useState(false)
@@ -383,18 +406,18 @@ function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
   // instead of hiding (dogfood 2026-07-24: "no option on mobile").
   if (state === 'ios-install') {
     return (
-      <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+      <section className={`${card} mt-3 p-4`}>
         <div className="flex items-start gap-3">
-          <span className="text-2xl" aria-hidden>🔔</span>
+          <Bell size={22} strokeWidth={2} className="mt-0.5 flex-none text-ac2" aria-hidden />
           <div className="min-w-0 grow">
-            <div className="font-medium">Know when they check in</div>
-            <p className="mt-0.5 text-sm text-neutral-500">
+            <div className="font-serif text-lg font-semibold">Know when they check in</div>
+            <p className="mt-0.5 text-base leading-[1.5] text-tx2">
               On iPhone/iPad, notifications need this page on your Home Screen:
             </p>
-            <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-neutral-600 dark:text-neutral-400">
-              <li>Open this link in <strong>Safari</strong> (if you&apos;re in Messenger/Instagram, tap ⋯ → Open in Safari)</li>
-              <li>Tap <strong>Share</strong> <span aria-hidden>⎋</span> → <strong>Add to Home Screen</strong></li>
-              <li>Open it from the new icon → tap <strong>Enable push notifications</strong> here</li>
+            <ol className="mt-2 list-inside list-decimal space-y-1 text-base leading-[1.5] text-tx2">
+              <li>Open this link in <strong className="text-tx">Safari</strong> (if you&apos;re in Messenger/Instagram, tap ⋯ → Open in Safari)</li>
+              <li>Tap <strong className="text-tx">Share</strong> <span aria-hidden>⎋</span> → <strong className="text-tx">Add to Home Screen</strong></li>
+              <li>Open it from the new icon → tap <strong className="text-tx">Enable push notifications</strong> here</li>
             </ol>
           </div>
         </div>
@@ -414,18 +437,18 @@ function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
   }
 
   return (
-    <section className="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+    <section className={`${card} mt-3 p-4`}>
       <div className="flex items-start gap-3">
-        <span className="text-2xl" aria-hidden>🔔</span>
+        <Bell size={22} strokeWidth={2} className="mt-0.5 flex-none text-ac2" aria-hidden />
         <div className="min-w-0 grow">
-          <div className="font-medium">Know when they check in</div>
-          <p className="mt-0.5 text-sm text-neutral-500">
+          <div className="font-serif text-lg font-semibold">Know when they check in</div>
+          <p className="mt-0.5 text-base leading-[1.5] text-tx2">
             {state === 'subscribed'
               ? 'Notifications are on for this device.'
               : 'Get a ping the moment something new is shared — check-ins, arrivals, notes. Nothing else, no marketing.'}
           </p>
           {state === 'denied' ? (
-            <p className="mt-2 text-xs text-neutral-500">
+            <p className="mt-2 text-base text-tx3">
               Notifications are blocked for this site — enable them in your browser settings to opt in.
             </p>
           ) : (
@@ -434,14 +457,14 @@ function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
               disabled={busy}
               className={
                 state === 'subscribed'
-                  ? 'mt-2 rounded border border-neutral-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-neutral-700'
-                  : 'mt-2 rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50'
+                  ? 'mt-2.5 rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln3 px-4 py-2.5 text-base font-semibold text-tx2 disabled:opacity-50'
+                  : 'mt-2.5 rounded-[calc(var(--r)-3px)] bg-ac px-4 py-2.5 text-base font-semibold text-on disabled:opacity-50'
               }
             >
               {busy ? '…' : state === 'subscribed' ? 'Turn off notifications' : 'Enable push notifications'}
             </button>
           )}
-          <p className="mt-1.5 text-xs text-neutral-400 dark:text-neutral-600">
+          <p className="mt-1.5 text-base text-tx3">
             Browser notifications on this device · no account needed
           </p>
         </div>
