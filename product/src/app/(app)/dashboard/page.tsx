@@ -1,12 +1,17 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/server'
 import { prefetchTripScreen } from '@/lib/trips/prefetch'
 import DashboardClient from './DashboardClient'
 
 export default async function DashboardPage() {
   const qc = await prefetchTripScreen()
+  // Home owns the Account entry (avatar, top-right — handoff nav "1g"); the
+  // layout already verified auth, this just reads the email for the initial.
+  const supabase = await createClient()
+  const { data } = await supabase.auth.getClaims()
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <DashboardClient />
+      <DashboardClient userEmail={data?.claims?.email as string | undefined} />
     </HydrationBoundary>
   )
 }

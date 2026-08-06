@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget, type CityCost } from '@/lib/trips/budget'
@@ -7,7 +8,7 @@ import { fmtUSD } from '@/lib/trips/format'
 import { Stat } from '@/components/trips/Stat'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
-export default function DashboardClient() {
+export default function DashboardClient({ userEmail }: { userEmail?: string }) {
   const { fmt, base } = useMoney()
   const { trip, cityIdx } = useTripScreen()
   // "next stop" depends on the current clock → compute only after mount to avoid an
@@ -45,10 +46,24 @@ export default function DashboardClient() {
 
   return (
     <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-1 text-2xl font-semibold">{s.meta.tripName}</h1>
-      <p className="mb-4 text-sm text-neutral-500">
-        {inPlan.length} stops · {b.totalNights} nights · {s.meta.travelers} travellers
-      </p>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="mb-1 text-2xl font-semibold">{s.meta.tripName}</h1>
+          <p className="text-sm text-neutral-500">
+            {inPlan.length} stops · {b.totalNights} nights · {s.meta.travelers} travellers
+          </p>
+        </div>
+        {/* Account's only door now that the top bar is gone (handoff: 42px
+            mauve-soft circle, top-right of Home in every phase). */}
+        <Link
+          href="/account"
+          aria-label="Account"
+          title={userEmail || 'Account'}
+          className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-ac2-soft font-semibold text-ac2-deep"
+        >
+          {(userEmail?.trim()[0] ?? '?').toUpperCase()}
+        </Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {/* Grand total = entered numbers only; missing stays are NAMED, not

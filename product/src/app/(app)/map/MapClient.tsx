@@ -1,5 +1,7 @@
 'use client'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
+import { Search } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchCities, fetchCountries } from '@/lib/catalogue/queries'
@@ -25,11 +27,20 @@ export default function MapClient() {
   })
   const { data: countries = [] } = useQuery({ queryKey: qk.countries, queryFn: () => fetchCountries(sb) })
   const state = trip.data?.state
-  // top-14 tucks the overlay under the nav bar; the nav itself is z-40 with a
-  // solid background, so any small overlap (or the open phone menu) always
-  // paints ABOVE the globe — no more being trapped on this page.
+  // Full-bleed to the top now that the top bar is gone; the bottom tab bar is
+  // z-40 with a solid background, so it always paints ABOVE the globe — no
+  // more being trapped on this page.
   return (
-    <div className="fixed inset-x-0 bottom-0 top-14 bg-[#0b0f14]">
+    <div className="fixed inset-x-0 top-0 bottom-[calc(76px+env(safe-area-inset-bottom))] bg-[#0b0f14]">
+      {/* Explore retired as a destination — its search lives here (top-right).
+          Links to the old /knowledge screen until Phase 7 embeds it. */}
+      <Link
+        href="/knowledge"
+        aria-label="Search places"
+        className="absolute right-4 top-4 z-10 flex h-[44px] w-[44px] items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+      >
+        <Search aria-hidden className="size-5" strokeWidth={2} />
+      </Link>
       <GlobeView
         cities={cities.data ?? []}
         countries={countries}
