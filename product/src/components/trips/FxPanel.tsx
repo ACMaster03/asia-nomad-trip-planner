@@ -112,148 +112,136 @@ export default function FxPanel({
   }, [watched])
 
   return (
-    <>
-      <h2 className="mb-1 mt-6 text-lg font-semibold">
-        FX rates{' '}
-        <span className="text-sm font-normal text-neutral-500">
-          {base} per 1 unit · updated automatically
-        </span>
-      </h2>
-      <p className="mb-3 text-sm text-neutral-500">
-        These come straight from the daily reference feed. They are not editable — one
-        mistyped rate would quietly distort every total in the trip.
-      </p>
-
-      <div
-        className={`mb-3 flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5 text-sm ${
-          failed
-            ? 'border-red-400 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
-            : stale
-              ? 'border-amber-400 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30'
-              : 'border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900'
-        }`}
-      >
-        <span>
-          {!online ? (
-            <>📴 Offline — showing the rates saved on this device</>
-          ) : failed ? (
-            <>Couldn’t reach the rate feed · showing values from <b>{ago(fx?.lastSuccessAt ?? null)}</b></>
-          ) : stale ? (
-            <>⚠️ Last updated <b>{ago(fx?.lastSuccessAt ?? null)}</b> — totals may have drifted</>
-          ) : (
-            <>Updated <b>{ago(fx?.lastSuccessAt ?? null)}</b> · next automatic check tonight</>
-          )}
-        </span>
-        <span className="flex-1" />
-        <button
-          type="button"
-          onClick={doRefresh}
-          disabled={busy || !online}
-          className={`rounded px-3 py-1.5 text-sm disabled:opacity-50 ${
-            stale || failed
-              ? 'bg-teal-600 font-medium text-white'
-              : 'border border-neutral-300 dark:border-neutral-700'
+    <section className="rounded-[var(--r)] bg-sf p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <h2 className="font-serif text-[19px] font-semibold">FX rates</h2>
+        <span
+          className={`rounded-full border-[1.4px] px-2.5 py-[3px] text-base font-medium ${
+            failed
+              ? 'border-ac2-line text-ac2'
+              : stale
+                ? 'border-warn-line text-warn'
+                : 'border-ac text-tx2'
           }`}
         >
-          {busy ? '↻ Checking…' : failed ? '↻ Try again' : '↻ Refresh now'}
-        </button>
+          updated {ago(fx?.lastSuccessAt ?? null)}
+        </span>
       </div>
-      {refreshError && (
-        <p className="mb-3 text-sm text-amber-600 dark:text-amber-500">{refreshError}</p>
-      )}
+      <p className="mt-[7px] text-base leading-normal text-tx2">
+        Updated daily and read-only — one mistyped rate would quietly distort every total in the
+        trip. A currency appears here as soon as a stop needs it. All figures are {base} per 1 unit.
+      </p>
 
-      <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
-              <th className="p-2.5 text-left font-medium">Currency</th>
-              <th className="p-2.5 text-right font-medium">{base} per 1 unit</th>
-              <th className="w-8" />
-            </tr>
-          </thead>
-          <tbody>
-            {watched.map((code) => {
-              const live = crossRate(fx?.perUsd ?? {}, code, base)
-              const shown = live ?? state.rates[code]
-              const reason = autoReasons.get(code)
-              const accepted = currencyCountries(code)
-              return (
-                <tr key={code} className="border-b border-neutral-100 last:border-0 dark:border-neutral-900">
-                  <td className="p-2.5">
-                    <span className="font-semibold">{code}</span>
-                    {code === base && (
-                      <span className="ml-2 rounded-full border border-neutral-300 px-2 py-0.5 text-[11px] text-neutral-500 dark:border-neutral-700">
-                        base
-                      </span>
-                    )}
-                    {reason && code !== base && (
-                      <span className="ml-2 rounded-full border border-teal-500 bg-teal-500/10 px-2 py-0.5 text-[11px] text-teal-700 dark:text-teal-400">
-                        auto · {reason}
-                      </span>
-                    )}
-                    {accepted.length > 0 && (
-                      <div className="mt-0.5 text-[11px] text-neutral-500">
-                        {accepted.length === 1
-                          ? accepted[0]
-                          : `also legal tender in ${accepted.slice(0, 3).join(', ')}${
-                              accepted.length > 3 ? ` +${accepted.length - 3}` : ''
-                            }`}
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-2.5 text-right tabular-nums">
-                    {code === base ? 1 : shown ? shown.toFixed(4) : '—'}
-                  </td>
-                  <td className="p-2.5 text-right">
-                    {canEdit && code !== base && (
-                      <button
-                        type="button"
-                        onClick={() => removeCurrency(code)}
-                        title={`Remove ${code}`}
-                        className="text-red-600 hover:opacity-70"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      {(!online || failed || stale) && (
+        <div
+          className={`mt-3 flex flex-wrap items-center gap-3 rounded-[calc(var(--r)-3px)] border-[1.5px] px-3 py-2.5 text-base ${
+            failed ? 'border-ac2-line bg-ac2-soft' : 'border-warn-line bg-warn-soft'
+          }`}
+        >
+          <span className="leading-normal">
+            {!online ? (
+              <>Offline — showing the rates saved on this device</>
+            ) : failed ? (
+              <>Couldn’t reach the rate feed · showing values from <b>{ago(fx?.lastSuccessAt ?? null)}</b></>
+            ) : (
+              <>Last updated <b>{ago(fx?.lastSuccessAt ?? null)}</b> — totals may have drifted</>
+            )}
+          </span>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={doRefresh}
+        disabled={busy || !online}
+        className={`mt-3 rounded-[calc(var(--r)-3px)] px-4 py-3 text-base font-semibold disabled:opacity-50 ${
+          stale || failed
+            ? 'bg-ac text-on'
+            : 'border-[1.5px] border-ln3 text-tx2'
+        }`}
+      >
+        {busy ? '↻ Checking…' : failed ? '↻ Try again' : '↻ Refresh now'}
+      </button>
+      {refreshError && <p className="mt-2 text-base text-warn">{refreshError}</p>}
+
+      <div className="mt-3 flex flex-col">
+        {watched.map((code, i) => {
+          const live = crossRate(fx?.perUsd ?? {}, code, base)
+          const shown = live ?? state.rates[code]
+          const reason = autoReasons.get(code)
+          const accepted = currencyCountries(code)
+          return (
+            <div
+              key={code}
+              className={'flex items-center gap-2.5 py-[9px]' + (i < watched.length - 1 ? ' border-b border-ln' : '')}
+            >
+              <div className="min-w-0 flex-1 text-base">
+                <span className="font-semibold">{code}</span>
+                {accepted.length > 0 && (
+                  <span className="text-tx2">
+                    {' · '}
+                    {accepted.length === 1
+                      ? accepted[0]
+                      : `${accepted[0]} +${accepted.length - 1}`}
+                  </span>
+                )}
+                {code === base && (
+                  <span className="ml-2 rounded-full border-[1.4px] border-ln3 px-2 py-[1px] text-base text-tx2">
+                    base
+                  </span>
+                )}
+                {reason && code !== base && (
+                  <span className="ml-2 rounded-full border-[1.4px] border-ac-line bg-ac-soft px-2 py-[1px] text-base text-tx2">
+                    auto · {reason}
+                  </span>
+                )}
+              </div>
+              <span className="text-base tabular-nums">
+                {code === base ? 1 : shown ? shown.toFixed(4) : '—'}
+              </span>
+              {canEdit && code !== base && (
+                <button
+                  type="button"
+                  onClick={() => removeCurrency(code)}
+                  title={`Remove ${code}`}
+                  className="text-base text-ac2 hover:opacity-70"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {canEdit && (
-      <div className="mt-3 flex flex-wrap items-end gap-2">
-        <label className="block text-sm">
-          <span className="mb-1 block text-xs uppercase tracking-wide text-neutral-500">
+        <div className="mt-[13px] flex flex-wrap items-end gap-2.5">
+          <label className="block grow text-base font-medium text-tx2">
             Add a currency
-          </span>
-          <select
-            value={adding}
-            onChange={(e) => setAdding(e.target.value)}
-            className="rounded border border-neutral-300 bg-transparent px-2 py-1.5 text-sm dark:border-neutral-700"
+            <select
+              value={adding}
+              onChange={(e) => setAdding(e.target.value)}
+              className="mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base focus:border-ac focus:outline-none"
+            >
+              <option value="">Search {addable.length} currencies…</option>
+              {addable.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                  {currencyCountries(c).length ? ` — ${currencyCountries(c)[0]}` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            disabled={!adding}
+            onClick={() => addCurrency(adding)}
+            className="rounded-[calc(var(--r)-3px)] border-[1.5px] border-ac2 px-4 py-3 text-base font-semibold text-ac2 disabled:opacity-50"
           >
-            <option value="">Search {addable.length} currencies…</option>
-            {addable.map((c) => (
-              <option key={c} value={c}>
-                {c}
-                {currencyCountries(c).length ? ` — ${currencyCountries(c)[0]}` : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="button"
-          disabled={!adding}
-          onClick={() => addCurrency(adding)}
-          className="rounded border border-neutral-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-neutral-700"
-        >
-          ＋ Add
-        </button>
-      </div>
+            ＋ Add
+          </button>
+        </div>
       )}
-    </>
+    </section>
   )
 }
 

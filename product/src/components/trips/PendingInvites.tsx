@@ -64,18 +64,18 @@ export function PendingInvites() {
   const busy = accept.isPending || decline.isPending
 
   return (
-    <div className="mx-auto max-w-5xl px-6 pt-4">
+    <div className="mx-auto max-w-5xl px-4 pt-4">
       {list.map((inv) => (
         <div
           key={inv.invite_id}
-          className="mb-3 rounded-lg border border-teal-300 bg-teal-50 p-3 dark:border-teal-800 dark:bg-teal-950/30"
+          className="lv-enter mb-3 rounded-[var(--r)] border-[1.5px] border-ac-line bg-sf p-4"
         >
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <div className="min-w-0 grow">
-              <div className="text-sm">
+              <div className="text-base">
                 <b>{inv.invited_by_name}</b> invited you to <b>{inv.trip_name}</b>
               </div>
-              <div className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
+              <div className="mt-0.5 text-base leading-normal text-tx2">
                 {inv.role === 'editor'
                   ? 'As a co-editor — you can plan the trip together.'
                   : 'As a viewer — you can see everything, but not change it.'}
@@ -84,19 +84,19 @@ export function PendingInvites() {
             <button
               onClick={() => accept.mutate(inv.invite_id)}
               disabled={busy}
-              className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-[calc(var(--r)-3px)] bg-ac px-[15px] py-2.5 text-base font-semibold text-on disabled:opacity-50"
             >
               {accept.isPending ? 'Joining…' : 'Accept'}
             </button>
             <button
               onClick={() => decline.mutate(inv.invite_id)}
               disabled={busy}
-              className="rounded border border-neutral-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-neutral-700"
+              className="rounded-full border-[1.4px] border-ln3 px-3 py-1.5 text-base font-medium text-tx2 disabled:opacity-50"
             >
               Decline
             </button>
           </div>
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-base text-ac2">{error}</p>}
         </div>
       ))}
     </div>
