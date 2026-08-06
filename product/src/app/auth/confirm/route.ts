@@ -3,12 +3,12 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 // Magic-link / email OTP confirmation. The Supabase email template should point to:
-//   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type={{ .Type }}&next=/knowledge
+//   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type={{ .Type }}&next=/dashboard
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
-  const next = searchParams.get('next') ?? '/knowledge'
+  const next = searchParams.get('next') ?? '/dashboard'
 
   if (token_hash && type) {
     const supabase = await createClient()
