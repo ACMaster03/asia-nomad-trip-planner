@@ -1,31 +1,33 @@
 'use client'
 
-// Shared in-page tab bar for the Itinerary and Money hubs.
+// Shared capsule sub-nav for the Trip and Money hubs (handoff nav spec):
+// white pill container, active segment filled hunter with white text, 15px
+// labels, centered. Trip's gear button renders in the same row via `trailing`.
 export function Tabs<T extends string>({
-  tabs, active, onChange,
+  tabs, active, onChange, trailing,
 }: {
   tabs: readonly (readonly [T, string])[]
   active: T
   onChange: (t: T) => void
+  trailing?: React.ReactNode
 }) {
   return (
-    <div className="mx-auto max-w-5xl px-6 pt-4">
-      <nav className="flex flex-wrap gap-1 border-b border-neutral-200 dark:border-neutral-800">
+    <div className="mx-auto flex max-w-5xl items-center justify-center gap-2 px-6 pt-4">
+      <nav className="flex w-fit rounded-full border border-ln2 bg-sf p-[3px]">
         {tabs.map(([k, label]) => (
           <button
             key={k}
             onClick={() => onChange(k)}
             className={
-              '-mb-px border-b-2 px-3 py-2 text-sm font-medium ' +
-              (active === k
-                ? 'border-teal-600 text-teal-700 dark:text-teal-400'
-                : 'border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200')
+              'min-h-[38px] rounded-full px-4 text-[15px] font-medium transition-colors duration-[180ms] ' +
+              (active === k ? 'bg-ac text-on' : 'text-tx2 hover:bg-fill')
             }
           >
             {label}
           </button>
         ))}
       </nav>
+      {trailing}
     </div>
   )
 }

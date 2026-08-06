@@ -1,28 +1,177 @@
 @import "tailwindcss";
 
+/* dark: utilities key off the resolved data-theme attribute (set by the inline
+   script in layout.tsx from the stored choice, 'system' → matchMedia), so the
+   personalisation theme step can switch the whole app live. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── LIVHOLD v1 token layer ──────────────────────────────────────────────
+   Source of truth: design/handoff-v1/All Screens.dc.html (data-dc-script).
+   Radius LOCKED at 22px (cards/sheets 22, controls 20, pills/avatars round). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #f0eee9;
+  --pg: #e8f7ee;
+  --sf: #ffffff;
+  --in: #f7faf8;
+  --tx: #1f2a24;
+  --tx2: #3f5a3e;
+  --tx3: rgba(31, 42, 36, 0.5);
+  --ac: #3f5a3e;
+  --on: #ffffff;
+  --acSoft: rgba(63, 90, 62, 0.11);
+  --acLine: rgba(63, 90, 62, 0.45);
+  --ac2: #a94c5a;
+  --ac2Deep: #93404c;
+  --ac2Line: rgba(169, 76, 90, 0.45);
+  --ac2Soft: rgba(169, 76, 90, 0.1);
+  --warn: #8a6420;
+  --warnLine: rgba(138, 100, 32, 0.55);
+  --warnSoft: rgba(138, 100, 32, 0.08);
+  --tag: #e4eee6;
+  --tagInk: #2b3a4a;
+  --ph: #dce6dd;
+  --ln: rgba(31, 42, 36, 0.11);
+  --ln2: rgba(31, 42, 36, 0.16);
+  --ln3: rgba(31, 42, 36, 0.24);
+  --tr: rgba(31, 42, 36, 0.13);
+  --fill: rgba(31, 42, 36, 0.08);
+  --fill2: rgba(31, 42, 36, 0.1);
+  /* palette extras + budget category (Stays = --ac, Transport = --ac2, Extras = --warn) */
+  --catDaily: #6c8ccf;
+  --sage: #c9d4ba;
+  --paleBlue: #aec3d6;
+  --paper: #f5f2ea;
+  --blush: #f7e6e9;
+  /* landscape washes — 2a login/invite only, 2b milestones; grammar in handoff README */
+  --washLogin: url("/brand/livhold-login-bg.jpg") bottom/cover no-repeat #f0efe7;
+  --washLight: url("/brand/livhold-login-bg-light.jpg") bottom/cover no-repeat #f0efe7;
+  --washInk: #1f2a24;
+  --r: 22px;
+  --rCtl: 20px;
+  /* legacy aliases — boot splash + pre-redesign screens */
+  --background: var(--canvas);
+  --foreground: var(--tx);
+}
+
+:root[data-theme="dark"] {
+  --canvas: #12161a;
+  --pg: #161a18;
+  --sf: #1f2622;
+  --in: #19201c;
+  --tx: #d8e0e5;
+  --tx2: #a8b5a8;
+  --tx3: rgba(216, 224, 229, 0.5);
+  --ac: #7fa37d;
+  --on: #10160f;
+  --acSoft: rgba(127, 163, 125, 0.16);
+  --acLine: rgba(127, 163, 125, 0.5);
+  --ac2: #d08795;
+  --ac2Deep: #de9ba7;
+  --ac2Line: rgba(208, 135, 149, 0.5);
+  --ac2Soft: rgba(208, 135, 149, 0.14);
+  --warn: #d9a85c;
+  --warnLine: rgba(217, 168, 92, 0.6);
+  --warnSoft: rgba(217, 168, 92, 0.13);
+  --tag: rgba(201, 214, 234, 0.14);
+  --tagInk: #c9d6ea;
+  --ph: #27302b;
+  --ln: rgba(216, 224, 229, 0.1);
+  --ln2: rgba(216, 224, 229, 0.16);
+  --ln3: rgba(216, 224, 229, 0.26);
+  --tr: rgba(216, 224, 229, 0.14);
+  --fill: rgba(216, 224, 229, 0.07);
+  --fill2: rgba(216, 224, 229, 0.1);
+  --washLogin: url("/brand/livhold-login-bg-dark.png") bottom/cover no-repeat #161a18;
+  --washLight: url("/brand/livhold-login-bg-light-dark.png") bottom/cover no-repeat #161a18;
+  --washInk: #d8e0e5;
 }
 
 @theme inline {
+  --color-canvas: var(--canvas);
+  --color-pg: var(--pg);
+  --color-sf: var(--sf);
+  --color-inp: var(--in);
+  --color-tx: var(--tx);
+  --color-tx2: var(--tx2);
+  --color-tx3: var(--tx3);
+  --color-ac: var(--ac);
+  --color-on: var(--on);
+  --color-ac-soft: var(--acSoft);
+  --color-ac-line: var(--acLine);
+  --color-ac2: var(--ac2);
+  --color-ac2-deep: var(--ac2Deep);
+  --color-ac2-line: var(--ac2Line);
+  --color-ac2-soft: var(--ac2Soft);
+  --color-warn: var(--warn);
+  --color-warn-line: var(--warnLine);
+  --color-warn-soft: var(--warnSoft);
+  --color-tag: var(--tag);
+  --color-tag-ink: var(--tagInk);
+  --color-ph: var(--ph);
+  --color-ln: var(--ln);
+  --color-ln2: var(--ln2);
+  --color-ln3: var(--ln3);
+  --color-track: var(--tr);
+  --color-fill: var(--fill);
+  --color-fill2: var(--fill2);
+  --color-cat-daily: var(--catDaily);
+  --color-sage: var(--sage);
+  --color-pale-blue: var(--paleBlue);
+  --color-paper: var(--paper);
+  --color-blush: var(--blush);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-lora), Georgia, serif;
+
+  --radius-card: 22px;
+  --radius-ctl: 20px;
+  --radius-sheet: 22px;
+
+  /* BRIDGE: pre-redesign screens use Tailwind teal-*; remap the scale onto the
+     hunter ramp so everything reads on-brand until each phase replaces it with
+     semantic tokens. Remove in Phase 9. */
+  --color-teal-50: #eef5ef;
+  --color-teal-200: #c9d4ba;
+  --color-teal-300: #a9bfa0;
+  --color-teal-400: #7fa37d;
+  --color-teal-500: #4e6b4d;
+  --color-teal-600: #3f5a3e;
+  --color-teal-700: #344b33;
+  --color-teal-800: #2a3d2a;
+  --color-teal-900: #223122;
+  --color-teal-950: #1a261a;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--tx);
+  font-family: var(--font-sans);
+  /* figures are Work Sans tabular everywhere (DM Mono retired 2026-07-29) */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lora carries headings/display; screens override size/weight per frame. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+}
+
+/* Shared enter animation — the handoff's screen/sheet vocabulary. */
+@keyframes lv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.lv-enter {
+  animation: lv-rise 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 /* Boot / update splash (server-rendered in the root layout, removed by
@@ -52,14 +201,20 @@ body {
   text-align: center;
 }
 .anp-splash-icon {
-  font-size: 56px;
   line-height: 1;
   animation: anp-pulse 1.6s ease-in-out infinite;
 }
+.anp-splash-icon img {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+}
 .anp-splash-title {
   margin-top: 14px;
-  font-size: 17px;
+  font-family: var(--font-serif);
+  font-size: 19px;
   font-weight: 600;
+  letter-spacing: 0.08em;
 }
 .anp-splash-sub {
   margin-top: 6px;
@@ -76,10 +231,14 @@ body {
   opacity: 0.3;
 }
 @keyframes anp-splash-in {
-  to { opacity: 1; }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes anp-pulse {
-  50% { transform: scale(1.12); }
+  50% {
+    transform: scale(1.12);
+  }
 }
 
 /* iOS Safari auto-zooms (and then STAYS zoomed / pans side-to-side) whenever
