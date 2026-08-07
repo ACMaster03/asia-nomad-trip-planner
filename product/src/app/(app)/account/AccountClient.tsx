@@ -1,5 +1,6 @@
 'use client'
 import { useState, useSyncExternalStore } from 'react'
+import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchTrip } from '@/lib/trips/queries'
@@ -38,6 +39,7 @@ const snapFalse = () => false
 function NameCard({ initialFirstName }: { initialFirstName: string }) {
   const sb = createClient()
   const toast = useToast()
+  const router = useRouter()
   const [name, setName] = useState(initialFirstName)
   // what the server currently has — the prop goes stale after a save until the
   // next server render, so the Save button tracks this instead
@@ -49,8 +51,13 @@ function NameCard({ initialFirstName }: { initialFirstName: string }) {
       if (error) throw error
       return name.trim()
     },
-    onSuccess: (saved) => {
+    onSuccess: async (saved) => {
       setSavedName(saved)
+      // The Home avatar reads first_name from the server-side JWT claims, which
+      // stay stale until the access token refreshes (~1h). Mint a fresh token
+      // with the updated user_metadata now, then re-render the server components.
+      await sb.auth.refreshSession()
+      router.refresh()
       toast('Name saved')
     },
   })
