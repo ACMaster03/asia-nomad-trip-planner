@@ -53,12 +53,14 @@ export interface SentInvite {
   email: string
   role: 'editor' | 'viewer'
   created_at: string
+  /** goes into the emailed /invite/[token] link (migration 28) */
+  token: string
 }
 
 export async function fetchSentInvites(sb: SupabaseClient, tripId: string): Promise<SentInvite[]> {
   const { data, error } = await sb
     .from('trip_invites')
-    .select('id, email, role, created_at')
+    .select('id, email, role, created_at, token')
     .eq('trip_id', tripId)
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
@@ -71,4 +73,35 @@ export async function fetchSentInvites(sb: SupabaseClient, tripId: string): Prom
 export async function revokeInvite(sb: SupabaseClient, inviteId: string): Promise<void> {
   const { error } = await sb.from('trip_invites').update({ status: 'revoked' }).eq('id', inviteId)
   if (error) throw error
+}
+
+// ---------------------------------------------------------------------------
+// The TOKEN side (migration 28) — /invite/[token], handoff frame 06b.
+// The emailed link is opened by someone with no session at all, so both reads
+// go through anon-callable definer RPCs; the token in the URL is the only
+// credential, and it unlocks exactly these four fields.
+// ---------------------------------------------------------------------------
+
+export interface InvitePreview {
+  trip_name: string
+  invited_by_name: string
+  email: string
+  role: 'editor' | 'viewer'
+}
+
+// Null means unknown, revoked OR already accepted — the RPC deliberately does
+// not distinguish, so the page shows one generic "not live anymore" state.
+export async function fetchInvitePreview(sb: SupabaseClient, token: string): Promise<InvitePreview | null> {
+  const { data, error } = await sb.rpc('invite_preview', { p_token: token })
+  if (error) throw error
+  return (data as InvitePreview | null) ?? null
+}
+
+// After the magic link signed her in. Same rules as acceptInvite (the RPC
+// delegates to accept_invite), plus one kindness: re-opening the link after a
+// successful accept returns the trip id again instead of erroring.
+export async function acceptInviteByToken(sb: SupabaseClient, token: string): Promise<string> {
+  const { data, error } = await sb.rpc('accept_invite_by_token', { p_token: token })
+  if (error) throw error
+  return data as string
 }
