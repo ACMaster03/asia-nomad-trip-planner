@@ -73,6 +73,16 @@ export interface Extra {
   category?: string
   include?: boolean
 }
+// A reminder the user typed (handoff frames 25–26). Lives on the state JSON —
+// optional and migration-free, like autoImport/importSkip. Money deadlines
+// (free-cancel / card-charged) are NOT stored: reminders.ts derives them from
+// the stays, so editing the stay moves the deadline with it.
+export interface UserReminder {
+  id: string
+  title: string
+  due?: string | null // ISO date — optional; undated reminders never show on Home
+  doneOn?: string | null // ISO date it was ticked; null/absent = still open
+}
 export interface TripState {
   meta: TripMeta
   // The trip's WATCHLIST: keys are the currencies this trip uses (also the
@@ -90,6 +100,8 @@ export interface TripState {
   autoImport?: boolean
   // Source keys ("stay:<id>") the user deleted from the ledger — never re-import.
   importSkip?: string[]
+  // User reminders (frames 25–26). Optional — older documents simply lack it.
+  reminders?: UserReminder[]
 }
 export interface LedgerEntry {
   id: string

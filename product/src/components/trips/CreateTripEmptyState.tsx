@@ -1,4 +1,5 @@
 'use client'
+import { DoorClosed } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchTrip } from '@/lib/trips/queries'
@@ -34,8 +35,9 @@ export default function CreateTripEmptyState() {
   })
 
   if (tripId === null) {
+    // The wizard brings its own full-bleed 2b wash — no page padding here.
     return (
-      <main className="mx-auto max-w-2xl p-6">
+      <main>
         <OnboardingWizard />
       </main>
     )
@@ -43,20 +45,19 @@ export default function CreateTripEmptyState() {
 
   if (trip.isPending) return null
 
+  // Frame 36 — access revoked while this tab was open.
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <div className="rounded-lg border border-neutral-300 bg-neutral-50 p-6 text-center dark:border-neutral-700 dark:bg-neutral-900">
-        <p aria-hidden className="mb-2 text-2xl">
-          🚪
-        </p>
-        <h1 className="mb-1 text-lg font-semibold">You no longer have access to this trip</h1>
-        <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center p-6">
+      <div className="lv-enter rounded-[calc(var(--r)+2px)] bg-sf px-6 py-7 text-center text-tx">
+        <DoorClosed aria-hidden className="mx-auto size-9 text-tx2" strokeWidth={2} />
+        <h1 className="mt-3 text-[22px] font-semibold leading-tight">You no longer have access to this trip</h1>
+        <p className="mt-2.5 text-base leading-relaxed text-tx2">
           It may have been deleted, or your invite was withdrawn. Ask the owner if you think
           this is a mistake.
         </p>
         <a
-          href="/settings"
-          className="inline-block rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white"
+          href="/account"
+          className="mt-5 inline-block rounded-[calc(var(--r)-2px)] bg-ac px-[22px] py-[13px] text-base font-semibold text-on"
         >
           Pick another trip or start your own
         </a>

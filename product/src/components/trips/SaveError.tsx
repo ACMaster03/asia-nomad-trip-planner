@@ -14,7 +14,8 @@ export function SaveError({ show, error }: { show: boolean; error?: unknown }) {
       ? 'Someone else changed this trip at the same time — your change was rolled back and the latest version was loaded. Please redo your edit.'
       : "Couldn't save your change — it was rolled back. Please retry."
   return (
-    <div className="mb-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40">
+    // Amber, not red — the palette has no red; amber owns warnings/risk.
+    <div className="mb-3 rounded-[var(--rCtl)] border border-warn-line bg-warn-soft px-3 py-2 text-base text-warn">
       {msg}
     </div>
   )

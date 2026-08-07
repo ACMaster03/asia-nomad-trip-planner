@@ -23,15 +23,12 @@ export default async function ConfirmPage(
   if (result.status === 'error') {
     return (
       <DigestCard
-        glyph="⚠️"
         title="Something went wrong"
         footnote="Still stuck after a few tries? Reply to the email that brought you here."
       >
         <p>
           We couldn’t reach the trip just now.{' '}
-          <b className="text-neutral-900 dark:text-neutral-100">
-            Nothing about your subscription changed.
-          </b>
+          <b className="text-tx">Nothing about your subscription changed.</b>
         </p>
         <p>Try the link from your email again in a minute.</p>
       </DigestCard>
@@ -44,7 +41,6 @@ export default async function ConfirmPage(
     // the live page" button here would mean guessing which trip they meant.
     return (
       <DigestCard
-        glyph="⏳"
         title="This confirmation link has expired"
         footnote="Nothing was sent to you and nothing was changed."
       >
@@ -60,7 +56,7 @@ export default async function ConfirmPage(
               confirmation email, under the confirm button.
             </>,
             <>
-              Scroll to <b>Get email updates</b> at the bottom.
+              Scroll to <b className="text-tx">Get email updates</b> at the bottom.
             </>,
             <>Enter your address again — a fresh confirmation arrives in a minute.</>,
           ]}
@@ -72,7 +68,6 @@ export default async function ConfirmPage(
   const already = result.status === 'already'
   return (
     <DigestCard
-      glyph={already ? '✅' : '🎉'}
       tripName={result.tripName}
       title={already ? 'Already confirmed' : 'You’re in'}
       actions={<LivePageLink href={result.viewUrl} />}
@@ -80,17 +75,14 @@ export default async function ConfirmPage(
     >
       {already ? (
         <p>
-          <b className="text-neutral-900 dark:text-neutral-100">{result.email}</b> is already
-          signed up for <b className="text-neutral-900 dark:text-neutral-100">{result.frequency}</b>{' '}
-          updates. Nothing changed.
+          <b className="text-tx">{result.email}</b> is already signed up for{' '}
+          <b className="text-tx">{result.frequency}</b> updates. Nothing changed.
         </p>
       ) : (
         <>
           <p>
-            You’ll get a{' '}
-            <b className="text-neutral-900 dark:text-neutral-100">{result.frequency}</b> email
-            summary of the trip at{' '}
-            <b className="text-neutral-900 dark:text-neutral-100">{result.email}</b>.
+            You’ll get a <b className="text-tx">{result.frequency}</b> email summary of the
+            trip at <b className="text-tx">{result.email}</b>.
           </p>
           <p>
             Quiet {result.frequency === 'weekly' ? 'weeks' : 'days'} send nothing at all — the

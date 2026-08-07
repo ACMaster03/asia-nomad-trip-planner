@@ -7,17 +7,22 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { computeBudget, ledgerByMonth, plannedByMonth } from '@/lib/trips/budget'
 import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { toBase, monthLabel } from '@/lib/trips/format'
-import { Stat } from '@/components/trips/Stat'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import type { LedgerEntry } from '@/lib/trips/types'
 
+// Money · Actual (handoff frame 18). Structure: net hero (earned vs spent
+// bars) → one continuous ledger, date-desc, with month dividers. The plan →
+// ledger sync, add form and delete flows are unchanged — only the skin.
+
 const newId = (p: string) => p + crypto.randomUUID()
 const todayISO = () => new Date().toISOString().slice(0, 10)
-const GOOD = 'text-emerald-600'
-const BAD = 'text-red-600'
+const monthDivider = (k: string) =>
+  new Date(k + '-01T00:00:00').toLocaleString('en-US', { month: 'long', year: '2-digit' })
+const dayShort = (iso: string) =>
+  new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 export function LedgerTab() {
   const { fmt } = useMoney()
@@ -28,6 +33,7 @@ export function LedgerTab() {
   // date starts empty to avoid an SSR/hydration mismatch (todayISO is clock-dependent);
   // filled on mount. add() also falls back to todayISO() so submission is always dated.
   const [form, setForm] = useState({ date: '', type: 'income', cat: '', amount: '', cur: '', note: '' })
+  const [showForm, setShowForm] = useState(false)
   const [autoFuture, setAutoFuture] = useState(true)
   useEffect(() => { setForm((f) => (f.date ? f : { ...f, date: todayISO() })) }, [])
 
@@ -79,10 +85,9 @@ export function LedgerTab() {
     return { s, rates, totalInc, totalExp, net, plan, rows, entries }
   }, [trip.data, cityIdx])
 
-  if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
+  if (trip.isPending) return <main className="mx-auto max-w-xl p-6">Loading…</main>
   if (!trip.data || !view) return <CreateTripEmptyState />
   const v = view
-  const usd = v.rates.USD || 1
   const baseCur = v.s.meta.baseCurrency || 'HUF'
 
   function add() {
@@ -128,38 +133,79 @@ export function LedgerTab() {
     stateMut.mutate((cur) => ({ ...cur, autoImport: autoFuture }))
   }
 
-  const input = 'rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900'
+  const input =
+    'mt-[7px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base text-tx outline-none transition-colors duration-[180ms] focus:border-ac'
+  const label = 'block text-base font-medium text-tx2'
+  const maxFlow = Math.max(1, v.totalInc, v.totalExp)
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-1 text-2xl font-semibold">Money — income vs spend</h1>
-      <p className="mb-4 text-sm text-neutral-500">
-        Log what you actually earn and spend to see, month by month, whether you&apos;re turning a profit.
-      </p>
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px] text-tx">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">Actual</h1>
+          <p className="mt-1 text-base leading-normal text-tx2">
+            What really came in and went out. Booked costs arrive here on their charge date.
+          </p>
+        </div>
+        {canEdit && (
+          <button
+            onClick={() => setShowForm((x) => !x)}
+            className="flex-none rounded-full bg-ac2-soft px-[13px] py-[7px] text-base font-semibold text-ac2-deep"
+          >
+            ＋ Entry
+          </button>
+        )}
+      </div>
       <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />
       <SaveError show={stateMut.isError} error={stateMut.error} />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat k="Total income" v={fmt(v.totalInc)} sub={'~$' + Math.round(v.totalInc / usd)} />
-        <Stat k="Total spend" v={fmt(v.totalExp)} sub={'~$' + Math.round(v.totalExp / usd)} />
-        <Stat k="Net profit / loss" v={(v.net >= 0 ? '+' : '') + fmt(v.net)} sub={v.net >= 0 ? 'surplus' : 'shortfall'} color={v.net >= 0 ? '#059669' : '#dc2626'} />
-        <Stat k="Planned trip cost" v={fmt(v.plan)} sub="your itinerary estimate" />
+      {/* hero — net so far */}
+      <div className="lv-enter rounded-[var(--r)] bg-sf p-5">
+        <div className="text-base font-medium uppercase tracking-[.11em] text-tx2">Net, trip so far</div>
+        <div className={'mt-1 text-[32px] font-semibold leading-[1.1] tracking-[-.02em]' + (v.net > 0 ? ' text-ac' : '')}>
+          {(v.net > 0 ? '+' : '') + fmt(v.net)}
+        </div>
+        <p className="mt-1.5 text-base text-tx2">earned minus spent, everything logged so far</p>
+        <div className="mt-3.5 flex flex-col gap-3 border-t border-ln pt-3.5">
+          {(
+            [
+              ['Earned', v.totalInc, 'bg-ac'],
+              ['Spent', v.totalExp, 'bg-cat-daily'],
+            ] as const
+          ).map(([k, val, color], i) => (
+            <div key={k} className="flex items-center gap-3">
+              <span className="w-[70px] flex-none text-base text-tx2">{k}</span>
+              <div className="h-3 flex-1 overflow-hidden rounded-full bg-track">
+                <div
+                  className={'lv-grow h-full rounded-full ' + color}
+                  style={{ width: Math.round((val / maxFlow) * 100) + '%', animationDelay: `${i * 0.06}s` }}
+                />
+              </div>
+              <span className="flex-none text-right text-base font-medium">{fmt(val)}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {canEdit && imp && imp.candidates.length > 0 && !autoImport && (
-        <div className="mt-4 rounded-lg border border-teal-600/40 bg-teal-50 p-4 dark:bg-teal-950/30">
-          <div className="font-medium">
+        <div className="lv-enter rounded-[var(--r)] bg-sf p-4">
+          <div className="text-base font-semibold">
             Import your {imp.candidates.length} booked cost{imp.candidates.length > 1 ? 's' : ''}?
           </div>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Booked itinerary items with a charge date can sit in the ledger as ⤵ “from plan” rows, dated by charge date and kept in sync with the Itinerary.
+          <p className="mt-1 text-base leading-normal text-tx2">
+            Booked itinerary items with a charge date can sit in the ledger as &ldquo;from booking&rdquo; rows, dated by
+            charge date and kept in sync with the Itinerary.
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-4">
-            <button onClick={importNow} disabled={mut.isPending} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
+          <div className="mt-3 flex flex-wrap items-center gap-3.5">
+            <button
+              onClick={importNow}
+              disabled={mut.isPending}
+              className="rounded-[var(--rCtl)] bg-ac px-[18px] py-2.5 text-base font-semibold text-on disabled:opacity-50"
+            >
               Import {imp.candidates.length} item{imp.candidates.length > 1 ? 's' : ''}
             </button>
-            <label className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+            <label className="flex items-center gap-2 text-base text-tx2">
               <input type="checkbox" checked={autoFuture} onChange={(e) => setAutoFuture(e.target.checked)} />
               auto-import future bookings too
             </label>
@@ -167,121 +213,108 @@ export function LedgerTab() {
         </div>
       )}
 
-      {canEdit && (
-        <>
-      <h2 className="mb-2 mt-6 text-lg font-semibold">Add an entry</h2>
-      <div className="flex flex-wrap items-end gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
-        <input aria-label="Date" type="date" className={input} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-        <select aria-label="Type" className={input} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-          <option value="income">Income</option>
-          <option value="expense">Expense</option>
-        </select>
-        <input aria-label="Category" className={input} placeholder="Category" value={form.cat} onChange={(e) => setForm({ ...form, cat: e.target.value })} />
-        <input aria-label="Amount" className={input + ' w-24'} type="number" min="0" step="any" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-        <select aria-label="Currency" className={input} value={form.cur} onChange={(e) => setForm({ ...form, cur: e.target.value })}>
-          <option value="">{baseCur}</option>
-          {Object.keys(v.rates).filter((c) => c !== baseCur).map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-        <input aria-label="Note" className={input + ' flex-1'} placeholder="Note (optional)" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-        <button onClick={add} disabled={mut.isPending} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
-          + Add
-        </button>
-      </div>
-        </>
-      )}
-
-      <h2 className="mb-2 mt-6 text-lg font-semibold">Monthly profit &amp; loss</h2>
-      {!v.rows.length ? (
-        <p className="text-sm text-neutral-500">
-          {canEdit
-            ? 'No data yet — add an entry above, or build your itinerary so planned spend shows here.'
-            : 'No data yet.'}
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-neutral-500">
-                <th className="py-1 pr-4">Month</th>
-                <th className="pr-4">Income</th>
-                <th className="pr-4">Spend</th>
-                <th className="pr-4">Net</th>
-                <th className="pr-4">Cumulative</th>
-                <th>Planned</th>
-              </tr>
-            </thead>
-            <tbody>
-              {v.rows.map((r) => (
-                <tr key={r.k} className="border-t border-neutral-200 dark:border-neutral-800">
-                  <td className="py-1 pr-4 font-medium">{r.label}</td>
-                  <td className="pr-4">{r.inc ? fmt(r.inc) : '—'}</td>
-                  <td className="pr-4">{r.exp ? fmt(r.exp) : '—'}</td>
-                  <td className={'pr-4 ' + (r.n >= 0 ? GOOD : BAD)}>{(r.n >= 0 ? '+' : '') + fmt(r.n)}</td>
-                  <td className={'pr-4 ' + (r.cum >= 0 ? GOOD : BAD)}>{(r.cum >= 0 ? '+' : '') + fmt(r.cum)}</td>
-                  <td className="text-neutral-500">{r.planned ? fmt(r.planned) : '—'}</td>
-                </tr>
-              ))}
-              <tr className="border-t border-neutral-300 font-semibold dark:border-neutral-700">
-                <td className="py-1 pr-4">Total</td>
-                <td className="pr-4">{fmt(v.totalInc)}</td>
-                <td className="pr-4">{fmt(v.totalExp)}</td>
-                <td className={'pr-4 ' + (v.net >= 0 ? GOOD : BAD)}>{(v.net >= 0 ? '+' : '') + fmt(v.net)}</td>
-                <td />
-                <td />
-              </tr>
-            </tbody>
-          </table>
+      {canEdit && showForm && (
+        <div className="lv-enter rounded-[var(--r)] bg-sf p-4">
+          <div className="grid grid-cols-2 gap-3">
+            <label className={label}>
+              Date
+              <input aria-label="Date" type="date" className={input} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            </label>
+            <label className={label}>
+              Type
+              <select aria-label="Type" className={input} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+            </label>
+            <label className={label}>
+              Amount
+              <input aria-label="Amount" className={input} type="number" min="0" step="any" placeholder="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+            </label>
+            <label className={label}>
+              Currency
+              <select aria-label="Currency" className={input} value={form.cur} onChange={(e) => setForm({ ...form, cur: e.target.value })}>
+                <option value="">{baseCur}</option>
+                {Object.keys(v.rates).filter((c) => c !== baseCur).map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+            <label className={label + ' col-span-2'}>
+              Category
+              <input aria-label="Category" className={input} placeholder="e.g. client work, food" value={form.cat} onChange={(e) => setForm({ ...form, cat: e.target.value })} />
+            </label>
+            <label className={label + ' col-span-2'}>
+              Note
+              <input aria-label="Note" className={input} placeholder="Optional" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+            </label>
+          </div>
+          <button
+            onClick={add}
+            disabled={mut.isPending}
+            className="mt-3.5 w-full rounded-[var(--rCtl)] bg-ac py-3.5 text-base font-semibold text-on disabled:opacity-50"
+          >
+            Add entry
+          </button>
         </div>
       )}
 
-      <h2 className="mb-2 mt-6 text-lg font-semibold">All entries</h2>
+      {/* the ledger — one continuous list, month dividers derived in place */}
       {!v.entries.length ? (
-        <p className="text-sm text-neutral-500">Nothing logged yet.</p>
+        <p className="text-base text-tx2">
+          {canEdit ? 'Nothing logged yet - add an entry, or import your booked costs above.' : 'Nothing logged yet.'}
+        </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-neutral-500">
-                <th className="py-1 pr-4">Date</th>
-                <th className="pr-4">Type</th>
-                <th className="pr-4">Category</th>
-                <th className="pr-4">Amount</th>
-                <th className="pr-4">In HUF</th>
-                <th className="pr-4">Note</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {v.entries.map((e) => {
-                const isInc = e.type !== 'expense'
-                return (
-                  <tr key={e.id} className="border-t border-neutral-200 dark:border-neutral-800">
-                    <td className="py-1 pr-4 whitespace-nowrap">{e.date}</td>
-                    <td className={'pr-4 ' + (isInc ? GOOD : BAD)}>{isInc ? 'income' : 'expense'}</td>
-                    <td className="pr-4 whitespace-nowrap">
-                      {e.category}
-                      {e.source && (
-                        <span className="ml-1.5 rounded border border-teal-600/60 px-1 py-px text-[10px] text-teal-600">⤵ from plan</span>
-                      )}
-                      {e.orphaned && (
-                        <span className="ml-1.5 rounded border border-amber-500/60 px-1 py-px text-[10px] text-amber-600" title="The booking this row came from was removed from the Itinerary.">orphaned</span>
-                      )}
-                    </td>
-                    <td className="pr-4 whitespace-nowrap">{e.amount} {e.currency}</td>
-                    <td className="pr-4 text-neutral-500">{fmt(toBase(e.amount, e.currency, v.rates))}</td>
-                    <td className="pr-4 text-neutral-500">{e.note}</td>
-                    <td>
+        <div className="rounded-[var(--r)] bg-sf px-4 pb-1.5 text-tx">
+          {/* month dividers derive from the already date-desc list: one wherever
+              this entry's month differs from the previous entry's */}
+          {v.entries.map((e, idx) => {
+            const mKey = e.date.slice(0, 7)
+            const newMonth = idx === 0 || v.entries[idx - 1].date.slice(0, 7) !== mKey
+            const isInc = e.type !== 'expense'
+            return (
+              <div key={e.id}>
+                {newMonth && (
+                  <div
+                    className={
+                      'pb-1 pt-3.5 text-base font-medium uppercase tracking-[.11em] text-tx3' +
+                      (idx === 0 ? '' : ' border-t border-ln')
+                    }
+                  >
+                    {monthDivider(mKey)}
+                  </div>
+                )}
+                <div className="flex items-start justify-between gap-3 py-[11px]">
+                  <span className="min-w-0">
+                    <span className="block text-base font-semibold">{e.note?.trim() || e.category}</span>
+                    <span className="block text-base text-tx2">
+                      {dayShort(e.date)} · {e.category}
+                      {e.source && ' · from booking'}
+                      {e.orphaned && <span className="text-warn"> · booking removed</span>}
                       {canEdit && (
-                        <button onClick={() => del(e.id)} className="text-xs text-red-600 hover:underline">delete</button>
+                        <>
+                          {' · '}
+                          <button onClick={() => del(e.id)} className="text-base text-tx3 underline underline-offset-2">
+                            delete
+                          </button>
+                        </>
                       )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                    </span>
+                  </span>
+                  <span className="flex-none text-right">
+                    <span className={'block text-base font-semibold' + (isInc ? ' text-ac' : '')}>
+                      {(isInc ? '+' : '') + fmt(toBase(e.amount, e.currency, v.rates))}
+                    </span>
+                    {e.currency !== baseCur && (
+                      <span className="block text-base text-tx2">
+                        {e.amount.toLocaleString('en-US')} {e.currency}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
     </main>

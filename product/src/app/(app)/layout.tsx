@@ -6,6 +6,7 @@ import { TripScopeProvider } from '@/lib/trips/TripScope'
 import { MoneyProvider } from '@/lib/trips/Money'
 import { AppNav } from '@/components/AppNav'
 import { OfflineWarmup } from '@/components/OfflineWarmup'
+import { ToastProvider } from '@/components/Toast'
 import { PendingInvites } from '@/components/trips/PendingInvites'
 
 // Server-side auth guard. The shared catalogue RLS is `to authenticated`, so an
@@ -54,15 +55,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Seeded from the trip already resolved above, so the first paint is in
           the right currency instead of flashing a default. */}
       <MoneyProvider initialBase={meta?.baseCurrency ?? 'HUF'}>
-        <OfflineWarmup />
-        <div className="min-h-screen">
-          <AppNav showLive={showLive} userEmail={data.claims.email as string | undefined} />
-          {/* Above every screen: an invite is to a trip you cannot navigate to
-              yet, so it has no page of its own to live on. Renders nothing
-              unless you actually have one. */}
-          <PendingInvites />
-          {children}
-        </div>
+        <ToastProvider>
+          <OfflineWarmup />
+          {/* pb clears the fixed bottom tab bar (52px bar + raised button slack
+              + safe area) so no screen's last card hides behind it. */}
+          <div className="min-h-screen pb-[calc(76px+env(safe-area-inset-bottom))]">
+            {/* Above every screen: an invite is to a trip you cannot navigate to
+                yet, so it has no page of its own to live on. Renders nothing
+                unless you actually have one. */}
+            <PendingInvites />
+            {children}
+            <AppNav showCheckIn={showLive} />
+          </div>
+        </ToastProvider>
       </MoneyProvider>
     </TripScopeProvider>
   )

@@ -4,7 +4,9 @@ import type { TransportLeg } from '@/lib/trips/types'
 import { Modal } from './Modal'
 
 const uid = (p: string) => p + crypto.randomUUID()
-const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
+const label = 'block text-base font-medium text-tx2'
+const input =
+  'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base font-medium text-tx outline-none transition-colors duration-[180ms] focus:border-ac'
 
 export function TransportForm({
   initial, currencies, onCancel, onSave,
@@ -41,38 +43,38 @@ export function TransportForm({
     <Modal title={initial ? 'Edit transport leg' : 'Add transport leg'} onClose={onCancel}>
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <label className="block text-sm">Type
+          <label className={label}>Type
             <select className={input} value={type} onChange={(e) => setType(e.target.value)}>
               {['Flight', 'Train', 'Bus', 'Ferry', 'Other'].map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </label>
-          <label className="block text-sm">Date<input type="date" className={input} value={date} onChange={(e) => setDate(e.target.value)} /></label>
+          <label className={label}>Date<input type="date" className={input} value={date} onChange={(e) => setDate(e.target.value)} /></label>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block text-sm">From<input className={input} value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-          <label className="block text-sm">To<input className={input} value={to} onChange={(e) => setTo(e.target.value)} /></label>
+          <label className={label}>From<input className={input} value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+          <label className={label}>To<input className={input} value={to} onChange={(e) => setTo(e.target.value)} /></label>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block text-sm">Provider<input className={input} value={provider} onChange={(e) => setProvider(e.target.value)} /></label>
-          <label className="block text-sm">Status
+          <label className={label}>Provider<input className={input} value={provider} onChange={(e) => setProvider(e.target.value)} /></label>
+          <label className={label}>Status
             <select className={input} value={status} onChange={(e) => setStatus(e.target.value)}>
               {['idea', 'shortlist', 'booked'].map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </label>
         </div>
-        <label className="block text-sm">Link<input className={input} value={url} onChange={(e) => setUrl(e.target.value)} /></label>
+        <label className={label}>Link<input className={input} value={url} onChange={(e) => setUrl(e.target.value)} /></label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block text-sm">Price<input type="number" step="any" className={input} value={price} onChange={(e) => setPrice(e.target.value)} /></label>
-          <label className="block text-sm">Currency
+          <label className={label}>Price<input type="number" step="any" className={input} value={price} onChange={(e) => setPrice(e.target.value)} /></label>
+          <label className={label}>Currency
             <select className={input} value={cur} onChange={(e) => setCur(e.target.value)}>
               {currencies.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
         </div>
-        <label className="block text-sm">Notes<textarea rows={2} className={input} value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
+        <label className={label}>Notes<textarea rows={2} className={input} value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
         <div className="flex gap-2 pt-1">
-          <button onClick={submit} className="rounded bg-teal-600 px-3 py-1.5 text-sm font-medium text-white">Save</button>
-          <button onClick={onCancel} className="rounded border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700">Cancel</button>
+          <button onClick={submit} className="flex-1 rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-base font-semibold text-on">Save</button>
+          <button onClick={onCancel} className="rounded-[calc(var(--r)-2px)] border-[1.5px] border-ln3 px-5 py-3.5 text-base font-semibold text-tx2">Cancel</button>
         </div>
       </div>
     </Modal>

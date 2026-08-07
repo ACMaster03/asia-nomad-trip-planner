@@ -30,7 +30,6 @@ export default function UnsubscribedCard({
   if (undone) {
     return (
       <DigestCard
-        glyph="📮"
         tripName={tripName}
         title="You’re still subscribed"
         actions={<LivePageLink href={viewUrl} />}
@@ -38,20 +37,20 @@ export default function UnsubscribedCard({
       >
         <p>
           Nothing changed after all — {frequency ? `${frequency} ` : ''}summaries will keep
-          arriving at <b className="text-neutral-900 dark:text-neutral-100">{email}</b>.
+          arriving at <b className="text-tx">{email}</b>.
         </p>
       </DigestCard>
     )
   }
 
+  // Frame 32: undo is the mauve-outlined hero, the live page rides along as a
+  // quiet text link underneath.
   return (
     <DigestCard
-      glyph="👋"
       tripName={tripName}
       title="Unsubscribed"
       actions={
         <>
-          <LivePageLink href={viewUrl} />
           <button
             type="button"
             disabled={pending}
@@ -62,12 +61,15 @@ export default function UnsubscribedCard({
                 else setFailed(true)
               })
             }
-            className="w-full max-w-[17rem] rounded-lg border border-neutral-300 px-5 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="w-full max-w-[17rem] rounded-[calc(var(--r)-2px)] border-[1.5px] border-ac2 px-5 py-3 text-base font-semibold text-ac2 hover:bg-ac2-soft disabled:opacity-50"
           >
             {pending ? 'One moment…' : 'Actually, keep sending them'}
           </button>
+          <a href={viewUrl} className="text-base font-semibold text-tx2 hover:text-tx">
+            Open the live page →
+          </a>
           {failed && (
-            <p className="text-xs text-amber-600 dark:text-amber-500">
+            <p className="text-base text-warn">
               Couldn’t switch them back on. Re-subscribe from the live page instead.
             </p>
           )}
@@ -76,8 +78,7 @@ export default function UnsubscribedCard({
       footnote="Changed your mind later? Re-subscribe from the live page any time."
     >
       <p>
-        No more email summaries will be sent to{' '}
-        <b className="text-neutral-900 dark:text-neutral-100">{email}</b>.
+        No more email summaries will be sent to <b className="text-tx">{email}</b>.
       </p>
       <p>
         The live page still works — unsubscribing only stops the emails, it doesn’t take away

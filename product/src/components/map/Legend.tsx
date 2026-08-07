@@ -1,21 +1,21 @@
-function Pill({ c }: { c: string }) {
-  return <span className="mr-1 inline-block h-2 w-2 rounded-sm align-middle" style={{ background: c }} />
-}
-
+// Handoff frame 19: three entries, dark chrome, fixed colors (the map screen
+// stays dark in both themes — dark-set mauve/hunter/amber, not theme vars).
+// Sits above the bottom city card (MapClient).
 export function Legend() {
   return (
-    <div className="map-overlay absolute bottom-3 left-3 z-10 max-w-[46vw] rounded-lg border border-[#2a3642] bg-[#0f1419]/80 p-2 text-[11px] leading-relaxed text-[#e8edf2] backdrop-blur md:max-w-none">
-      <div className="mb-0.5 font-bold">Legend</div>
-      <div>
-        <Pill c="#37b3a4" />SE · <Pill c="#6c8ccf" />E · <Pill c="#cf8a6c" />S Asia · <Pill c="#f0a83c" />booked flight
+    <div className="absolute bottom-[120px] left-4 z-10 rounded-[calc(var(--r)-2px)] border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] px-3.5 py-3 text-[#d8e0e5] backdrop-blur">
+      <div className="text-base uppercase tracking-[.1em] text-[rgba(216,224,229,.6)]">Legend</div>
+      <div className="mt-2 flex flex-col gap-[7px] text-base leading-none">
+        <span className="flex items-center gap-2">
+          <i aria-hidden className="block h-[9px] w-[9px] rounded-full bg-[#D08795]" />Planned stop
+        </span>
+        <span className="flex items-center gap-2">
+          <i aria-hidden className="block h-[9px] w-[9px] rounded-full bg-[#7FA37D]" />Catalogue city
+        </span>
+        <span className="flex items-center gap-2">
+          <i aria-hidden className="block h-[2px] w-[14px] bg-[#D9A85C]" />Hazard
+        </span>
       </div>
-      <div className="mt-0.5">⌂ home base · <b>1·2·3…</b> = stop order</div>
-      <div className="mt-1 border-t border-[#2a3642] pt-1 font-bold">
-        ⚡ Hazards <span className="font-normal text-neutral-400">(toggle on)</span>
-      </div>
-      <div><Pill c="#ff5a4d" />Earthquake — <b>bigger = stronger</b> (past 7 days)</div>
-      <div><Pill c="#f0a83c" />Monsoon / heavy rain this month</div>
-      <div className="mt-0.5 text-neutral-400">Tap any marker or country for details.</div>
     </div>
   )
 }

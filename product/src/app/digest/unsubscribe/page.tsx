@@ -23,15 +23,12 @@ export default async function UnsubscribePage(
   if (result.status === 'error') {
     return (
       <DigestCard
-        glyph="⚠️"
         title="Something went wrong"
         footnote="Still stuck after a few tries? Reply to the email that brought you here."
       >
         <p>
           We couldn’t reach the trip just now.{' '}
-          <b className="text-neutral-900 dark:text-neutral-100">
-            You may still receive the next summary.
-          </b>
+          <b className="text-tx">You may still receive the next summary.</b>
         </p>
         <p>Try the link from your email again in a minute.</p>
       </DigestCard>
@@ -43,7 +40,7 @@ export default async function UnsubscribePage(
   // There is just no trip to name and no live page to offer.
   if (result.status === 'unknown') {
     return (
-      <DigestCard glyph="👋" title="Unsubscribed">
+      <DigestCard title="Unsubscribed">
         <p>No more email summaries will be sent to this address.</p>
         <p>If you asked for this more than once, it only had to happen the first time.</p>
       </DigestCard>

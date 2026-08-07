@@ -40,9 +40,9 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="mt-12 w-full max-w-lg rounded-xl border border-neutral-200 bg-white p-5 shadow-xl outline-none dark:border-neutral-800 dark:bg-neutral-950"
+        className="lv-enter mt-12 w-full max-w-lg rounded-[var(--r)] border border-ln bg-sf p-5 shadow-xl outline-none"
       >
-        <h3 className="mb-3 text-lg font-semibold">{title}</h3>
+        <h3 className="mb-3 text-[20px] font-semibold">{title}</h3>
         {children}
       </div>
     </div>

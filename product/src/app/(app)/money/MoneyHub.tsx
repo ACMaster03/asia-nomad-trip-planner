@@ -8,7 +8,7 @@ import { LedgerTab } from '@/components/trips/LedgerTab'
 const TABS = [
   ['budget', 'Budget'],
   ['monthly', 'Monthly'],
-  ['ledger', 'Ledger'],
+  ['ledger', 'Actual'],
 ] as const
 type TabKey = (typeof TABS)[number][0]
 

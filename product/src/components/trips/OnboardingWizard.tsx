@@ -16,23 +16,32 @@ import type { Trip } from '@/lib/trips/types'
 // closing after step 1 still leaves a usable trip, exactly per the mock note.
 // The same settings live on in Settings → Trip / Sharing.
 
-const input = 'mt-1 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
+const input =
+  'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base font-medium text-tx outline-none transition-colors duration-[180ms] focus:border-ac'
 
+// Step dots per handoff frames 04–06: past = solid hunter ✓, current = mauve-soft
+// circle with its label beside it, future = quiet outline.
 function Dots({ step }: { step: 1 | 2 | 3 }) {
-  const items: { n: 1 | 2 | 3; label: string; opt?: boolean }[] = [
-    { n: 1, label: 'Trip basics' },
-    { n: 2, label: 'Home base', opt: true },
-    { n: 3, label: 'Invite partner', opt: true },
-  ]
+  const labels = ['Basics', 'Home base', 'Invite']
   return (
-    <ol className="mb-5 flex items-center justify-center gap-2 text-xs">
-      {items.map((it, i) => (
-        <li key={it.n} className="flex items-center gap-2">
-          {i > 0 && <span className="h-px w-6 bg-neutral-300 dark:bg-neutral-700" aria-hidden />}
-          <span className={`flex items-center gap-1.5 ${step === it.n ? 'font-semibold' : 'text-neutral-500'}`}>
-            <span className={`flex h-5 w-5 items-center justify-center rounded-full border text-[11px] ${step >= it.n ? 'border-teal-600 bg-teal-600/10 text-teal-700 dark:text-teal-400' : 'border-neutral-300 dark:border-neutral-700'}`}>{it.n}</span>
-            {it.label}
-            {it.opt && <span className="text-neutral-400">· optional</span>}
+    <ol className="flex items-center justify-center gap-2 text-base font-medium">
+      {[1, 2, 3].map((n, i) => (
+        <li key={n} className="flex items-center gap-2">
+          {i > 0 && <span className="h-px w-[18px] bg-ln3" aria-hidden />}
+          <span className="flex items-center gap-1.5">
+            <span
+              className={
+                'flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] transition-colors duration-[250ms] ' +
+                (n < step
+                  ? 'border-ac bg-ac text-on'
+                  : n === step
+                    ? 'border-ac2-line bg-ac2-soft text-ac2-deep'
+                    : 'border-ln3 text-tx3')
+              }
+            >
+              {n < step ? '✓' : n}
+            </span>
+            {n === step && <span className="text-tx">{labels[i]}</span>}
           </span>
         </li>
       ))}
@@ -97,80 +106,108 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
     onSuccess: () => setInviteSent(true),
   })
 
+  // Wizard done → straight into the personalisation flow (handoff section F).
   function finish() {
     if (trip) setTripId(trip.id)
     onDone?.()
+    router.push('/welcome')
   }
 
+  const sub = step === 1 ? 'Three quick steps - only the first is required.' : step === 2 ? 'Step 2 of 3 · optional' : 'Last step · optional'
+  const card = 'lv-enter rounded-[calc(var(--r)+2px)] bg-sf p-4 pt-[18px] text-tx'
+  const cta = 'rounded-[calc(var(--r)-2px)] bg-ac px-5 py-3.5 text-base font-semibold text-on disabled:opacity-50'
+  const warn = 'mt-3 rounded-[calc(var(--r)-2px)] border border-warn-line bg-warn-soft px-3 py-2 text-base text-warn'
+
   return (
-    <div className="mx-auto max-w-xl">
-      <h1 className="mb-1 text-center text-2xl font-semibold">Let’s set up your trip</h1>
-      <p className="mb-5 text-center text-sm text-neutral-500">Three quick steps — only the first one is required.</p>
+    <div
+      className="flex min-h-dvh flex-col gap-3.5 px-4 pb-7 pt-6"
+      style={{ background: 'var(--washLight)', color: 'var(--washInk)' }}
+    >
+      <div className="text-center">
+        <h1 className="font-serif text-[25px] font-semibold leading-tight">Let&rsquo;s set up your trip</h1>
+        <p className="mt-1.5 text-base text-tx2">{sub}</p>
+      </div>
       <Dots step={step} />
 
-      {step === 1 && (
-        <div className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
-          <h2 className="mb-3 text-lg font-semibold">Trip basics</h2>
-          <TripMetaForm onSubmit={(v) => { if (!create.isPending) create.mutate(v) }} busy={create.isPending} />
-          {create.isError && <p className="mt-3 text-sm text-red-600">Could not create the trip — try again.</p>}
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
-          <h2 className="mb-1 text-lg font-semibold">Home base <span className="text-sm font-normal text-neutral-400">— optional</span></h2>
-          <p className="mb-3 text-sm text-neutral-500">Where the trip starts from — sets your departure default and home context.</p>
-          <label className="block text-sm">
-            City, country
-            <input className={input} value={homeBase} onChange={(e) => setHomeBase(e.target.value)} placeholder="Budapest, Hungary" autoFocus />
-          </label>
-          {saveHome.isError && <p className="mt-3 text-sm text-red-600">Could not save — you can set this later in Settings.</p>}
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              onClick={() => (homeBase.trim() ? saveHome.mutate() : setStep(3))}
-              disabled={saveHome.isPending}
-              className="rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+      <div className="mx-auto w-full max-w-xl">
+        {step === 1 && (
+          <>
+            <div className={card}>
+              <h2 className="mb-3 font-serif text-[19px] font-semibold">Trip basics</h2>
+              <TripMetaForm onSubmit={(v) => { if (!create.isPending) create.mutate(v) }} busy={create.isPending} />
+              {create.isError && <p className={warn}>Could not create the trip — try again.</p>}
+            </div>
+            <div
+              className="mt-3.5 rounded-2xl px-3.5 py-2.5 text-center text-base leading-normal text-[#1F2A24] backdrop-blur-[3px]"
+              style={{ background: 'rgba(255,255,255,.72)' }}
             >
-              {saveHome.isPending ? 'Saving…' : homeBase.trim() ? 'Save & continue →' : 'Continue →'}
-            </button>
-            <button onClick={() => setStep(3)} className="text-sm text-neutral-500 hover:underline">Skip</button>
-          </div>
-        </div>
-      )}
+              This is the only hard commit - closing after it still leaves a usable trip.
+            </div>
+          </>
+        )}
 
-      {step === 3 && (
-        <div className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
-          <h2 className="mb-1 text-lg font-semibold">Invite your partner <span className="text-sm font-normal text-neutral-400">— optional</span></h2>
-          <p className="mb-3 text-sm text-neutral-500">
-            Full co-editor access when they sign in with this email — revocable any time in Settings → Sharing.
-          </p>
-          {inviteSent ? (
-            <p className="text-sm text-emerald-600">✓ Invite recorded for {inviteEmail.trim().toLowerCase()}.</p>
-          ) : (
-            <>
-              <label className="block text-sm">
-                Their email
-                <input type="email" className={input} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="partner@example.com" autoFocus />
-              </label>
-              {invite.isError && <p className="mt-3 text-sm text-red-600">Could not record the invite — you can do it later in Settings.</p>}
-            </>
-          )}
-          <div className="mt-4 flex items-center gap-3">
-            {!inviteSent && (
+        {step === 2 && (
+          <div className={card}>
+            <h2 className="mb-1 font-serif text-[19px] font-semibold">
+              Home base <span className="font-sans text-base font-normal text-tx3">- optional</span>
+            </h2>
+            <p className="mb-3 text-base leading-normal text-tx2">Where the trip starts from - sets your departure default and home context.</p>
+            <label className="block text-base font-medium text-tx2">
+              City, country
+              <input className={input} value={homeBase} onChange={(e) => setHomeBase(e.target.value)} placeholder="Budapest, Hungary" autoFocus />
+            </label>
+            {saveHome.isError && <p className={warn}>Could not save — you can set this later in Settings.</p>}
+            <div className="mt-4 flex items-center gap-3.5">
               <button
-                onClick={() => invite.mutate()}
-                disabled={invite.isPending || !inviteEmail.includes('@')}
-                className="rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                onClick={() => (homeBase.trim() ? saveHome.mutate() : setStep(3))}
+                disabled={saveHome.isPending}
+                className={cta + ' flex-1'}
               >
-                {invite.isPending ? 'Sending…' : 'Send invite'}
+                {saveHome.isPending ? 'Saving…' : homeBase.trim() ? 'Save & continue →' : 'Continue →'}
               </button>
-            )}
-            <button onClick={finish} className={inviteSent ? 'rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white' : 'text-sm text-neutral-500 hover:underline'}>
-              {inviteSent ? 'Open my trip →' : 'Skip & open my trip →'}
-            </button>
+              <button onClick={() => setStep(3)} className="inline-flex min-h-11 items-center text-base font-medium text-ac2 underline">Skip</button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {step === 3 && (
+          <div className={card}>
+            <h2 className="mb-1 font-serif text-[19px] font-semibold">
+              Invite your partner <span className="font-sans text-base font-normal text-tx3">- optional</span>
+            </h2>
+            <p className="mb-3 text-base leading-normal text-tx2">
+              Full co-editor access when they sign in with this email - revocable any time in Settings → Sharing.
+            </p>
+            {inviteSent ? (
+              <p className="lv-enter rounded-[var(--r)] bg-tag px-4 py-3.5 text-base font-medium leading-normal text-tag-ink">
+                ✓ Invite recorded for {inviteEmail.trim().toLowerCase()}. They accept it from the banner on their own screen.
+              </p>
+            ) : (
+              <>
+                <label className="block text-base font-medium text-tx2">
+                  Their email
+                  <input type="email" className={input} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="partner@example.com" autoFocus />
+                </label>
+                {invite.isError && <p className={warn}>Could not record the invite — you can do it later in Settings.</p>}
+              </>
+            )}
+            <div className="mt-4 flex items-center gap-3.5">
+              {!inviteSent && (
+                <button
+                  onClick={() => invite.mutate()}
+                  disabled={invite.isPending || !inviteEmail.includes('@')}
+                  className={cta + ' flex-1'}
+                >
+                  {invite.isPending ? 'Sending…' : 'Send invite'}
+                </button>
+              )}
+              <button onClick={finish} className={inviteSent ? cta + ' flex-1' : 'inline-flex min-h-11 items-center text-base font-medium text-ac2 underline'}>
+                {inviteSent ? 'Continue →' : 'Skip →'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

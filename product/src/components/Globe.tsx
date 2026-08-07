@@ -3,14 +3,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useMoney } from '@/lib/trips/Money'
 import { useRouter } from 'next/navigation'
 import Globe from 'globe.gl'
+import { LocateFixed, Map as MapIcon, Moon, RotateCw, SlidersHorizontal, Sun, Zap } from 'lucide-react'
 import type { City, Country } from '@/lib/catalogue/types'
 import type { Segment, TransportLeg } from '@/lib/trips/types'
 import type { CityCost } from '@/lib/trips/budget'
-import { regColor, regName, toBase } from '@/lib/trips/format'
+import { regName, toBase } from '@/lib/trips/format'
 import { getAtJsonPath } from '@/lib/catalogue/getAtJsonPath'
 import {
   type MapOpts, type GlobePoint, type Hazard,
-  loadMapOpts, saveMapOpts, buildRoute, buildArcs, seasonalHazards, quakesFromFeed, qColor,
+  loadMapOpts, saveMapOpts, buildRoute, buildArcs, seasonalHazards, quakesFromFeed,
 } from '@/lib/map/globeData'
 import { CountryPanel } from './map/CountryPanel'
 import { HazardPanel } from './map/HazardPanel'
@@ -49,11 +50,13 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
 
   // ---- tooltip closures (return HTML strings; globe.gl renders them) ----
   const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]!))
+  // Tooltip chrome per frame 19's dark map UI: Work Sans at the 16px floor,
+  // dark surface, amber hazards (no red), mauve wayfinding hints.
   const box = (inner: string, mw = '') =>
-    `<div style="${mw}background:#171e26;border:1px solid #2a3642;border-radius:10px;padding:8px 10px;color:#e8edf2;font:12.5px -apple-system,sans-serif;line-height:1.5">${inner}</div>`
+    `<div style="${mw}background:rgba(11,15,20,.92);border:1px solid rgba(216,224,229,.16);border-radius:14px;padding:10px 12px;color:#d8e0e5;font-family:var(--font-work-sans),'Work Sans',sans-serif;font-size:16px;line-height:1.5">${inner}</div>`
   function hazLabel(d: Hazard) {
-    if (d.kind === 'quake') return box(`<b style="color:${qColor(d.mag ?? 0)}">M${d.mag?.toFixed(1) ?? '?'} earthquake</b><br><span style="color:#8fa0b0">${esc(d.place)}</span><br><span style="color:#37b3a4">click for details</span>`)
-    return box(`<b style="color:#f0a83c">Heavy rain / monsoon</b><br><span style="color:#8fa0b0">${esc(d.city)} · ~${d.rain}mm this month</span><br><span style="color:#37b3a4">click for details</span>`)
+    if (d.kind === 'quake') return box(`<b style="color:#D9A85C">M${d.mag?.toFixed(1) ?? '?'} earthquake</b><br><span style="color:rgba(216,224,229,.6)">${esc(d.place)}</span><br><span style="color:#D08795">click for details</span>`)
+    return box(`<b style="color:#D9A85C">Heavy rain / monsoon</b><br><span style="color:rgba(216,224,229,.6)">${esc(d.city)} · ~${d.rain}mm this month</span><br><span style="color:#D08795">click for details</span>`)
   }
   function pointLabel(d: GlobePoint | Hazard) {
     if ('haz' in d && d.haz) return hazLabel(d as Hazard)
@@ -65,21 +68,21 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     if (k?.accom) rows += `<div>Stay (mid): ~$${k.accom[1]} /night</div>`
     if (c?.rent_monthly) rows += `<div>Rent: ~$${c.rent_monthly} /mo</div>`
     const net = c && getAtJsonPath(c.attributes, 'internet')
-    if (net) rows += `<div style="color:#8fa0b0">Wi-Fi: ${esc(net)}</div>`
+    if (net) rows += `<div style="color:rgba(216,224,229,.6)">Wi-Fi: ${esc(net)}</div>`
     const land = c && (getAtJsonPath(c.attributes, 'landmarks') as unknown[] | undefined)
-    if (Array.isArray(land) && land.length) rows += `<div style="color:#8fa0b0">${land.length} landmark${land.length > 1 ? 's' : ''} in KB</div>`
+    if (Array.isArray(land) && land.length) rows += `<div style="color:rgba(216,224,229,.6)">${land.length} landmark${land.length > 1 ? 's' : ''} in KB</div>`
     const wx = c && getAtJsonPath(c.attributes, 'weather.hazard')
-    const wxRow = wx ? `<div style="color:#8fa0b0;margin-top:3px">${esc(wx)}</div>` : ''
-    return box(`<div style="font-weight:700;font-size:13.5px">${esc(p.city)}</div><div style="color:#8fa0b0;margin-bottom:4px">${esc(p.country)} · ${esc(regName(p.r ?? ''))}</div>${rows}${wxRow}<div style="color:#37b3a4;margin-top:5px">Click → Knowledge Base</div>`, 'max-width:250px;')
+    const wxRow = wx ? `<div style="color:rgba(216,224,229,.6);margin-top:3px">${esc(wx)}</div>` : ''
+    return box(`<div style="font-weight:600;font-size:17px;font-family:var(--font-lora),Georgia,serif">${esc(p.city)}</div><div style="color:rgba(216,224,229,.6);margin-bottom:4px">${esc(p.country)} · ${esc(regName(p.r ?? ''))}</div>${rows}${wxRow}<div style="color:#D08795;margin-top:5px">Click → Knowledge Base</div>`, 'max-width:270px;')
   }
   function arcLabel(d: { from: string; to: string; flight: TransportLeg | null; booked: boolean }) {
     const head = `<b>${esc(d.from)} → ${esc(d.to)}</b>`
     let body: string
     if (d.flight) {
       const f = d.flight
-      body = `<div>${esc(f.type || 'Flight')} · ${esc(String(f.price))} ${esc(f.cur)} <span style="color:#8fa0b0">(~${fmt(toBase(f.price, f.cur, ratesRef.current))})</span></div>`
-        + `<div style="margin-top:2px">${d.booked ? '<span style="color:#f0a83c">✅ booked</span>' : '<span style="color:#8fa0b0">~ estimate</span>'}${f.provider ? ` · ${esc(f.provider)}` : ''}</div>`
-    } else body = '<div style="color:#8fa0b0">no flight logged for this hop</div>'
+      body = `<div>${esc(f.type || 'Flight')} · ${esc(String(f.price))} ${esc(f.cur)} <span style="color:rgba(216,224,229,.6)">(~${fmt(toBase(f.price, f.cur, ratesRef.current))})</span></div>`
+        + `<div style="margin-top:2px">${d.booked ? '<span style="color:#D9A85C">✓ booked</span>' : '<span style="color:rgba(216,224,229,.6)">~ estimate</span>'}${f.provider ? ` · ${esc(f.provider)}` : ''}</div>`
+    } else body = '<div style="color:rgba(216,224,229,.6)">no flight logged for this hop</div>'
     return box(head + body)
   }
 
@@ -119,7 +122,8 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
         const k = cityIdx[c.city]
         return {
           lat: c.lat!, lng: c.lng!, city: c.city, country: c.country, r: k?.r ?? c.region ?? null, city_: c,
-          color: on ? regColor(k?.r ?? c.region) : 'rgba(178,196,212,0.9)', radius: on ? 0.6 : 0.36, alt: on ? 0.02 : 0.01,
+          // Frame 19: planned stops mauve (--ac2 dark set), catalogue cities hunter.
+          color: on ? '#D08795' : 'rgba(127,163,125,0.9)', radius: on ? 0.6 : 0.36, alt: on ? 0.02 : 0.01,
         }
       })
     const origin = route.find((n) => n.home)
@@ -132,7 +136,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     const g = new Globe(el)
       .globeImageUrl(optsRef.current.day ? '/vendor/earth-day.jpg' : '/vendor/earth-night.jpg')
       .backgroundColor('rgba(0,0,0,0)')
-      .showAtmosphere(true).atmosphereColor('#37b3a4').atmosphereAltitude(0.16)
+      .showAtmosphere(true).atmosphereColor('#7FA37D').atmosphereAltitude(0.16)
       .pointsData(points as object[]).pointLat('lat').pointLng('lng').pointColor('color').pointAltitude('alt').pointRadius('radius')
       .pointLabel(((d: object) => pointLabel(d as GlobePoint | Hazard)) as never)
       .onPointClick(((d: object) => {
@@ -148,7 +152,9 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
       .polygonStrokeColor((() => (optsRef.current.borders ? 'rgba(170,190,210,0.6)' : 'rgba(0,0,0,0)')) as never).polygonAltitude(0.004)
       .onPolygonClick(((p: object) => setCountryFeat(p as { properties?: { name?: string; iso?: string } })) as never)
       .ringsData([]).ringLat('lat').ringLng('lng').ringMaxRadius('maxR').ringPropagationSpeed('speed').ringRepeatPeriod('period')
-      .ringColor((((d: Hazard) => (d.kind === 'quake' ? (t: number) => `rgba(224,101,92,${1 - t})` : (t: number) => `rgba(240,168,60,${1 - t})`))) as never)
+      // One amber hazard color per frame 19's legend (no red in the palette);
+      // quakes still read stronger via ring size (bigger = stronger).
+      .ringColor(((() => (t: number) => `rgba(217,168,92,${1 - t})`)) as never)
       .labelsData(route as object[]).labelLat('lat').labelLng('lng').labelText('label').labelSize(0.9).labelDotRadius(0.34)
       .labelColor(((d: { home?: boolean }) => (d.home ? '#ffffff' : '#e8edf2')) as never).labelResolution(2)
 
@@ -182,27 +188,38 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { applyHazards() }, [opts.hazards])
 
+  // Dark map chrome (frame 19): fixed dark-set colors in both themes, pill
+  // controls at the 16px floor, Lucide icons.
+  const chip = 'flex items-center gap-2 rounded-full border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base font-medium text-[#d8e0e5] backdrop-blur'
   return (
     <>
       <div ref={boxRef} className="absolute inset-0" />
-      <div className="absolute right-3 top-3 z-10">
-        <button className="rounded-lg border border-[#2a3642] bg-[#0f1419]/80 px-2 py-1 text-xs text-[#e8edf2] backdrop-blur md:hidden" onClick={() => setMenuOpen((o) => !o)}>⚙ Map</button>
-        <div className={`${menuOpen ? 'flex' : 'hidden'} mt-1 flex-col gap-1 md:flex`}>
+      {/* below MapClient's top-right search button (frame 19) */}
+      <div className="absolute right-4 top-[72px] z-10 flex flex-col items-end gap-1.5">
+        <button className={chip + ' md:hidden'} onClick={() => setMenuOpen((o) => !o)}>
+          <SlidersHorizontal aria-hidden className="size-4" strokeWidth={2} /> Map options
+        </button>
+        <div className={`${menuOpen ? 'flex' : 'hidden'} flex-col items-end gap-1.5 md:flex`}>
           {([
-            ['rotate', `↻ Spin: ${opts.rotate ? 'on' : 'off'}`],
-            ['day', `${opts.day ? '☀' : '🌙'} View: ${opts.day ? 'day' : 'night'}`],
-            ['borders', `🗺 Borders: ${opts.borders ? 'on' : 'off'}`],
-            ['hazards', `⚡ Hazards: ${opts.hazards ? 'on' : 'off'}`],
-          ] as const).map(([k, label]) => (
-            <button key={k} className="rounded-lg border border-[#2a3642] bg-[#0f1419]/80 px-2 py-1 text-left text-xs text-[#e8edf2] backdrop-blur" onClick={() => setOpts((o) => ({ ...o, [k]: !o[k] }))}>{label}</button>
+            ['rotate', RotateCw, `Spin: ${opts.rotate ? 'on' : 'off'}`],
+            ['day', opts.day ? Sun : Moon, `View: ${opts.day ? 'day' : 'night'}`],
+            ['borders', MapIcon, `Borders: ${opts.borders ? 'on' : 'off'}`],
+            ['hazards', Zap, `Hazards: ${opts.hazards ? 'on' : 'off'}`],
+          ] as const).map(([k, Icon, label]) => (
+            <button key={k} className={chip} onClick={() => setOpts((o) => ({ ...o, [k]: !o[k] }))}>
+              <Icon aria-hidden className="size-4" strokeWidth={2} />{label}
+            </button>
           ))}
-          <button className="rounded-lg border border-[#2a3642] bg-[#0f1419]/80 px-2 py-1 text-xs text-[#e8edf2] backdrop-blur" onClick={() => instRef.current?.pointOfView(POV, 600)}>⟲ Reset</button>
+          <button className={chip} onClick={() => instRef.current?.pointOfView(POV, 600)}>
+            <LocateFixed aria-hidden className="size-4" strokeWidth={2} />Reset view
+          </button>
         </div>
       </div>
       {opts.hazards && hazInfo && (
-        <div className="absolute left-3 top-3 z-10 rounded-lg border border-[#2a3642] bg-[#0f1419]/80 px-3 py-1 text-xs text-[#e8edf2] backdrop-blur">
-          ⚡ {hazInfo.total} hazard{hazInfo.total === 1 ? '' : 's'}
-          {hazInfo.quakes != null && <span className="text-[#ff7a45]"> · {hazInfo.quakes} live quake{hazInfo.quakes === 1 ? '' : 's'}</span>}
+        <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base text-[#d8e0e5] backdrop-blur">
+          <Zap aria-hidden className="size-4 text-[#D9A85C]" strokeWidth={2} />
+          {hazInfo.total} hazard{hazInfo.total === 1 ? '' : 's'}
+          {hazInfo.quakes != null && <span className="text-[#D9A85C]"> · {hazInfo.quakes} live quake{hazInfo.quakes === 1 ? '' : 's'}</span>}
         </div>
       )}
       <Legend />
