@@ -1,7 +1,7 @@
 'use client'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import { MapPin, Search, WifiOff } from 'lucide-react'
+import { ArrowLeft, MapPin, Search, WifiOff } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -94,7 +94,16 @@ export default function KnowledgeClient() {
   if (!online) {
     return (
       <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
-        <h1 className="font-serif text-[25px] font-semibold">Explore</h1>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/map"
+            aria-label="Back to Map"
+            className="flex size-11 flex-none items-center justify-center rounded-full border border-ln2 bg-sf text-tx2"
+          >
+            <ArrowLeft aria-hidden className="size-5" strokeWidth={2} />
+          </Link>
+          <h1 className="font-serif text-[25px] font-semibold">Explore</h1>
+        </div>
         <div className="lv-enter mt-10 rounded-[calc(var(--r)+2px)] bg-sf p-7 text-center text-tx">
           <WifiOff aria-hidden className="mx-auto size-[34px] text-tx2" strokeWidth={2} />
           <h2 className="mt-3 font-serif text-[21px] font-semibold leading-[1.3]">Explore needs a connection</h2>
@@ -117,7 +126,16 @@ export default function KnowledgeClient() {
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
       <div>
-        <h1 className="font-serif text-[25px] font-semibold">Explore</h1>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/map"
+            aria-label="Back to Map"
+            className="flex size-11 flex-none items-center justify-center rounded-full border border-ln2 bg-sf text-tx2"
+          >
+            <ArrowLeft aria-hidden className="size-5" strokeWidth={2} />
+          </Link>
+          <h1 className="font-serif text-[25px] font-semibold">Explore</h1>
+        </div>
         <p className="mt-[5px] text-base leading-normal text-tx2">
           {`Country & city knowledge base - ${fields.length} fields, rendered from the catalogue.`}
         </p>

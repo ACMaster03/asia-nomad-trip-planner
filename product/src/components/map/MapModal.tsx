@@ -52,7 +52,13 @@ export function MapModal({
         role="dialog"
         aria-modal="true"
         aria-label={label ?? (typeof title === 'string' ? title : 'Details')}
-        className="lv-enter mt-12 w-full max-w-lg rounded-[var(--r)] border border-[rgba(216,224,229,.16)] bg-[#12181d] p-5 text-[#d8e0e5] shadow-xl outline-none"
+        // Height-capped + internally scrollable: on phones the panel used to
+        // outgrow the viewport and its tail (table rows, Close) ended up
+        // unreachable behind the fixed bottom tab bar. The dvh cap keeps the
+        // whole dialog on screen (16px outer p-4 + 48px mt-12 above, ~76px
+        // clear below) and the safe-area bottom padding keeps the last row
+        // tappable above the home indicator.
+        className="lv-enter mt-12 max-h-[calc(100dvh-140px)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-[var(--r)] border border-[rgba(216,224,229,.16)] bg-[#12181d] px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))] text-[#d8e0e5] shadow-xl outline-none"
       >
         <h3 className="mb-3 font-serif text-[20px] font-semibold">{title}</h3>
         {children}
