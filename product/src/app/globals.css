@@ -348,3 +348,14 @@ h3 {
     font-size: 16px;
   }
 }
+
+/* iOS Safari gives <input type="date"> an intrinsic minimum width, so in
+   side-by-side grid/flex rows the date field refuses to shrink and bleeds
+   off the card. Strip the native appearance and let it shrink; the shared
+   input classes' padding (px-3 py-3) keeps the height in line with text
+   inputs. */
+input[type='date'] {
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
