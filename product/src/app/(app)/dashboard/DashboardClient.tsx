@@ -280,7 +280,15 @@ export default function DashboardClient({ userEmail }: { userEmail?: string }) {
           <p className="flex-1 text-base font-medium leading-normal text-warn">
             You&apos;re offline - check-ins are saved on this phone and will sync when you&apos;re back.
           </p>
-          <button aria-label="Dismiss" onClick={() => setOfflineDismissed(true)}><X className="size-4 text-warn" /></button>
+          {/* 16px glyph, 44px tap target — negative margins keep the layout
+              where the bare icon sat (README: 44px min hit targets). */}
+          <button
+            aria-label="Dismiss"
+            onClick={() => setOfflineDismissed(true)}
+            className="-m-3.5 flex size-11 flex-none items-center justify-center"
+          >
+            <X className="size-4 text-warn" />
+          </button>
         </div>
       )}
       {offline && offlineDismissed && (
@@ -388,7 +396,7 @@ export default function DashboardClient({ userEmail }: { userEmail?: string }) {
 
       <div className="flex items-center justify-between">
         <span className="text-base font-semibold uppercase tracking-[.12em] text-tx2">Recent activity{events.data ? ` · ${events.data.length}` : ''}</span>
-        <Link href="/live" className="text-base font-semibold text-ac2">All check-ins ›</Link>
+        <Link href="/live" className="-my-2.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2">All check-ins ›</Link>
       </div>
       {events.data && events.data.length > 0 && (
         <div className="rounded-[var(--r)] bg-sf px-3.5 text-tx">

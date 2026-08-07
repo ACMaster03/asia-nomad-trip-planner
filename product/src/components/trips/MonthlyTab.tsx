@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { monthlyBuckets } from '@/lib/trips/budget'
-import { toBase, monthShort } from '@/lib/trips/format'
+import { fmtMoney, toBase, monthShort } from '@/lib/trips/format'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 
 // Money · Monthly (handoff frame 17). Structure: earn-target hero → month
@@ -51,9 +51,18 @@ export function MonthlyTab() {
 
       {/* hero — the earn target */}
       <div className="lv-enter rounded-[var(--r)] bg-sf p-5">
-        <div className="text-base font-medium uppercase tracking-[.11em] text-tx2">Earn target / month</div>
+        <div className="text-base font-medium uppercase tracking-[.11em] text-tx2">Earn target · per month</div>
         <div className="mt-1 text-[32px] font-semibold leading-[1.1] tracking-[-.02em]">{fmt(v.recMonthly)}</div>
-        <p className="mt-1.5 text-base text-tx2">rent + daily living, before flights</p>
+        {/* Rig copy (frame 17): "≈ $1 780 · rent and daily living, between the
+            two of you" — the ≈USD lead needs a USD rate and only makes sense
+            when the base isn't already USD; "between the two of you" only when
+            it IS two of you. */}
+        <p className="mt-1.5 text-base text-tx2">
+          {v.s.meta.baseCurrency !== 'USD' && v.s.rates?.USD
+            ? `≈ ${fmtMoney(v.recMonthly / v.s.rates.USD, 'USD')} · `
+            : ''}
+          rent and daily living{v.s.meta.travelers === 2 ? ', between the two of you' : ', before flights'}
+        </p>
         <div className="mt-3.5 border-t border-ln pt-3.5">
           <div className="flex justify-between gap-3 text-base">
             <span className="text-tx2">All-in with flights</span>

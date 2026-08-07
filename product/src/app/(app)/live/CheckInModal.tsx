@@ -203,7 +203,7 @@ export function CheckInModal({
               disabled={addCustom.isPending}
               className="flex w-full py-3 text-left text-base font-medium text-ac2-deep disabled:opacity-50"
             >
-              {addCustom.isPending ? 'Adding…' : `＋ Add "${q.trim()}" · custom place`}
+              {addCustom.isPending ? 'Adding…' : `＋ Add "${q.trim()}" · custom place (GPS)`}
             </button>
           </div>
         ) : (
@@ -229,18 +229,20 @@ export function CheckInModal({
         )}
       </div>
 
-      {/* rating — pick pop via scale pulse */}
+      {/* rating — the just-tapped star pops (rig's dcPop .6→1.15→1); keying it
+          to the pick re-triggers the animation on every new rating */}
       <div>
         <div className="text-base font-medium text-tx2">Rating · optional</div>
         <div className="mt-1 flex gap-1">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
-              key={n}
+              key={rating === n ? `${n}·picked` : n}
               aria-label={`${n} star${n > 1 ? 's' : ''}`}
               onClick={() => setRating(rating === n ? null : n)} // tap again to clear
               className={
-                'px-1 text-[30px] leading-none transition-[color,transform] duration-150 ease-out ' +
-                (rating != null && n <= rating ? 'scale-[1.12] text-warn' : 'text-ln3')
+                'px-1 text-[30px] leading-none transition-colors duration-150 ease-out ' +
+                (rating != null && n <= rating ? 'text-warn' : 'text-ln3') +
+                (rating === n ? ' lv-pop' : '')
               }
             >
               ★

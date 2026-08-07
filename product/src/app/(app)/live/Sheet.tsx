@@ -51,7 +51,7 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className="lv-enter fixed inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col gap-[13px] overflow-y-auto rounded-t-[var(--r)] bg-sf px-[18px] pb-[max(26px,env(safe-area-inset-bottom))] pt-2.5 text-tx outline-none"
+        className="lv-sheet fixed inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col gap-[13px] overflow-y-auto rounded-t-[var(--r)] bg-sf px-[18px] pb-[max(26px,env(safe-area-inset-bottom))] pt-2.5 text-tx outline-none"
       >
         <div aria-hidden className="mx-auto h-[5px] w-11 flex-none rounded-full bg-ln3" />
         {children}

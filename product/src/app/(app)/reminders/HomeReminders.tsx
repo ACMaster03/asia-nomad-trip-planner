@@ -1,7 +1,7 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
+import { useToast } from '@/components/Toast'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { beforeYouFly, comingUp, deriveReminders, dueLabel, type ReminderItem } from '@/lib/trips/reminders'
@@ -19,7 +19,10 @@ import type { TripState } from '@/lib/trips/types'
 
 const kicker = 'text-base font-semibold uppercase tracking-[.12em] text-ac2-deep'
 
-function TickCircle({
+// 26px circle (rig-spec visual) inside a 44px tap target; the negative margin
+// keeps the layout exactly where the bare circle sat (handoff README: 44px min
+// hit targets).
+export function TickCircle({
   r,
   canEdit,
   onTick,
@@ -35,12 +38,17 @@ function TickCircle({
       aria-pressed={r.done}
       disabled={!canEdit}
       onClick={onTick}
-      className={
-        'flex h-[26px] w-[26px] flex-none items-center justify-center rounded-full text-base font-semibold transition-colors duration-[180ms] ' +
-        (r.done ? 'bg-ac text-on' : 'border-2 text-transparent ' + (r.overdue ? 'border-warn' : 'border-ln3'))
-      }
+      className="-m-[9px] flex size-11 flex-none items-center justify-center"
     >
-      ✓
+      <span
+        aria-hidden
+        className={
+          'flex h-[26px] w-[26px] items-center justify-center rounded-full text-base font-semibold transition-colors duration-[180ms] ' +
+          (r.done ? 'bg-ac text-on' : 'border-2 text-transparent ' + (r.overdue ? 'border-warn' : 'border-ln3'))
+        }
+      >
+        ✓
+      </span>
     </button>
   )
 }
@@ -121,18 +129,10 @@ export function BeforeYouFly({ state, todayIso }: { state: TripState; todayIso: 
 export function ComingUp({ state, todayIso }: { state: TripState; todayIso: string }) {
   const { tick } = useTick(todayIso)
   const { canEdit } = useTripRole()
-  const [toast, setToast] = useState('')
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
+  const flash = useToast()
 
   const rows = comingUp(deriveReminders(state, todayIso), todayIso).slice(0, 2)
   if (rows.length === 0) return null
-
-  const flash = (msg: string) => {
-    if (timer.current) clearTimeout(timer.current)
-    setToast(msg)
-    timer.current = setTimeout(() => setToast(''), 2200)
-  }
 
   return (
     <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
@@ -163,14 +163,6 @@ export function ComingUp({ state, todayIso }: { state: TripState; todayIso: stri
         <span className="flex-1 text-base font-medium text-ac2-deep">All reminders</span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
-      {toast && (
-        <div
-          role="status"
-          className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full bg-tx px-4 py-2.5 text-base font-medium text-sf"
-        >
-          {toast}
-        </div>
-      )}
     </div>
   )
 }

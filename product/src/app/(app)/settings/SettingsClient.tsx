@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { useOnline } from '@/lib/useOnline'
@@ -21,6 +21,8 @@ import { DangerZone } from '@/components/trips/DangerZone'
 import { NotificationSettings } from '@/components/trips/NotificationSettings'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { Modal } from '@/components/trips/Modal'
+import { useToast } from '@/components/Toast'
+import { applyLarger, applyTheme, storedLarger, storedTheme, type Theme } from '@/lib/theme'
 import { ActiveTripCard } from './ActiveTripCard'
 
 // LIVHOLD v1 token idioms (frames 27/27b/28)
@@ -29,6 +31,12 @@ const input =
 const pill = 'rounded-full border-[1.4px] border-ln3 px-3 py-1.5 text-base font-medium text-tx2 disabled:opacity-50'
 const pillMauve = 'rounded-full border-[1.4px] border-ac2-line px-3 py-1.5 text-base font-medium text-ac2 disabled:opacity-50'
 const pillAc = 'rounded-full border-[1.4px] border-ac-line px-3 py-1.5 text-base font-medium text-ac disabled:opacity-50'
+
+// useSyncExternalStore mounted-gate helpers — module-level so their
+// identities are stable (DashboardClient pattern).
+const subscribeNever = () => () => {}
+const snapTrue = () => true
+const snapFalse = () => false
 
 // "People on this trip" — the INVITER's half of the invite flow (migration 25).
 //
@@ -140,6 +148,78 @@ function PeopleCard() {
   )
 }
 
+// Appearance (frame 27b + P6): the same theme + larger-text choices the
+// personalisation flow offers — P7's recap links here, and the README rule is
+// that every personalisation answer lives in Settings. Applies instantly via
+// the shared lib/theme helpers (lv-theme / lv-larger localStorage +
+// data-theme / data-large on <html>); nothing is written to the trip.
+function AppearanceCard() {
+  // localStorage doesn't exist during the server prerender and hydration must
+  // match it, so the stored choice is read only once mounted (the
+  // useSyncExternalStore mounted-gate pattern from DashboardClient); picks
+  // then live in local state on top of it.
+  const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
+  const [pick, setPick] = useState<{ theme: Theme; larger: boolean } | null>(null)
+  const theme: Theme | null = pick ? pick.theme : mounted ? storedTheme() : null
+  const larger = pick ? pick.larger : mounted ? storedLarger() : false
+
+  return (
+    <section className="mt-3 flex flex-col gap-3">
+      <h2 className="font-serif text-[19px] font-semibold">Appearance</h2>
+      <div className="flex flex-col gap-3 rounded-[var(--r)] bg-sf p-4">
+        <div className="grid grid-cols-3 gap-2.5">
+          {(['Light', 'Dark', 'System'] as Theme[]).map((t) => {
+            const on = theme === t
+            return (
+              <button
+                key={on ? t + ' ·picked' : t}
+                onClick={() => {
+                  setPick({ theme: t, larger })
+                  applyTheme(t) // instant — the whole app flips with the pick
+                }}
+                className={'rounded-[calc(var(--r)-3px)] border-2 bg-sf p-2.5 transition-colors duration-[180ms] ' + (on ? 'lv-pick border-ac' : 'border-fill2')}
+              >
+                <span
+                  className="block h-[74px] rounded-[9px] p-2"
+                  style={{
+                    background:
+                      t === 'Light' ? '#E8F7EE' : t === 'Dark' ? '#161A18' : 'linear-gradient(115deg,#E8F7EE 50%,#161A18 50%)',
+                  }}
+                >
+                  <span className="block h-2 w-[70%] rounded" style={{ background: t === 'Dark' ? '#1F2622' : '#fff' }} />
+                  <span className="mt-1.5 block h-[22px] rounded" style={{ background: t === 'Dark' ? '#1F2622' : '#fff' }} />
+                  <span className="mt-1.5 block h-2 w-[45%] rounded" style={{ background: t === 'Dark' ? '#7FA37D' : '#3F5A3E' }} />
+                </span>
+                <span className="mt-[9px] block text-center text-base font-semibold text-tx">{t}</span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-ln pt-3">
+          <span>
+            <span className="block text-base font-semibold">Larger text</span>
+            <span className="block text-base text-tx2">Every size steps up one notch</span>
+          </span>
+          <button
+            role="switch"
+            aria-checked={larger}
+            aria-label="Larger text"
+            onClick={() => {
+              setPick({ theme: theme ?? storedTheme(), larger: !larger })
+              applyLarger(!larger)
+            }}
+            className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (larger ? 'bg-ac' : 'bg-ln2')}
+          >
+            <span
+              className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (larger ? 'left-[24px]' : 'left-[3px]')}
+            />
+          </button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // Follow-links panel (frame 28). Create (label + optional expiry, default trip
 // end + 30 days), list with follower counts, revoke, pause-all switch, and the
 // privacy line. Tokens are hashed at rest, so the link is copyable ONCE at
@@ -147,6 +227,7 @@ function PeopleCard() {
 function SharingCard({ endDate }: { endDate?: string }) {
   const sb = createClient()
   const qc = useQueryClient()
+  const toast = useToast()
   const { tripId } = useTripScope()
   const shares = useQuery({
     queryKey: tk.shares(tripId ?? 'none'),
@@ -159,6 +240,8 @@ function SharingCard({ endDate }: { endDate?: string }) {
   })
   const pauseMut = useMutation({
     mutationFn: (paused: boolean) => setTripSharingPaused(sb, tripId!, paused),
+    onSuccess: (_d, paused) =>
+      toast(paused ? 'Sharing paused - push and digests are muted' : 'Sharing resumed'),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') })
       qc.invalidateQueries({ queryKey: ['share-stats', tripId ?? 'none'] })
@@ -182,6 +265,7 @@ function SharingCard({ endDate }: { endDate?: string }) {
       createShareLink(sb, tripId!, label.trim(), expiry ? expiry + 'T23:59:59Z' : null),
     onSuccess: (token) => {
       setNewLink(`${window.location.origin}/follow/${token}`)
+      toast('New follow link created')
       qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') })
     },
   })
@@ -278,7 +362,10 @@ function SharingCard({ endDate }: { endDate?: string }) {
             <button
               onClick={() => {
                 if (confirm(`Revoke "${s.label || 'this link'}"? Followers using it lose access immediately.`))
-                  revoke.mutate(s.id)
+                  revoke.mutate(s.id, {
+                    onSuccess: () =>
+                      toast(`${s.label || 'Follow'} link revoked - that URL stops working`),
+                  })
               }}
               disabled={revoke.isPending}
               className={pillMauve + ' flex-none'}
@@ -500,8 +587,10 @@ export default function SettingsClient() {
         </div>
       )}
 
-      {/* Personal (account-level), so every role sees it — a viewer partner
-          still wants the deadline buzz. Frame 27b. */}
+      {/* Personal (device/account-level), so every role sees them — appearance
+          and the deadline buzz belong to the person, not the trip. Frame 27b;
+          the P7 recap's Appearance row links here. */}
+      <AppearanceCard />
       <NotificationSettings />
 
       {/* Editors, not just the owner — create_share_link and

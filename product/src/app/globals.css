@@ -198,6 +198,52 @@ h3 {
   animation: lv-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* Sheets slide up from below (rig's dcSheet: 102% → 0). */
+@keyframes lv-sheet-up {
+  from {
+    transform: translateY(102%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.lv-sheet {
+  animation: lv-sheet-up 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Option-pick pulse (rig's lvPick): key the class to the just-picked item so
+   a repeat pick re-triggers it. */
+@keyframes lv-pick-pulse {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.045);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.lv-pick {
+  animation: lv-pick-pulse 0.28s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+/* Star pop on the just-tapped rating star (rig's dcPop). */
+@keyframes lv-pop-in {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.lv-pop {
+  animation: lv-pop-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 /* Pulsing mark on the auth-callback beat (rig's dcShimmer). */
 @keyframes lv-shimmer {
   0%,
@@ -216,7 +262,10 @@ h3 {
   .lv-enter,
   .lv-brand,
   .lv-reveal,
-  .lv-shimmer {
+  .lv-shimmer,
+  .lv-sheet,
+  .lv-pick,
+  .lv-pop {
     animation: none;
   }
 }

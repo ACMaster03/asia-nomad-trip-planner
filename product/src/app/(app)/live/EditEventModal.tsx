@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { tk } from '@/lib/trips/keys'
 import { updateCheckInDetails, updateTripEvent, type TripEvent } from '@/lib/trips/events'
 import { publicMediaUrl, uploadCheckinPhotos } from '@/lib/trips/media'
+import { useToast } from '@/components/Toast'
 import { Sheet } from './Sheet'
 
 // Edit your own past event (owner request 2026-07-24: revise a rating after
@@ -52,6 +53,7 @@ export function EditEventModal({
 }) {
   const sb = createClient()
   const qc = useQueryClient()
+  const toast = useToast()
 
   const [noteText, setNoteText] = useState(
     typeof ev.payload.text === 'string' ? ev.payload.text : '',
@@ -95,6 +97,7 @@ export function EditEventModal({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tk.events(tripId) })
       onClose()
+      toast(ev.kind === 'checkin' ? 'Check-in updated - followers see the new version' : 'Saved')
     },
   })
 
@@ -131,12 +134,13 @@ export function EditEventModal({
             <div className="mt-1 flex gap-1">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
-                  key={n}
+                  key={rating === n ? `${n}·picked` : n}
                   aria-label={`${n} star${n > 1 ? 's' : ''}`}
                   onClick={() => setRating(rating === n ? null : n)}
                   className={
-                    'px-1 text-[26px] leading-none transition-[color,transform] duration-150 ease-out ' +
-                    (rating != null && n <= rating ? 'scale-[1.1] text-warn' : 'text-ln3')
+                    'px-1 text-[26px] leading-none transition-colors duration-150 ease-out ' +
+                    (rating != null && n <= rating ? 'text-warn' : 'text-ln3') +
+                    (rating === n ? ' lv-pop' : '')
                   }
                 >
                   ★

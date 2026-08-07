@@ -7,6 +7,7 @@ import { TriangleAlert } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { writeState } from '@/lib/trips/queries'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
+import { applyLarger, applyTheme, type Theme } from '@/lib/theme'
 
 // Personalisation flow — handoff section F (P1–P7): six skippable steps
 // straight after Create trip, ending in the recap. Every answer also lives in
@@ -22,7 +23,6 @@ import { useTripScreen } from '@/lib/trips/useTripScreen'
 type Who = 'Just me' | 'Two of us' | 'A small group'
 type Tier = 'Frugal' | 'Comfortable' | 'Generous'
 type Followers = 'Family link + weekly email' | 'Link only' | 'Nobody yet'
-type Theme = 'Light' | 'Dark' | 'System'
 
 export interface Personalisation {
   who?: Who
@@ -58,21 +58,6 @@ const FOLLOWER_OPTS: Array<{ name: Followers; desc: string }> = [
   { name: 'Nobody yet', desc: 'travel privately for now' },
 ]
 
-function applyTheme(theme: Theme) {
-  const key = theme.toLowerCase()
-  try {
-    localStorage.setItem('lv-theme', key)
-  } catch {}
-  const dark = theme === 'Dark' || (theme === 'System' && matchMedia('(prefers-color-scheme: dark)').matches)
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
-}
-function applyLarger(on: boolean) {
-  try {
-    localStorage.setItem('lv-larger', on ? '1' : '')
-  } catch {}
-  document.documentElement.toggleAttribute('data-large', on)
-}
-
 // "Mauve lead-in words" note pattern: 'Lead|rest of the sentence'.
 function Note({ lines }: { lines: string[] }) {
   return (
@@ -98,10 +83,13 @@ function Check({ on }: { on: boolean }) {
 }
 
 const card = 'rounded-[var(--r)] bg-sf p-4 text-tx'
+// Selected options carry lv-pick; callers key the element to the pick state so
+// a fresh pick remounts it and the pulse re-triggers (rig's lvPick).
+const pickKey = (id: string, on: boolean) => (on ? id + ' ·picked' : id)
 const optCard = (on: boolean) =>
-  `flex w-full items-center gap-3 rounded-[var(--r)] border-2 bg-sf p-4 text-left transition-[border-color,transform] duration-[180ms] ${on ? 'translate-x-[2px] border-ac' : 'border-fill2'}`
+  `flex w-full items-center gap-3 rounded-[var(--r)] border-2 bg-sf p-4 text-left transition-[border-color,transform] duration-[180ms] ${on ? 'lv-pick translate-x-[2px] border-ac' : 'border-fill2'}`
 const pill = (on: boolean) =>
-  `rounded-full px-[15px] py-2.5 text-base transition-colors duration-[180ms] ${on ? 'bg-ac font-semibold text-on' : 'border-[1.5px] border-ln2 font-medium text-tx'}`
+  `rounded-full px-[15px] py-2.5 text-base transition-colors duration-[180ms] ${on ? 'lv-pick bg-ac font-semibold text-on' : 'border-[1.5px] border-ln2 font-medium text-tx'}`
 const inputCls =
   'mt-[7px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base font-medium text-tx outline-none transition-colors duration-[180ms] focus:border-ac'
 
@@ -282,7 +270,7 @@ export default function PersonalisationFlow() {
             style={{ width: `${Math.round(((stepIdx + 1) / steps.length) * 100)}%` }}
           />
         </div>
-        <button onClick={() => setRecap(true)} className="text-base font-medium text-ac2">Skip</button>
+        <button onClick={() => setRecap(true)} className="-my-2.5 inline-flex min-h-11 items-center text-base font-medium text-ac2">Skip</button>
       </div>
 
       <div className="flex flex-1 flex-col gap-3.5 px-[18px] pb-6 pt-1">
@@ -295,7 +283,7 @@ export default function PersonalisationFlow() {
         {key === 'who' && (
           <>
             {(['Just me', 'Two of us', 'A small group'] as Who[]).map((w, i) => (
-              <button key={w} onClick={() => patch({ who: w })} className={optCard(c.who === w)}>
+              <button key={pickKey(w, c.who === w)} onClick={() => patch({ who: w })} className={optCard(c.who === w)}>
                 <span className={'flex h-11 w-11 flex-none items-center justify-center rounded-[calc(var(--r)-1px)] ' + (c.who === w ? 'bg-ac-soft' : 'bg-tag')}>
                   <span className="flex items-center -space-x-1">
                     {Array.from({ length: i + 1 }).map((_, d) => (
@@ -379,11 +367,11 @@ export default function PersonalisationFlow() {
               <div className="mt-[11px] flex flex-col gap-[9px]">
                 {TIERS.map((t) => (
                   <button
-                    key={t.name}
+                    key={pickKey(t.name, tier === t.name)}
                     onClick={() => patch({ tier: t.name })}
                     className={
                       'flex items-center gap-[11px] rounded-[calc(var(--r)-2px)] border-2 p-[11px] text-left transition-colors duration-[180ms] ' +
-                      (tier === t.name ? 'border-ac' : 'border-fill2')
+                      (tier === t.name ? 'lv-pick border-ac' : 'border-fill2')
                     }
                   >
                     <span className="flex-1">
@@ -408,7 +396,7 @@ export default function PersonalisationFlow() {
               <div className="text-base font-medium text-tx2">Show all totals in</div>
               <div className="mt-2.5 flex flex-wrap gap-2">
                 {['HUF', 'EUR', 'USD', 'GBP'].map((cur) => (
-                  <button key={cur} onClick={() => patch({ currency: cur })} className={pill(currency === cur)}>
+                  <button key={pickKey(cur, currency === cur)} onClick={() => patch({ currency: cur })} className={pill(currency === cur)}>
                     {cur}
                   </button>
                 ))}
@@ -449,7 +437,7 @@ export default function PersonalisationFlow() {
         {key === 'followers' && (
           <>
             {FOLLOWER_OPTS.map((f) => (
-              <button key={f.name} onClick={() => patch({ followers: f.name })} className={optCard(c.followers === f.name)}>
+              <button key={pickKey(f.name, c.followers === f.name)} onClick={() => patch({ followers: f.name })} className={optCard(c.followers === f.name)}>
                 <span className="flex-1">
                   <span className="block text-[17px] font-semibold">{f.name}</span>
                   <span className="block text-base text-tx2">{f.desc}</span>
@@ -501,7 +489,7 @@ export default function PersonalisationFlow() {
             {ALERT_OPTS.map((a) => {
               const on = c.alerts?.includes(a.name) ?? false
               return (
-                <button key={a.name} onClick={() => toggleAlert(a.name)} className={optCard(on) + (pushDenied && on ? ' opacity-80' : '')}>
+                <button key={pickKey(a.name, on)} onClick={() => toggleAlert(a.name)} className={optCard(on) + (pushDenied && on ? ' opacity-80' : '')}>
                   <span className="flex-1">
                     <span className="block text-[17px] font-semibold">{a.name}</span>
                     <span className="block text-base text-tx2">
@@ -528,12 +516,12 @@ export default function PersonalisationFlow() {
             <div className="grid grid-cols-3 gap-2.5">
               {(['Light', 'Dark', 'System'] as Theme[]).map((t) => (
                 <button
-                  key={t}
+                  key={pickKey(t, theme === t)}
                   onClick={() => {
                     patch({ theme: t })
                     applyTheme(t) // instant — the whole app flips with the pick
                   }}
-                  className={'rounded-[var(--r)] border-2 bg-sf p-2.5 transition-colors duration-[180ms] ' + (theme === t ? 'border-ac' : 'border-fill2')}
+                  className={'rounded-[var(--r)] border-2 bg-sf p-2.5 transition-colors duration-[180ms] ' + (theme === t ? 'lv-pick border-ac' : 'border-fill2')}
                 >
                   <span
                     className="block h-[74px] rounded-[9px] p-2"

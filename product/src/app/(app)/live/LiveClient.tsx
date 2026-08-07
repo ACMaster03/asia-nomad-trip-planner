@@ -36,6 +36,7 @@ import {
 import { publicMediaUrl, uploadCheckinPhotos } from '@/lib/trips/media'
 import { Modal } from '@/components/trips/Modal'
 import { SaveError } from '@/components/trips/SaveError'
+import { useToast } from '@/components/Toast'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { CheckInModal, type CheckInInput } from './CheckInModal'
 import { EditEventModal } from './EditEventModal'
@@ -89,6 +90,7 @@ const bookedStay = (stays: Stay[], segId: string) =>
 export default function LiveClient() {
   const sb = createClient()
   const qc = useQueryClient()
+  const toast = useToast()
   const { trip, cities } = useTripScreen()
   const { tripId } = useTripScope()
 
@@ -266,11 +268,13 @@ export default function LiveClient() {
     !!lastArrivedCity &&
     lastArrivedCity.toLowerCase() !== current.city.toLowerCase()
 
+  // Rig behavior (frame 08): tap → recorded → toast. No blocking confirm; the
+  // row is deletable from the feed if it was a mis-tap.
   const doArrived = () => {
     const city = current?.city ?? next?.city ?? previous?.city ?? ''
     if (!city || !tripId) return
-    if (!confirm(`Mark "Arrived in ${city}"?`)) return
     addEvent.mutate({ id: crypto.randomUUID(), tripId, kind: 'arrived', payload: { city } })
+    toast('Arrival recorded - the button is done for this stop')
   }
   const saveNote = () => {
     const text = noteText.trim()
@@ -307,6 +311,13 @@ export default function LiveClient() {
     }
     addCheckIn.mutate({ ...rest, id, tripId, photos })
     setCheckinOpen(false)
+    toast(
+      onlineManager.isOnline()
+        ? rest.visibility === 'trip'
+          ? 'Check-in posted - just for the two of you'
+          : 'Check-in posted · followers notified'
+        : 'Queued on this phone - syncs when you reconnect',
+    )
   }
 
   const mutErr = addCheckIn.isError
@@ -506,7 +517,14 @@ export default function LiveClient() {
             onEdit={() => setEditEvent(ev)}
             onDelete={() => {
               if (confirm('Delete this entry? This is the undo — the row is removed for everyone.'))
-                delEvent.mutate(ev.id)
+                delEvent.mutate(ev.id, {
+                  onSuccess: () =>
+                    toast(
+                      ev.kind === 'checkin'
+                        ? 'Check-in deleted - followers no longer see it'
+                        : 'Deleted - followers no longer see it',
+                    ),
+                })
             }}
           />
         ))}
@@ -754,12 +772,12 @@ function EventRow({ ev, mine, queued, onEdit, onDelete }: { ev: TripEvent; mine:
             {ev.edited_at ? ' · edited' : ''}
           </span>
           {editable && (
-            <button onClick={onEdit} className="font-semibold text-ac2">
+            <button onClick={onEdit} className="-my-2.5 inline-flex min-h-11 items-center font-semibold text-ac2">
               Edit
             </button>
           )}
           {mine && (
-            <button onClick={onDelete} className="font-semibold text-ac2">
+            <button onClick={onDelete} className="-my-2.5 inline-flex min-h-11 items-center font-semibold text-ac2">
               Delete
             </button>
           )}

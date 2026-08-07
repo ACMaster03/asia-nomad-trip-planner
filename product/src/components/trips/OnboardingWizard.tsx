@@ -165,7 +165,7 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
               >
                 {saveHome.isPending ? 'Saving…' : homeBase.trim() ? 'Save & continue →' : 'Continue →'}
               </button>
-              <button onClick={() => setStep(3)} className="text-base font-medium text-ac2 underline">Skip</button>
+              <button onClick={() => setStep(3)} className="inline-flex min-h-11 items-center text-base font-medium text-ac2 underline">Skip</button>
             </div>
           </div>
         )}
@@ -201,7 +201,7 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
                   {invite.isPending ? 'Sending…' : 'Send invite'}
                 </button>
               )}
-              <button onClick={finish} className={inviteSent ? cta + ' flex-1' : 'text-base font-medium text-ac2 underline'}>
+              <button onClick={finish} className={inviteSent ? cta + ' flex-1' : 'inline-flex min-h-11 items-center text-base font-medium text-ac2 underline'}>
                 {inviteSent ? 'Continue →' : 'Skip →'}
               </button>
             </div>

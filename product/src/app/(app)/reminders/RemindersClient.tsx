@@ -10,7 +10,9 @@ import { deriveReminders, dueLabel, shortDate, type ReminderItem } from '@/lib/t
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
+import { useToast } from '@/components/Toast'
 import { AddReminderSheet } from './AddReminderSheet'
+import { TickCircle } from './HomeReminders'
 
 // /reminders — handoff frames 25 (list) + 26 (add sheet).
 //
@@ -27,6 +29,7 @@ export default function RemindersClient() {
   const { trip } = useTripScreen()
   const mut = useTripMutation()
   const { canEdit } = useTripRole()
+  const toast = useToast()
   const [addOpen, setAddOpen] = useState(false)
 
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
@@ -51,21 +54,14 @@ export default function RemindersClient() {
   const row = (r: ReminderItem, last: boolean) => (
     <div key={r.id} className={'flex items-start gap-3 px-4 py-[15px] ' + (last ? '' : 'border-b border-ln')}>
       {r.kind === 'mine' ? (
-        <button
-          type="button"
-          aria-label={r.done ? 'Mark as not done' : 'Mark as done'}
-          aria-pressed={r.done}
-          disabled={!canEdit}
-          onClick={() => tick(r.id)}
-          className={
-            'flex h-[26px] w-[26px] flex-none items-center justify-center rounded-full text-base font-semibold transition-colors duration-[180ms] ' +
-            (r.done
-              ? 'bg-ac text-on'
-              : 'border-2 text-transparent ' + (r.overdue ? 'border-warn' : 'border-ln3'))
-          }
-        >
-          ✓
-        </button>
+        <TickCircle
+          r={r}
+          canEdit={canEdit}
+          onTick={() => {
+            tick(r.id)
+            if (!r.done) toast('Ticked - gone from Home, still under Done')
+          }}
+        />
       ) : (
         <span aria-hidden className="mx-[9px] mt-[9px] h-2 w-2 flex-none rounded-full bg-ac2" />
       )}

@@ -14,9 +14,13 @@ import { useTripRole } from '@/lib/trips/useTripRole'
 import type { Segment } from '@/lib/trips/types'
 
 // LIVHOLD list-card idioms (handoff itinerary frames): the whole card taps to
-// edit, the tick is its own 24×24 target, statuses live on a line below.
+// edit, the tick keeps its 24×24 visual inside a 44px tap target (negative
+// margin keeps the layout; the padding is a generous stopPropagation zone so
+// a near-miss toggles instead of opening the editor), statuses live on a line
+// below.
+const tickBtn = '-m-2.5 flex size-11 flex-none items-center justify-center'
 const tick = (on: boolean) =>
-  'flex h-6 w-6 flex-none items-center justify-center rounded-lg text-base font-semibold transition-colors duration-[180ms] ' +
+  'flex h-6 w-6 items-center justify-center rounded-lg text-base font-semibold transition-colors duration-[180ms] ' +
   (on ? 'border border-ac bg-ac text-on' : 'border-[1.5px] border-ln3 text-transparent')
 
 const fmtD = (d: string) => {
@@ -110,9 +114,9 @@ export function StopsTab() {
                   aria-pressed={inPlan}
                   disabled={!canEdit}
                   onClick={(e) => { e.stopPropagation(); toggle(s.id) }}
-                  className={tick(inPlan)}
+                  className={tickBtn}
                 >
-                  ✓
+                  <span aria-hidden className={tick(inPlan)}>✓</span>
                 </button>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[18px] font-semibold">{s.city}</span>
@@ -144,14 +148,14 @@ export function StopsTab() {
                       type="button"
                       title="Add accommodation for this stop"
                       onClick={(e) => { e.stopPropagation(); setStayFor(s.id) }}
-                      className="text-base font-semibold text-ac2"
+                      className="-my-2.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2"
                     >
                       ＋ Add stay
                     </button>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); del(s.id) }}
-                      className="text-base font-semibold text-ac2"
+                      className="-my-2.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2"
                     >
                       Delete
                     </button>
