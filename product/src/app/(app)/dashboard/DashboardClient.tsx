@@ -39,7 +39,13 @@ function fmtDay(d: Date, withYear = false) {
   })
 }
 
-export default function DashboardClient({ userEmail }: { userEmail?: string }) {
+export default function DashboardClient({
+  userEmail,
+  userName,
+}: {
+  userEmail?: string
+  userName?: string
+}) {
   const sb = createClient()
   const { fmt } = useMoney()
   const { tripId } = useTripScope()
@@ -97,7 +103,8 @@ export default function DashboardClient({ userEmail }: { userEmail?: string }) {
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data || !s || !b) return <CreateTripEmptyState />
 
-  const initial = (userEmail?.trim()[0] ?? '?').toUpperCase()
+  // The saved first name (Account → Your name) wins over the email initial.
+  const initial = (userName?.trim()[0] ?? userEmail?.trim()[0] ?? '?').toUpperCase()
   const header = (eyebrow: string, title: string, sub: string) => (
     <div className="flex items-start justify-between gap-3">
       <div>
@@ -108,7 +115,7 @@ export default function DashboardClient({ userEmail }: { userEmail?: string }) {
       <Link
         href="/account"
         aria-label="Account"
-        title={userEmail || 'Account'}
+        title={userName || userEmail || 'Account'}
         className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-ac2-soft text-[17px] font-semibold text-ac2-deep"
       >
         {initial}

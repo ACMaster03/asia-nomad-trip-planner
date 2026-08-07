@@ -45,6 +45,9 @@ export function PendingInvites() {
       // The (app) layout resolves the active trip AND the role server-side;
       // without a refresh the new trip renders under the old role.
       router.refresh()
+      // Same door as /invite/[token]: a fresh co-editor gets the 3 personal
+      // steps (trip setup skipped — the trip already exists).
+      router.push('/welcome?short=1')
     },
     onError: () => setError('Could not accept the invite — it may have been withdrawn.'),
   })

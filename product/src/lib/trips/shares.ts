@@ -76,3 +76,18 @@ export async function setTripSharingPaused(
   const { error } = await sb.rpc('set_trip_sharing_paused', { p_trip: tripId, p_paused: paused })
   if (error) throw error
 }
+
+// Pauses/resumes ONE link — paused_at on its own row, so "mute grandma's link
+// while the family one keeps flowing" is expressible. Plain table update (no
+// RPC); RLS decides whether the caller may, and the UI surfaces a refusal.
+export async function setShareLinkPaused(
+  sb: SupabaseClient,
+  linkId: string,
+  paused: boolean,
+): Promise<void> {
+  const { error } = await sb
+    .from('trip_shares')
+    .update({ paused_at: paused ? new Date().toISOString() : null })
+    .eq('id', linkId)
+  if (error) throw error
+}

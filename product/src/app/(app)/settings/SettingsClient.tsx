@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { useOnline } from '@/lib/useOnline'
@@ -7,7 +7,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchTrip, isRevConflict, isPermissionDenied, createInvite } from '@/lib/trips/queries'
 import { fetchSentInvites, revokeInvite } from '@/lib/trips/invites'
-import { createShareLink, fetchShares, fetchShareStats, revokeShare, setTripSharingPaused } from '@/lib/trips/shares'
 import { tk } from '@/lib/trips/keys'
 import FxPanel from '@/components/trips/FxPanel'
 import { fetchFx } from '@/lib/catalogue/fx'
@@ -20,23 +19,13 @@ import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import { DangerZone } from '@/components/trips/DangerZone'
 import { NotificationSettings } from '@/components/trips/NotificationSettings'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
-import { Modal } from '@/components/trips/Modal'
-import { useToast } from '@/components/Toast'
-import { applyLarger, applyTheme, storedLarger, storedTheme, type Theme } from '@/lib/theme'
 import { ActiveTripCard } from './ActiveTripCard'
 
 // LIVHOLD v1 token idioms (frames 27/27b/28)
 const input =
   'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base focus:border-ac focus:outline-none disabled:opacity-60'
 const pill = 'rounded-full border-[1.4px] border-ln3 px-3 py-1.5 text-base font-medium text-tx2 disabled:opacity-50'
-const pillMauve = 'rounded-full border-[1.4px] border-ac2-line px-3 py-1.5 text-base font-medium text-ac2 disabled:opacity-50'
 const pillAc = 'rounded-full border-[1.4px] border-ac-line px-3 py-1.5 text-base font-medium text-ac disabled:opacity-50'
-
-// useSyncExternalStore mounted-gate helpers — module-level so their
-// identities are stable (DashboardClient pattern).
-const subscribeNever = () => () => {}
-const snapTrue = () => true
-const snapFalse = () => false
 
 // "People on this trip" — the INVITER's half of the invite flow (migration 25).
 //
@@ -144,285 +133,6 @@ function PeopleCard() {
           </div>
         ))}
       </div>
-    </section>
-  )
-}
-
-// Appearance (frame 27b + P6): the same theme + larger-text choices the
-// personalisation flow offers — P7's recap links here, and the README rule is
-// that every personalisation answer lives in Settings. Applies instantly via
-// the shared lib/theme helpers (lv-theme / lv-larger localStorage +
-// data-theme / data-large on <html>); nothing is written to the trip.
-function AppearanceCard() {
-  // localStorage doesn't exist during the server prerender and hydration must
-  // match it, so the stored choice is read only once mounted (the
-  // useSyncExternalStore mounted-gate pattern from DashboardClient); picks
-  // then live in local state on top of it.
-  const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
-  const [pick, setPick] = useState<{ theme: Theme; larger: boolean } | null>(null)
-  const theme: Theme | null = pick ? pick.theme : mounted ? storedTheme() : null
-  const larger = pick ? pick.larger : mounted ? storedLarger() : false
-
-  return (
-    <section className="mt-3 flex flex-col gap-3">
-      <h2 className="font-serif text-[19px] font-semibold">Appearance</h2>
-      <div className="flex flex-col gap-3 rounded-[var(--r)] bg-sf p-4">
-        <div className="grid grid-cols-3 gap-2.5">
-          {(['Light', 'Dark', 'System'] as Theme[]).map((t) => {
-            const on = theme === t
-            return (
-              <button
-                key={on ? t + ' ·picked' : t}
-                onClick={() => {
-                  setPick({ theme: t, larger })
-                  applyTheme(t) // instant — the whole app flips with the pick
-                }}
-                className={'rounded-[calc(var(--r)-3px)] border-2 bg-sf p-2.5 transition-colors duration-[180ms] ' + (on ? 'lv-pick border-ac' : 'border-fill2')}
-              >
-                <span
-                  className="block h-[74px] rounded-[9px] p-2"
-                  style={{
-                    background:
-                      t === 'Light' ? '#E8F7EE' : t === 'Dark' ? '#161A18' : 'linear-gradient(115deg,#E8F7EE 50%,#161A18 50%)',
-                  }}
-                >
-                  <span className="block h-2 w-[70%] rounded" style={{ background: t === 'Dark' ? '#1F2622' : '#fff' }} />
-                  <span className="mt-1.5 block h-[22px] rounded" style={{ background: t === 'Dark' ? '#1F2622' : '#fff' }} />
-                  <span className="mt-1.5 block h-2 w-[45%] rounded" style={{ background: t === 'Dark' ? '#7FA37D' : '#3F5A3E' }} />
-                </span>
-                <span className="mt-[9px] block text-center text-base font-semibold text-tx">{t}</span>
-              </button>
-            )
-          })}
-        </div>
-        <div className="flex items-center justify-between gap-3 border-t border-ln pt-3">
-          <span>
-            <span className="block text-base font-semibold">Larger text</span>
-            <span className="block text-base text-tx2">Every size steps up one notch</span>
-          </span>
-          <button
-            role="switch"
-            aria-checked={larger}
-            aria-label="Larger text"
-            onClick={() => {
-              setPick({ theme: theme ?? storedTheme(), larger: !larger })
-              applyLarger(!larger)
-            }}
-            className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (larger ? 'bg-ac' : 'bg-ln2')}
-          >
-            <span
-              className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (larger ? 'left-[24px]' : 'left-[3px]')}
-            />
-          </button>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// Follow-links panel (frame 28). Create (label + optional expiry, default trip
-// end + 30 days), list with follower counts, revoke, pause-all switch, and the
-// privacy line. Tokens are hashed at rest, so the link is copyable ONCE at
-// creation — a per-row Copy can't exist (plan requirement).
-function SharingCard({ endDate }: { endDate?: string }) {
-  const sb = createClient()
-  const qc = useQueryClient()
-  const toast = useToast()
-  const { tripId } = useTripScope()
-  const shares = useQuery({
-    queryKey: tk.shares(tripId ?? 'none'),
-    queryFn: () => (tripId ? fetchShares(sb, tripId) : Promise.resolve([])),
-  })
-  const stats = useQuery({
-    queryKey: ['share-stats', tripId ?? 'none'],
-    queryFn: () => (tripId ? fetchShareStats(sb, tripId) : Promise.resolve([])),
-    refetchInterval: 60_000, // counts drift as family opts in
-  })
-  const pauseMut = useMutation({
-    mutationFn: (paused: boolean) => setTripSharingPaused(sb, tripId!, paused),
-    onSuccess: (_d, paused) =>
-      toast(paused ? 'Sharing paused - push and digests are muted' : 'Sharing resumed'),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') })
-      qc.invalidateQueries({ queryKey: ['share-stats', tripId ?? 'none'] })
-    },
-  })
-
-  const [createOpen, setCreateOpen] = useState(false)
-  const [label, setLabel] = useState('Family')
-  const defaultExpiry = () => {
-    if (!endDate) return ''
-    const d = new Date(endDate + 'T00:00:00')
-    d.setDate(d.getDate() + 30)
-    return d.toISOString().slice(0, 10)
-  }
-  const [expiry, setExpiry] = useState<string>('')
-  const [newLink, setNewLink] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-
-  const create = useMutation({
-    mutationFn: () =>
-      createShareLink(sb, tripId!, label.trim(), expiry ? expiry + 'T23:59:59Z' : null),
-    onSuccess: (token) => {
-      setNewLink(`${window.location.origin}/follow/${token}`)
-      toast('New follow link created')
-      qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') })
-    },
-  })
-  const revoke = useMutation({
-    mutationFn: (id: string) => revokeShare(sb, id),
-    onSettled: () => qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') }),
-  })
-
-  function openCreate() {
-    setLabel('Family')
-    setExpiry(defaultExpiry())
-    setNewLink(null)
-    setCopied(false)
-    setCreateOpen(true)
-  }
-  async function copy() {
-    if (!newLink) return
-    await navigator.clipboard.writeText(newLink)
-    setCopied(true)
-  }
-
-  const list = shares.data ?? []
-  const statFor = (id: string) => stats.data?.find((x) => x.share_id === id)
-  const totals = (stats.data ?? []).reduce(
-    (a, x) => ({ push: a.push + x.push, email: a.email + x.email }),
-    { push: 0, email: 0 },
-  )
-  const allPaused = list.length > 0 && list.every((s) => s.paused_at)
-
-  return (
-    <section className="mt-3 flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <h2 className="font-serif text-[19px] font-semibold">Follow links</h2>
-        <button onClick={openCreate} className="rounded-[calc(var(--r)-3px)] bg-ac px-3.5 py-2.5 text-base font-semibold text-on">
-          ＋ Create
-        </button>
-      </div>
-
-      {/* always-visible follower count + pause-all */}
-      {list.length > 0 && (
-        <div
-          className={
-            allPaused
-              ? 'rounded-[var(--r)] border-[1.5px] border-warn-line bg-warn-soft p-4'
-              : 'rounded-[var(--r)] bg-sf p-4'
-          }
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="min-w-0 grow">
-              <div className={'text-base font-semibold' + (allPaused ? ' text-warn' : '')}>
-                {allPaused ? 'Sharing is paused' : 'Sharing is live'}
-              </div>
-              <div className="mt-0.5 text-base leading-normal text-tx2">
-                {allPaused
-                  ? 'Followers see a “sharing paused” page; push and email digests are muted. Opt-ins are kept.'
-                  : stats.data
-                    ? `${totals.push} device${totals.push === 1 ? '' : 's'} get push · ${totals.email} email digest${totals.email === 1 ? '' : 's'}`
-                    : 'Loading follower counts…'}
-              </div>
-            </div>
-            <button
-              onClick={() => pauseMut.mutate(!allPaused)}
-              disabled={pauseMut.isPending}
-              className={
-                allPaused
-                  ? 'rounded-[calc(var(--r)-3px)] bg-ac px-3.5 py-2.5 text-base font-semibold text-on disabled:opacity-50'
-                  : pill
-              }
-            >
-              {pauseMut.isPending ? '…' : allPaused ? 'Resume' : 'Pause'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="overflow-hidden rounded-[var(--r)] bg-sf">
-        <p className="border-b border-ln px-4 pb-3.5 pt-4 text-base leading-normal text-tx2">
-          Anyone with the link sees your route, dates, last check-in city and shared comments —{' '}
-          <b className="font-semibold text-ac2-deep">never money, private notes or exact GPS</b>.
-        </p>
-        {list.map((s, i) => (
-          <div key={s.id} className={'flex items-center gap-[9px] px-4 py-3.5' + (i > 0 ? ' border-t border-ln' : '')}>
-            <div className="min-w-0 grow">
-              <div className="truncate text-base font-semibold">
-                {s.label || 'Follow link'}
-                {s.paused_at && <span className="ml-1.5 font-normal text-warn">· paused</span>}
-              </div>
-              <div className="text-base text-tx2">
-                /follow/{s.token_prefix ?? '??????'}…
-                {s.expires_at ? ` · expires ${new Date(s.expires_at).toLocaleDateString()}` : ' · no expiry'}
-                {statFor(s.id) && ` · ${statFor(s.id)!.push} push · ${statFor(s.id)!.email} email`}
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                if (confirm(`Revoke "${s.label || 'this link'}"? Followers using it lose access immediately.`))
-                  revoke.mutate(s.id, {
-                    onSuccess: () =>
-                      toast(`${s.label || 'Follow'} link revoked - that URL stops working`),
-                  })
-              }}
-              disabled={revoke.isPending}
-              className={pillMauve + ' flex-none'}
-            >
-              Revoke
-            </button>
-          </div>
-        ))}
-        {!shares.isPending && !list.length && (
-          <p className="px-4 py-3.5 text-base text-tx2">
-            No follow links yet — create one and send it to your family.
-          </p>
-        )}
-        {shares.isPending && <p className="px-4 py-3.5 text-base text-tx2">Loading…</p>}
-      </div>
-
-      {createOpen && (
-        <Modal title={newLink ? 'Follow link created' : 'Create follow link'} onClose={() => setCreateOpen(false)}>
-          {!newLink ? (
-            <div>
-              <label className="block text-base font-medium text-tx2">
-                Label
-                <input className={input} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Family" autoFocus />
-              </label>
-              <label className="mt-3 block text-base font-medium text-tx2">
-                Expires <span className="text-tx3">— optional, default trip end + 30 days</span>
-                <input type="date" className={input} value={expiry} onChange={(e) => setExpiry(e.target.value)} />
-              </label>
-              {create.isError && <p className="mt-2 text-base text-ac2">Could not create the link — try again.</p>}
-              <button
-                onClick={() => create.mutate()}
-                disabled={create.isPending || !tripId}
-                className="mt-4 w-full rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-base font-semibold text-on disabled:opacity-50"
-              >
-                {create.isPending ? 'Creating…' : 'Create link'}
-              </button>
-            </div>
-          ) : (
-            <div>
-              <p className="text-base leading-normal text-tx2">
-                Copy it now — for security the full link is shown <strong>only this once</strong>. If you lose it, revoke and create a new one.
-              </p>
-              <div className="mt-3 break-all rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp p-3 font-mono text-base">
-                {newLink}
-              </div>
-              <div className="mt-3 flex gap-2.5">
-                <button onClick={copy} className="rounded-[calc(var(--r)-3px)] bg-ac px-3.5 py-2.5 text-base font-semibold text-on">
-                  {copied ? '✓ Copied' : '⧉ Copy link'}
-                </button>
-                <button onClick={() => setCreateOpen(false)} className="rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln3 px-3.5 py-2.5 text-base font-semibold text-tx2">
-                  Done
-                </button>
-              </div>
-            </div>
-          )}
-        </Modal>
-      )}
     </section>
   )
 }
@@ -587,18 +297,15 @@ export default function SettingsClient() {
         </div>
       )}
 
-      {/* Personal (device/account-level), so every role sees them — appearance
-          and the deadline buzz belong to the person, not the trip. Frame 27b;
-          the P7 recap's Appearance row links here. */}
-      <AppearanceCard />
+      {/* Personal (device/account-level), so every role sees it — the deadline
+          buzz belongs to the person, not the trip. Appearance and Follow links
+          moved to /account (testing round 1 designer decision). */}
       <NotificationSettings />
 
-      {/* Editors, not just the owner — create_share_link and
-          set_trip_sharing_paused both gate on can_edit_trip (migrations 11/16),
-          so hiding this from a co-editor would be the UI inventing a rule the
-          database doesn't have. Viewers get nothing. */}
+      {/* Editors, not just the owner: invites_insert gates on can_edit_trip
+          (migration 25), so hiding this from a co-editor would be the UI
+          inventing a rule the database doesn't have. Viewers get nothing. */}
       {canEdit && <PeopleCard />}
-      {canEdit && <SharingCard endDate={trip.data.state?.meta?.endDate} />}
 
       {/* Last on the page, per frame 28 — irreversible actions never sit above
           the things people came here to do. Viewers see it too: leaving a trip
