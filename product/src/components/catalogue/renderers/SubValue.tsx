@@ -25,7 +25,7 @@ export function SubValue({ item, row }: { item: ItemField; row: Record<string, u
   const unit = item.unit ? ` ${item.unit}` : ''
   return (
     <span className="mr-2">
-      <b className="text-neutral-500">{item.label}:</b> {String(v)}
+      <b className="text-tx3">{item.label}:</b> {String(v)}
       {unit}
     </span>
   )

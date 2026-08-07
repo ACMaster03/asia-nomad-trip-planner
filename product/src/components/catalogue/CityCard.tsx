@@ -25,17 +25,17 @@ export function CityCard({
   }
 
   return (
-    <article className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+    <article className="rounded-[var(--r)] bg-sf p-4 text-tx">
       <header className="mb-3">
-        <h3 className="text-lg font-semibold">{city.city}</h3>
-        <p className="text-sm text-neutral-500">
+        <h3 className="font-serif text-lg font-semibold">{city.city}</h3>
+        <p className="text-base text-tx2">
           {city.country}
           {city.region ? ` · ${city.region}` : ''}
         </p>
       </header>
       {groups.map(({ group, fields: fs }) => (
         <section key={group} className="mb-3">
-          <h4 className="mb-1 text-xs font-bold text-neutral-400">{group}</h4>
+          <h4 className="mb-1 text-base font-semibold uppercase tracking-[.08em] text-tx3">{group}</h4>
           <dl className="grid grid-cols-2 gap-2">
             {fs.map((f) => (
               <FieldRenderer key={f.key} field={f} city={city} country={country} />

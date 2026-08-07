@@ -128,20 +128,6 @@
   --radius-card: 22px;
   --radius-ctl: 20px;
   --radius-sheet: 22px;
-
-  /* BRIDGE: pre-redesign screens use Tailwind teal-*; remap the scale onto the
-     hunter ramp so everything reads on-brand until each phase replaces it with
-     semantic tokens. Remove in Phase 9. */
-  --color-teal-50: #eef5ef;
-  --color-teal-200: #c9d4ba;
-  --color-teal-300: #a9bfa0;
-  --color-teal-400: #7fa37d;
-  --color-teal-500: #4e6b4d;
-  --color-teal-600: #3f5a3e;
-  --color-teal-700: #344b33;
-  --color-teal-800: #2a3d2a;
-  --color-teal-900: #223122;
-  --color-teal-950: #1a261a;
 }
 
 body {

@@ -76,11 +76,11 @@ export default function NewCountryBanner({ state }: { state: TripState }) {
   if (!announced || announced.codes.length === 0) return null
 
   return (
-    <div className="mb-4 flex items-start gap-3 rounded-lg border-y border-r border-l-4 border-neutral-200 border-l-teal-500 bg-neutral-50 px-3 py-2.5 text-sm dark:border-neutral-800 dark:border-l-teal-500 dark:bg-neutral-900">
+    <div className="lv-enter mb-4 flex items-start gap-3 rounded-[var(--rCtl)] border border-l-4 border-ln2 border-l-ac bg-sf px-3.5 py-3 text-base text-tx">
       <span>
         <b>{announced.country} is new on your route</b> — {announced.codes.join(' and ')}{' '}
         {announced.codes.length === 1 ? 'was' : 'were'} added to your FX watchlist.{' '}
-        <Link href="/settings" className="text-teal-700 underline dark:text-teal-400">
+        <Link href="/settings" className="font-medium text-ac2-deep underline">
           View in Settings
         </Link>
       </span>
@@ -94,7 +94,7 @@ export default function NewCountryBanner({ state }: { state: TripState }) {
             return { ...s, meta }
           })
         }
-        className="ml-auto rounded border border-neutral-300 px-2 text-neutral-500 dark:border-neutral-700"
+        className="ml-auto flex h-8 w-8 flex-none items-center justify-center rounded-full border border-ln2 text-tx3"
       >
         ✕
       </button>

@@ -91,7 +91,7 @@ function Note({ lines }: { lines: string[] }) {
 
 function Check({ on }: { on: boolean }) {
   return on ? (
-    <span className="flex h-6 w-6 flex-none items-center justify-center rounded-lg bg-ac text-sm font-semibold text-on">✓</span>
+    <span className="flex h-6 w-6 flex-none items-center justify-center rounded-lg bg-ac text-[14px] font-semibold text-on">✓</span>
   ) : (
     <span className="h-6 w-6 flex-none" aria-hidden />
   )

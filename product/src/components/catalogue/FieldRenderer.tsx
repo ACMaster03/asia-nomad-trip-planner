@@ -49,8 +49,8 @@ export function FieldRenderer({
   const Cmp = REGISTRY[field.type] ?? TextField // unknown type degrades to text, never crashes
   return (
     <div className="flex flex-col gap-0.5">
-      <dt className="text-xs uppercase tracking-wide text-neutral-500">{field.label}</dt>
-      <dd className="text-sm">
+      <dt className="text-base uppercase tracking-wide text-tx3">{field.label}</dt>
+      <dd className="text-base">
         <Cmp value={value} field={field} />
       </dd>
     </div>
