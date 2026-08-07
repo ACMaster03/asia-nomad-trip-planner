@@ -10,7 +10,7 @@ import type { Segment, Tier } from '@/lib/trips/types'
 import { Modal } from './Modal'
 
 const uid = (p: string) => p + crypto.randomUUID()
-const label = 'block text-base font-medium text-tx2'
+const label = 'block min-w-0 text-base font-medium text-tx2'
 const input =
   'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base font-medium text-tx outline-none transition-colors duration-[180ms] focus:border-ac'
 

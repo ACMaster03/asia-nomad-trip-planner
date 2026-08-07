@@ -250,17 +250,17 @@ export default function SettingsClient() {
           <input className={input} disabled={!canEdit} value={name} onChange={(e) => setName(e.target.value)} />
         </label>
         <div className="flex gap-2.5">
-          <label className="block flex-1 text-base font-medium text-tx2">
+          <label className="block min-w-0 flex-1 text-base font-medium text-tx2">
             Travellers
             <input type="number" min={1} className={input} disabled={!canEdit} value={travelers} onChange={(e) => setTravelers(Number(e.target.value) || 1)} />
           </label>
-          <label className="block flex-1 text-base font-medium text-tx2">
+          <label className="block min-w-0 flex-1 text-base font-medium text-tx2">
             Start date
             <input type="date" className={input} disabled={!canEdit} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </label>
         </div>
         <div className="flex gap-2.5">
-          <label className="block flex-1 text-base font-medium text-tx2">
+          <label className="block min-w-0 flex-1 text-base font-medium text-tx2">
             Budget cap
             <input type="number" min={0} className={input} disabled={!canEdit} value={budgetCap} onChange={(e) => setBudgetCap(Number(e.target.value) || 0)} />
           </label>
