@@ -28,6 +28,7 @@ const input =
   'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base focus:border-ac focus:outline-none disabled:opacity-60'
 const pill = 'rounded-full border-[1.4px] border-ln3 px-3 py-1.5 text-base font-medium text-tx2 disabled:opacity-50'
 const pillMauve = 'rounded-full border-[1.4px] border-ac2-line px-3 py-1.5 text-base font-medium text-ac2 disabled:opacity-50'
+const pillAc = 'rounded-full border-[1.4px] border-ac-line px-3 py-1.5 text-base font-medium text-ac disabled:opacity-50'
 
 // "People on this trip" — the INVITER's half of the invite flow (migration 25).
 //
@@ -43,6 +44,9 @@ function PeopleCard() {
   const { tripId } = useTripScope()
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'editor' | 'viewer'>('editor')
+  // which pending row just had its link copied — reverts after the same 1.5s
+  // beat the follow-link modal uses
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const sent = useQuery({
     queryKey: tk.sentInvites(tripId ?? 'none'),
@@ -63,13 +67,23 @@ function PeopleCard() {
   const pending = sent.data ?? []
   const valid = /.+@.+\..+/.test(email.trim())
 
+  // There is no email sender — this link IS the delivery path (migration 28's
+  // /invite/[token] front door). Invite tokens are stored in plain, unlike
+  // hashed share tokens, so copying works on every visit, not just at creation.
+  async function copyLink(id: string, token: string) {
+    await navigator.clipboard.writeText(`${window.location.origin}/invite/${token}`)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 1500)
+  }
+
   return (
     <section className="mt-3 flex flex-col gap-3">
       <h2 className="font-serif text-[19px] font-semibold">People on this trip</h2>
       <div className="flex flex-col gap-[11px] rounded-[var(--r)] bg-sf p-4">
         <p className="text-base leading-normal text-tx2">
-          Invite by email. They join by signing in with that address — the invite appears at the
-          top of their screen and they accept it there.
+          Invite by email, then copy their link below and send it yourself —{' '}
+          <b className="font-semibold text-tx">nothing is emailed automatically</b>. Signing in
+          with that address also shows the invite in-app.
         </p>
 
         <div className="flex items-end gap-[9px]">
@@ -103,15 +117,21 @@ function PeopleCard() {
         )}
 
         {pending.map((i) => (
-          <div key={i.id} className="flex items-center gap-[11px] border-t border-ln pt-3">
-            <div className="min-w-0 grow">
-              <div className="truncate text-base font-semibold">{i.email}</div>
-              <div className="text-base text-tx2">
-                invited as {i.role === 'editor' ? 'co-editor' : 'viewer'} · not accepted yet
+          <div key={i.id} className="flex flex-col gap-2 border-t border-ln pt-3">
+            <div className="flex items-center gap-[11px]">
+              <div className="min-w-0 grow">
+                <div className="truncate text-base font-semibold">{i.email}</div>
+                <div className="text-base text-tx2">
+                  invited as {i.role === 'editor' ? 'co-editor' : 'viewer'} · not accepted yet
+                </div>
               </div>
+              <button onClick={() => revoke.mutate(i.id)} disabled={revoke.isPending} className={pill + ' flex-none'}>
+                Withdraw
+              </button>
             </div>
-            <button onClick={() => revoke.mutate(i.id)} disabled={revoke.isPending} className={pill}>
-              Withdraw
+            {/* own line: beside Withdraw the email would truncate to ~110px at 375px wide */}
+            <button onClick={() => copyLink(i.id, i.token)} className={pillAc + ' self-start'}>
+              {copiedId === i.id ? '✓ Copied' : '⧉ Copy invite link'}
             </button>
           </div>
         ))}
