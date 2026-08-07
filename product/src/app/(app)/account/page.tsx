@@ -16,5 +16,6 @@ export default async function AccountPage() {
   const sb = await createClient()
   const { data } = await sb.auth.getClaims()
   const email = (data?.claims?.email as string | undefined) ?? ''
-  return <AccountClient email={email} />
+  const meta = data?.claims?.user_metadata as { first_name?: string } | undefined
+  return <AccountClient email={email} initialFirstName={meta?.first_name ?? ''} />
 }

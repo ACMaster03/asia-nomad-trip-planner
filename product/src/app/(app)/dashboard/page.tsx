@@ -9,9 +9,13 @@ export default async function DashboardPage() {
   // layout already verified auth, this just reads the email for the initial.
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()
+  const meta = data?.claims?.user_metadata as { first_name?: string } | undefined
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <DashboardClient userEmail={data?.claims?.email as string | undefined} />
+      <DashboardClient
+        userEmail={data?.claims?.email as string | undefined}
+        userName={meta?.first_name}
+      />
     </HydrationBoundary>
   )
 }
