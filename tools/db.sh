@@ -74,8 +74,11 @@ case "$cmd" in
   apply)
     [[ $# -gt 0 ]] || { echo "usage: tools/db.sh apply 25 26" >&2; exit 1; }
     for n in "$@"; do
-      f=$(ls "$MIG/$n"-*.sql 2>/dev/null | grep -v -- '-TESTPLAN' | head -1)
-      [[ -f "$f" ]] || { echo "✗ no migration $n" >&2; exit 1; }
+      # `|| true`: with pipefail + errexit, a no-match ls would abort the script
+      # right here and exit non-zero with NOTHING printed — the check below
+      # never got a chance to say which number was wrong.
+      f=$(ls "$MIG/$n"-*.sql 2>/dev/null | grep -v -- '-TESTPLAN' | head -1 || true)
+      [[ -f "$f" ]] || { echo "✗ no migration numbered $n in supabase/migrations/" >&2; exit 1; }
       echo "── applying $(basename "$f")  →  $TARGET"
       run "$f"
       echo "   ✓ applied"
