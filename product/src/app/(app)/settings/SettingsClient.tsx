@@ -109,6 +109,15 @@ function PeopleCard() {
         >
           {invite.isPending ? 'Inviting…' : 'Send invite'}
         </button>
+        {/* The role words matter more than they look: "View" is the answer to
+            "share the trip, but only with THIS person" — unlike a follow link,
+            an invite is bound to the address and cannot be forwarded. */}
+        <p className="text-base leading-normal text-tx2">
+          <b className="font-semibold text-tx">Edit</b> can change the plan;{' '}
+          <b className="font-semibold text-tx">View</b> sees everything but changes nothing. Either
+          way they must sign in with this address, so the invite is useless to anyone else — that is
+          the difference from a follow link, which opens for whoever holds it.
+        </p>
         {invite.isError && (
           <p className="text-base text-ac2">Could not create the invite — try again.</p>
         )}

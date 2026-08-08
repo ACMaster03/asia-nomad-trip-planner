@@ -428,7 +428,7 @@ function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
   const toggle = async () => {
     setBusy(true)
     try {
-      setState(state === 'subscribed' ? await disablePush(sb) : await enablePush(sb, token))
+      setState(state === 'subscribed' ? await disablePush(sb, token) : await enablePush(sb, token))
     } catch {
       setState(await getPushState())
     } finally {

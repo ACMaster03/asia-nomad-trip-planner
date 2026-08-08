@@ -1,6 +1,13 @@
 -- ============================================================================
 -- 09-places.sql — the places table (M2 item 1, first of the "lived trip" regime)
 --
+-- AUTHORITY NOTE: 29-privacy-hardening.sql is the AUTHORITY for the places
+-- policies and for uniqueness. It narrows places_select (user rows are NOT
+-- world-readable — created_by made them an itinerary leak), re-asserts `source`
+-- in places_update, and replaces the global unique (city_id, name) below with
+-- two partial indexes. Re-running THIS file afterwards reopens both holes —
+-- always (re)apply 29 last. If this file and 29 disagree, 29 wins.
+--
 -- Idempotent, additive-only. Design per the approved plan: places are BORN
 -- relational (never jsonb) because every check-in hangs off one, and public
 -- community reviews (P3) aggregate over them.
@@ -56,8 +63,11 @@ create policy places_delete on public.places for delete
   to authenticated using (public.is_admin());
 
 -- ---------------------------------------------------------------------------
--- Seed: explode every city's landmarks into places rows. Re-runnable — the
--- (city_id, name) unique constraint turns repeats into no-ops.
+-- Seed: explode every city's landmarks into places rows. Re-runnable via an
+-- explicit NOT EXISTS rather than ON CONFLICT: migration 29 replaces the
+-- unique (city_id, name) constraint above with two partial indexes, and
+-- ON CONFLICT (city_id, name) can no longer infer an index once it does. This
+-- form is index-agnostic, so the seed stays idempotent both before and after 29.
 -- ---------------------------------------------------------------------------
 insert into public.places (city_id, name, kind, source, attributes)
 select
@@ -69,4 +79,7 @@ select
 from public.cities c,
      jsonb_array_elements(coalesce(c.attributes->'landmarks', '[]'::jsonb)) lm
 where lm ? 'name'
-on conflict (city_id, name) do nothing;
+  and not exists (
+    select 1 from public.places p
+    where p.city_id = c.id and p.name = lm->>'name'
+  );

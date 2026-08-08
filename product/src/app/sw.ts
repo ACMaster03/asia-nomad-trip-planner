@@ -111,7 +111,16 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
-    // Navigations FIRST: defaultCache's own "pages" entry matches on the
+    // NEVER CACHE THE FOLLOW PAGE. Its document is server-rendered with the
+    // trip summary already in the HTML, so a cached copy keeps showing the
+    // route and dates after the owner revokes or pauses the link — revocation
+    // that stops at the network is not revocation. Followers lose offline
+    // access to this one page; being able to withdraw a link is worth more.
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/follow/"),
+      handler: new NetworkOnly(),
+    },
+    // Navigations: defaultCache's own "pages" entry matches on the
     // request's Content-Type header, which GET navigations don't carry — so
     // documents ended up in the tiny shared "others" cache. Match on
     // request.mode instead so visited screens reliably reopen offline.

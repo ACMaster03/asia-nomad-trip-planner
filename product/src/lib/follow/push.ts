@@ -88,11 +88,15 @@ export async function enablePush(sb: SupabaseClient, token: string): Promise<Pus
   return 'subscribed'
 }
 
-export async function disablePush(sb: SupabaseClient): Promise<PushState> {
+// The follow token is required, not decorative: unsubscribe_push used to delete
+// by endpoint alone (migration 29), so anyone who learned a push-service URL
+// could mute that follower. The token proves the caller holds the link the
+// subscription belongs to.
+export async function disablePush(sb: SupabaseClient, token: string): Promise<PushState> {
   const reg = await navigator.serviceWorker.getRegistration()
   const sub = await reg?.pushManager.getSubscription()
   if (sub) {
-    await sb.rpc('unsubscribe_push', { p_endpoint: sub.endpoint }).then(
+    await sb.rpc('unsubscribe_push', { p_token: token, p_endpoint: sub.endpoint }).then(
       () => {},
       () => {},
     )

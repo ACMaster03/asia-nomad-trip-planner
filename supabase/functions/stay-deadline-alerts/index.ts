@@ -20,6 +20,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendEmail } from '../_shared/resend.ts'
 import { sendWebPush, type WebPushTarget } from '../_shared/webpush.ts'
+import { hasCronSecret } from '../_shared/cronAuth.ts'
 
 type Stay = {
   id: string
@@ -38,7 +39,6 @@ type TripRow = {
 }
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const CRON_SECRET = Deno.env.get('CRON_SECRET')!
 const FROM = Deno.env.get('ALERTS_FROM') ?? 'Nomad Planner <onboarding@resend.dev>'
 
 // kind → how many days before the date the alert fires
@@ -54,7 +54,7 @@ function daysUntil(iso: string, today: Date): number {
 }
 
 Deno.serve(async (req) => {
-  if (req.headers.get('x-cron-secret') !== CRON_SECRET) {
+  if (!(await hasCronSecret(req))) {
     return new Response('forbidden', { status: 403 })
   }
 
