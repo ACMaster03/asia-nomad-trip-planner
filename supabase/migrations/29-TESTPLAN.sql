@@ -68,9 +68,10 @@ language sql as $$ select set_config('role', 'none', true); $$;
 
 -- A catalogue place and a private one created by the owner, plus the check-in
 -- that ties the private one to the trip (exactly what CheckInModal does).
--- cities.country → countries FK: the fixture country must exist first
+-- cities.country → countries(code) FK — and this schema's codes are full
+-- names ('Vietnam'), so the fixture code must literally be 'Testland'
 insert into public.countries (code, name, extras)
-values ('TP29', 'Testland', '{}'::jsonb)
+values ('Testland', 'Testland', '{}'::jsonb)
 on conflict do nothing;
 
 -- cities.id is GENERATED ALWAYS — the fixture needs a known id for the FK
