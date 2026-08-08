@@ -28,12 +28,19 @@ select t.id,
 \echo ''
 \echo '── photo storage per trip folder, incl. any ORPHANED folders ──────────'
 \echo '   (a folder whose trip no longer exists = files nothing can reach)'
-select split_part(o.name, '/', 1)              as trip_folder,
-       count(*)                                as objects,
-       pg_size_pretty(sum((o.metadata->>'size')::bigint)) as size,
+-- aggregate first, then test existence on the grouped value — referencing
+-- o.name inside EXISTS from the grouped outer query is a 42803 error
+select f.trip_folder,
+       f.objects,
+       f.size,
        exists (select 1 from public.trips t
-                where t.id::text = split_part(o.name, '/', 1)) as trip_still_exists
-  from storage.objects o
- where o.bucket_id = 'trip-media'
- group by 1
- order by 2 desc;
+                where t.id::text = f.trip_folder) as trip_still_exists
+  from (
+    select split_part(o.name, '/', 1)                         as trip_folder,
+           count(*)                                           as objects,
+           pg_size_pretty(sum((o.metadata->>'size')::bigint)) as size
+      from storage.objects o
+     where o.bucket_id = 'trip-media'
+     group by 1
+  ) f
+ order by f.objects desc;
