@@ -17,19 +17,47 @@
 #   supabase/.prod-conn      requires --prod       (also gitignored)
 #
 # Get the string from Supabase → Project Settings → Database → Connection
-# string → URI, and write it to the file:
+# string, and write it to the file:
 #
-#   printf '%s' 'postgresql://postgres:PASSWORD@db.PROJECT.supabase.co:5432/postgres' \
+#   printf '%s' 'postgresql://postgres.PROJECT:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres' \
 #     > supabase/.staging-conn
 #
-# Use the DIRECT connection (port 5432), not the pooler: the testplans create
-# their own fixtures in auth.users, which the pooled role may not be able to do.
+# Use the SESSION POOLER (port 5432) — the tab labelled "Session pooler", not
+# "Transaction pooler". Two separate reasons, easy to conflate:
+#
+#   • The DIRECT host (db.PROJECT.supabase.co) publishes an AAAA record and no
+#     A record. On a network without IPv6 it does not resolve at all — psql
+#     fails with "could not translate host name", before any auth. The session
+#     pooler is reachable over IPv4, so it is the only route that works here.
+#   • The TRANSACTION pooler (port 6543) hands out a different backend per
+#     statement, so `set role`, `begin … rollback` and temp fixtures — which is
+#     what every TESTPLAN is built out of — do not survive. The session pooler
+#     gives one real backend for the whole connection, so they do.
+#
+# Both poolers connect as the same `postgres` role, so the auth.users fixtures
+# the testplans create are as permitted there as on the direct connection.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MIG="$ROOT/supabase/migrations"
 CHECKS="$ROOT/supabase/checks"
+
+# Homebrew's libpq is keg-only: `brew install libpq` leaves a working psql that
+# is not on PATH, so the script would report it missing on a machine that has
+# it. Look in the usual places before giving up.
+PSQL="${PSQL:-}"
+if [[ -z "$PSQL" ]]; then
+  for c in psql /opt/homebrew/opt/libpq/bin/psql /usr/local/opt/libpq/bin/psql \
+           /Applications/Postgres.app/Contents/Versions/latest/bin/psql; do
+    if command -v "$c" >/dev/null 2>&1; then PSQL="$c"; break; fi
+  done
+fi
+if [[ -z "$PSQL" ]]; then
+  echo "✗ psql not found. Install it with:  brew install libpq" >&2
+  echo "  (or set PSQL=/path/to/psql)" >&2
+  exit 1
+fi
 
 TARGET=staging
 ARGS=()
@@ -42,7 +70,11 @@ for a in "$@"; do
 done
 set -- "${ARGS[@]:-}"
 
-usage() { sed -n '3,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+# The header block is the help text. Printing a hardcoded line range meant that
+# editing the header silently truncated --help; read to the closing rule instead.
+usage() {
+  awk 'NR>2 && /^# ---/ { exit } NR>2 { sub(/^# ?/, ""); print }' "${BASH_SOURCE[0]}"
+}
 
 # Usage before credentials: asking for a connection string in order to be told
 # how to use the script would be a silly first experience.
@@ -52,7 +84,8 @@ CONN_FILE="$ROOT/supabase/.$TARGET-conn"
 if [[ ! -s "$CONN_FILE" ]]; then
   echo "✗ No connection string at supabase/.$TARGET-conn" >&2
   echo "  Create it (the file is gitignored):" >&2
-  echo "    printf '%s' 'postgresql://postgres:PW@db.PROJECT.supabase.co:5432/postgres' > supabase/.$TARGET-conn" >&2
+  echo "    printf '%s' 'postgresql://postgres.PROJECT:PW@aws-0-REGION.pooler.supabase.com:5432/postgres' > supabase/.$TARGET-conn" >&2
+  echo "  Supabase → Database → Connection string → Session pooler (see the header)." >&2
   exit 1
 fi
 # First non-empty, non-comment line; tolerate a trailing newline.
@@ -66,7 +99,7 @@ if [[ "$TARGET" == prod && "${1:-}" =~ ^(apply|sql)$ ]]; then
 fi
 
 # ON_ERROR_STOP: a failed assertion must exit non-zero, not scroll past.
-run() { psql "$CONN" -v ON_ERROR_STOP=1 --no-psqlrc -f "$1"; }
+run() { "$PSQL" "$CONN" -v ON_ERROR_STOP=1 --no-psqlrc -f "$1"; }
 
 cmd="${1:-}"; shift || true
 
@@ -106,7 +139,7 @@ case "$cmd" in
     [[ -f "${1:-}" ]] || { echo "usage: tools/db.sh sql <file.sql>" >&2; exit 1; }
     run "$1"
     ;;
-  shell)  psql "$CONN" --no-psqlrc ;;
+  shell)  "$PSQL" "$CONN" --no-psqlrc ;;
   *)
     echo "✗ unknown command: $cmd" >&2
     usage >&2
