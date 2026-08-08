@@ -15,8 +15,8 @@
 // Secrets: CRON_SECRET (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY auto-provided).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { hasCronSecret } from '../_shared/cronAuth.ts'
 
-const CRON_SECRET = Deno.env.get('CRON_SECRET')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const FEED = 'https://open.er-api.com/v6/latest/USD'
 const MANUAL_COOLDOWN_MS = 60_000
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'unsupported' }, 405)
 
   // Cron arm.
-  if (req.headers.get('x-cron-secret') === CRON_SECRET) return refresh()
+  if (await hasCronSecret(req)) return refresh()
 
   // User arm: a real signed-in account, then a cooldown. The feed moves once a
   // day, so hammering Refresh buys nothing and only risks the upstream.

@@ -15,8 +15,8 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendWebPush, type WebPushTarget } from '../_shared/webpush.ts'
+import { hasCronSecret } from '../_shared/cronAuth.ts'
 
-const CRON_SECRET = Deno.env.get('CRON_SECRET')!
 
 const sb = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -51,7 +51,7 @@ function notification(ev: EventRow, tripName: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.headers.get('x-cron-secret') !== CRON_SECRET) {
+  if (!(await hasCronSecret(req))) {
     return new Response('forbidden', { status: 403 })
   }
   const { event_id } = await req.json().catch(() => ({}))

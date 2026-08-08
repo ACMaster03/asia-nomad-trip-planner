@@ -268,6 +268,18 @@ function SharingCard({ endDate }: { endDate?: string }) {
         </button>
       </div>
 
+      {/* The honest description of what a follow link IS. It cannot be made
+          account-protected without becoming a different feature — so the card
+          says so plainly and points at the one that already is. */}
+      <p className="text-base leading-normal text-tx2">
+        A follow link opens for <b className="font-semibold text-tx">anyone who has it</b> — there
+        is no sign-in, so a forwarded link works just as well for whoever receives it. Followers see
+        the route, dates and check-ins; never money, bookings or notes. To share with a specific
+        person instead, invite them as a <b className="font-semibold text-tx">Viewer</b> under People
+        on this trip in Trip settings — they have to sign in with that address, and the invite
+        cannot be passed on.
+      </p>
+
       {/* always-visible follower count + pause-all */}
       {list.length > 0 && (
         <div
@@ -362,6 +374,11 @@ function SharingCard({ endDate }: { endDate?: string }) {
         <Modal title={newLink ? 'Follow link created' : 'Create follow link'} onClose={() => setCreateOpen(false)}>
           {!newLink ? (
             <div>
+              <p className="mb-3 text-base leading-normal text-tx2">
+                For family who just want to watch along — anyone the link reaches can open it. If it
+                should only work for one named person, invite them as a Viewer in Trip settings
+                instead.
+              </p>
               <label className="block text-base font-medium text-tx2">
                 Label
                 <input className={input} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Family" autoFocus />

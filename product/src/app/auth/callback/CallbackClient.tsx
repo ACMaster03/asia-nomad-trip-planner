@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { safeNextPath } from '@/lib/auth/safeNext'
 
 export default function CallbackClient() {
   const router = useRouter()
@@ -14,9 +15,8 @@ export default function CallbackClient() {
     ran.current = true
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
-    const rawNext = params.get('next') ?? '/dashboard'
-    // relative paths only — never follow an absolute ?next= off-site
-    const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard'
+    // relative same-origin paths only — never follow a ?next= off-site
+    const next = safeNextPath(params.get('next'))
     if (!code) {
       router.replace('/auth/auth-code-error')
       return

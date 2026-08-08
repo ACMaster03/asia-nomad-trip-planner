@@ -18,9 +18,9 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendEmail } from '../_shared/resend.ts'
+import { hasCronSecret } from '../_shared/cronAuth.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const CRON_SECRET = Deno.env.get('CRON_SECRET')!
 const FROM = Deno.env.get('ALERTS_FROM') ?? 'Nomad Planner <onboarding@resend.dev>'
 const FALLBACK_SITE = 'https://asia-nomad-trip-planner.vercel.app'
 const SITE = (Deno.env.get('SITE_URL') ?? FALLBACK_SITE).replace(/\/+$/, '')
@@ -65,7 +65,7 @@ function eventLine(e: EventRow): string {
 }
 
 Deno.serve(async (req) => {
-  if (req.headers.get('x-cron-secret') !== CRON_SECRET) {
+  if (!(await hasCronSecret(req))) {
     return new Response('forbidden', { status: 403 })
   }
 
