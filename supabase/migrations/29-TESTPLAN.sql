@@ -68,7 +68,10 @@ language sql as $$ select set_config('role', 'none', true); $$;
 
 -- A catalogue place and a private one created by the owner, plus the check-in
 -- that ties the private one to the trip (exactly what CheckInModal does).
+-- cities.id is GENERATED ALWAYS — the fixture needs a known id for the FK
+-- below, so override the identity rather than drop the explicit value
 insert into public.cities (id, region, country, city)
+overriding system value
 values (929929, 'TP29', 'Testland', 'TP29 City')
 on conflict (id) do nothing;
 
