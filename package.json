@@ -5,6 +5,9 @@
   "description": "Self-contained Asia nomad trip planner — static site, no build step.",
   "scripts": {
     "coords": "node tools/add-coords.mjs",
-    "serve": "npx --yes serve ."
+    "serve": "npx --yes serve .",
+    "db": "tools/db.sh",
+    "db:check": "tools/db.sh check",
+    "db:trips": "tools/db.sh trips"
   }
 }
