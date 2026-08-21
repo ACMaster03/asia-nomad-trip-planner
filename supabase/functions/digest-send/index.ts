@@ -91,11 +91,14 @@ Deno.serve(async (req) => {
   const tripIds = [...new Set(due.map((s) => s.trip_shares.trip_id))]
   const tripEvents = new Map<string, EventRow[]>()
   const tripNames = new Map<string, string>()
+  const fetchFailures: string[] = []
   for (const tripId of tripIds) {
-    const { data: trip } = await sb.from('trips').select('state').eq('id', tripId).maybeSingle()
+    const { data: trip, error: tripErr } = await sb
+      .from('trips').select('state').eq('id', tripId).maybeSingle()
+    if (tripErr) console.error('[digest-send] trip lookup failed', tripId, '—', tripErr.message)
     tripNames.set(tripId,
       (trip?.state as { meta?: { tripName?: string } })?.meta?.tripName ?? 'Trip update')
-    const { data: evs } = await sb
+    const { data: evs, error: evErr } = await sb
       .from('trip_events')
       .select('kind,occurred_at,payload,check_ins(rating,comment)')
       .eq('trip_id', tripId)
@@ -103,6 +106,14 @@ Deno.serve(async (req) => {
       .gt('occurred_at', new Date(now - MAX_WINDOW).toISOString())
       .order('occurred_at', { ascending: true })
       .limit(60)
+    // A failed event fetch is the worst kind of silence: `evs` is null, the trip
+    // reads as a quiet day, every subscriber is skipped, last_sent_at is left
+    // alone — and the run still reports success. Indistinguishable from "nothing
+    // happened" unless we say so.
+    if (evErr) {
+      console.error('[digest-send] event fetch failed', tripId, '—', evErr.message)
+      fetchFailures.push(`${tripId}: ${evErr.message}`)
+    }
     tripEvents.set(tripId, (evs ?? []) as unknown as EventRow[])
   }
 
@@ -167,5 +178,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  return Response.json({ due: due.length, sent, results })
+  // fetchFailures surfaces in the cron-secret-protected response so a run that
+  // sent nothing can be told apart from a run that had nothing to send.
+  return Response.json({ due: due.length, sent, results, fetchFailures })
 })

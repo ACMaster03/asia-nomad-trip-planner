@@ -59,11 +59,13 @@ const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: CORS })
 
 async function tripNameForShare(shareId: string): Promise<string> {
-  const { data: share } = await sb
+  const { data: share, error: shareErr } = await sb
     .from('trip_shares').select('trip_id').eq('id', shareId).maybeSingle()
+  if (shareErr) console.error('[digest] trip_shares lookup failed —', shareErr.message)
   if (!share) return 'the trip'
-  const { data: trip } = await sb
+  const { data: trip, error: tripErr } = await sb
     .from('trips').select('state').eq('id', share.trip_id).maybeSingle()
+  if (tripErr) console.error('[digest] trips lookup failed —', tripErr.message)
   return (trip?.state as { meta?: { tripName?: string } })?.meta?.tripName ?? 'the trip'
 }
 
@@ -81,23 +83,28 @@ async function subscribe(req: Request): Promise<Response> {
   }
 
   const tokenHash = await sha256hex(token)
-  const { data: share } = await sb
+  const { data: share, error: shareErr } = await sb
     .from('trip_shares')
     .select('id, trip_id, revoked_at, expires_at')
     .eq('token_hash', tokenHash)
     .is('revoked_at', null)
     .maybeSingle()
+  // A DB failure here is INDISTINGUISHABLE to the caller from a dead link: both
+  // answer 403 "invalid link". Keep the vague reply (the follower can't act on
+  // either) but never let the real reason vanish.
+  if (shareErr) console.error('[digest] subscribe: share lookup failed —', shareErr.message)
   if (!share || (share.expires_at && +new Date(share.expires_at) < Date.now())) {
     return json({ error: 'invalid link' }, 403)
   }
 
   const normEmail = email.trim().toLowerCase()
-  const { data: existing } = await sb
+  const { data: existing, error: existingErr } = await sb
     .from('digest_subscriptions')
     .select('id, confirmed_at, confirm_sent_at, unsubscribed_at')
     .eq('share_id', share.id)
     .eq('email', normEmail)
     .maybeSingle()
+  if (existingErr) console.error('[digest] subscribe: existing lookup failed —', existingErr.message)
 
   // Live and confirmed → just switch frequency, no new email. A row that was
   // unsubscribed falls through to a fresh double opt-in on purpose: an
@@ -129,7 +136,12 @@ async function subscribe(req: Request): Promise<Response> {
     .upsert(row, { onConflict: 'share_id,email' })
     .select('view_token')
     .single()
-  if (upErr || !saved) return json({ error: 'try again' }, 500)
+  if (upErr || !saved) {
+    // Previously discarded outright: the follower got "try again", the log got
+    // nothing, and a schema/constraint problem was invisible from both ends.
+    console.error('[digest] subscribe: upsert failed —', upErr?.message ?? 'no row returned')
+    return json({ error: 'try again' }, 500)
+  }
 
   const tripName = await tripNameForShare(share.id)
   const sent = await send(
@@ -159,11 +171,12 @@ async function subscribe(req: Request): Promise<Response> {
 
 async function confirm(raw: string): Promise<Response> {
   const hash = await sha256hex(raw)
-  const { data: sub } = await sb
+  const { data: sub, error: subErr } = await sb
     .from('digest_subscriptions')
     .select('id, share_id, email, frequency, confirmed_at, unsubscribed_at, view_token')
     .eq('confirm_token_hash', hash)
     .maybeSingle()
+  if (subErr) console.error('[digest] confirm: lookup failed —', subErr.message)
   // No row → the token was used, replaced by a newer request, or never existed.
   // We cannot tell which, and cannot name the trip: there is nothing to look up.
   if (!sub) return json({ status: 'invalid' })
@@ -187,11 +200,12 @@ async function confirm(raw: string): Promise<Response> {
 // POST is idempotent and the undo below has something to restore. The view
 // token keeps working — unsubscribing stops emails, not access.
 async function unsub(raw: string): Promise<Response> {
-  const { data: sub } = await sb
+  const { data: sub, error: subErr } = await sb
     .from('digest_subscriptions')
     .select('id, share_id, email, frequency, unsubscribed_at, view_token')
     .eq('unsub_token', raw)
     .maybeSingle()
+  if (subErr) console.error('[digest] unsub: lookup failed —', subErr.message)
   // Unknown token still reports success — an unsubscribe link must never fail.
   if (!sub) return json({ status: 'unknown' })
 
@@ -213,11 +227,12 @@ async function unsub(raw: string): Promise<Response> {
 // Undo, straight off the Unsubscribed page. No second opt-in: this address
 // already confirmed once, and the caller is holding its unsubscribe token.
 async function resubscribe(raw: string): Promise<Response> {
-  const { data: sub } = await sb
+  const { data: sub, error: subErr } = await sb
     .from('digest_subscriptions')
     .select('id, share_id, email, frequency, confirmed_at, view_token')
     .eq('unsub_token', raw)
     .maybeSingle()
+  if (subErr) console.error('[digest] resubscribe: lookup failed —', subErr.message)
   if (!sub) return json({ status: 'unknown' })
 
   await sb.from('digest_subscriptions')
