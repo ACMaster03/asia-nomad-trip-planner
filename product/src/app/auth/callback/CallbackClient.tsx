@@ -17,14 +17,22 @@ export default function CallbackClient() {
     const code = params.get('code')
     // relative same-origin paths only — never follow a ?next= off-site
     const next = safeNextPath(params.get('next'))
+    // Carry the real reason to the error page. "Invalid or expired" covers two
+    // completely different failures — a genuinely stale link, and a PKCE
+    // verifier that was never in THIS browser because the link was opened from
+    // a mail app's in-app browser — and they need opposite fixes. Discarding
+    // the provider's own words is what made this outage take a day to place.
+    const fail = (reason: string) =>
+      router.replace(`/auth/auth-code-error?reason=${encodeURIComponent(reason.slice(0, 200))}`)
+
     if (!code) {
-      router.replace('/auth/auth-code-error')
+      fail('no code in the link')
       return
     }
     createClient()
       .auth.exchangeCodeForSession(code)
-      .then(({ error }) => router.replace(error ? '/auth/auth-code-error' : next))
-      .catch(() => router.replace('/auth/auth-code-error'))
+      .then(({ error }) => (error ? fail(error.message) : router.replace(next)))
+      .catch((e) => fail(e instanceof Error ? e.message : String(e)))
   }, [router])
 
   return (
