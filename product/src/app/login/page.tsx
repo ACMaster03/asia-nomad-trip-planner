@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createOtpClient } from '@/lib/supabase/otp'
 
 // Login — handoff frame 01 (the only screen on the 2a "valley morning" wash;
 // invite-accept shares it in Phase 4). Behavior follows the rig: sending stays
@@ -25,11 +25,15 @@ export default function Login() {
     e.preventDefault()
     if (!email || sending || cooldown > 0) return
     setSending(true)
-    const sb = createClient()
+    // Send-only, NON-PKCE client (lib/supabase/otp.ts). PKCE bound the link to
+    // this browser's stored verifier, so opening it from a mail app's in-app
+    // browser failed with "link invalid or expired" — see that file for the
+    // full account. Without a verifier the link is redeemable anywhere:
+    // /auth/confirm verifies a token_hash server-side once the Supabase email
+    // template points there (docs/AUTH-EMAIL-TEMPLATE.md), and until it does,
+    // /auth/callback accepts the tokens Supabase puts in the URL fragment.
+    const sb = createOtpClient()
     const { error } = await sb.auth.signInWithOtp({
-      // PKCE (browser client default) delivers the link as ?code= → /auth/callback
-      // exchanges it. /auth/confirm (token_hash) stays available for templates that
-      // use the OTP flow instead.
       email,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
