@@ -74,16 +74,32 @@ browser history.
 (currently `{{ .ConfirmationURL }}`) with:
 
 ```
-{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type={{ .Type }}&next=/dashboard
+{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink&next=/dashboard
 ```
+
+> **`{{ .Type }}` DOES NOT WORK — write the type literally.** This cost two
+> test rounds on 2026-08-28. `{{ .SiteURL }}` and `{{ .TokenHash }}` are
+> substituted; `{{ .Type }}` is not, and renders as nothing — producing
+> `…&type=&next=/dashboard`, which `/auth/confirm` rejects because an empty
+> string matches none of its allowed OTP types. Each template must state its
+> own type: **`type=magiclink`** here, **`type=signup`** on Confirm signup.
+> The route says so explicitly now if it ever sees an empty one again.
 
 Keep all the Livhold styling. Only the `href` changes — in **both** the green
 "Open Livhold" button and the "Button not working? Copy this link" fallback
 underneath it.
 
 Then do the same on **Confirm signup**, which is the template a brand-new
-address gets. Missing it means existing users are fixed and first-time users
-are not — the worst possible split.
+address gets — with **`type=signup`**, not `magiclink`. Missing it means
+existing users are fixed and first-time users are not: the worst possible
+split, and invisible to anyone who already has an account.
+
+**Status 2026-08-28:** Magic Link is done and verified in production — link
+requested in Safari, opened from the Gmail app, completed in Chrome, signed in.
+Three separate browser contexts, which is the case that used to fail. Site URL
+was also corrected from `https://livhold.com` to `https://www.livhold.com`
+(it builds `{{ .SiteURL }}`). Confirm signup still needs the same edit; it can
+only be proven by inviting a genuinely new address.
 
 Also check:
 
