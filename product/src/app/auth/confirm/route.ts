@@ -31,7 +31,17 @@ export async function GET(request: NextRequest) {
     )
 
   if (!token_hash) return fail('the link carried no sign-in token')
-  if (!type) return fail(`unsupported link type: ${rawType ?? 'missing'}`)
+  // `rawType` empty is its own diagnosis and a likely one: the email template
+  // wrote `type={{ .Type }}`, which Supabase does NOT populate — each template
+  // has to state its own type literally (type=magiclink, type=signup). Saying
+  // "unsupported link type:" and then nothing sent us looking at the wrong end.
+  if (!type) {
+    return fail(
+      rawType
+        ? `unsupported link type: ${rawType}`
+        : 'the link carried an empty type — the email template needs a literal type=magiclink or type=signup, not a placeholder',
+    )
+  }
 
   // Build the redirect FIRST and let Supabase write the session cookies onto
   // that exact response. Going through next/headers cookies() here would set
