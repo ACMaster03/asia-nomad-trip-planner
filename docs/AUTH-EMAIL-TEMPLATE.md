@@ -94,12 +94,16 @@ address gets — with **`type=signup`**, not `magiclink`. Missing it means
 existing users are fixed and first-time users are not: the worst possible
 split, and invisible to anyone who already has an account.
 
-**Status 2026-08-28:** Magic Link is done and verified in production — link
-requested in Safari, opened from the Gmail app, completed in Chrome, signed in.
-Three separate browser contexts, which is the case that used to fail. Site URL
-was also corrected from `https://livhold.com` to `https://www.livhold.com`
-(it builds `{{ .SiteURL }}`). Confirm signup still needs the same edit; it can
-only be proven by inviting a genuinely new address.
+**Status 2026-08-28 — BOTH TEMPLATES DONE.**
+
+- **Magic Link** (`type=magiclink`) — verified end to end in production: link
+  requested in Safari, opened from the Gmail app, completed in Chrome, signed
+  in. Three separate browser contexts, which is the case that used to fail.
+- **Confirm signup** (`type=signup`) — edited and confirmed correct by reading
+  it back. NOT yet exercised by a real signup: it can only be proven by
+  inviting a genuinely new address, so treat the first invite as its test.
+- **Site URL** corrected from `https://livhold.com` to
+  `https://www.livhold.com`, since `{{ .SiteURL }}` builds the link.
 
 Also check:
 
