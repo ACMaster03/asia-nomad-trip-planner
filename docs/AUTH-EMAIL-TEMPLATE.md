@@ -39,7 +39,14 @@ Note this template is the one part of the sign-in path with **no version
 control** — it lives only in the dashboard. That is how it drifted away from
 what `auth/confirm/route.ts` was written to receive, with no diff to catch it.
 
-## Step 1 — the code (DONE, on `claude/livhold-downtime-investigation-l2wcip`)
+## Step 1 — the code (DONE, merged, VERIFIED IN PRODUCTION 2026-08-28)
+
+Confirmed by the person who reported it, on the exact journey that failed:
+signed out completely, requested a link in Safari, opened it from the **Gmail
+app** — which handed it to Chrome, a browser holding no session — and landed
+signed in. The emailed token now reads `token=89e1e13d…` where it previously
+read `token=pkce_ae2133…`; that missing prefix is the fix.
+
 
 - `product/src/lib/supabase/otp.ts` — new send-only, **non-PKCE** client used
   for the sign-in email only. No verifier is minted, so the link is redeemable
@@ -92,10 +99,10 @@ The email says *"Open it on the device that asked for it."* That was never
 quite right and is now unnecessary — after this change any device and any
 browser works. Worth deleting so nobody follows advice that no longer applies.
 
-## Step 3 — verify (do not skip)
+## Step 3 — verify the TEMPLATE change (do not skip)
 
-The failure this fixes is invisible from the happy path, so test it the way it
-actually broke:
+Step 1 is already verified in production; this is about Step 2. The failure
+class is invisible from the happy path, so test it the way it actually broke:
 
 1. Request a link in **Safari**.
 2. Open the mail in the **Gmail app** and tap the button — deliberately the
