@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import withSerwistInit from "@serwist/next";
 
 // PWA (M2): Serwist precaches the app shell + static assets so /live opens
@@ -61,4 +62,34 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default process.env.NODE_ENV === "development" ? nextConfig : withSerwist(nextConfig);
+// Refuse to BUILD without the Supabase public config.
+//
+// These are read as `process.env.NEXT_PUBLIC_*` and Next inlines them at build
+// time, so an unset variable is baked into the bundle as `undefined` and only
+// explodes in production, at runtime, on every request: createServerClient()
+// throws inside src/proxy.ts and Vercel answers a bare 21-byte
+// `Internal Server Error` for every route. Nothing is logged where anyone would
+// look, so the site simply appears not to respond.
+//
+// Before this guard the build sailed through and shipped that bundle. Failing
+// here instead means a misconfigured deploy is rejected and the last good
+// deployment stays live — the failure mode you want.
+function assertSupabaseEnv() {
+  const missing = (
+    ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"] as const
+  ).filter((k) => !process.env[k]);
+  if (missing.length === 0) return;
+  throw new Error(
+    `Missing required build-time environment ${missing.join(" and ")}.\n` +
+      `Without it the bundle inlines \`undefined\` and EVERY route 500s at runtime.\n` +
+      `Set it in Vercel (Project → Settings → Environment Variables, Production)\n` +
+      `or in product/.env.local for a local build — see product/.env.example.`,
+  );
+}
+
+const config = (phase: string) => {
+  if (phase === PHASE_PRODUCTION_BUILD) assertSupabaseEnv();
+  return process.env.NODE_ENV === "development" ? nextConfig : withSerwist(nextConfig);
+};
+
+export default config;
