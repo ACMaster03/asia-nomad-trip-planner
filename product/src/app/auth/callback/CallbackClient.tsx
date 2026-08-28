@@ -39,10 +39,17 @@ export default function CallbackClient() {
     const fail = (reason: string) =>
       router.replace(`/auth/auth-code-error?reason=${encodeURIComponent(reason.slice(0, 200))}`)
 
-    // Supabase refused it before we ever got here.
-    const hashError = hash.get('error_description') ?? hash.get('error')
-    if (hashError) {
-      fail(hashError)
+    // Supabase refused it before we ever got here. It reports that in the
+    // FRAGMENT on the implicit flow and in the QUERY on the redirect flow, and
+    // checking only the fragment made a stated refusal look like an empty link.
+    const refused =
+      hash.get('error_description') ??
+      query.get('error_description') ??
+      hash.get('error') ??
+      query.get('error')
+    if (refused) {
+      const code_ = hash.get('error_code') ?? query.get('error_code')
+      fail(code_ ? `${refused} (${code_})` : refused)
       return
     }
 
@@ -64,7 +71,16 @@ export default function CallbackClient() {
 
     const code = query.get('code')
     if (!code) {
-      fail('the link carried no sign-in token')
+      // Say WHAT arrived, not just what didn't. Parameter NAMES only — never
+      // their values, which are credentials. "no sign-in token" on its own sent
+      // us hunting blind once already; the names alone identify the flow that
+      // produced the link and whether something upstream stripped it.
+      const seen = [...query.keys(), ...[...hash.keys()].map((k) => `#${k}`)]
+      fail(
+        seen.length
+          ? `no sign-in token; the link carried: ${seen.join(', ')}`
+          : 'no sign-in token, and the link carried nothing at all — the address may have lost it in a redirect',
+      )
       return
     }
     createClient()
