@@ -1,5 +1,5 @@
 import type { LedgerEntry, Stay, TransportLeg, TripState } from './types'
-import { segNights } from './format'
+import { stayTotal } from './budget'
 
 // === Auto-import planned costs into the ledger (mock 04, ledger states) ===
 //
@@ -15,9 +15,10 @@ import { segNights } from './format'
 //
 // `state.importSkip` lists source keys the user explicitly deleted from the
 // ledger; without it, reconcile would resurrect every deleted row.
-// `state.autoImport` — undefined means "never asked": the Ledger shows the
-// import card. true = future bookings land silently; false = card returns
-// only when NEW unimported bookings appear.
+// `state.autoImport` — undefined or true: bookings land in the ledger on their
+// own (default since 2026-09-12 — a charged booking is money spent, and the
+// ask-first card only delayed it). false = the opt-out: the Ledger shows the
+// import card whenever NEW unimported bookings appear.
 
 export type ImportSource = { kind: 'stay' | 'transport'; id: string }
 
@@ -26,10 +27,17 @@ export const sourceKey = (s: ImportSource) => `${s.kind}:${s.id}`
 const isBooked = (status?: string) =>
   ['booked', 'chosen'].includes((status ?? '').toLowerCase())
 
+// Amounts are rounded to cents. ppn × nights in floating point (33.71 × 29 =
+// 977.5900000000001) round-trips through jsonb fine, but a later rate/nights
+// edit could make "existing.amount !== synced.amount" true on noise alone and
+// re-sync the row on every visit; rounding makes the comparison exact.
+const cents = (n: number) => Math.round(n * 100) / 100
+
 interface Candidate {
   source: ImportSource
   date: string
-  category: 'Stays' | 'Transport'
+  /** registry ids (lib/trips/categories.ts) */
+  category: 'stays' | 'transport'
   amount: number
   currency: string
   note: string
@@ -38,13 +46,12 @@ interface Candidate {
 function stayCandidate(st: Stay, state: TripState): Candidate | null {
   if (!isBooked(st.status) || st.include === false || !st.chargeDate) return null
   const seg = state.segments.find((s) => s.id === st.segId)
-  const nights = st.nights != null ? st.nights : seg ? segNights(seg) : 0
-  const amount = st.ppn * nights
+  const amount = cents(stayTotal(st, seg))
   if (!(amount > 0)) return null
   return {
     source: { kind: 'stay', id: st.id },
     date: st.chargeDate,
-    category: 'Stays',
+    category: 'stays',
     amount,
     currency: st.cur,
     note: st.name,
@@ -57,8 +64,8 @@ function transportCandidate(t: TransportLeg): Candidate | null {
   return {
     source: { kind: 'transport', id: t.id },
     date: t.date,
-    category: 'Transport',
-    amount: t.price,
+    category: 'transport',
+    amount: cents(t.price),
     currency: t.cur,
     note: `${t.type} ${t.from} → ${t.to}`,
   }

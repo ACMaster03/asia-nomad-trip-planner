@@ -1,7 +1,9 @@
 import type { City } from '@/lib/catalogue/types'
 import { getAtJsonPath } from '@/lib/catalogue/getAtJsonPath'
 import type { TripState, LedgerEntry, Segment } from './types'
-import { toBase, usdToBase, segNights } from './format'
+import { toBase, usdToBase, segNights, stayTotal } from './format'
+// stayNights/stayTotal live in format.ts (node-testable); re-exported for callers.
+export { stayNights, stayTotal } from './format'
 
 // A city's cost profile, built ONLY from the catalogue attributes (the full nested
 // cost objects). If a city lacks them it is OMITTED from the index, so a lookup
@@ -74,10 +76,7 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
       let aHUF: number
       let aSrc: PerSeg['accomSrc']
       if (inc.length) {
-        aHUF = inc.reduce(
-          (a, st) => a + toBase(st.ppn, st.cur, rates) * (st.nights != null ? st.nights : nn),
-          0,
-        )
+        aHUF = inc.reduce((a, st) => a + toBase(stayTotal(st, s), st.cur, rates), 0)
         aSrc = 'included'
       } else if (k) {
         aHUF = usdToBase(k.accom[tier], rates) * nn
@@ -146,10 +145,7 @@ export function monthlyBuckets(state: TripState, cityIdx: Record<string, CityCos
       const tier = Math.min(2, Math.max(0, Number(s.tier ?? 1) || 0)) // clamp DB-sourced tier (0..2)
       const chosen = state.stays.filter((st) => st.segId === s.id && st.include)
       const accomTotal = chosen.length
-        ? chosen.reduce(
-            (a, st) => a + toBase(st.ppn, st.cur, rates) * (st.nights != null ? st.nights : nn),
-            0,
-          )
+        ? chosen.reduce((a, st) => a + toBase(stayTotal(st, s), st.cur, rates), 0)
         : k ? usdToBase(k.accom[tier], rates) * nn : 0
       const accomPN = accomTotal / nn
       const livePN = k ? usdToBase(k.live[tier], rates) : 0

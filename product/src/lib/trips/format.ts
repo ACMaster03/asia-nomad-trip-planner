@@ -1,4 +1,4 @@
-import type { Segment } from './types'
+import type { Segment, Stay } from './types'
 
 // Money formatting is BASE-CURRENCY AWARE (2026-07-25). Before this, fmtHUF
 // appended a literal " Ft" to everything: meta.baseCurrency was stored and the
@@ -46,6 +46,16 @@ export const nightsBetween = (a?: string, b?: string) => {
 }
 export const segNights = (s: Segment) =>
   s.nights != null ? s.nights : nightsBetween(s.arrive, s.depart)
+
+// A stay's nights and full cost — the ONE definition (owner note, 2026-09-11:
+// the Stays card "shows the per night stay and not the full cost and it isn't
+// clear"). The stay's own `nights` override wins; otherwise the stop's length.
+export function stayNights(st: Stay, seg: Segment | undefined): number {
+  return st.nights != null ? st.nights : seg ? segNights(seg) : 0
+}
+export function stayTotal(st: Stay, seg: Segment | undefined): number {
+  return st.ppn * stayNights(st, seg)
+}
 
 export const regName = (r: string) =>
   r === 'SE' ? 'Southeast Asia' : r === 'EA' ? 'East Asia' : r === 'SA' ? 'South Asia' : r
