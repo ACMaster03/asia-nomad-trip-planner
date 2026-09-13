@@ -52,7 +52,12 @@ export default function RootLayout({
         {/* Boot/update splash: SERVER-rendered so it paints before any JS
             (cold PWA starts, auto-update reloads); SWUpdate fades it out on
             hydration. The inline script swaps the label when this load was
-            triggered by the auto-updater (sessionStorage flag from SWUpdate). */}
+            triggered by the auto-updater (sessionStorage flag from SWUpdate).
+            That swap happens before React hydrates, so the label carries
+            suppressHydrationWarning: without it every auto-update reload —
+            i.e. the first load after each deploy — logged React #418 and
+            React put "Loading…" back over the swapped text. (Prod, 2026-09-13:
+            the #418s seen "right after" migrations 31/32 were these.) */}
         <div id="anp-splash" aria-hidden="true">
           <div className="anp-splash-inner">
             <div className="anp-splash-icon">
@@ -60,7 +65,9 @@ export default function RootLayout({
               <img src="/brand/livhold-mark.png" alt="" width={64} height={64} />
             </div>
             <div className="anp-splash-title">LIVHOLD</div>
-            <div className="anp-splash-sub" id="anp-splash-sub">Loading…</div>
+            <div className="anp-splash-sub" id="anp-splash-sub" suppressHydrationWarning>
+              Loading…
+            </div>
           </div>
           <div className="anp-splash-ver">v{process.env.NEXT_PUBLIC_BUILD_SHA}</div>
         </div>
