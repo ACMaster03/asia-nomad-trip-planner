@@ -157,8 +157,16 @@ run() {
       echo "✗ $(basename "$1") uses psql metacommands — run it with --psql" >&2
       return 1
     fi
-    supabase --workdir "$LINKDIR" db query --linked -f "$1" 2>&1 | grep -v '^Initialising login role'
-    [[ "${PIPESTATUS[0]}" -eq 0 ]]
+    # Capture, then print: piping straight into grep made an EMPTY result (a
+    # migration that returns no rows) look like a failure — grep -v exits 1
+    # when nothing survives, pipefail turned that into the script's exit, and
+    # `apply A && test A && --prod apply A` stopped after the first apply with
+    # the SQL already run and no "✓ applied" (2026-09-13, migration 32 landed
+    # on staging only).
+    local out rc=0
+    if out="$(supabase --workdir "$LINKDIR" db query --linked -f "$1" 2>&1)"; then rc=0; else rc=$?; fi
+    printf '%s\n' "$out" | grep -v '^Initialising login role' || true
+    return "$rc"
   fi
 }
 
