@@ -21,6 +21,7 @@ import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { tk } from '@/lib/trips/keys'
 import { nightsBetween, segNights } from '@/lib/trips/format'
+import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
 import {
   deleteTripEvent,
   fetchTripEvents,
@@ -231,8 +232,8 @@ export default function LiveClient() {
       next,
       previous,
       phase,
-      dayNum: nightsBetween(start, todayStr) + 1, // Day 1 = departure day (FIXTURES.md)
-      totalDays: end ? nightsBetween(start, end) + 1 : null,
+      dayNum: tripDay(s.meta, todayStr) ?? 1, // Day 1 = departure day (FIXTURES.md)
+      totalDays: tripLength(s.meta, 0),
       daysToGo: nightsBetween(todayStr, start),
     }
   }, [mounted, s])
@@ -600,9 +601,8 @@ function CurrentStopCard({
   stays: Stay[]
   todayStr: string
 }) {
-  const n = Math.max(segNights(seg), 1)
-  const night = Math.min(nightsBetween(seg.arrive, todayStr) + 1, n)
-  const left = n - night
+  // lib/trips/progress.ts — the same math Home uses
+  const { night, nights: n, left } = stopProgress(seg, todayStr)
   const stay = bookedStay(stays, seg.id)
   const nextBooked = next ? bookedStay(stays, next.id) : undefined
   return (

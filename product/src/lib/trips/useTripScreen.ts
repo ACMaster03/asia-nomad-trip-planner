@@ -2,10 +2,9 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchTrip } from './queries'
+import { tripQueryOptions } from './tripQuery'
 import { fetchCityList, fetchCitiesByName } from '@/lib/catalogue/queries'
 import { fetchFx, crossRate } from '@/lib/catalogue/fx'
-import { tk } from './keys'
 import { qk } from '@/lib/catalogue/keys'
 import { buildCityIndex } from './budget'
 import { useTripScope } from './TripScope'
@@ -16,10 +15,7 @@ export function useTripScreen() {
   // tripId null → no trips exist. The query must still RESOLVE (to null) rather
   // than sit disabled — a disabled query stays isPending forever, which would
   // pin every screen on "Loading…" instead of the create/empty state.
-  const trip = useQuery({
-    queryKey: tk.trip(tripId ?? 'none'),
-    queryFn: () => (tripId ? fetchTrip(sb, tripId) : Promise.resolve(null)),
-  })
+  const trip = useQuery(tripQueryOptions(sb, tripId))
   // TIER 2 (migration 20): the LIGHT city list — no attributes, ~8 kB instead
   // of ~102 kB. Enough for the stop picker and for matching a stop's city to
   // its places; nothing on these screens renders catalogue attributes.

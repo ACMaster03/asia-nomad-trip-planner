@@ -2,8 +2,7 @@
 import { createContext, useContext, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchTrip } from './queries'
-import { tk } from './keys'
+import { tripQueryOptions } from './tripQuery'
 import { useTripScope } from './TripScope'
 import { fmtMoney } from './format'
 
@@ -35,11 +34,7 @@ export function MoneyProvider({
 }) {
   const sb = createClient()
   const { tripId } = useTripScope()
-  const trip = useQuery({
-    queryKey: tk.trip(tripId ?? 'none'),
-    queryFn: () => (tripId ? fetchTrip(sb, tripId) : Promise.resolve(null)),
-    enabled: tripId !== null,
-  })
+  const trip = useQuery({ ...tripQueryOptions(sb, tripId), enabled: tripId !== null })
 
   const base = trip.data?.state?.meta?.baseCurrency || initialBase || 'HUF'
   const value = useMemo<MoneyValue>(

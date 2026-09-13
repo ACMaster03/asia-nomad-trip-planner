@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { requireClaims } from '@/lib/supabase/guard'
 import { getActiveTrip } from '@/lib/trips/prefetch'
 import { fetchTripRole, canEditRole } from '@/lib/trips/role'
 import { TripScopeProvider } from '@/lib/trips/TripScope'
@@ -12,10 +12,11 @@ import { PendingInvites } from '@/components/trips/PendingInvites'
 // Server-side auth guard. The shared catalogue RLS is `to authenticated`, so an
 // unauthenticated visitor would get zero rows; require a session here instead.
 // Never rely on the proxy alone — re-check auth in the protected layout.
+// requireClaims redirects ONLY on a missing/invalid session; a transient auth
+// outage throws to app/error.tsx instead (lib/supabase/guard.ts).
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
-  const { data, error } = await supabase.auth.getClaims()
-  if (error || !data?.claims) redirect('/login')
+  const claims = await requireClaims(supabase)
 
   // Resolve the working trip once per request (memoized — page prefetches reuse
   // it) and scope every screen to it via context. null → no trips yet →
@@ -27,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // instead of a second auth round trip. A failure resolves to null rather than
   // 500ing the whole app — the client hook re-resolves it.
   const initialRole = activeTrip
-    ? await fetchTripRole(supabase, activeTrip.id, data.claims.sub as string).catch(() => null)
+    ? await fetchTripRole(supabase, activeTrip.id, claims.sub as string).catch(() => null)
     : null
 
   // Nav canon (design/mocks/FIXTURES.md): "Live" is a nav item during the live

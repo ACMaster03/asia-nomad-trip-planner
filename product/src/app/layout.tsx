@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   icons: {
     apple: '/icons/apple-touch-icon.png',
   },
+  // iOS Safari auto-links any run of digits that looks like a phone number.
+  // A ledger full of "305 788 Ft" and "977.59 USD" is exactly that, so tapping
+  // an amount offered to CALL it (owner note, 2026-09-11). Money is never a
+  // phone number here — switch the detection off app-wide.
+  formatDetection: { telephone: false, date: false, address: false, email: false },
 }
 
 export const viewport: Viewport = {

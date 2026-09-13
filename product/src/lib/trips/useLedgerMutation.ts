@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { ledgerUpsertEntry, ledgerDeleteEntry, isPermissionDenied } from './queries'
+import { shouldRetryWrite, writeRetryDelay, withFreshSession } from './writeRetry'
 import { tk } from './keys'
 import { useTripScope } from './TripScope'
 import type { Ledger, LedgerEntry, Trip } from './types'
@@ -28,6 +29,10 @@ export function useLedgerMutation() {
   const key = tk.trip(tripId ?? 'none')
   return useMutation({
     scope: { id: 'ledger-write' },
+    // Transient failures (a connection iOS tore down while the app slept, a
+    // token that expired in the background) retry before the banner shows.
+    retry: shouldRetryWrite,
+    retryDelay: writeRetryDelay,
     mutationFn: async (op: LedgerOp) => {
       // onMutate (which runs first) has ALREADY applied `op` to the cached
       // ledger, and `scope` serializes mutations — the cache is the truth here.
@@ -35,10 +40,11 @@ export function useLedgerMutation() {
       // state-mutation twin had a real double-apply bug from doing so.)
       const trip = qc.getQueryData<Trip>(key)
       if (!trip) throw new Error('No active trip')
-      const newRev =
+      const newRev = await withFreshSession(sb, () =>
         op.kind === 'delete'
-          ? await ledgerDeleteEntry(sb, trip.id, op.id)
-          : await ledgerUpsertEntry(sb, trip.id, op.entry)
+          ? ledgerDeleteEntry(sb, trip.id, op.id)
+          : ledgerUpsertEntry(sb, trip.id, op.entry),
+      )
       // Sync the cached rev immediately — the next queued write reads it from
       // cache before the onSettled refetch has landed.
       qc.setQueryData<Trip>(key, (t) => (t ? { ...t, ledger_rev: newRev } : t))

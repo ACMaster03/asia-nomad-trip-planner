@@ -7,42 +7,12 @@ import { makeNewTripState, type NewTripInput } from './newTrip'
 // future column addition from silently widening every trip payload.
 const TRIP_COLS = 'id,owner,name,state,ledger,updated_at,created_at,state_rev,ledger_rev'
 
-// Typed conflict error: a write lost the optimistic-concurrency race (someone
-// else wrote the trip since we last read it). Callers roll back the optimistic
-// UI update and refetch. Detection is by the RPC's SQLSTATE — NEVER by
-// comparing updated_at.
-export class RevConflictError extends Error {
-  constructor() {
-    super('Trip was changed elsewhere — reloaded the latest version.')
-    this.name = 'RevConflictError'
-  }
-}
-export function isRevConflict(e: unknown): e is RevConflictError {
-  return e instanceof RevConflictError
-}
-// SQLSTATE raised by public.write_state() on an expected_rev mismatch (migration 06).
-const REV_CONFLICT_CODE = 'REV01'
-
-// Typed permission error: the write was refused because the caller may not edit
-// this trip. Distinct from RevConflictError — a conflict means "try again", this
-// means "you can't, and retrying won't help".
-//
-// This is how a co-editor whose access is REVOKED MID-SESSION finds out: their
-// tab still holds the editable UI from before the revocation, and the first save
-// after it comes back 42501. Callers roll the optimistic update back (same as a
-// conflict) and surface the read-only state.
-export class PermissionDeniedError extends Error {
-  constructor() {
-    super('You no longer have permission to edit this trip.')
-    this.name = 'PermissionDeniedError'
-  }
-}
-export function isPermissionDenied(e: unknown): e is PermissionDeniedError {
-  return e instanceof PermissionDeniedError
-}
-// SQLSTATE raised by all three write RPCs' can_edit_trip pre-check (migration
-// 06 lines 307/366/406), and by Postgres itself for an RLS WITH CHECK violation.
-const PERMISSION_DENIED_CODE = '42501'
+// Typed write errors live in errors.ts (dependency-free for the retry policy's
+// tests); re-exported here so existing imports keep working.
+export {
+  RevConflictError, isRevConflict, PermissionDeniedError, isPermissionDenied,
+} from './errors'
+import { REV_CONFLICT_CODE, PERMISSION_DENIED_CODE, RevConflictError, PermissionDeniedError } from './errors'
 
 // One trip by id. null → not visible (RLS) or deleted; callers fall back.
 export async function fetchTrip(sb: SupabaseClient, id: string): Promise<Trip | null> {

@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { writeState, isPermissionDenied } from './queries'
+import { shouldRetryWrite, writeRetryDelay, withFreshSession } from './writeRetry'
 import { tk } from './keys'
 import { useTripScope } from './TripScope'
 import type { TripState, Trip } from './types'
@@ -24,6 +25,11 @@ export function useTripMutation() {
   const key = tk.trip(tripId ?? 'none')
   return useMutation({
     scope: { id: 'state-write' },
+    // Transient failures retry before the banner shows (see writeRetry.ts). A
+    // rev conflict is excluded there: the cached document is stale, and only
+    // the onSettled refetch can fix that.
+    retry: shouldRetryWrite,
+    retryDelay: writeRetryDelay,
     // the param is unused (see comment below) but its type drives useMutation's
     // TVariables inference — mutate(updater) stops compiling without it.
     mutationFn: async (_updater: StateUpdater) => {
@@ -35,7 +41,7 @@ export function useTripMutation() {
       const trip = qc.getQueryData<Trip>(key)
       if (!trip) throw new Error('No active trip')
       const next = trip.state
-      const newRev = await writeState(sb, trip.id, next, trip.state_rev)
+      const newRev = await withFreshSession(sb, () => writeState(sb, trip.id, next, trip.state_rev))
       // Sync the cached rev immediately: the next queued write (scope-serialized)
       // reads it from cache before the onSettled refetch has landed.
       qc.setQueryData<Trip>(key, (t) => (t ? { ...t, state_rev: newRev } : t))
