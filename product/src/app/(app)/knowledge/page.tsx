@@ -1,4 +1,5 @@
-import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'
+import { dehydrate, QueryClient } from '@tanstack/react-query'
+import { HydrationBoundary } from '@/lib/query/HydrationBoundary'
 import { createClient } from '@/lib/supabase/server'
 import { fetchFields, fetchCities, fetchCountries } from '@/lib/catalogue/queries'
 import { qk } from '@/lib/catalogue/keys'

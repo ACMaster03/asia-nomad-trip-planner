@@ -1,27 +1,20 @@
 'use client'
-import { useState } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TripScopeProvider } from '@/lib/trips/TripScope'
 import { MoneyProvider } from '@/lib/trips/Money'
-import { tk } from '@/lib/trips/keys'
 import MoneyPage from '@/components/money/MoneyPage'
-import { fixtureTrip } from './fixture'
+import DashboardClient from '@/app/(app)/dashboard/DashboardClient'
 
-export default function Preview() {
-  const [qc] = useState(() => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } })
-    client.setQueryData(tk.trip('fixture'), fixtureTrip(new Date().toISOString().slice(0, 10)))
-    return client
-  })
+// The (app) layout's providers, minus auth. The query client is the root
+// Providers' one (see page.tsx), so the fixture trip is read from the same
+// persisted cache the real screens use.
+export default function Preview({ screen }: { screen: 'money' | 'home' }) {
   return (
-    <QueryClientProvider client={qc}>
-      <TripScopeProvider initialTripId="fixture" initialRole="owner">
-        <MoneyProvider initialBase="HUF">
-          <div className="pb-20">
-            <MoneyPage />
-          </div>
-        </MoneyProvider>
-      </TripScopeProvider>
-    </QueryClientProvider>
+    <TripScopeProvider initialTripId="fixture" initialRole="owner">
+      <MoneyProvider initialBase="HUF">
+        <div className="pb-20">
+          {screen === 'home' ? <DashboardClient userEmail="dev@example.com" userName="Dev" /> : <MoneyPage />}
+        </div>
+      </MoneyProvider>
+    </TripScopeProvider>
   )
 }

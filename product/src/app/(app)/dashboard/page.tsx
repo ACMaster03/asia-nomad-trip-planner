@@ -1,4 +1,5 @@
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
+import { dehydrate } from '@tanstack/react-query'
+import { HydrationBoundary } from '@/lib/query/HydrationBoundary'
 import { createClient } from '@/lib/supabase/server'
 import { prefetchTripScreen } from '@/lib/trips/prefetch'
 import DashboardClient from './DashboardClient'

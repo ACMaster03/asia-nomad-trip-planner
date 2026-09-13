@@ -11,6 +11,12 @@ import { registerOutboxMutations } from '@/lib/trips/outbox'
 // PersistQueryClientProvider restores them and onSuccess replays the paused
 // mutations through the defaults registered in lib/trips/outbox.ts.
 // localStorage is too small for the catalogue + feed caches → IndexedDB.
+//
+// The restore runs in an effect of the ROOT layout, so on a document load it
+// can land before a streamed page segment hydrates (the (app) loading.tsx is a
+// Suspense boundary). The page's server-dehydrated trip document must still be
+// what the first client render shows — lib/query/HydrationBoundary makes sure
+// of that; the restore then keeps only what is newer.
 const persister =
   typeof window !== 'undefined'
     ? createAsyncStoragePersister({
@@ -42,7 +48,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   if (!persister) {
     // SSR pass: no persistence on the server — plain provider semantics via
     // the persist provider with a no-op is not possible, but this branch never
-    // renders client-side. Hydration happens per-page via HydrationBoundary.
+    // renders client-side. Hydration happens per-page via
+    // lib/query/HydrationBoundary.
     return (
       <PersistQueryClientProvider
         client={qc}
