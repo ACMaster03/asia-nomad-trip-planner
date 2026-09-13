@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import { lockBodyScroll } from '@/lib/scrollLock'
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -14,8 +15,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
   })
 
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden' // lock background scroll
+    const unlock = lockBodyScroll() // iOS-proof: fixes the body in place, see lib/scrollLock.ts
     // Focus the dialog for Escape/tab context — but never steal it from a
     // child that already has it (autoFocus fields win).
     if (!dialogRef.current?.contains(document.activeElement)) {
@@ -25,7 +25,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
+      unlock()
     }
   }, []) // mount-only, on purpose — see onCloseRef above
 

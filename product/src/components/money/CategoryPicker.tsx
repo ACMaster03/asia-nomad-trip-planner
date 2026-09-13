@@ -49,8 +49,12 @@ export function CategoryPicker({
         <h3 className="text-[20px] font-semibold">Category</h3>
         <button onClick={onClose} aria-label="Close" className="-m-2 flex size-11 items-center justify-center text-tx3">✕</button>
       </div>
+      {/* Not autofocused: on a phone the keyboard would cover most of the list
+          and jump the sheet on every open (report, 2026-09-13). Browsing is the
+          default; search is one tap away for the rare lookup. */}
       <input
-        autoFocus
+        type="search"
+        enterKeyHint="search"
         aria-label="Search categories"
         className={input}
         placeholder="Search categories"

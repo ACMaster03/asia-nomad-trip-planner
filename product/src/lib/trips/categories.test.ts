@@ -9,8 +9,8 @@ test('every real category seen in production (2026-09-12) folds into the registr
   const seen: Record<string, string> = {
     Food: 'food', Drink: 'drinks', Drinks: 'drinks', '7 eleven': 'convenience', Clothes: 'clothes',
     Transport: 'transport', Health: 'health', Subscription: 'subscriptions', 'Public transport': 'local-transport',
-    Accessories: 'shopping', Stays: 'stays', Drogerie: 'personal-care', Attraction: 'activities',
-    'Cash expense': 'other', Charity: 'giving', Souvenir: 'shopping', 'Total wealth': 'savings', ATM: 'fees',
+    Accessories: 'accessories', Stays: 'stays', Drogerie: 'personal-care', Attraction: 'activities',
+    'Cash expense': 'other', Charity: 'giving', Souvenir: 'souvenirs', 'Total wealth': 'savings', ATM: 'fees',
     Skincare: 'personal-care', 'SKZ concert tickets': 'activities', 'Airport (food, drinks)': 'food',
     'E-sim': 'connectivity', Groceries: 'groceries', '(uncategorised)': 'other',
   }
@@ -40,12 +40,20 @@ test('ids, labels and aliases are unique across the registry', () => {
   assert.ok(categoriesFor('income').every((c) => c.kind === 'income'))
 })
 
-test('migration 31 carries exactly the same alias table as the registry', () => {
+test('migrations 31 + 32, applied in order, carry exactly the alias table of the registry', () => {
   const here = dirname(fileURLToPath(import.meta.url))
-  const sql = readFileSync(join(here, '../../../../supabase/migrations/31-ledger-categories.sql'), 'utf8')
-  // rows look like:  ('7 eleven', 'convenience'),  or  ('getting around', 'local-transport', true),  every row carries the flag
-  const rows = [...sql.matchAll(/\('((?:[^']|'')*)',\s*'([a-z-]+)'(?:,\s*(?:true|false))?\)/g)].map((m) => [m[1].replace(/''/g, "'"), m[2]] as [string, string])
-  const inSql = new Map(rows)
+  const inSql = new Map<string, string>()
+  for (const file of ['31-ledger-categories.sql', '32-ledger-categories-souvenirs-accessories.sql']) {
+    const sql = readFileSync(join(here, '../../../../supabase/migrations/', file), 'utf8')
+    // `delete from public.ledger_category_aliases where id = 'x'` drops a whole bucket …
+    for (const m of sql.matchAll(/delete from public\.ledger_category_aliases where id = '([a-z-]+)'/g)) {
+      for (const [k, v] of inSql) if (v === m[1]) inSql.delete(k)
+    }
+    // … and rows look like  ('7 eleven', 'convenience', false)  /  ('getting around', 'local-transport', true)
+    for (const m of sql.matchAll(/\('((?:[^']|'')*)',\s*'([a-z-]+)',\s*(?:true|false)\)/g)) {
+      inSql.set(m[1].replace(/''/g, "'"), m[2])
+    }
+  }
   const inTs = new Map<string, string>()
   for (const c of CATEGORIES) for (const key of [c.id, c.label.toLowerCase(), ...c.aliases]) inTs.set(key, c.id)
   for (const [k, v] of inTs) assert.equal(inSql.get(k), v, `SQL is missing or disagrees on "${k}"`)

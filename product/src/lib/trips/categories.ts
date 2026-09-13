@@ -12,7 +12,8 @@
 // `aliases` is how the old free-text values (and typos/duplicates of them)
 // fold into one bucket: normalizeCategory() maps "Drink" / "Drinks" / "7 eleven"
 // onto their canonical id. Migration 31 applies the SAME table to the rows
-// already in the database (categories.test.ts asserts the two stay identical).
+// already in the database; 32 splits Souvenirs and Accessories back out
+// (categories.test.ts asserts the registry equals 31 + 32 applied in order).
 
 export type CategoryKind = 'expense' | 'income'
 
@@ -51,8 +52,10 @@ export const CATEGORIES: readonly CategoryDef[] = [
     aliases: ['personal care', 'drogerie', 'drugstore', 'skincare', 'face care', 'toiletries', 'beauty', 'watsons', 'haircut', 'laundry'] },
   { id: 'clothes', label: 'Clothes', kind: 'expense', hint: 'clothing and shoes',
     aliases: ['clothes', 'clothing', 'shoes'] },
-  { id: 'shopping', label: 'Shopping', kind: 'expense', hint: 'accessories, souvenirs, gifts',
-    aliases: ['shopping', 'accessories', 'accessory', 'souvenir', 'souvenirs', 'gift', 'gifts'] },
+  { id: 'accessories', label: 'Accessories', kind: 'expense', hint: 'jewellery, sunglasses, hair pins, phone straps',
+    aliases: ['accessory', 'jewellery', 'jewelry', 'sunglasses', 'hair pins', 'phone strap'] },
+  { id: 'souvenirs', label: 'Souvenirs', kind: 'expense', hint: 'gifts, keepsakes, postcards',
+    aliases: ['souvenir', 'gift', 'gifts', 'keepsake', 'postcard', 'postcards'] },
   { id: 'gear', label: 'Gear', kind: 'expense', hint: 'backpacks, electronics, adapters — trip kit',
     aliases: ['gear', 'equipment', 'backpack', 'luggage', 'electronics', 'adapter', 'charger', 'trip gear', 'kit', 'one-off', 'one off', 'extras'] },
   { id: 'connectivity', label: 'Phone & internet', kind: 'expense', hint: 'eSIM, data, wifi',
@@ -118,7 +121,7 @@ export const categoriesFor = (kind: CategoryKind): readonly CategoryDef[] =>
 export const NON_DAILY_CATEGORIES: ReadonlySet<string> = new Set(['stays', 'transport', 'gear', 'insurance', 'subscriptions', 'fees'])
 
 // ---- groups: the five colour families the charts use ----------------------
-// Nineteen categories are too many colours for a phone-width bar; the chart
+// Twenty categories are too many colours for a phone-width bar; the chart
 // and donut speak in these families and the table underneath spells out the
 // individual categories.
 export type CategoryGroup = 'food' | 'shops' | 'around' | 'wear' | 'care' | 'fun' | 'other'
@@ -126,7 +129,7 @@ export const GROUPS: Record<CategoryGroup, { label: string; color: string }> = {
   food: { label: 'Food & drinks', color: 'var(--ac)' },
   shops: { label: 'Groceries & shops', color: 'var(--catGrocery)' },
   around: { label: 'Getting around', color: 'var(--catDaily)' },
-  wear: { label: 'Clothes & shopping', color: 'var(--ac2)' },
+  wear: { label: 'Clothes & accessories', color: 'var(--ac2)' },
   care: { label: 'Health & care', color: 'var(--warn)' },
   fun: { label: 'Activities', color: 'var(--catActivity)' },
   other: { label: 'Other', color: 'var(--ln3)' },
@@ -136,7 +139,7 @@ const GROUP_OF: Record<string, CategoryGroup> = {
   food: 'food', drinks: 'food',
   groceries: 'shops', convenience: 'shops',
   'local-transport': 'around',
-  clothes: 'wear', shopping: 'wear',
+  clothes: 'wear', accessories: 'wear', souvenirs: 'wear',
   health: 'care', 'personal-care': 'care',
   activities: 'fun',
 }

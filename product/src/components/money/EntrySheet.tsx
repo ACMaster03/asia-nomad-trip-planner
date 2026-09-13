@@ -5,6 +5,7 @@ import { CategoryPicker } from './CategoryPicker'
 import { useMoney } from '@/lib/trips/Money'
 import { toBase } from '@/lib/trips/format'
 import {
+  categoriesFor,
   categoryLabel, mostUsedCategories, suggestCategory, DEFAULT_CATEGORY, type CategoryKind,
 } from '@/lib/trips/categories'
 import type { LedgerEntry } from '@/lib/trips/types'
@@ -158,7 +159,7 @@ export function EntrySheet({
             </button>
           ))}
           <button onClick={() => setPicker(true)} className={chip(false) + ' border-dashed bg-inp text-tx2'}>
-            All {type === 'expense' ? 19 : 5}…
+            All {categoriesFor(type).length}…
           </button>
         </div>
       </div>

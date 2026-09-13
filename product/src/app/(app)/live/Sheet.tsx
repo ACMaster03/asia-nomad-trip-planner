@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import { lockBodyScroll } from '@/lib/scrollLock'
 
 // LIVHOLD bottom sheet (handoff frames 23/26 vocabulary): dim scrim + bottom-
 // anchored bg-sf panel with a grab handle. Focus / Escape / scroll-lock
@@ -23,8 +24,7 @@ export function Sheet({
   })
 
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden' // lock background scroll
+    const unlock = lockBodyScroll() // iOS-proof: fixes the body in place, see lib/scrollLock.ts
     if (!sheetRef.current?.contains(document.activeElement)) {
       sheetRef.current?.focus()
     }
@@ -34,7 +34,7 @@ export function Sheet({
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
+      unlock()
     }
   }, []) // mount-only, on purpose — see onCloseRef above
 
@@ -51,7 +51,7 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className="lv-sheet fixed inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col gap-[13px] overflow-y-auto rounded-t-[var(--r)] bg-sf px-[18px] pb-[max(26px,env(safe-area-inset-bottom))] pt-2.5 text-tx outline-none"
+        className="lv-sheet fixed inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col gap-[13px] overflow-y-auto overscroll-contain rounded-t-[var(--r)] bg-sf px-[18px] pb-[max(26px,env(safe-area-inset-bottom))] pt-2.5 text-tx outline-none"
       >
         <div aria-hidden className="mx-auto h-[5px] w-11 flex-none rounded-full bg-ln3" />
         {children}
