@@ -38,6 +38,9 @@
   --fill2: rgba(31, 42, 36, 0.1);
   /* palette extras + budget category (Stays = --ac, Transport = --ac2, Extras = --warn) */
   --catDaily: #6c8ccf;
+  /* Money chart families (round-two design, 2026-09-13): groceries & shops, activities */
+  --catGrocery: #8fa88a;
+  --catActivity: #c98a63;
   --sage: #c9d4ba;
   --paleBlue: #aec3d6;
   --paper: #f5f2ea;
@@ -81,6 +84,8 @@
   --tr: rgba(216, 224, 229, 0.14);
   --fill: rgba(216, 224, 229, 0.07);
   --fill2: rgba(216, 224, 229, 0.1);
+  --catGrocery: #9fb89a;
+  --catActivity: #d9a07c;
   --washLogin: url("/brand/livhold-login-bg-dark.png") bottom/cover no-repeat #161a18;
   --washLight: url("/brand/livhold-login-bg-light-dark.png") bottom/cover no-repeat #161a18;
   --washInk: #d8e0e5;
@@ -115,6 +120,8 @@
   --color-fill: var(--fill);
   --color-fill2: var(--fill2);
   --color-cat-daily: var(--catDaily);
+  --color-cat-grocery: var(--catGrocery);
+  --color-cat-activity: var(--catActivity);
   --color-sage: var(--sage);
   --color-pale-blue: var(--paleBlue);
   --color-paper: var(--paper);

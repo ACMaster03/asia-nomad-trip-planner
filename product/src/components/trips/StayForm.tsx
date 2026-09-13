@@ -14,7 +14,7 @@ const NEW_STOP = '__new-stop__'
 
 export function StayForm({
   initial, segments, currencies, onCancel, onSave,
-  defaultSegId, cities = [], defaultArrive = '', onCreateStop,
+  defaultSegId, cities = [], defaultArrive = '', onCreateStop, onDelete,
 }: {
   initial: Stay | null
   segments: Segment[]
@@ -27,6 +27,8 @@ export function StayForm({
   defaultArrive?: string
   /** create a stop without leaving the form (owner request 2026-07-24) */
   onCreateStop?: (seg: Segment) => void
+  /** delete lives inside the editor, like the ledger's entry sheet (2026-09-13) */
+  onDelete?: (id: string) => void
 }) {
   const [segId, setSegId] = useState(initial?.segId ?? defaultSegId ?? segments[0]?.id ?? '')
   const [stopFormOpen, setStopFormOpen] = useState(false)
@@ -108,6 +110,11 @@ export function StayForm({
           <button onClick={submit} className="flex-1 rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-base font-semibold text-on">Save</button>
           <button onClick={onCancel} className="rounded-[calc(var(--r)-2px)] border-[1.5px] border-ln3 px-5 py-3.5 text-base font-semibold text-tx2">Cancel</button>
         </div>
+        {initial && onDelete && (
+          <button onClick={() => onDelete(initial.id)} className="min-h-11 w-full text-center text-base font-semibold text-ac2-deep">
+            Delete this stay
+          </button>
+        )}
       </div>
       {stopFormOpen && onCreateStop && (
         <SegmentForm

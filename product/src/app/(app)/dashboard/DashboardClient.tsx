@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
+import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
+import { moneyModel } from '@/lib/trips/moneyModel'
 import { tripPhase } from '@/lib/trips/recap'
 import { tripRecap } from '@/lib/trips/recap'
 import { fetchTripEvents, type TripEvent } from '@/lib/trips/events'
@@ -266,12 +268,18 @@ export default function DashboardClient({
   }
 
   /* ── live / arrive / off-plan (frames 08–09, 24) ── */
-  const day = s.meta.startDate ? Math.floor((+today - +new Date(s.meta.startDate)) / 86400000) + 1 : null
-  const night = current ? Math.max(1, Math.floor((+today - +new Date(current.arrive)) / 86400000)) : null
-  const nightsHere = current ? Math.max(1, Math.round((+new Date(current.depart) - +new Date(current.arrive)) / 86400000)) : null
+  // Shared with /live (lib/trips/progress.ts) so the two screens never
+  // disagree on the same morning again: Day 1 = departure, night 1 = arrival,
+  // "of N" = the trip's own length (planned nights only when open-ended).
+  const day = tripDay(s.meta, todayIso)
+  const tripDays = tripLength(s.meta, b.totalNights)
+  const prog = current ? stopProgress(current, todayIso) : null
+  const night = prog?.night ?? null
+  const nightsHere = prog?.nights ?? null
   const stay = current ? s.stays.find((st) => st.segId === current.id && st.include !== false) : undefined
   const recapMid = tripRecap(s, trip.data.ledger ?? [])
-  const tripPct = day && b.totalNights ? Math.min(100, Math.round((day / b.totalNights) * 100)) : 0
+  const money = moneyModel(s, trip.data.ledger ?? [], cityIdx, todayIso)
+  const tripPct = day && tripDays ? Math.min(100, Math.round((day / tripDays) * 100)) : 0
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-3">
@@ -312,7 +320,7 @@ export default function DashboardClient({
               {phase === 'off' ? 'Right now' : 'On plan'}
             </span>
           </span>
-          {day && <span className="text-base font-medium text-tx2">Day {day} of {b.totalNights}</span>}
+          {day && <span className="text-base font-medium text-tx2">Day {day}{tripDays ? ` of ${tripDays}` : ''}</span>}
         </div>
         <div className="mt-2 font-serif text-[30px] font-semibold leading-[1.2] tracking-[-.01em]">
           {phase === 'off' ? `${placeName}` : phase === 'arrive' ? `${current?.city}, arrival day` : current ? `${current.city}, night ${night}` : 'Between stops'}
@@ -390,12 +398,21 @@ export default function DashboardClient({
         </div>
       </div>
 
+      {/* Once live, the money card speaks the Money page's language: spent so
+          far against the PROJECTED total (your measured pace), not the pre-trip
+          city-average estimate (round-two design, 2026-09-13). */}
       <Link href="/money" className={card + ' flex items-center justify-between'}>
         <span>
-          <span className="block text-base font-semibold">Spent {fmt(recapMid.spent)} of {fmt(b.grand)} estimated</span>
+          <span className="block text-base font-semibold">Spent {fmt(money.projection.spent)} of ≈ {fmt(money.projection.projected)} projected</span>
           <span className="block text-base text-tx2">
-            {b.grand > 0 ? Math.round((recapMid.spent / b.grand) * 100) : 0}% in ·{' '}
-            <span className="font-semibold text-ac2-deep">{recapMid.spent <= (b.grand * (day ?? 0)) / Math.max(1, b.totalNights) ? 'on track' : 'ahead of plan'}</span>
+            {money.pace.perDay !== null ? (
+              <>
+                {fmt(money.pace.perDay)}/day everyday{money.pace.scope === 'stop' && current ? ` in ${current.city}` : ''} ·{' '}
+                <span className="font-semibold text-ac2-deep">{money.projection.projected <= b.grand ? 'under the estimate' : 'over the estimate'}</span>
+              </>
+            ) : (
+              <>measuring your daily pace · {recapMid.spent > 0 ? `${fmt(recapMid.spent)} logged` : 'nothing logged yet'}</>
+            )}
           </span>
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
