@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import type { AuthError } from '@supabase/supabase-js'
 import { createOtpClient } from '@/lib/supabase/otp'
 
 // Login — handoff frame 01 (the only screen on the 2a "valley morning" wash;
@@ -7,6 +8,28 @@ import { createOtpClient } from '@/lib/supabase/otp'
 // on this screen, the button label cycles Sending… → "Sent · again in N s"
 // (60s cooldown, disabled) → "Send again", and the honeydew chip confirms.
 // Apple sign-in: DEFERRED (owner decision 2026-08-06) — magic link only.
+
+// supabase-js treats every 5xx as retryable and short-circuits BEFORE parsing the
+// response body, handing its message extractor the raw Response — which carries no
+// message field, so the extractor falls through to JSON.stringify() and the thrown
+// error's `.message` is literally "{}". A mailer outage therefore reached the
+// traveller as a red box containing two braces (2026-08-21: Resend key rotated out
+// from under the project, every send 500ing on SMTP 535).
+//
+// The real cause is only ever in the Supabase auth logs, so there is nothing more
+// specific to say here — but "try again in a moment" is at least actionable, and it
+// keeps the raw text for 4xx errors, which DO carry a useful message (rate limits,
+// "Signups not allowed for otp", address rejected).
+function humanAuthError(error: AuthError): string {
+  const raw = error.message?.trim()
+  if (!raw || raw === '{}') {
+    return "We couldn't send the link just now. Please try again in a moment."
+  }
+  if (/failed to fetch|networkerror|load failed/i.test(raw)) {
+    return 'No connection. Check your network and try again.'
+  }
+  return raw
+}
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -39,7 +62,7 @@ export default function Login() {
     })
     setSending(false)
     if (error) {
-      setError(error.message)
+      setError(humanAuthError(error))
     } else {
       setError('')
       setSent(true)
