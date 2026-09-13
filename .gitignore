@@ -16,3 +16,5 @@ supabase/backups/
 product/public/sw.js
 product/public/sw.js.map
 supabase/.temp/
+# Per-target Supabase CLI link workdirs created by tools/db.sh (API mode).
+supabase/.links/

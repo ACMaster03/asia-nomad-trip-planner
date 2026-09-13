@@ -38,81 +38,81 @@ revoke all on public.ledger_category_aliases from public, anon, authenticated;
 
 insert into public.ledger_category_aliases (alias, id, canonical) values
   -- food
-  ('food', 'food'), ('meal', 'food'), ('meals', 'food'), ('restaurant', 'food'), ('restaurants', 'food'),
-  ('eating out', 'food'), ('lunch', 'food'), ('dinner', 'food'), ('breakfast', 'food'), ('snacks', 'food'),
-  ('airport (food, drinks)', 'food'),
+  ('food', 'food', false), ('meal', 'food', false), ('meals', 'food', false), ('restaurant', 'food', false), ('restaurants', 'food', false),
+  ('eating out', 'food', false), ('lunch', 'food', false), ('dinner', 'food', false), ('breakfast', 'food', false), ('snacks', 'food', false),
+  ('airport (food, drinks)', 'food', false),
   -- drinks
-  ('drinks', 'drinks'), ('drink', 'drinks'), ('coffee', 'drinks'), ('beer', 'drinks'), ('bar', 'drinks'),
-  ('juice', 'drinks'), ('tea', 'drinks'),
+  ('drinks', 'drinks', false), ('drink', 'drinks', false), ('coffee', 'drinks', false), ('beer', 'drinks', false), ('bar', 'drinks', false),
+  ('juice', 'drinks', false), ('tea', 'drinks', false),
   -- groceries
-  ('groceries', 'groceries'), ('grocery', 'groceries'), ('supermarket', 'groceries'), ('market', 'groceries'),
+  ('groceries', 'groceries', false), ('grocery', 'groceries', false), ('supermarket', 'groceries', false), ('market', 'groceries', false),
   -- convenience
-  ('convenience', 'convenience'), ('convenience store', 'convenience', true), ('7 eleven', 'convenience'),
-  ('7-eleven', 'convenience'), ('7eleven', 'convenience'), ('seven eleven', 'convenience'),
-  ('family mart', 'convenience'), ('familymart', 'convenience'), ('lawson', 'convenience'),
+  ('convenience', 'convenience', false), ('convenience store', 'convenience', true), ('7 eleven', 'convenience', false),
+  ('7-eleven', 'convenience', false), ('7eleven', 'convenience', false), ('seven eleven', 'convenience', false),
+  ('family mart', 'convenience', false), ('familymart', 'convenience', false), ('lawson', 'convenience', false),
   -- stays
-  ('stays', 'stays'), ('stay', 'stays'), ('accommodation', 'stays'), ('hotel', 'stays'), ('hostel', 'stays'),
-  ('airbnb', 'stays'), ('rent', 'stays'), ('booking', 'stays'),
+  ('stays', 'stays', false), ('stay', 'stays', false), ('accommodation', 'stays', false), ('hotel', 'stays', false), ('hostel', 'stays', false),
+  ('airbnb', 'stays', false), ('rent', 'stays', false), ('booking', 'stays', false),
   -- transport (between cities)
-  ('transport', 'transport'), ('flight', 'transport'), ('flights', 'transport'), ('train', 'transport'),
-  ('trains', 'transport'), ('bus', 'transport'), ('ferry', 'transport'), ('plane', 'transport'),
-  ('intercity', 'transport'),
+  ('transport', 'transport', false), ('flight', 'transport', false), ('flights', 'transport', false), ('train', 'transport', false),
+  ('trains', 'transport', false), ('bus', 'transport', false), ('ferry', 'transport', false), ('plane', 'transport', false),
+  ('intercity', 'transport', false),
   -- local-transport
-  ('local-transport', 'local-transport'), ('getting around', 'local-transport', true), ('local transport', 'local-transport'),
-  ('public transport', 'local-transport'), ('taxi', 'local-transport'), ('grab', 'local-transport'),
-  ('tuktuk', 'local-transport'), ('tuk-tuk', 'local-transport'), ('tuk tuk', 'local-transport'),
-  ('metro', 'local-transport'), ('bts', 'local-transport'), ('mrt', 'local-transport'),
-  ('scooter', 'local-transport'), ('bolt', 'local-transport'),
+  ('local-transport', 'local-transport', false), ('getting around', 'local-transport', true), ('local transport', 'local-transport', false),
+  ('public transport', 'local-transport', false), ('taxi', 'local-transport', false), ('grab', 'local-transport', false),
+  ('tuktuk', 'local-transport', false), ('tuk-tuk', 'local-transport', false), ('tuk tuk', 'local-transport', false),
+  ('metro', 'local-transport', false), ('bts', 'local-transport', false), ('mrt', 'local-transport', false),
+  ('scooter', 'local-transport', false), ('bolt', 'local-transport', false),
   -- activities
-  ('activities', 'activities'), ('activity', 'activities'), ('attraction', 'activities'), ('attractions', 'activities'),
-  ('tour', 'activities'), ('tours', 'activities'), ('sightseeing', 'activities'), ('museum', 'activities'),
-  ('temple', 'activities'), ('entry', 'activities'), ('ticket', 'activities'), ('tickets', 'activities'),
-  ('entertainment', 'activities'), ('concert', 'activities'), ('concerts', 'activities'),
-  ('cinema', 'activities'), ('nightlife', 'activities'), ('skz concert tickets', 'activities'),
+  ('activities', 'activities', false), ('activity', 'activities', false), ('attraction', 'activities', false), ('attractions', 'activities', false),
+  ('tour', 'activities', false), ('tours', 'activities', false), ('sightseeing', 'activities', false), ('museum', 'activities', false),
+  ('temple', 'activities', false), ('entry', 'activities', false), ('ticket', 'activities', false), ('tickets', 'activities', false),
+  ('entertainment', 'activities', false), ('concert', 'activities', false), ('concerts', 'activities', false),
+  ('cinema', 'activities', false), ('nightlife', 'activities', false), ('skz concert tickets', 'activities', false),
   -- health
-  ('health', 'health'), ('pharmacy', 'health'), ('doctor', 'health'), ('medicine', 'health'),
-  ('medical', 'health'), ('massage', 'health'), ('dentist', 'health'),
+  ('health', 'health', false), ('pharmacy', 'health', false), ('doctor', 'health', false), ('medicine', 'health', false),
+  ('medical', 'health', false), ('massage', 'health', false), ('dentist', 'health', false),
   -- personal-care
-  ('personal-care', 'personal-care'), ('personal care', 'personal-care', true), ('drogerie', 'personal-care'),
-  ('drugstore', 'personal-care'), ('skincare', 'personal-care'), ('face care', 'personal-care'),
-  ('toiletries', 'personal-care'), ('beauty', 'personal-care'), ('watsons', 'personal-care'),
-  ('haircut', 'personal-care'), ('laundry', 'personal-care'),
+  ('personal-care', 'personal-care', false), ('personal care', 'personal-care', true), ('drogerie', 'personal-care', false),
+  ('drugstore', 'personal-care', false), ('skincare', 'personal-care', false), ('face care', 'personal-care', false),
+  ('toiletries', 'personal-care', false), ('beauty', 'personal-care', false), ('watsons', 'personal-care', false),
+  ('haircut', 'personal-care', false), ('laundry', 'personal-care', false),
   -- clothes
-  ('clothes', 'clothes'), ('clothing', 'clothes'), ('shoes', 'clothes'),
+  ('clothes', 'clothes', false), ('clothing', 'clothes', false), ('shoes', 'clothes', false),
   -- shopping
-  ('shopping', 'shopping'), ('accessories', 'shopping'), ('accessory', 'shopping'), ('souvenir', 'shopping'),
-  ('souvenirs', 'shopping'), ('gift', 'shopping'), ('gifts', 'shopping'),
+  ('shopping', 'shopping', false), ('accessories', 'shopping', false), ('accessory', 'shopping', false), ('souvenir', 'shopping', false),
+  ('souvenirs', 'shopping', false), ('gift', 'shopping', false), ('gifts', 'shopping', false),
   -- gear (trip kit bought as one-offs)
-  ('gear', 'gear'), ('equipment', 'gear'), ('backpack', 'gear'), ('luggage', 'gear'), ('electronics', 'gear'),
-  ('adapter', 'gear'), ('charger', 'gear'), ('trip gear', 'gear'), ('kit', 'gear'), ('one-off', 'gear'),
-  ('one off', 'gear'), ('extras', 'gear'),
+  ('gear', 'gear', false), ('equipment', 'gear', false), ('backpack', 'gear', false), ('luggage', 'gear', false), ('electronics', 'gear', false),
+  ('adapter', 'gear', false), ('charger', 'gear', false), ('trip gear', 'gear', false), ('kit', 'gear', false), ('one-off', 'gear', false),
+  ('one off', 'gear', false), ('extras', 'gear', false),
   -- connectivity
-  ('connectivity', 'connectivity'), ('phone & internet', 'connectivity', true), ('e-sim', 'connectivity'),
-  ('esim', 'connectivity'), ('sim', 'connectivity'), ('sim card', 'connectivity'), ('internet', 'connectivity'),
-  ('phone', 'connectivity'), ('data', 'connectivity'), ('wifi', 'connectivity'),
+  ('connectivity', 'connectivity', false), ('phone & internet', 'connectivity', true), ('e-sim', 'connectivity', false),
+  ('esim', 'connectivity', false), ('sim', 'connectivity', false), ('sim card', 'connectivity', false), ('internet', 'connectivity', false),
+  ('phone', 'connectivity', false), ('data', 'connectivity', false), ('wifi', 'connectivity', false),
   -- subscriptions
-  ('subscriptions', 'subscriptions'), ('subscription', 'subscriptions'), ('netflix', 'subscriptions'),
-  ('spotify', 'subscriptions'), ('icloud', 'subscriptions'),
+  ('subscriptions', 'subscriptions', false), ('subscription', 'subscriptions', false), ('netflix', 'subscriptions', false),
+  ('spotify', 'subscriptions', false), ('icloud', 'subscriptions', false),
   -- insurance & visas
-  ('insurance', 'insurance'), ('insurance & visas', 'insurance', true), ('travel insurance', 'insurance'),
-  ('visa', 'insurance'), ('visas', 'insurance'), ('visa fee', 'insurance'), ('permit', 'insurance'),
+  ('insurance', 'insurance', false), ('insurance & visas', 'insurance', true), ('travel insurance', 'insurance', false),
+  ('visa', 'insurance', false), ('visas', 'insurance', false), ('visa fee', 'insurance', false), ('permit', 'insurance', false),
   -- fees
-  ('fees', 'fees'), ('fees & cash', 'fees', true), ('fee', 'fees'), ('atm', 'fees'), ('atm fee', 'fees'),
-  ('bank fee', 'fees'), ('exchange', 'fees'),
+  ('fees', 'fees', false), ('fees & cash', 'fees', true), ('fee', 'fees', false), ('atm', 'fees', false), ('atm fee', 'fees', false),
+  ('bank fee', 'fees', false), ('exchange', 'fees', false),
   -- giving
-  ('giving', 'giving'), ('charity', 'giving'), ('donation', 'giving'), ('donations', 'giving'),
-  ('tip', 'giving'), ('tips', 'giving'),
+  ('giving', 'giving', false), ('charity', 'giving', false), ('donation', 'giving', false), ('donations', 'giving', false),
+  ('tip', 'giving', false), ('tips', 'giving', false),
   -- other
-  ('other', 'other'), ('misc', 'other'), ('miscellaneous', 'other'), ('(uncategorised)', 'other'),
-  ('uncategorised', 'other'), ('uncategorized', 'other'), ('cash expense', 'other'),
+  ('other', 'other', false), ('misc', 'other', false), ('miscellaneous', 'other', false), ('(uncategorised)', 'other', false),
+  ('uncategorised', 'other', false), ('uncategorized', 'other', false), ('cash expense', 'other', false),
   -- income
-  ('salary', 'salary'), ('wage', 'salary'), ('wages', 'salary'), ('payroll', 'salary'),
-  ('freelance', 'freelance'), ('client work', 'freelance'), ('contract', 'freelance'), ('invoice', 'freelance'),
-  ('savings', 'savings'), ('savings brought in', 'savings', true), ('total wealth', 'savings'),
-  ('starting balance', 'savings'), ('opening balance', 'savings'), ('transfer in', 'savings'),
-  ('refund', 'refund'), ('refunds', 'refund'), ('cashback', 'refund'), ('reimbursement', 'refund'),
-  ('other-income', 'other-income'), ('other income', 'other-income', true), ('misc income', 'other-income'),
-  ('gift received', 'other-income')
+  ('salary', 'salary', false), ('wage', 'salary', false), ('wages', 'salary', false), ('payroll', 'salary', false),
+  ('freelance', 'freelance', false), ('client work', 'freelance', false), ('contract', 'freelance', false), ('invoice', 'freelance', false),
+  ('savings', 'savings', false), ('savings brought in', 'savings', true), ('total wealth', 'savings', false),
+  ('starting balance', 'savings', false), ('opening balance', 'savings', false), ('transfer in', 'savings', false),
+  ('refund', 'refund', false), ('refunds', 'refund', false), ('cashback', 'refund', false), ('reimbursement', 'refund', false),
+  ('other-income', 'other-income', false), ('other income', 'other-income', true), ('misc income', 'other-income', false),
+  ('gift received', 'other-income', false)
 on conflict (alias) do update set id = excluded.id, canonical = excluded.canonical;
 
 -- 2) The same fold the app applies: trim, lower-case, collapse whitespace.

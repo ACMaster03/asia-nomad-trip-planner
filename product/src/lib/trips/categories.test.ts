@@ -43,8 +43,8 @@ test('ids, labels and aliases are unique across the registry', () => {
 test('migration 31 carries exactly the same alias table as the registry', () => {
   const here = dirname(fileURLToPath(import.meta.url))
   const sql = readFileSync(join(here, '../../../../supabase/migrations/31-ledger-categories.sql'), 'utf8')
-  // rows look like:  ('7 eleven', 'convenience'),  or  ('getting around', 'local-transport', true),
-  const rows = [...sql.matchAll(/\('((?:[^']|'')*)',\s*'([a-z-]+)'(?:,\s*true)?\)/g)].map((m) => [m[1].replace(/''/g, "'"), m[2]] as [string, string])
+  // rows look like:  ('7 eleven', 'convenience'),  or  ('getting around', 'local-transport', true),  every row carries the flag
+  const rows = [...sql.matchAll(/\('((?:[^']|'')*)',\s*'([a-z-]+)'(?:,\s*(?:true|false))?\)/g)].map((m) => [m[1].replace(/''/g, "'"), m[2]] as [string, string])
   const inSql = new Map(rows)
   const inTs = new Map<string, string>()
   for (const c of CATEGORIES) for (const key of [c.id, c.label.toLowerCase(), ...c.aliases]) inTs.set(key, c.id)
