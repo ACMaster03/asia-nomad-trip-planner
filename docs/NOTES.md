@@ -44,6 +44,27 @@ password set and the first password sign-in are their own test**, along with
 one reset link opened from a phone's mail app, which is the journey that broke
 before.
 
+### OPEN — appoint an EU/EEA representative (Article 27), Patrik
+
+**A legal obligation, currently unmet, and the privacy policy says so on its
+face** — the EU-representative line renders as an unset marker until it is
+appointed.
+
+KeepYourHabits Ltd is a UK company with no EEA establishment, and it offers this
+service to people in the EEA — the travellers and the family following the trip
+are in Hungary. That combination is exactly what Article 27 of the EU GDPR is
+about: appoint a representative established in an EEA member state, and **name
+them in the privacy notice**, which is why `entity.ts` has a field for it rather
+than leaving it implicit.
+
+Commercial providers do this for roughly £300–800/year. Alternatively an EEA
+establishment of your own removes the requirement altogether. Not urgent enough
+to block the Play submission, urgent enough not to forget — and cheap to fix.
+
+Worth checking at the same time: whether the ICO data protection fee applies to
+the company. That is a separate UK registration obligation from anything on the
+legal pages.
+
 ### OPEN — fill in the five company facts on the legal pages (Patrik)
 
 `/privacy`, `/terms` and `/delete-account` are built and linked from the sign-in
@@ -55,15 +76,22 @@ All five live in **`product/src/lib/legal/entity.ts`** — one file, one edit:
 
 | Field | What it needs |
 |---|---|
-| `entity` | registered company name, exactly as on the register |
-| `address` | registered address, one line |
+| `entity` | ✅ `KeepYourHabits Ltd` |
+| `jurisdiction` | ⚠️ set to `England & Wales` — **confirm against the certificate of incorporation**, since Companies House also registers in Scotland and Northern Ireland and those are different legal systems |
+| `address` | registered address as filed, one line |
 | `contactEmail` | a **monitored** address — Play requires a working contact route |
-| `jurisdiction` | governing law for the Terms, e.g. `Hungary` |
-| `dataRegion` | where the Supabase project actually runs, e.g. `the EU (Frankfurt)` |
+| `dataRegion` | where the Supabase project actually runs |
+| `euRepresentative` | see the Article 27 entry above |
 
 `dataRegion` is the one to *check* rather than recall — Supabase → Project
 Settings → General. A wrong region claim in a privacy policy is a bad one to get
-wrong.
+wrong, and the policy's data-transfer section reasons from it.
+
+**The UK Ltd changed the policy, not just a field.** The rights section named
+"the GDPR" generically, which is wrong for a UK controller: it now names the UK
+GDPR and the Data Protection Act 2018, points UK complaints at the ICO and EEA
+complaints at the reader's own authority, and adds a data-transfer section
+resting on the UK↔EEA adequacy decisions in both directions.
 
 **Taking these from keepyourhabits.com was the intent and did not happen**:
 this session's egress proxy blocks that domain, and `add_repo` refused the

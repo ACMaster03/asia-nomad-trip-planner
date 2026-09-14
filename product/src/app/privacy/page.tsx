@@ -194,15 +194,49 @@ export default function PrivacyPage() {
 
       <Section id="rights" title="Your rights">
         <p>
-          Under the GDPR you can ask for a copy of your data, ask for it to be corrected or erased,
-          object to how it is processed, or ask for it in a portable form. Most of it you can do
-          yourself and instantly: the app exports your trip and your money ledger as files, and the
-          delete button is a real erasure rather than a request.
+          <LegalValue value={LEGAL.entity} /> is a company registered in the United Kingdom, so the{' '}
+          <b className="font-semibold text-tx">UK GDPR</b> and the Data Protection Act 2018 apply to
+          what it does with your data. The service is also offered to people in the EEA, so the{' '}
+          <b className="font-semibold text-tx">EU GDPR</b> applies as well. The rights below are the
+          same under both.
+        </p>
+        <p>
+          You can ask for a copy of your data, ask for it to be corrected or erased, object to how
+          it is processed, ask us to restrict it, or ask for it in a portable form. Most of that you
+          can do yourself and instantly: the app exports your trip and your money ledger as files,
+          and{' '}
+          <Link href="/delete-account" className="font-medium text-ac2-deep underline">
+            deleting your account
+          </Link>{' '}
+          is a real erasure rather than a request that goes into a queue.
         </p>
         <p>
           For anything else, write to <LegalValue value={LEGAL.contactEmail} /> and we will answer
-          within one month. You also have the right to complain to your national data protection
-          authority.
+          within one month.
+        </p>
+        <p>
+          <b className="font-semibold text-tx">If you are not satisfied</b>, you can complain to the
+          UK&apos;s Information Commissioner&apos;s Office (ico.org.uk). If you are in the EEA, you
+          can complain to your own country&apos;s data protection authority instead.
+        </p>
+        <p>
+          Our representative in the EU, for the purposes of Article 27 of the EU GDPR, is{' '}
+          <LegalValue value={LEGAL.euRepresentative} />. People in the EEA may contact them about
+          anything on this page as an alternative to contacting us directly.
+        </p>
+      </Section>
+
+      <Section id="transfers" title="Data leaving the UK and the EEA">
+        <p>
+          The company is in the United Kingdom and the service runs on providers in Ireland and{' '}
+          <LegalValue value={LEGAL.dataRegion} />, so your data moves between the UK and the EEA in
+          the ordinary course of the service working. Both directions are covered by adequacy
+          decisions — the EU recognises the UK, and the UK recognises the EEA — so no extra
+          safeguard is needed for that leg.
+        </p>
+        <p>
+          Where a provider is based outside those, it is used under the standard contractual clauses
+          its own terms provide.
         </p>
       </Section>
 

@@ -19,10 +19,28 @@ export const LEGAL = {
   address: 'TODO_REGISTERED_ADDRESS',
   /** Where privacy questions and data requests go. Must be monitored. */
   contactEmail: 'TODO_CONTACT_EMAIL',
-  /** Country whose law governs the Terms, e.g. 'Hungary'. */
-  jurisdiction: 'TODO_JURISDICTION',
+  /**
+   * Law governing the Terms. Set to England & Wales because KeepYourHabits Ltd
+   * is a UK company — but Companies House also registers in Scotland and in
+   * Northern Ireland, and those are different legal systems. CHECK THE
+   * CERTIFICATE OF INCORPORATION and correct this if it says otherwise.
+   */
+  jurisdiction: 'England & Wales',
   /** Where the Supabase project is hosted, e.g. 'the EU (Frankfurt)'. */
   dataRegion: 'TODO_SUPABASE_REGION',
+
+  /**
+   * EU/EEA representative under Article 27 of the EU GDPR.
+   *
+   * REQUIRED, not optional, and not yet appointed. A UK company with no EEA
+   * establishment that offers a service to people in the EEA must appoint one
+   * and NAME IT IN THIS PRIVACY NOTICE — and this app's users and followers are
+   * in Hungary, so the condition is plainly met rather than arguable.
+   *
+   * Until it is appointed the policy shows a marker here, which is the honest
+   * state: the obligation exists and is unmet. See docs/NOTES.md.
+   */
+  euRepresentative: 'TODO_EU_REPRESENTATIVE',
 
   /** Product name as users see it. */
   product: 'Livhold',
