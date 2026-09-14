@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createOtpClient } from '@/lib/supabase/otp'
 import { createClient } from '@/lib/supabase/client'
 import { humanAuthError, looksLikeNoPasswordSet } from '@/lib/auth/authError'
@@ -270,10 +271,19 @@ export default function Login() {
               {mode === 'link' ? 'Use a password instead' : 'Email me a link instead'}
             </button>
 
+            {/* These were <span>s until 2026-09-14 — the sentence claimed two
+                documents that did not exist, and Play will not list an app
+                without a reachable privacy policy. Both pages are public. */}
             <div className={'mt-0.5 ' + chip + ' text-[13px]'} style={chipBg}>
               By continuing you agree to the{' '}
-              <span className="font-medium text-ac2-deep underline">Terms</span> and{' '}
-              <span className="font-medium text-ac2-deep underline">Privacy Policy</span>.
+              <Link href="/terms" className="font-medium text-ac2-deep underline">
+                Terms
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="font-medium text-ac2-deep underline">
+                Privacy Policy
+              </Link>
+              .
             </div>
           </form>
         </div>

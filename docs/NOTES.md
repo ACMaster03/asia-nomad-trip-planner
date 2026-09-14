@@ -44,13 +44,60 @@ password set and the first password sign-in are their own test**, along with
 one reset link opened from a phone's mail app, which is the journey that broke
 before.
 
-### WORTH DOING — Play still needs a privacy policy and terms page
+### OPEN — fill in the five company facts on the legal pages (Patrik)
 
-`app/login/page.tsx` renders "Terms" and "Privacy Policy" as `<span>` elements
-with no `href`, and there is no `/terms` or `/privacy` route. Play Console will
-not accept a submission without a privacy policy URL. Not auth work, so it was
-deliberately left out of the password change; recorded here so it is not
-discovered at submission time.
+`/privacy`, `/terms` and `/delete-account` are built and linked from the sign-in
+screen, but five facts are **not set**, and the pages say so loudly: an unfilled
+value renders as an orange `[… — not set yet]` marker rather than printing the
+token, so an unfinished page cannot be mistaken for a finished one.
+
+All five live in **`product/src/lib/legal/entity.ts`** — one file, one edit:
+
+| Field | What it needs |
+|---|---|
+| `entity` | registered company name, exactly as on the register |
+| `address` | registered address, one line |
+| `contactEmail` | a **monitored** address — Play requires a working contact route |
+| `jurisdiction` | governing law for the Terms, e.g. `Hungary` |
+| `dataRegion` | where the Supabase project actually runs, e.g. `the EU (Frankfurt)` |
+
+`dataRegion` is the one to *check* rather than recall — Supabase → Project
+Settings → General. A wrong region claim in a privacy policy is a bad one to get
+wrong.
+
+**Taking these from keepyourhabits.com was the intent and did not happen**:
+this session's egress proxy blocks that domain, and `add_repo` refused the
+`KeepYourHabits/WebLandingPage` source as a cross-owner add. So the values above
+were left unset rather than guessed. Copy them from the existing policy if the
+two are the same entity.
+
+**Not reviewed by a lawyer.** The liability and governing-law clauses in
+`/terms` are the ordinary shape of such a clause, written to be read rather than
+litigated. Worth an hour of somebody qualified before this is a paid product; it
+is defensible as-is for a free one.
+
+### DONE — /delete-account, which Play requires and nobody had noticed
+
+Play's User Data policy wants account deletion available **two** ways: in the app
+*and* at a public web URL that works with no sign-in and no install. The in-app
+half has existed since migration 26; the URL half did not exist at all, and it is
+a required field on the Data safety form.
+
+`/delete-account` is deliberately **not a button**. An unauthenticated endpoint
+that erases an account on request is an account takeover with extra steps —
+`delete_my_account` keeps no tombstone and has no undo. Play asks that a *request*
+be possible without signing in, not that the deletion itself be unauthenticated.
+So the page routes: the real button stays behind the session, and an
+identity-checked email route covers anyone locked out.
+
+### REFERENCE — docs/PLAY-DATA-SAFETY.md
+
+The Data safety form is a second declaration of the same facts as `/privacy`, and
+Google compares them. Every answer is worked out there with its evidence in the
+code, so the two cannot drift. **Read the EXIF warning in it before anyone
+touches `lib/trips/media.ts`** — the "we do not collect location" answer rests
+entirely on that function's canvas re-encode, and an "upload original" feature
+would silently turn the form into a false declaration.
 
 ---
 

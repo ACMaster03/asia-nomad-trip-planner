@@ -29,6 +29,9 @@ export const config = {
     // would be pure latency for followers who never have a session. Same for
     // `digest` (confirm/unsubscribe landings) and `api/digest` — the one-click
     // POST arrives from a mail provider's servers, which have no cookies at all.
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|follow|digest|api/digest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // `privacy`, `terms` and `delete-account` join them: a Play reviewer and a
+    // crawler both open those signed out, and they hold no secret worth a
+    // session for. Play REQUIRES the deletion page to work with no sign-in.
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|follow|digest|api/digest|privacy|terms|delete-account|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
