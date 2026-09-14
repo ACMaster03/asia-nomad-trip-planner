@@ -14,7 +14,7 @@
 
 export const LEGAL = {
   /** Registered company name, exactly as it appears on the register. */
-  entity: 'TODO_COMPANY_LEGAL_NAME',
+  entity: 'KeepYourHabits Ltd',
   /** Registered address, one line. */
   address: 'TODO_REGISTERED_ADDRESS',
   /** Where privacy questions and data requests go. Must be monitored. */
