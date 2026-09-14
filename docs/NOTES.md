@@ -5,6 +5,55 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-14
+
+### OPEN — turn password sign-in on in the Supabase dashboard (Patrik)
+
+**The code is merged and does nothing until this is done.** Password sign-in is
+on the login screen and in Account → Password, but the Supabase project still
+has the password grant disabled, so every attempt answers
+`Invalid login credentials` no matter what anyone types.
+
+1. **Authentication → Providers → Email → enable password.**
+2. **Leave "Allow new users to sign up" OFF.** This app has no sign-up anywhere
+   and the Play submission is simpler without one. A password here is a second
+   key to a door you already have.
+3. **Create the review account by hand** (Authentication → Users → Add user,
+   with a password), then give Play Console that address and password under
+   **App access**.
+
+**Why it exists at all.** Google Play requires sign-in details that are
+"reusable, valid regardless of user location", and says explicitly that an app
+gated behind *one-time passwords* must provide credentials that bypass them — a
+magic link is a one-time password, so the old configuration could not be
+reviewed. The second reason is ours rather than Google's: a password has no
+email round trip, so it cannot be lost to a slow mail server or handed to the
+wrong browser, which is the failure `lib/supabase/otp.ts` exists to document.
+
+**No email-template change is needed.** The reset link points at
+`/auth/callback?next=/account`, which reads `?next=` and handles both shapes —
+the default `/auth/v1/verify?…&redirect_to=` template *and* a repointed
+`/auth/confirm` one. `recovery` was already in `OTP_TYPES` in
+`app/auth/confirm/route.ts`. This deliberately avoids the
+`{{ .Type }}` trap in `docs/AUTH-EMAIL-TEMPLATE.md` that cost two test rounds.
+
+**What is NOT verified.** This session's container has no egress to
+`*.supabase.co` (403 from the egress proxy), so a real sign-in was never
+exercised — only the UI, and the no-connection error branch. **The first
+password set and the first password sign-in are their own test**, along with
+one reset link opened from a phone's mail app, which is the journey that broke
+before.
+
+### WORTH DOING — Play still needs a privacy policy and terms page
+
+`app/login/page.tsx` renders "Terms" and "Privacy Policy" as `<span>` elements
+with no `href`, and there is no `/terms` or `/privacy` route. Play Console will
+not accept a submission without a privacy policy URL. Not auth work, so it was
+deliberately left out of the password change; recorded here so it is not
+discovered at submission time.
+
+---
+
 ## 2026-08-28
 
 ### OPEN — deploy the digest Edge Functions (Patrik, from his Mac)

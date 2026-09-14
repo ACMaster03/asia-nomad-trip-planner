@@ -3,6 +3,7 @@ import { useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { humanAuthError } from '@/lib/auth/authError'
 import { fetchTrip } from '@/lib/trips/queries'
 import {
   createShareLink,
@@ -89,6 +90,100 @@ function NameCard({ initialFirstName }: { initialFirstName: string }) {
       {save.isError && (
         <p className="mt-2 text-base text-ac2">Could not save your name — try again.</p>
       )}
+    </section>
+  )
+}
+
+// Password (2026-09-14). Accounts here arrive by invitation and sign in with a
+// magic link; a password is a SECOND key to a door you already have, never a way
+// to make a new account — this app has no sign-up anywhere, and the Supabase
+// project keeps signups closed.
+//
+// Two reasons it exists. Google Play requires reusable sign-in credentials for
+// app review, and says so in as many words for apps gated behind one-time
+// passwords — which is exactly what a magic link is. And on the road it is the
+// more dependable way in: no mail server to wait on, and no link that can be
+// opened in the wrong browser (the failure lib/supabase/otp.ts documents).
+//
+// Whether an account already HAS a password is not something Supabase tells the
+// client — there is no flag on the user object — so this card never claims to
+// know. It sets one either way, which is also what makes it double as the
+// landing spot for a "forgot password" link.
+const MIN_PASSWORD_LENGTH = 8
+
+function PasswordCard() {
+  const sb = createClient()
+  const toast = useToast()
+  const [pw, setPw] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [error, setError] = useState('')
+
+  const tooShort = pw.length > 0 && pw.length < MIN_PASSWORD_LENGTH
+  const mismatch = confirm.length > 0 && pw !== confirm
+  const ready = pw.length >= MIN_PASSWORD_LENGTH && pw === confirm
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await sb.auth.updateUser({ password: pw })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      setPw('')
+      setConfirm('')
+      setError('')
+      toast('Password saved - you can sign in with it now')
+    },
+    onError: (e) =>
+      setError(
+        humanAuthError(e, "We couldn't save the password just now. Please try again in a moment."),
+      ),
+  })
+
+  return (
+    <section className="rounded-[var(--r)] bg-sf p-4">
+      <h2 className="font-serif text-[19px] font-semibold">Password</h2>
+      <p className="mt-1 text-base leading-normal text-tx2">
+        Optional. A magic link always works — a password is a second way in, and the quicker one
+        when the mail is slow to arrive. Set a new one here at any time.
+      </p>
+      <label className="mt-2 block text-base font-medium text-tx2">
+        New password
+        <input
+          className={input}
+          type="password"
+          autoComplete="new-password"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          placeholder={'At least ' + MIN_PASSWORD_LENGTH + ' characters'}
+        />
+      </label>
+      <label className="mt-3 block text-base font-medium text-tx2">
+        Confirm password
+        <input
+          className={input}
+          type="password"
+          autoComplete="new-password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          placeholder="Type it again"
+        />
+      </label>
+      {/* Both notes wait for the reader to have typed something — a form that
+          scolds you before you have finished the first field is just noise. */}
+      {tooShort && (
+        <p className="mt-2 text-base text-tx2">
+          At least {MIN_PASSWORD_LENGTH} characters.
+        </p>
+      )}
+      {mismatch && <p className="mt-2 text-base text-ac2">The two passwords don&apos;t match.</p>}
+      {error && <p className="mt-2 text-base text-ac2">{error}</p>}
+      <button
+        onClick={() => save.mutate()}
+        disabled={save.isPending || !ready}
+        className="mt-[13px] w-full rounded-[calc(var(--r)-3px)] bg-ac py-3 text-base font-semibold text-on disabled:opacity-50"
+      >
+        {save.isPending ? 'Saving…' : 'Save password'}
+      </button>
     </section>
   )
 }
@@ -480,7 +575,7 @@ export default function AccountClient({
           <div className="min-w-0 grow">
             <div className="truncate text-base font-semibold">{email || 'Signed in'}</div>
             <div className="mt-0.5 text-base text-tx2">
-              Magic-link sign-in — no password to manage.
+              Sign in with a magic link, or with a password you set below.
             </div>
           </div>
         </div>
@@ -492,6 +587,11 @@ export default function AccountClient({
           {busy ? 'Signing out…' : 'Sign out'}
         </button>
       </section>
+
+      {/* Directly under the identity card, and above everything trip-shaped: a
+          "forgot password" link lands on this page, so what it came for has to
+          be on screen without hunting. */}
+      <PasswordCard />
 
       <NameCard initialFirstName={initialFirstName ?? ''} />
 
