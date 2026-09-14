@@ -20,10 +20,10 @@ export const LEGAL = {
   /** Where privacy questions and data requests go. Must be monitored. */
   contactEmail: 'TODO_CONTACT_EMAIL',
   /**
-   * Law governing the Terms. Set to England & Wales because KeepYourHabits Ltd
-   * is a UK company — but Companies House also registers in Scotland and in
-   * Northern Ireland, and those are different legal systems. CHECK THE
-   * CERTIFICATE OF INCORPORATION and correct this if it says otherwise.
+   * Law governing the Terms. KeepYourHabits Ltd is London-based, and England &
+   * Wales is the legal system covering London — confirmed with the owner
+   * 2026-09-14, so this is settled rather than assumed. (Scotland and Northern
+   * Ireland would each have been a different answer.)
    */
   jurisdiction: 'England & Wales',
   /** Where the Supabase project is hosted, e.g. 'the EU (Frankfurt)'. */

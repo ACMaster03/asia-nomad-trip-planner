@@ -50,12 +50,16 @@ before.
 face** — the EU-representative line renders as an unset marker until it is
 appointed.
 
-KeepYourHabits Ltd is a UK company with no EEA establishment, and it offers this
+KeepYourHabits Ltd is London-based with no EEA establishment, and it offers this
 service to people in the EEA — the travellers and the family following the trip
 are in Hungary. That combination is exactly what Article 27 of the EU GDPR is
 about: appoint a representative established in an EEA member state, and **name
 them in the privacy notice**, which is why `entity.ts` has a field for it rather
 than leaving it implicit.
+
+Being in London is what *creates* this, not what excuses it: before Brexit a UK
+company was EU-established and needed no representative. An office in the EEA —
+Dublin, Budapest — would remove the requirement again. Without one, it applies.
 
 Commercial providers do this for roughly £300–800/year. Alternatively an EEA
 establishment of your own removes the requirement altogether. Not urgent enough
@@ -77,8 +81,8 @@ All five live in **`product/src/lib/legal/entity.ts`** — one file, one edit:
 | Field | What it needs |
 |---|---|
 | `entity` | ✅ `KeepYourHabits Ltd` |
-| `jurisdiction` | ⚠️ set to `England & Wales` — **confirm against the certificate of incorporation**, since Companies House also registers in Scotland and Northern Ireland and those are different legal systems |
-| `address` | registered address as filed, one line |
+| `jurisdiction` | ✅ `England & Wales` — London-based, confirmed with the owner |
+| `address` | registered address **as filed at Companies House** — "London" is not an address; the page prints it verbatim |
 | `contactEmail` | a **monitored** address — Play requires a working contact route |
 | `dataRegion` | where the Supabase project actually runs |
 | `euRepresentative` | see the Article 27 entry above |
