@@ -65,9 +65,21 @@ Commercial providers do this for roughly £300–800/year. Alternatively an EEA
 establishment of your own removes the requirement altogether. Not urgent enough
 to block the Play submission, urgent enough not to forget — and cheap to fix.
 
-Worth checking at the same time: whether the ICO data protection fee applies to
-the company. That is a separate UK registration obligation from anything on the
-legal pages.
+**ICO: settled, and separate from this.** The data protection fee is paid for
+this year (owner, 2026-09-15), so the company is on the ICO register. Two things
+follow, neither of which the payment itself covers:
+
+- It **renews annually**, and lapsing is an enforcement matter in its own right.
+  It is also exactly the sort of thing that lapses while somebody is on the road
+  and not reading post. Put the renewal in a calendar rather than trusting the
+  reminder email to reach you.
+- The register entry is public and carries the **registered address** — one of
+  the fields still unset in `entity.ts`. Take it from there rather than from
+  memory: it is the address the regulator already holds, and the privacy policy
+  should not disagree with the regulator.
+
+Paying the ICO fee is *not* the Article 27 item above. One is a UK registration;
+the other is an EEA representative. Neither substitutes for the other.
 
 ### OPEN — fill in the five company facts on the legal pages (Patrik)
 
