@@ -218,8 +218,16 @@ Fixed set of six:
 | `fire` | 🔥 | the grind — a 14-hour bus, a 5am summit |
 | `care` | 🥹 | affection at distance |
 
-- **Store the stable key, never the emoji character.** This is what keeps the set
-  re-skinnable and makes a seventh key a migration plus a UI row.
+- **Store the stable key, never the emoji character.** The available set lives in a
+  `reaction_kinds` registry table plus a `lib/trips/reactions.ts` mirror — the same
+  pattern migration 31 used to turn ledger categories from free text into a registry.
+  Adding a seventh kind is then a registry row, not a schema change, and every stored
+  reaction keeps working.
+- **Swappable sets are the intended direction, shipping as the fixed six.** Decided
+  with the trade-off understood: per-user or per-trip sets mean you render glyphs from
+  outside your own set anyway (A reacts `fire`, B removed it, B still has to draw it),
+  and trip-local sets break cross-trip aggregation. The registry keeps the door open at
+  near-zero cost; revisit when someone actually asks.
 - No reactions on comments. It makes the parent polymorphic (event *or* comment) for the
   least valuable interaction. Easy to add, hard to remove.
 - Six fits one phone row at 44px targets (6×44 = 264px inside a 400px viewport). Seven
@@ -306,7 +314,7 @@ integration pass. `user_push_subscriptions` already accepts `transport = 'apns'`
 | 5 | Commenting and reacting require an account | Anonymous followers have no identity: no attribution, no per-person removal, no "who reacted with what". |
 | 6 | Comments visible to all who can see the check-in | Invisible comments make threading meaningless and turn the feature into a private inbox. Noise is a *notification* problem. |
 | 7 | Reaction tally to trip members only | Avoids Instagram popularity dynamics; the follower still sees their own. |
-| 8 | Reaction keys, not glyphs; fixed six | Keeps the set re-skinnable and additive. |
+| 8 | Reaction keys in a registry table, not glyphs; six to start | Mirrors migration 31's ledger-category registry. Swappable sets are the intended direction; a seventh kind becomes a registry row. |
 | 9 | One level of comment nesting | 90% of the value at 20% of the debt. |
 | 10 | No device fingerprinting | Covert tracking of everyone to catch one person. |
 | 11 | Removal revokes access, not history | Threads with holes confuse; rage-quits should not delete conversations. |
@@ -316,17 +324,28 @@ integration pass. `user_push_subscriptions` already accepts `transport = 'apns'`
 
 ---
 
-## 8. Deferred / filed
+## 8. Tracked work
+
+| Issue | Phase | Depends on |
+|---|---|---|
+| #8 | **A** — following + merged Home feed | — |
+| #9 | **B** — followed routes on the globe | #8 |
+| #10 | **C1** — comments on check-ins | #8 |
+| #11 | **C2** — reactions | #8 |
+| #12 | **C3** — blocks + link rotation | #8 |
+| #13 | **C4** — notification matrix | #8, #10, #11 |
+
+## 9. Deferred / filed
 
 | Item | Where |
 |---|---|
-| Advisor / "editorial" role — a non-travelling reviewer who can comment | issue #6 (low priority, may be overruled) |
-| Location-scoped discovery — same city / similar trip, **not** global | issue #7 (low priority; stalker risk, DPIA required) |
+| Advisor / "editorial" role — a non-travelling reviewer who can comment | #6 (low priority, may be overruled) |
+| Location-scoped discovery — same city / similar trip, **not** global | #7 (low priority; stalker risk, DPIA required) |
 | Per-author follow *within* one trip | deferred — the one feature that forces author identity into the feed projection |
-| User-configurable reaction sets | deferred — per-trip sets make reactions trip-local and break cross-trip aggregation; the stable-key storage keeps the *additive* path cheap |
+| User-configurable reaction sets | deferred, but **intended** — the `reaction_kinds` registry is designed for it; ships as the fixed six |
 | Account-level push for followed journeys | rides `user_push_subscriptions` (migration 27) |
 
-## 9. Known blockers
+## 10. Known blockers
 
 - **The digest Edge Functions are undeployed** (`docs/NOTES.md`, open since 2026-08-28).
   Phase C rewrites `push-fanout` routing, so this must be resolved first or the
