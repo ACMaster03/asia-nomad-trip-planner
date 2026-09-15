@@ -2,6 +2,7 @@ import type { City } from '@/lib/catalogue/types'
 import { getAtJsonPath } from '@/lib/catalogue/getAtJsonPath'
 import type { TripState, LedgerEntry, Segment } from './types'
 import { toBase, usdToBase, segNights, stayTotal } from './format'
+import { isBookedStatus } from './commitment'
 // stayNights/stayTotal live in format.ts (node-testable); re-exported for callers.
 export { stayNights, stayTotal } from './format'
 
@@ -63,7 +64,11 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
   // silently include guesses — it sums only CHOSEN accommodation + entered
   // transport/extras, and reports which stops still lack a stay instead of
   // estimating them. The blended number lives on as `grand` = ESTIMATED total.
+  //
+  // 2026-09-15: "chosen" now means the STATUS, not merely the tick. A ticked
+  // idea/shortlist is a draft — it feeds the estimate below, never this.
   let committedAccom = 0
+  let committedTransport = 0
   const missingAccomStops: string[] = []
   const perSeg: PerSeg[] = []
   state.segments
@@ -88,11 +93,19 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
       const lHUF = k ? usdToBase(k.live[tier], rates) * nn : 0
       accom += aHUF
       live += lHUF
-      if (aSrc === 'included') committedAccom += aHUF
-      else missingAccomStops.push(s.city)
+      if (aSrc === 'included') {
+        committedAccom += inc
+          .filter((st) => isBookedStatus(st.status))
+          .reduce((a, st) => a + toBase(stayTotal(st, s), st.cur, rates), 0)
+      } else missingAccomStops.push(s.city)
       perSeg.push({ seg: s, nights: nn, tier, accom: aHUF, accomSrc: aSrc, live: lHUF, total: aHUF + lHUF, kb: k })
     })
-  state.transport.forEach((t) => { if (t.include) transport += toBase(t.price, t.cur, rates) })
+  state.transport.forEach((t) => {
+    if (!t.include) return
+    const v = toBase(t.price, t.cur, rates)
+    transport += v
+    if (isBookedStatus(t.status)) committedTransport += v
+  })
   state.extras.forEach((e) => { if (e.include) extras += toBase(e.amount, e.cur, rates) })
   const grand = accom + live + transport + extras
   const totalNights = state.segments
@@ -104,7 +117,7 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
     perDay: totalNights ? grand / totalNights : 0,
     // Committed view: your entered numbers only — no catalogue guesses, no
     // daily-living estimate. missingAccomStops says what the number lacks.
-    committed: committedAccom + transport + extras,
+    committed: committedAccom + committedTransport + extras,
     missingAccomStops,
   }
 }

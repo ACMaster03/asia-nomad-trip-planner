@@ -12,7 +12,7 @@ export function moneyModel(state: TripState, ledger: LedgerEntry[], cityIdx: Rec
   const pace = tripPace(state, ledger, todayIso, current)
   const plan = planByStop(state, ledger, budget.perSeg, todayIso, pace.perDay)
   const bookings = bookingsSummary(state, ledger)
-  const projection = projectFromPlan(plan, bookings, ledger, state.rates)
+  const projection = projectFromPlan(plan, bookings, ledger, state.rates, todayIso)
   return { budget, inPlan, current, pace, plan, bookings, projection }
 }
 export type MoneyModel = ReturnType<typeof moneyModel>

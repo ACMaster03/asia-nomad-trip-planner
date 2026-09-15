@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
+import { isBookedStatus } from '@/lib/trips/commitment'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { tk } from '@/lib/trips/keys'
 import { nightsBetween, segNights } from '@/lib/trips/format'
@@ -78,15 +79,10 @@ const fmtEventTime = (iso: string) =>
 const fmtShort = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
-// A stay that is actually committed (StayForm statuses are idea/shortlist/
-// chosen; 'booked' kept for forward-compat with the booking flow).
+// A stay that is actually committed — the same test the Money page uses, so
+// "booked" means one thing across the app (lib/trips/commitment.ts).
 const bookedStay = (stays: Stay[], segId: string) =>
-  stays.find(
-    (st) =>
-      st.segId === segId &&
-      st.include !== false &&
-      ['booked', 'chosen'].includes((st.status ?? '').toLowerCase()),
-  )
+  stays.find((st) => st.segId === segId && st.include !== false && isBookedStatus(st.status))
 
 export default function LiveClient() {
   const sb = createClient()

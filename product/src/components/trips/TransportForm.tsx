@@ -25,6 +25,7 @@ export function TransportForm({
   const [url, setUrl] = useState(initial?.url ?? 'https://www.google.com/travel/flights')
   const [price, setPrice] = useState(initial?.price != null ? String(initial.price) : '')
   const [cur, setCur] = useState(initial?.cur ?? 'USD')
+  const [chargeDate, setChargeDate] = useState(initial?.chargeDate ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
 
   function submit() {
@@ -34,6 +35,7 @@ export function TransportForm({
       type, from: from.trim(), to: to.trim(), date, provider, url, cur,
       price: Number(price) || 0, status,
       include: initial?.include ?? false,
+      chargeDate,
       notes,
     }
     onSave(leg)
@@ -71,6 +73,14 @@ export function TransportForm({
             </select>
           </label>
         </div>
+        <label className={label}>Card charged on
+          <input type="date" className={input} value={chargeDate} onChange={(e) => setChargeDate(e.target.value)} />
+          <span className="mt-1 block text-base font-normal text-tx3">
+            Leave blank if the fare is taken on the travel date. Fares are
+            usually paid at booking — fill this in and Money counts it as spent
+            then, instead of waiting for the flight.
+          </span>
+        </label>
         <label className={label}>Notes<textarea rows={2} className={input} value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
         <div className="flex gap-2 pt-1">
           <button onClick={submit} className="flex-1 rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-base font-semibold text-on">Save</button>

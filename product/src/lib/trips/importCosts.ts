@@ -1,12 +1,20 @@
 import type { LedgerEntry, Stay, TransportLeg, TripState } from './types'
-import { stayTotal } from './budget'
+// Straight from format.ts, not the budget.ts re-export: budget.ts pulls in the
+// catalogue path aliases, which the node tests cannot resolve.
+import { stayTotal } from './format.ts'
+import { isBookedStatus } from './commitment.ts'
 
 // === Auto-import planned costs into the ledger (mock 04, ledger states) ===
 //
 // One-way sync, plan → ledger. A "booking" is importable when it is
 //   booked (status booked/chosen) + included + has a charge date
 // (stays: chargeDate — the free-cancel-deadline+1 the user typed; transport:
-// the travel date — fares are committed money once booked).
+// chargeDate when set, else the travel date — fares are committed money once
+// booked). A draft (idea/shortlist) never imports: nothing has been charged.
+//
+// The date matters beyond ordering: the Money page reads rows dated after
+// today as SCHEDULED rather than spent, so a fare paid months in advance
+// needs its own chargeDate to land in the month the card was actually hit.
 //
 // Imported entries carry `source` ("⤵ from plan" badge) and keep syncing:
 // amount/date/currency/note follow the plan until the booking disappears, at
@@ -23,9 +31,6 @@ import { stayTotal } from './budget'
 export type ImportSource = { kind: 'stay' | 'transport'; id: string }
 
 export const sourceKey = (s: ImportSource) => `${s.kind}:${s.id}`
-
-const isBooked = (status?: string) =>
-  ['booked', 'chosen'].includes((status ?? '').toLowerCase())
 
 // Amounts are rounded to cents. ppn × nights in floating point (33.71 × 29 =
 // 977.5900000000001) round-trips through jsonb fine, but a later rate/nights
@@ -44,7 +49,7 @@ interface Candidate {
 }
 
 function stayCandidate(st: Stay, state: TripState): Candidate | null {
-  if (!isBooked(st.status) || st.include === false || !st.chargeDate) return null
+  if (!isBookedStatus(st.status) || st.include === false || !st.chargeDate) return null
   const seg = state.segments.find((s) => s.id === st.segId)
   const amount = cents(stayTotal(st, seg))
   if (!(amount > 0)) return null
@@ -59,11 +64,15 @@ function stayCandidate(st: Stay, state: TripState): Candidate | null {
 }
 
 function transportCandidate(t: TransportLeg): Candidate | null {
-  if (!isBooked(t.status) || t.include === false || !t.date) return null
+  if (!isBookedStatus(t.status) || t.include === false) return null
+  // When the card was charged, if the traveller filled it in; the travel date
+  // is the fallback it always was.
+  const date = t.chargeDate || t.date
+  if (!date) return null
   if (!(t.price > 0)) return null
   return {
     source: { kind: 'transport', id: t.id },
-    date: t.date,
+    date,
     category: 'transport',
     amount: cents(t.price),
     currency: t.cur,

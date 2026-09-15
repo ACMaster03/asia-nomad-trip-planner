@@ -8,6 +8,11 @@ import type { TripState } from '@/lib/trips/types'
 // × your pace (city average until you have a pace). The mauve bands are the
 // only numbers that matter at a glance; the breakdown line under each row
 // says where the figure comes from.
+//
+// This card is a FORECAST, so a drafted stay still shapes it — a price someone
+// found beats a city average, and for a city outside the catalogue it is the
+// only number there is. It is marked ≈ and never reported as money owed; the
+// Bookings card above is where committed money is counted.
 
 const d = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 const band = 'mt-1.5 -mx-[18px] flex items-center justify-between gap-3 bg-ac2-soft px-[18px] py-3 text-base font-semibold text-ac2-deep'
@@ -27,12 +32,16 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
   const lastDepart = plan.reduce((m, p) => (p.seg.depart > m ? p.seg.depart : m), '')
   const planShort = !!state.meta.endDate && !!lastDepart && lastDepart < state.meta.endDate
   const stayText = (p: StopPlan) =>
-    p.stayLabel === 'booked' ? 'stay booked' : p.stayLabel === 'unpaid' ? 'stay chosen, unpaid' : p.stayLabel === 'estimate' ? 'no stay yet · city average' : 'no stay yet'
+    p.stayLabel === 'booked' ? 'stay booked'
+      : p.stayLabel === 'unpaid' ? 'stay chosen, unpaid'
+      : p.stayLabel === 'draft' ? 'stay drafted · forecast only'
+      : p.stayLabel === 'estimate' ? 'no stay yet · city average'
+      : 'no stay yet'
   const breakdown = (p: StopPlan) => {
     const parts: string[] = []
     if (p.spent > 0) parts.push(`${fmt(p.spent)} spent`)
     if (p.remaining > 0) parts.push(`${p.remaining} nights × ${fmt(p.rate)}${p.rateSrc === 'catalogue' ? ' (city average)' : ' at your pace'}`)
-    if (p.stay > 0) parts.push(`stay ${fmt(p.stay)}`)
+    if (p.stay > 0) parts.push(`stay ${p.stayLabel === 'draft' ? '≈ ' : ''}${fmt(p.stay)}`)
     return parts.join(' + ')
   }
 
@@ -54,7 +63,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
                   {p.nights} nights{live ? ` · ${p.nightsIn} in` : p.nightsIn >= p.nights && p.nights > 0 ? ' · done' : ` · from ${d(p.seg.arrive)}`} · {stayText(p)}
                 </span>
               </span>
-              <span className="flex-none text-base font-semibold">{p.remaining > 0 && p.rateSrc === 'catalogue' ? '≈ ' : ''}{fmt(p.projected)}</span>
+              <span className="flex-none text-base font-semibold">{(p.remaining > 0 && p.rateSrc === 'catalogue') || p.stayLabel === 'draft' ? '≈ ' : ''}{fmt(p.projected)}</span>
             </div>
             <div className="pb-2.5 text-[13px] text-tx2">{breakdown(p) || 'nothing counted yet'}</div>
           </div>
@@ -72,7 +81,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
         <span className="flex-none text-base font-semibold">{fmt(transportTotal)}</span>
       </div>
       <div className="flex items-start justify-between gap-3 border-t border-ln pt-2.5 pb-2.5">
-        <span><span className="block text-base font-semibold">Gear, e-SIM, insurance</span><span className="block text-[14px] text-tx2">and days outside a stop · already in “spent so far”</span></span>
+        <span><span className="block text-base font-semibold">Gear, e-SIM, insurance</span><span className="block text-[14px] text-tx2">and days outside a stop · already counted above</span></span>
         <span className="flex-none text-base font-semibold">{fmt(projection.residual)}</span>
       </div>
       <div className={band + ' -mb-2 rounded-t-[12px] rounded-b-[var(--r)]'}><span>Projected total</span><span>{fmt(projection.projected)}</span></div>

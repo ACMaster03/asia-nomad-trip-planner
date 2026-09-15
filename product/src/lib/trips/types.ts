@@ -64,6 +64,10 @@ export interface TransportLeg {
   status?: string
   include?: boolean
   notes?: string
+  // ISO date — when the fare was actually charged, if that is not the travel
+  // date. Fares are usually paid at booking, months ahead; without this the
+  // Money page reads a booked-and-paid flight as money still to come.
+  chargeDate?: string
 }
 export interface Extra {
   id: string

@@ -1,6 +1,7 @@
 import type { LedgerEntry, Segment, TripState } from './types'
 import { toBase, nightsBetween, stayNights, stayTotal } from './format.ts'
 import { NON_DAILY_CATEGORIES, isEverydayCategory } from './categories.ts'
+import { isBookedStatus, isSettled } from './commitment.ts'
 import type { PerSeg } from './budget'
 
 // Spending analytics over the ledger — the numbers behind "how much does a day
@@ -147,7 +148,14 @@ export interface StopPlan {
   /** everyday spend logged between arrival and today/departure */
   spent: number
   stay: number
-  stayLabel: 'booked' | 'unpaid' | 'estimate' | 'none'
+  /**
+   * booked   — chosen/booked and the money is in the ledger
+   * unpaid   — chosen/booked, still to pay
+   * draft    — ticked, but still an idea/shortlist: a forecast, not a bill
+   * estimate — no stay ticked; the catalogue's city average
+   * none     — no stay and no catalogue entry for the city
+   */
+  stayLabel: 'booked' | 'unpaid' | 'draft' | 'estimate' | 'none'
   /** per-night rate used for the nights still ahead */
   rate: number
   rateSrc: 'pace' | 'catalogue'
@@ -180,10 +188,14 @@ export function planByStop(
     const rate = pace !== null ? pace : nights ? p.live / nights : 0
     let stayLabel: StopPlan['stayLabel'] = p.accomSrc === 'included' ? 'unpaid' : p.accomSrc
     if (p.accomSrc === 'included') {
-      const chosen = state.stays.filter((st) => st.segId === seg.id && st.include)
+      const ticked = state.stays.filter((st) => st.segId === seg.id && st.include)
+      const real = ticked.filter((st) => isBookedStatus(st.status))
+      // Nothing here is actually booked — the figure is a price someone found,
+      // so it forecasts the stop but is never reported as money owed.
+      if (!real.length) stayLabel = 'draft'
       // "booked" = the money is in the ledger (auto-imported), which is what
       // lets the Plan rows reconcile with "spent so far"
-      if (chosen.length && chosen.every((st) => imported.has(`stay:${st.id}`))) stayLabel = 'booked'
+      else if (ticked.every((st) => imported.has(`stay:${st.id}`))) stayLabel = 'booked'
     }
     return {
       seg, nights, nightsIn, spent, stay: p.accom, stayLabel, rate, rateSrc, remaining,
@@ -206,10 +218,14 @@ export interface BookingRow {
 }
 
 /**
- * Bookings section: every chosen stay and every planned transport leg, with
+ * Bookings section: every ticked stay and every planned transport leg, with
  * whether the money is already on the books — "paid" once the row is in the
  * ledger (auto-imported from its charge date). A booking whose date has passed
  * but that never got a charge date stays "unpaid" and is flagged in the UI.
+ *
+ * A row that is ticked but still an idea/shortlist is "unbooked": it is listed
+ * (you asked for it in the plan) but counts towards neither `paid` nor `toPay`,
+ * because nobody owes money on a draft.
  */
 export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
   const rates = state.rates
@@ -222,21 +238,21 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
       const seg = state.segments.find((s) => s.id === st.segId)
       const nights = stayNights(st, seg)
       const total = stayTotal(st, seg)
-      const paid = imported.has(`stay:${st.id}`)
+      const booked = isBookedStatus(st.status)
+      const paid = booked && imported.has(`stay:${st.id}`)
       return {
         id: st.id, kind: 'stay', title: `${seg?.city ?? '—'} · ${st.name}`,
         detail: `${nights} nights · ${st.ppn} ${st.cur} / night`,
         date: st.chargeDate || undefined,
-        status: paid ? 'paid' : 'unpaid',
+        status: !booked ? 'unbooked' : paid ? 'paid' : 'unpaid',
         amount: toBase(total, st.cur, rates), original: orig(total, st.cur),
       }
     })
     .sort((a, b) => (a.date ?? '9').localeCompare(b.date ?? '9'))
-  const isBooked = (status?: string) => ['booked', 'chosen'].includes((status ?? '').toLowerCase())
   const transport: BookingRow[] = state.transport
     .filter((t) => t.include !== false)
     .map((t): BookingRow => {
-      const booked = isBooked(t.status)
+      const booked = isBookedStatus(t.status)
       const paid = booked && imported.has(`transport:${t.id}`)
       return {
         id: t.id, kind: 'transport', title: `${t.from} → ${t.to}`,
@@ -252,6 +268,11 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
     stays, transport,
     paid: all.filter((r) => r.status === 'paid').reduce((a, r) => a + r.amount, 0),
     toPay: all.filter((r) => r.status === 'unpaid').reduce((a, r) => a + r.amount, 0),
+    // Drafted stays: listed, priced, but owed to nobody. Kept out of
+    // paid/toPay and reported separately so the card can say what it is NOT
+    // counting. (Drafted transport has always been reported as `unbooked`.)
+    draftedStays: stays.filter((r) => r.status === 'unbooked').reduce((a, r) => a + r.amount, 0),
+    draftStays: stays.filter((r) => r.status === 'unbooked').length,
     unbooked: transport.filter((r) => r.status === 'unbooked').length,
   }
 }
@@ -264,30 +285,42 @@ export const nightsSpan = (start: string, iso: string) =>
 export const everydayOnly = (ledger: LedgerEntry[]) => ledger.filter((e) => isEverydayCategory(e.category))
 
 export interface Projection {
-  /** every expense logged so far */
+  /** expenses dated today or earlier — money that has actually left */
   spent: number
+  /**
+   * expenses dated after today: a booked stay's charge date, a fare paid on
+   * travel day. Real, committed, already in the ledger — but not spent yet, so
+   * it is quoted on its own rather than folded into "spent so far".
+   */
+  scheduled: number
   remainingNights: number
-  /** stays for stops whose chosen stay is not paid yet (or only estimated) */
+  /** stays for stops whose stay is not paid yet (booked, drafted or estimated) */
   unpaidStays: number
   transportToPay: number
-  /** spent + Σ remaining nights × rate + unpaid stays + transport to pay */
+  /** spent + scheduled + Σ remaining nights × rate + unpaid stays + transport to pay */
   projected: number
-  /** spent that no stop or paid booking accounts for: gear, e-SIM, days between stops */
+  /** logged spend that no stop or paid booking accounts for: gear, e-SIM, days between stops */
   residual: number
 }
 
 /**
  * The projected total, defined so the Plan card's rows add up to it exactly:
  *   Σ stop projections + transport (paid + to pay) + residual
- * = spent so far + Σ remaining × rate + unpaid stays + transport to pay.
+ * = spent + scheduled + Σ remaining × rate + unpaid stays + transport to pay.
+ *
+ * `todayIso` is what splits spent from scheduled; everything else is timeless.
  */
 export function projectFromPlan(
   plan: StopPlan[],
   bookings: ReturnType<typeof bookingsSummary>,
   ledger: LedgerEntry[],
   rates: Record<string, number>,
+  todayIso: string,
 ): Projection {
-  const spent = ledger.filter(isExpense).reduce((a, e) => a + toBase(e.amount, e.currency, rates), 0)
+  const expenses = ledger.filter(isExpense)
+  const sum = (rows: LedgerEntry[]) => rows.reduce((a, e) => a + toBase(e.amount, e.currency, rates), 0)
+  const spent = sum(expenses.filter((e) => isSettled(e.date, todayIso)))
+  const scheduled = sum(expenses.filter((e) => !isSettled(e.date, todayIso)))
   const remainingNights = plan.reduce((a, p) => a + p.remaining, 0)
   const ahead = plan.reduce((a, p) => a + p.remaining * p.rate, 0)
   const unpaidStays = plan.filter((p) => p.stayLabel !== 'booked').reduce((a, p) => a + p.stay, 0)
@@ -295,9 +328,12 @@ export function projectFromPlan(
   const paidStays = bookings.stays.filter((r) => r.status === 'paid').reduce((a, r) => a + r.amount, 0)
   const paidTransport = bookings.transport.filter((r) => r.status === 'paid').reduce((a, r) => a + r.amount, 0)
   const inStops = plan.reduce((a, p) => a + p.spent, 0)
+  // Residual is measured against the WHOLE ledger (spent + scheduled): the
+  // paid-booking totals it subtracts are timeless too, so mixing bases here
+  // would break "Σ stops + transport + residual = projected".
   return {
-    spent, remainingNights, unpaidStays, transportToPay,
-    projected: spent + ahead + unpaidStays + transportToPay,
-    residual: spent - inStops - paidStays - paidTransport,
+    spent, scheduled, remainingNights, unpaidStays, transportToPay,
+    projected: spent + scheduled + ahead + unpaidStays + transportToPay,
+    residual: spent + scheduled - inStops - paidStays - paidTransport,
   }
 }

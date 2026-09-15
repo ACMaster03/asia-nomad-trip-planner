@@ -12,11 +12,15 @@ export function fixtureTrip(today: string): Trip {
     segments: [
       { id: 'bkk', country: 'Thailand', city: 'Bangkok', arrive: '2026-09-01', depart: '2026-09-30', tier: 1 },
       { id: 'han', country: 'Vietnam', city: 'Hanoi', arrive: '2026-09-30', depart: '2026-11-13', tier: 1 },
+      { id: 'dad', country: 'Vietnam', city: 'Da Nang', arrive: '2026-11-13', depart: '2026-12-13', tier: 1 },
     ],
     stays: [
       { id: 'st1', segId: 'bkk', name: 'Bangkok - Home in Khet Huai Khwang', platform: 'Booking.com', cur: 'USD', ppn: 33.71, nights: 29, status: 'chosen', include: true, chargeDate: '2026-07-09' },
-      { id: 'st2', segId: 'han', name: 'Văn Giang (Mai Kenny)', platform: 'Airbnb', cur: 'USD', ppn: 29, status: 'chosen', include: true },
-      { id: 'st3', segId: 'han', name: 'Old Quarter loft', platform: 'Airbnb', cur: 'USD', ppn: 41, status: 'shortlist', include: false },
+      // booked, but the card is not hit until the 29th: SCHEDULED, not spent
+      { id: 'st2', segId: 'han', name: 'Văn Giang (Mai Kenny)', platform: 'Airbnb', cur: 'USD', ppn: 29, status: 'chosen', include: true, chargeDate: '2026-09-29' },
+      // ticked into the plan while still a shortlist: a DRAFT. It forecasts
+      // Da Nang, and must never show up as money paid or money to pay.
+      { id: 'st3', segId: 'dad', name: 'An Bang beach house', platform: 'Airbnb', cur: 'USD', ppn: 41, status: 'shortlist', include: true },
     ],
     transport: [
       { id: 't1', type: 'flight', from: 'Budapest', to: 'Bangkok', date: '2026-08-31', cur: 'HUF', price: 248_000, status: 'booked', include: true },
@@ -65,6 +69,8 @@ export function fixtureTrip(today: string): Trip {
     e('s11a', '2026-09-11', 'drinks', 170, 'THB', 'Iced coffees'),
     e('s12a', '2026-09-12', 'food', 410, 'THB', 'Dinner by the river'),
     e('s13a', today, 'convenience', 95, 'THB', '7-Eleven breakfast'),
+    // dated ahead of `today` — the ledger shows it, the overview does not count it
+    e('imp-st2', '2026-09-29', 'stays', 1276, 'USD', 'Văn Giang (Mai Kenny)', { source: { kind: 'stay', id: 'st2' } }),
     { id: 'inc1', date: '2026-09-01', type: 'income', category: 'freelance', amount: 420_000, currency: 'HUF', note: 'August invoice' },
   ]
   return {

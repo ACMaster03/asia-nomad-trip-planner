@@ -144,6 +144,11 @@ export default function MoneyPage() {
           Spent so far{day ? ` · ${day} ${day === 1 ? 'day' : 'days'}` : tripStart ? ' · before departure' : ''}
         </div>
         <div className="mt-0.5 text-[32px] font-semibold leading-[1.1] tracking-[-.02em]">{fmt(projection.spent)}</div>
+        {projection.scheduled > 0 && (
+          <div className="mt-1 text-[14px] text-tx2">
+            + <b className="text-tx">{fmt(projection.scheduled)}</b> scheduled · dated after today, not spent yet
+          </div>
+        )}
         <div className="mt-3.5 grid grid-cols-2 gap-3 border-t border-ln pt-3">
           <div>
             <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">Per day</div>
@@ -190,7 +195,12 @@ export default function MoneyPage() {
         fmt={fmt} onShowDay={scrollToDay}
       />
       <WhereItGoes ledger={ledger} rates={s.rates} from={from} to={to} fmt={fmt} rangeLabel={rangeLabel} />
-      <BookingsCard stays={bookings.stays} transport={bookings.transport} paid={bookings.paid} toPay={bookings.toPay} fmt={fmt} todayIso={today} />
+      <BookingsCard
+        stays={bookings.stays} transport={bookings.transport}
+        paid={bookings.paid} toPay={bookings.toPay}
+        draftedStays={bookings.draftedStays} draftStays={bookings.draftStays}
+        fmt={fmt} todayIso={today}
+      />
       <LedgerList entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} />
       <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} />
       <MonthlyCard state={s} cityIdx={cityIdx} fmt={fmt} />

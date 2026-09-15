@@ -52,8 +52,8 @@ test('tripPace prefers the current stop once it has three days, and planByStop i
     rates,
     segments: [bkk, han],
     stays: [
-      { id: 'st1', segId: 'bkk', name: 'paid', cur: 'USD', ppn: 10, include: true, chargeDate: '2026-07-09' },
-      { id: 'st2', segId: 'han', name: 'future', cur: 'USD', ppn: 20, include: true, nights: 10 },
+      { id: 'st1', segId: 'bkk', name: 'paid', cur: 'USD', ppn: 10, include: true, status: 'chosen', chargeDate: '2026-07-09' },
+      { id: 'st2', segId: 'han', name: 'future', cur: 'USD', ppn: 20, include: true, status: 'chosen', nights: 10 },
     ],
     transport: [
       { id: 't1', type: 'flight', from: 'BUD', to: 'BKK', date: '2026-08-31', cur: 'USD', price: 100, include: true, status: 'booked' },
@@ -101,7 +101,7 @@ test('tripPace prefers the current stop once it has three days, and planByStop i
   const plan2 = planByStop(state, led2, perSeg, '2026-09-05', 400)
   const bk2 = bookingsSummary(state, led2)
   assert.equal(plan2[0].stayLabel, 'booked')
-  const pr = projectFromPlan(plan2, bk2, led2, rates)
+  const pr = projectFromPlan(plan2, bk2, led2, rates, '2026-09-05')
   assert.equal(pr.spent, 1000 + 2000 + 34000)
   assert.equal(pr.remainingNights, 15)
   assert.equal(pr.unpaidStays, 68000)
@@ -111,5 +111,70 @@ test('tripPace prefers the current stop once it has three days, and planByStop i
   // the Plan card's rows add up to the same number: Σ stops + transport + residual
   const stops = plan2.reduce((a, p) => a + p.projected, 0)
   const transport = bk2.transport.filter((r) => r.status !== 'unbooked').reduce((a, r) => a + r.amount, 0)
+  assert.equal(stops + transport + pr.residual, pr.projected)
+})
+
+// === drafts vs committed money (owner report 2026-09-15) ====================
+// A tester ticked a Lisbon flat that was still a shortlist and the Money page
+// billed them for it. A draft may forecast; it may never be owed.
+const draftState = (stayStatus: string): TripState => ({
+  meta: { version: 1, tripName: 'T', travelers: 1, baseCurrency: 'HUF', budgetCap: 0, startDate: '2026-09-01' },
+  rates,
+  segments: [{ id: 'lis', country: 'Portugal', city: 'Lisbon', arrive: '2026-10-01', depart: '2026-10-11' }],
+  stays: [{ id: 'st', segId: 'lis', name: 'Alfama flat', cur: 'USD', ppn: 50, nights: 10, include: true, status: stayStatus }],
+  transport: [],
+  extras: [],
+  notes: {},
+}) as TripState
+
+const lisPerSeg = (state: TripState): PerSeg[] => [
+  { seg: state.segments[0], nights: 10, tier: 1, accom: 500 * 340, accomSrc: 'included', live: 0, total: 0, kb: undefined },
+]
+
+test('a ticked but unbooked stay is a draft: listed, forecast, never owed', () => {
+  const drafted = draftState('shortlist')
+  const bk = bookingsSummary(drafted, [])
+  // still listed — the traveller asked for it in the plan
+  assert.equal(bk.stays.length, 1)
+  assert.equal(bk.stays[0].status, 'unbooked')
+  // ...but owed to nobody
+  assert.equal(bk.toPay, 0)
+  assert.equal(bk.paid, 0)
+  assert.equal(bk.draftStays, 1)
+  assert.equal(bk.draftedStays, 170_000)
+
+  const [stop] = planByStop(drafted, [], lisPerSeg(drafted), '2026-09-15', null)
+  assert.equal(stop.stayLabel, 'draft')
+  // it DOES carry the forecast: Lisbon is not in the Asia catalogue, so
+  // dropping the drafted price would forecast zero accommodation for the stop
+  assert.equal(stop.stay, 170_000)
+
+  // the same stay, once it is actually chosen, becomes money owed
+  const chosen = draftState('chosen')
+  const bk2 = bookingsSummary(chosen, [])
+  assert.equal(bk2.stays[0].status, 'unpaid')
+  assert.equal(bk2.toPay, 170_000)
+  assert.equal(bk2.draftStays, 0)
+  assert.equal(planByStop(chosen, [], lisPerSeg(chosen), '2026-09-15', null)[0].stayLabel, 'unpaid')
+})
+
+test('expenses dated after today are scheduled, not spent', () => {
+  const state = draftState('chosen')
+  const led: LedgerEntry[] = [
+    e('past', '2026-09-10', 'food', 100, 'HUF'),
+    e('today', '2026-09-15', 'food', 50, 'HUF'),
+    e('ahead', '2026-12-24', 'stays', 900, 'HUF', { source: { kind: 'stay', id: 'st' } }),
+  ]
+  const plan = planByStop(state, led, lisPerSeg(state), '2026-09-15', null)
+  const pr = projectFromPlan(plan, bookingsSummary(state, led), led, rates, '2026-09-15')
+  assert.equal(pr.spent, 150) // today counts; December does not
+  assert.equal(pr.scheduled, 900)
+  // the total is unchanged by the split — only its labelling
+  assert.equal(pr.projected, projectFromPlan(plan, bookingsSummary(state, led), led, rates, '2026-12-31').projected)
+
+  // and the Plan card's rows still reconcile with the projected total
+  const bk = bookingsSummary(state, led)
+  const stops = plan.reduce((a, p) => a + p.projected, 0)
+  const transport = bk.transport.filter((r) => r.status !== 'unbooked').reduce((a, r) => a + r.amount, 0)
   assert.equal(stops + transport + pr.residual, pr.projected)
 })

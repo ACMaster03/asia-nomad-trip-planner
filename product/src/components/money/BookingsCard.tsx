@@ -2,30 +2,52 @@
 import Link from 'next/link'
 import type { BookingRow } from '@/lib/trips/spending'
 
-// Bookings — every chosen stay and planned transport leg with whether the
+// Bookings — every ticked stay and planned transport leg with whether the
 // money is on the books. Editing stays on the Trip page; this is the money view.
+//
+// Three states, and the difference is the point: PAID is in the ledger and
+// already counted as spend; TO PAY is booked and owed; a DRAFT (still an
+// idea/shortlist) is listed with its price but counts towards neither — the
+// footer says so out loud.
 
 const d = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 function status(r: BookingRow, todayIso: string) {
+  // A paid row dated ahead of today is money committed, not money gone — say
+  // "charges" so it reads the same as the overview's scheduled line.
+  const scheduled = !!r.date && r.date > todayIso
   if (r.kind === 'stay') {
-    if (r.status === 'paid') return <span className="text-ac">paid{r.date ? ` ${d(r.date)}` : ''}</span>
+    if (r.status === 'unbooked') return <span className="text-warn">draft · not booked</span>
+    if (r.status === 'paid') {
+      return scheduled
+        ? <span>scheduled · charges {d(r.date!)}</span>
+        : <span className="text-ac">paid{r.date ? ` ${d(r.date)}` : ''}</span>
+    }
     if (!r.date) return <span className="text-warn">charge date not set</span>
     return r.date <= todayIso ? <span className="text-warn">charged {d(r.date)} · not on the books yet</span> : <span>charges {d(r.date)}</span>
   }
-  if (r.status === 'paid') return <span className="text-ac">paid</span>
+  if (r.status === 'paid') return scheduled ? <span>scheduled · charges {d(r.date!)}</span> : <span className="text-ac">paid</span>
   if (r.status === 'unpaid') return <span>booked · to pay</span>
   return <span className="text-warn">not booked yet</span>
 }
 
-export function BookingsCard({ stays, transport, paid, toPay, fmt, todayIso }: {
+export function BookingsCard({ stays, transport, paid, toPay, draftedStays, draftStays, fmt, todayIso }: {
   stays: BookingRow[]
   transport: BookingRow[]
   paid: number
   toPay: number
+  /** total of the drafted stays — counted in neither paid nor toPay */
+  draftedStays: number
+  draftStays: number
   fmt: (n: number) => string
   todayIso: string
 }) {
+  // `paid` counts every row that is on the books, charge date or not — split it
+  // so the footer never calls a December charge "paid" (the rows don't either).
+  const scheduled = [...stays, ...transport]
+    .filter((r) => r.status === 'paid' && !!r.date && r.date > todayIso)
+    .reduce((a, r) => a + r.amount, 0)
+  const settled = paid - scheduled
   const row = (r: BookingRow) => (
     <div key={r.kind + r.id} className="flex items-start justify-between gap-3 border-t border-ln py-2.5">
       <span className="min-w-0">
@@ -51,9 +73,19 @@ export function BookingsCard({ stays, transport, paid, toPay, fmt, todayIso }: {
       {stays.map(row)}
       {transport.length > 0 && <div className="pb-0.5 pt-3 text-[12px] font-semibold uppercase tracking-[.09em] text-tx3">Transport</div>}
       {transport.map(row)}
+      {draftStays > 0 && (
+        <p className="border-t border-ln pt-2.5 text-[13px] text-tx2">
+          {draftStays === 1 ? 'One stay is' : `${draftStays} stays are`} still a draft —
+          {' '}{fmt(draftedStays)} that nobody owes yet. Set the status to <b>chosen</b> on the Trip page to count it.
+        </p>
+      )}
       {(stays.length > 0 || transport.length > 0) && (
         <div className="-mx-[18px] -mb-2 mt-2 flex items-center justify-between gap-3 rounded-b-[var(--r)] rounded-t-[12px] bg-ac2-soft px-[18px] py-3 text-base font-semibold text-ac2-deep">
-          <span>Bookings · {fmt(paid)} paid{toPay > 0 ? `, ≈ ${fmt(toPay)} to pay` : ''}</span>
+          <span>
+            Bookings · {fmt(settled)} paid
+            {scheduled > 0 ? `, ${fmt(scheduled)} scheduled` : ''}
+            {toPay > 0 ? `, ≈ ${fmt(toPay)} to pay` : ''}
+          </span>
           <span className="flex-none">{fmt(paid + toPay)}</span>
         </div>
       )}
