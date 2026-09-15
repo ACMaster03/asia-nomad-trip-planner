@@ -74,7 +74,7 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
             {i === 0 && ahead && (
               <div className="-mx-[18px] mb-1 mt-2 flex items-center justify-between gap-2 rounded-[12px] border border-dashed border-ln2 px-[18px] py-2.5 text-[13px] font-semibold text-tx2">
                 <span>Scheduled · {aheadCount} {aheadCount === 1 ? 'entry' : 'entries'} still to come</span>
-                <span className="font-medium text-tx3">≈ {fmt(aheadTotal)} · not counted as spent</span>
+                <span className="font-medium text-tx3">{fmt(aheadTotal)} · not counted as spent</span>
               </div>
             )}
             {crossesToday && (
