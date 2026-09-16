@@ -44,26 +44,53 @@ password set and the first password sign-in are their own test**, along with
 one reset link opened from a phone's mail app, which is the journey that broke
 before.
 
-### OPEN — appoint an EU/EEA representative (Article 27), Patrik
+### OPEN — establish whether Article 27 applies at all (Patrik) — the premise below was wrong
 
-**A legal obligation, currently unmet, and the privacy policy says so on its
-face** — the EU-representative line renders as an unset marker until it is
-appointed.
+**The earlier version of this entry said "KeepYourHabits Ltd is London-based
+with no EEA establishment". Company records contradict both halves**, so the
+conclusion that followed from it — that a representative must be engaged — is
+not safe to act on until someone qualified confirms it. The field stays unset
+meanwhile, because "unresolved" is the honest state just as "unmet" was.
 
-KeepYourHabits Ltd is London-based with no EEA establishment, and it offers this
-service to people in the EEA — the travellers and the family following the trip
-are in Hungary. That combination is exactly what Article 27 of the EU GDPR is
-about: appoint a representative established in an EEA member state, and **name
-them in the privacy notice**, which is why `entity.ts` has a field for it rather
-than leaving it implicit.
+Three independent documents, all in Drive under `MSI PC leftover`:
 
-Being in London is what *creates* this, not what excuses it: before Brexit a UK
-company was EU-established and needed no representative. An office in the EEA —
-Dublin, Budapest — would remove the requirement again. Without one, it applies.
+| Source | What it says |
+|---|---|
+| Certificate of Incorporation, company 17055436 (25 Feb 2026) | Sole director and PSC Patrik Tamás Grohmann — **"Country/State Usually Resident: HUNGARY"**, Hungarian nationality |
+| `Clarification_ Relationship with UK.pdf`, signed as sole director, 28 Feb 2026 | "all management and operational activities are carried out remotely from **Hungary, where I reside**… no employees, physical premises, or customers located in the UK… managed from Hungary" |
+| `Hoxton Mix Certification.pdf` | 66 Paul Street is a **virtual office** subscription — "This does not imply physical occupation of the premises." |
 
-Commercial providers do this for roughly £300–800/year. Alternatively an EEA
-establishment of your own removes the requirement altogether. Not urgent enough
-to block the Play submission, urgent enough not to forget — and cheap to fix.
+So the UK presence is a mailbox, and the company is run from Budapest.
+
+**Why that may remove the obligation rather than shrink it.** Article 27 binds
+controllers caught by Article 3(2) — those with *no* establishment in the Union.
+Establishment under the GDPR turns on the effective and real exercise of
+activity through stable arrangements, not on where a company is incorporated.
+A company whose only director manages it from Budapest has a serious argument
+that it *is* established in the Union, in which case Article 3(1) applies and
+Article 27 never engages.
+
+**"The representative is me" is the one answer that does not work.** The role
+exists to give EEA data subjects and supervisory authorities a contact separate
+from the controller; a controller does not represent itself. The live question
+is not who to appoint — it is whether anything needs appointing.
+
+**Two consequences if the Hungary reading is right**, and both reach further
+than one field:
+
+- The policy currently reasons throughout from "UK controller → UK GDPR → ICO".
+  An establishment in Hungary would put the Hungarian NAIH in the picture, quite
+  possibly alongside the ICO rather than instead of it, since the company is also
+  UK-incorporated.
+- It is *cheaper* than the alternative — no £300–800/year representative — which
+  is exactly why it deserves a qualified opinion rather than a hopeful reading by
+  the people who benefit from it.
+
+Worth an hour of somebody qualified, with those three documents in front of them.
+Still not urgent enough to block the Play submission.
+
+If it turns out a representative *is* needed, commercial providers do this for
+roughly £300–800/year.
 
 **ICO: settled, and separate from this.** The data protection fee is paid for
 this year (owner, 2026-09-15), so the company is on the ICO register. Two things
@@ -162,7 +189,7 @@ would silently turn the form into a false declaration.
 
 ## 2026-08-28
 
-### OPEN — deploy the digest Edge Functions (Patrik, from his Mac)
+### DONE — deploy the digest Edge Functions (2026-09-16)
 
 **Do this before followers start subscribing.** Departure is 31 Aug, and the
 digests begin going out for real once family follow the trip.
@@ -197,6 +224,20 @@ most misleading answer it could give.
 
 **No user-facing bug is fixed by this**, which is why it was left. It only
 matters the first time something goes wrong, and then it matters a lot.
+
+**Deployed 2026-09-16.** `digest` v6 → v7, `digest-send` v7 → v8, both ACTIVE
+on `wvmnudcwcqktcugouqoe`. Two corrections to the recipe above, for next time:
+
+- `supabase login` and `supabase link` were both unnecessary. The CLI was
+  already authenticated, and `--project-ref <ref>` targets the project
+  directly — which also skips the link step's database-password prompt:
+
+      supabase functions deploy digest      --project-ref wvmnudcwcqktcugouqoe
+      supabase functions deploy digest-send --project-ref wvmnudcwcqktcugouqoe
+
+- **Docker must be running.** The CLI bundles in
+  `public.ecr.aws/supabase/edge-runtime`, pulling it on first use (~700 MB,
+  a few minutes). The second deploy reused the cached image and took seconds.
 
 ### DONE — sign-in works from any browser
 
