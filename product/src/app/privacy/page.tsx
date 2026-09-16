@@ -228,7 +228,7 @@ export default function PrivacyPage() {
 
       <Section id="transfers" title="Data leaving the UK and the EEA">
         <p>
-          The company is in the United Kingdom and the service runs on providers in Ireland and{' '}
+          The company is in the United Kingdom and the service runs on providers in{' '}
           <LegalValue value={LEGAL.dataRegion} />, so your data moves between the UK and the EEA in
           the ordinary course of the service working. Both directions are covered by adequacy
           decisions — the EU recognises the UK, and the UK recognises the EEA — so no extra

@@ -81,27 +81,40 @@ follow, neither of which the payment itself covers:
 Paying the ICO fee is *not* the Article 27 item above. One is a UK registration;
 the other is an EEA representative. Neither substitutes for the other.
 
-### OPEN — fill in the five company facts on the legal pages (Patrik)
+### MOSTLY DONE — the company facts on the legal pages (one left)
 
 `/privacy`, `/terms` and `/delete-account` are built and linked from the sign-in
-screen, but five facts are **not set**, and the pages say so loudly: an unfilled
-value renders as an orange `[… — not set yet]` marker rather than printing the
-token, so an unfinished page cannot be mistaken for a finished one.
+screen. Five of the six facts are now set; an unfilled value still renders as an
+orange `[… — not set yet]` marker rather than printing the token, so an
+unfinished page cannot be mistaken for a finished one.
 
-All five live in **`product/src/lib/legal/entity.ts`** — one file, one edit:
+All of them live in **`product/src/lib/legal/entity.ts`** — one file, one edit:
 
-| Field | What it needs |
+| Field | State |
 |---|---|
 | `entity` | ✅ `KeepYourHabits Ltd` |
 | `jurisdiction` | ✅ `England & Wales` — London-based, confirmed with the owner |
-| `address` | registered address **as filed at Companies House** — "London" is not an address; the page prints it verbatim |
-| `contactEmail` | a **monitored** address — Play requires a working contact route |
-| `dataRegion` | where the Supabase project actually runs |
-| `euRepresentative` | see the Article 27 entry above |
+| `address` | ✅ `66 Paul Street, London, England, EC2A 4NA` — read off the Companies House register for company **17055436**, not recalled |
+| `contactEmail` | ✅ `privacy@keepyourhabits.com` — **see the caveat below** |
+| `dataRegion` | ✅ `Ireland` — prod `Nomad_Trip_Planner` runs in `eu-west-1` |
+| `euRepresentative` | ❌ still unset — see the Article 27 entry above |
 
-`dataRegion` is the one to *check* rather than recall — Supabase → Project
-Settings → General. A wrong region claim in a privacy policy is a bad one to get
-wrong, and the policy's data-transfer section reasons from it.
+`/terms` and `/delete-account` now carry **no** markers at all. `/privacy` has
+exactly one left, at the Article 27 line.
+
+**`privacy@keepyourhabits.com` has to actually exist and be read.** Nothing in
+the code can check that, and this is the one of the five that fails silently: a
+policy naming a dead address is worse than one naming none, because Play treats
+it as a working contact route and a GDPR request landing there starts a
+one-month clock whether or not anyone is looking. Confirm the mailbox or the
+forwarding rule before submission.
+
+**`dataRegion` was checked, not recalled** — `supabase projects list` reports
+`eu-west-1` for the prod project, which is AWS Ireland. This had a knock-on
+effect worth knowing about: Vercel already serves from Dublin, so the transfers
+section's "providers in Ireland and *X*" would have rendered as "Ireland and
+Ireland". It now names one country. If the Supabase project is ever moved to
+another region, that sentence has to go back to naming two.
 
 **The UK Ltd changed the policy, not just a field.** The rights section named
 "the GDPR" generically, which is wrong for a UK controller: it now names the UK
@@ -109,11 +122,13 @@ GDPR and the Data Protection Act 2018, points UK complaints at the ICO and EEA
 complaints at the reader's own authority, and adds a data-transfer section
 resting on the UK↔EEA adequacy decisions in both directions.
 
-**Taking these from keepyourhabits.com was the intent and did not happen**:
-this session's egress proxy blocks that domain, and `add_repo` refused the
-`KeepYourHabits/WebLandingPage` source as a cross-owner add. So the values above
-were left unset rather than guessed. Copy them from the existing policy if the
-two are the same entity.
+**Where these came from.** An earlier session could not reach
+keepyourhabits.com (egress proxy) and left the values unset rather than guess
+them. They were filled in on 2026-09-16 from the Companies House public register
+and from the Supabase project itself — both authoritative sources rather than
+the landing page, which is why they are safe to disagree with if that page says
+something else. If the landing page's policy names a *different* entity, that is
+a discrepancy to resolve, not a value to copy.
 
 **Not reviewed by a lawyer.** The liability and governing-law clauses in
 `/terms` are the ordinary shape of such a clause, written to be read rather than
