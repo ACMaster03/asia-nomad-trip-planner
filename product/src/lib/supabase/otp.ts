@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
-// SEND-ONLY client, used for exactly one call: issuing the sign-in email.
+// SEND-ONLY client. Two calls use it, and both for the same reason: they put a
+// LINK in an email, and an emailed link gets opened somewhere other than the
+// browser that asked for it. `signInWithOtp` (the magic link) and
+// `resetPasswordForEmail` (the password reset) both go through here.
+//
+// `signInWithPassword` does NOT — it has no email round trip at all, so none of
+// the below applies to it, and it needs a client that actually keeps the
+// session. It uses lib/supabase/client.ts.
 //
 // WHY IT EXISTS — the cross-browser sign-in failure (2026-08-27):
 // The app-wide browser client (lib/supabase/client.ts) runs the PKCE flow. PKCE
