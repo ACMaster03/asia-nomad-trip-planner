@@ -24,7 +24,7 @@ follow-link system already defends.
 > per-trip "open to followers" switch. `35-social-post.sql` (single-post readers
 > `followed_event` / `shared_event`) is on staging (applied 2026-09-17, testplan green).
 > Dev preview: `/dev/social-preview?screen=home|journey|people|post|follow`.
-> Nothing is on prod yet: a deploy of this branch needs 33–35 applied to prod first.
+> **33, 34 and 35 are on prod** (applied 2026-09-17, all testplans green). PR #16 carries the UI.
 >
 > **Model change, 2026-09-16 (Patrik):** follows attach to **people, not trips**.
 > Section 2 below is rewritten for that; decision 3 in the log records the reversal.
