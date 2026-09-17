@@ -12,11 +12,20 @@ export interface SharedRouteStop {
   lng: number | null
 }
 
+/** A traveller on the trip, as the follower projection names them (migration 33). */
+export interface Traveller {
+  id: string
+  /** first name from the account, or "A traveller" */
+  name: string
+}
+
 export interface SharedSummary {
   tripName: string
   startDate: string
   endDate: string | null
   route: SharedRouteStop[]
+  /** the people who travel (owner + editors), by first name (migration 33) */
+  travellers: Traveller[]
   /** owner paused all sharing — only tripName is populated (migration 16) */
   paused?: boolean
   /**
@@ -32,6 +41,9 @@ export interface SharedEvent {
   id: string
   kind: SharedEventKind
   occurred_at: string
+  /** who posted it (migration 33) */
+  author: string
+  authorName: string
   payload: { placeName?: string; text?: string; city?: string; photos?: string[] }
   rating: number | null
   comment: string | null
@@ -54,7 +66,7 @@ export async function fetchSharedSummary(
   if (!s) return null
   // Paused answers carry only {paused, tripName} — normalize the rest so the
   // client never touches undefined route/dates.
-  if (s.paused) return { ...s, startDate: '', endDate: null, route: [] }
+  if (s.paused) return { ...s, startDate: '', endDate: null, route: [], travellers: [] }
   return s
 }
 

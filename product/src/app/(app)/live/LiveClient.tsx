@@ -39,6 +39,7 @@ import { publicMediaUrl, uploadCheckinPhotos } from '@/lib/trips/media'
 import { Modal } from '@/components/trips/Modal'
 import { SaveError } from '@/components/trips/SaveError'
 import { useToast } from '@/components/Toast'
+import { FollowerNudge, maybeNudge } from './FollowerNudge'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { CheckInModal, type CheckInInput } from './CheckInModal'
 import { EditEventModal } from './EditEventModal'
@@ -196,6 +197,9 @@ export default function LiveClient() {
   const [noteText, setNoteText] = useState('')
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [editEvent, setEditEvent] = useState<TripEvent | null>(null)
+  // "Show this trip to your followers?" — once, after the first check-in of a
+  // trip that is still hidden from the people who follow you.
+  const [nudge, setNudge] = useState(false)
 
   // ---- derive today's picture from the plan ---------------------------------
   const s = trip.data?.state
@@ -306,8 +310,10 @@ export default function LiveClient() {
         setUploadingPhotos(false)
       }
     }
+    const firstCheckIn = !(events.data ?? []).some((e) => e.kind === 'checkin')
     addCheckIn.mutate({ ...rest, id, tripId, photos })
     setCheckinOpen(false)
+    if (firstCheckIn && rest.visibility !== 'trip' && onlineManager.isOnline()) void maybeNudge(sb, tripId).then(setNudge)
     toast(
       onlineManager.isOnline()
         ? rest.visibility === 'trip'
@@ -530,6 +536,8 @@ export default function LiveClient() {
       {editEvent && tripId && (
         <EditEventModal ev={editEvent} tripId={tripId} onClose={() => setEditEvent(null)} />
       )}
+
+      {nudge && tripId && <FollowerNudge tripId={tripId} onClose={() => setNudge(false)} />}
 
       {checkinOpen && (
         <CheckInModal

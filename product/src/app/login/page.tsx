@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createOtpClient } from '@/lib/supabase/otp'
+import { DEFAULT_NEXT, safeNextPath } from '@/lib/auth/safeNext'
 import { createClient } from '@/lib/supabase/client'
 import { humanAuthError, looksLikeNoPasswordSet } from '@/lib/auth/authError'
 
@@ -38,6 +39,11 @@ export default function Login() {
   const [cooldown, setCooldown] = useState(0)
   const [error, setError] = useState('')
 
+  // Where to land after sign-in. A follow link sends people here with
+  // ?next=/follow/<token> so the follow they started can finish; anything
+  // off-site is refused by safeNextPath.
+  const nextPath = () => safeNextPath(new URLSearchParams(window.location.search).get('next'))
+
   useEffect(() => {
     if (cooldown <= 0) return
     const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
@@ -68,7 +74,11 @@ export default function Login() {
     const sb = createOtpClient()
     const { error } = await sb.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        emailRedirectTo: nextPath() === DEFAULT_NEXT
+          ? `${window.location.origin}/auth/callback`
+          : `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath())}`,
+      },
     })
     setSending(false)
     if (error) {
@@ -104,7 +114,7 @@ export default function Login() {
     // A full navigation, not router.push: the session cookies were written a
     // moment ago and every server component on the other side has to read them.
     // Account's sign-out reloads for the mirror-image reason.
-    window.location.href = '/dashboard'
+    window.location.href = nextPath()
   }
 
   async function sendReset() {

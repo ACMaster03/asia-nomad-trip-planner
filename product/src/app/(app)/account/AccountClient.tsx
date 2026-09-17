@@ -14,6 +14,9 @@ import {
   setTripSharingPaused,
 } from '@/lib/trips/shares'
 import { tk } from '@/lib/trips/keys'
+import { fetchFollowerAccess, fetchMyFollowerCount, fetchMyFollowing, setFollowerAccess } from '@/lib/follow/follows'
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { AccountDeletion } from '@/components/trips/DangerZone'
@@ -281,6 +284,25 @@ function SharingCard({ endDate }: { endDate?: string }) {
     queryFn: () => (tripId ? fetchShareStats(sb, tripId) : Promise.resolve([])),
     refetchInterval: 60_000, // counts drift as family opts in
   })
+  // Followers with accounts (migration 33): how many follow you, and whether
+  // THIS trip is open to them. Both fail soft on a database without 33.
+  const followerCount = useQuery({
+    queryKey: ['follower-count'],
+    queryFn: () => fetchMyFollowerCount(sb),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+  const access = useQuery({
+    queryKey: ['follower-access', tripId ?? 'none'],
+    queryFn: () => fetchFollowerAccess(sb, tripId!),
+    enabled: tripId !== null,
+    retry: false,
+  })
+  const accessMut = useMutation({
+    mutationFn: (open: boolean) => setFollowerAccess(sb, tripId!, open ? 'on' : 'off'),
+    onSuccess: (_d, open) => toast(open ? 'Your followers can see this trip' : 'This trip is hidden from your followers'),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['follower-access', tripId ?? 'none'] }),
+  })
   const pauseMut = useMutation({
     mutationFn: (paused: boolean) => setTripSharingPaused(sb, tripId!, paused),
     onSuccess: (_d, paused) =>
@@ -374,6 +396,33 @@ function SharingCard({ endDate }: { endDate?: string }) {
         on this trip in Trip settings — they have to sign in with that address, and the invite
         cannot be passed on.
       </p>
+
+      {/* people who follow YOU (accounts, not links) and this trip's switch */}
+      {access.data !== undefined && (
+        <div className="rounded-[var(--r)] bg-sf p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="min-w-0 grow">
+              <div className="text-base font-semibold">
+                {followerCount.data === 1 ? '1 person follows you' : `${followerCount.data ?? 0} people follow you`}
+              </div>
+              <div className="mt-0.5 text-base leading-normal text-tx2">
+                {access.data === 'off'
+                  ? 'This trip is not shown to them. New trips start hidden; open it when you are ready.'
+                  : access.data === 'paused'
+                    ? 'This trip is paused for them, together with the links below.'
+                    : 'This trip is open to them: they see the same route, check-ins and notes a link shows.'}
+              </div>
+            </div>
+            <button
+              onClick={() => accessMut.mutate(access.data === 'off')}
+              disabled={accessMut.isPending || access.data === 'paused'}
+              className={access.data === 'off' ? 'rounded-[calc(var(--r)-3px)] bg-ac px-3.5 py-2.5 text-base font-semibold text-on disabled:opacity-50' : pill}
+            >
+              {accessMut.isPending ? '…' : access.data === 'off' ? 'Open to followers' : 'Hide'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* always-visible follower count + pause-all */}
       {list.length > 0 && (
@@ -597,6 +646,8 @@ export default function AccountClient({
 
       <ActiveTripCard />
 
+      <PeopleRow />
+
       <AppearanceCard />
 
       {/* Editors, not just the owner — create_share_link and
@@ -607,5 +658,26 @@ export default function AccountClient({
 
       <AccountDeletion />
     </main>
+  )
+}
+
+// One line, the door to the full lists. Counts fail soft on a database
+// without migration 33 — the row then simply says "People".
+function PeopleRow() {
+  const sb = createClient()
+  const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
+  const followers = useQuery({ queryKey: ['follower-count'], queryFn: () => fetchMyFollowerCount(sb), staleTime: 5 * 60_000, retry: false })
+  const parts = [
+    following.data ? `Following ${following.data.length}` : null,
+    followers.data != null ? `${followers.data} follower${followers.data === 1 ? '' : 's'}` : null,
+  ].filter(Boolean)
+  return (
+    <Link href="/people" className="flex items-center justify-between rounded-[var(--r)] bg-sf p-4">
+      <span>
+        <span className="block font-serif text-[19px] font-semibold">People</span>
+        <span className="block text-base text-tx2">{parts.length ? parts.join(' · ') : 'Who you follow, who follows you'}</span>
+      </span>
+      <ChevronRight aria-hidden className="size-5 text-ac2" />
+    </Link>
   )
 }

@@ -4,7 +4,31 @@ How a signed-in traveller comes to see **other people's journeys next to their o
 and what that does (and deliberately does not do) to the privacy boundary the
 follow-link system already defends.
 
-> Status: **scope, not built.** Nothing in this document has been implemented.
+> Status: **Phase A backend written, not applied.** `supabase/migrations/33-social-following.sql`
+> and its TESTPLAN exist and passed a rolled-back dry run on staging on 2026-09-16;
+> the query layer is in `product/src/lib/follow/follows.ts` + `merge.ts`. The UI is
+> mocked for review, not built. Phases B and C are untouched.
+>
+> **2026-09-17:** migration 33 is on staging. `34-social-interactions.sql` (followers
+> list + remove/block, reactions, comments, reports; TESTPLAN green in a rolled-back
+> run on staging) is written, not applied. Query layers: `product/src/lib/follow/`.
+> Mock round 4 has every question answered; UI build has not started.
+>
+> **2026-09-17, later:** 34 is on staging. **Phase A UI is built** on branch
+> `feat/social-following` from the round-4 mocks: Home activity (merged feed, people
+> strip, reaction chips, comment counts), `/post/[id]` and `/follow/[token]/post/[id]`
+> (reactions, one-level thread), `/people` (Following/Followers, search, country
+> chips, remove/block), `/journeys/[trip]` (follow controls behind the top-right
+> sliders), the follow page's "Follow the travellers" card with the account sheet
+> for anonymous visitors, the first-check-in nudge on /live, Account's People row and
+> per-trip "open to followers" switch. `35-social-post.sql` (single-post readers
+> `followed_event` / `shared_event`) is on staging (applied 2026-09-17, testplan green).
+> Dev preview: `/dev/social-preview?screen=home|journey|people|post|follow`.
+> Nothing is on prod yet: a deploy of this branch needs 33–35 applied to prod first.
+>
+> **Model change, 2026-09-16 (Patrik):** follows attach to **people, not trips**.
+> Section 2 below is rewritten for that; decision 3 in the log records the reversal.
+> Everything else in this document still holds.
 > Written 2026-09-15, mid-trip, from a scoping round. The decision log at the
 > bottom records *why* each call was made, so the next person does not re-litigate
 > them from scratch.
@@ -17,8 +41,9 @@ follow-link system already defends.
   The gap is narrow: a signed-in user cannot *keep* a followed trip.
 - The answer is a **two-tier follower model**: anonymous link-holders read; people
   with accounts read, comment and react, and are individually removable.
-- Follows attach to the **trip**, not to the share link. The link is a door, not a
-  tether.
+- Follows attach to **people**. The trip stays the unit of content, and each trip
+  has its own switch that opens it to the travellers' followers. The link is a
+  door, not a tether.
 - Three phases: **A** (following + merged Home feed) → **B** (followed routes on the
   globe) → **C** (comments, reactions, blocks, notification matrix).
 - **Ship A alone first.** ~3 days, and it is the foundation the other two stand on.
@@ -69,59 +94,84 @@ with what". So:
 This is not a paywall, it is a funnel: grandma reads, the cousin who wants to say
 "wow" makes an account.
 
-### Follows attach to the trip, not the share
+### Follows attach to people; trips opt in
+
+You follow a **person**, and you keep following them wherever they go next. A trip
+is visible to its travellers' followers only while `trips.follower_access` is
+`'on'` (the default for a new trip is `'off'`: nothing is broadcast by accident,
+and the app nudges at the first check-in — "Show this trip to your 12 followers?").
+Trips that already had a live link when migration 33 ran were backfilled to `'on'`.
 
 ```sql
-create table public.trip_follows (
-  user_id       uuid not null references auth.users (id) on delete cascade,
-  trip_id       uuid not null references public.trips (id) on delete cascade,
-  via_share_id  uuid references public.trip_shares (id) on delete set null, -- provenance only
-  nickname      text,
-  created_at    timestamptz not null default now(),
-  primary key (user_id, trip_id)    -- one user, many followed trips
+alter table public.trips add column follower_access text not null default 'off'
+  check (follower_access in ('off','on','paused'));
+
+create table public.user_follows (
+  follower_id  uuid not null references auth.users (id) on delete cascade,
+  followee_id  uuid not null references auth.users (id) on delete cascade,
+  via_share_id uuid references public.trip_shares (id) on delete set null, -- provenance only
+  created_at   timestamptz not null default now(),
+  primary key (follower_id, followee_id),
+  check (follower_id <> followee_id)
 );
 
-create table public.trip_blocks (
-  trip_id       uuid not null references public.trips (id) on delete cascade,
-  user_id       uuid references auth.users (id) on delete cascade,
-  email         text,               -- catches the trivial second-account re-signup
-  created_at    timestamptz not null default now()
+create table public.user_blocks (
+  blocker_id uuid not null references auth.users (id) on delete cascade,
+  blocked_id uuid references auth.users (id) on delete cascade,
+  email      text,               -- catches the trivial second-account re-signup
+  created_at timestamptz not null default now()
 );
 ```
 
-The link is a **door**, not a tether. Walking through it creates a relationship that
-then lives on its own. This gives two orthogonal controls instead of one blunt one:
+The share link is still the **door**: the follow page lists the trip's travellers
+(owner + editors, by first name) with everyone preselected, and "Follow" creates one
+`user_follows` row per person kept. A parent who only wants their kid's posts unticks
+the friends. What a follower then sees on a trip is:
 
-- **Block a person** → `trip_blocks` row, checked by `follow_by_token`. Targeted, no
-  collateral damage.
-- **Rotate a link** → a new `token_hash` on the **same `trip_shares` row**, so every
-  `share_id`-keyed subscription survives and only the URL changes. Use when the *link*
-  leaked, not when a *person* misbehaved.
+- the **route and dates** of any open trip one of their followees travels on;
+- **check-ins and notes by the travellers they follow**;
+- **"Arrived in X"** from anyone on the trip — arrivals belong to the trip, not to
+  a person.
 
-Without the decoupling, a leaked link leaves you playing whack-a-mole with revoke-all
-as your only tool.
+Trips the follower is themselves a member of are left out of the follower feed:
+those already reach Home through the authenticated path.
+
+Two orthogonal controls, same as before but per person:
+
+- **Block a person** → `user_blocks` row, checked by `follow_by_token` and by the
+  follower predicate. Targeted, no collateral damage.
+- **Rotate a link** → a new `token_hash` on the **same `trip_shares` row**. Use when
+  the *link* leaked, not when a *person* misbehaved.
+
+Names: the follower projection shows a traveller's **first name** from the auth
+metadata (what the Account "Your name" card writes), otherwise "A traveller". It
+never falls back to `profiles.display_name`, which is seeded from the email's local
+part. This is the one widening of the anonymous projection: link holders now see
+first names too, plus `author`/`authorName` on feed rows. Nothing else moves.
 
 ### ⚠ The load-bearing rule
 
-The follow relationship needs its own predicate — call it `can_follow_trip(t)`:
-a non-blocked `trip_follows` row exists for `auth.uid()`.
+The follow relationship needs its own predicate — `can_follow_trip(t)`: the trip is
+not `'off'`, and a non-blocked `user_follows` row exists from `auth.uid()` to one of
+its travellers.
 
 **`can_follow_trip` must never appear in a table RLS policy.** It authorises the
 sanitized follower RPCs and nothing else. `can_view_trip()` gates `segments`, `stays`,
 `transport`, `extras`, `notes` **and `ledger`** (see the policy loop in `schema.sql`);
 if a future change adds `can_follow_trip` to any of those "for consistency", the entire
-privacy model collapses in one line. Put this warning in the migration itself.
+privacy model collapses in one line. Migration 33 revokes EXECUTE on it from
+`authenticated` so such a policy fails loudly, and its TESTPLAN asserts it is absent
+from `pg_policies`.
 
 ### Pause semantics
 
-Migration 16 already has both levels, and they map cleanly:
-
-- **Trip-level pause** (`set_trip_sharing_paused`) → everything dark, account followers
-  included.
-- **Per-link pause** (`trip_shares.paused_at`) → that link's holders only. Account
-  followers are unaffected, because they are no longer tethered to it.
-
----
+- **`follower_access = 'paused'`** → the trip goes dark for account followers (page
+  says paused, list goes dark, feed stops). The owner's existing "pause sharing"
+  switch (`set_trip_sharing_paused`, migration 16) flips `'on'` ↔ `'paused'` as well
+  as pausing every link, and leaves `'off'` alone.
+- **`'off'`** → the trip is not listed for followers at all; the follows survive.
+- **Per-link pause** (`trip_shares.paused_at`) → that link's anonymous holders only.
+  Account followers are unaffected: they are not tethered to it.
 
 ## 3. Phase A — following + merged Home feed
 
@@ -129,17 +179,19 @@ Migration 16 already has both levels, and they map cleanly:
 
 ### Backend (one migration)
 
-`trip_follows`, `trip_blocks`, plus:
+`user_follows`, `user_blocks`, `trips.follower_access`, plus:
 
 | RPC | Purpose |
 |---|---|
-| `follow_by_token(token, nickname)` | the only place a raw token is hashed; refuses blocked users and dead tokens |
-| `my_follows()` | the whole list in **one** call — name, current stop, last event, link state |
-| `followed_trip_summary(trip_id)` | authenticated twin of `shared_trip_summary` |
-| `following_feed(limit, before)` | follower-visible events across all followed trips, newest first |
-| `unfollow(trip_id)` | plain RLS delete on own row |
+| `follow_by_token(token, travellers[])` | the only place a raw token is hashed; skips people who blocked the caller; null for dead/paused links |
+| `my_following()` | everyone you follow with their open trips in **one** call — current stop, last event, state |
+| `followed_trip_summary(trip_id)` | authenticated twin of `shared_trip_summary`, plus which travellers you follow there |
+| `following_feed(limit, before)` | posts of the people you follow across their open trips, newest first |
+| `set_follower_access(trip, off/on/paused)` | the traveller's per-trip switch |
+| `my_follower_count()` | "12 people follow you" |
+| unfollow | plain RLS delete on own `user_follows` row |
 
-`my_follows()` must be a single call. N+1 here is ten round trips on hotel wifi.
+`my_following()` must be a single call. N+1 here is ten round trips on hotel wifi.
 
 The `followed_*` functions share an internal core with the existing `shared_*` ones
 rather than duplicating them, or the two projections will drift.
@@ -157,16 +209,20 @@ how a private note ends up in a follower's feed.
   exactly this. **Build it as a deliberate near-copy first**, unify after the current
   trip ends: that file is a live page real family are reading daily.
 - **Home** — the existing events card becomes a merged feed (own + followed), each
-  followed row labelled by trip nickname.
-- **Account** — a "Trips you follow" card beside "Your trips" (`ActiveTripCard`). This
-  is the *management* surface, not the consumption one.
-- `/follow/[token]` gains a "Save this journey" CTA when a session exists.
+  followed row labelled by who posted it and on which trip.
+- **Account** — a "People you follow" card beside "Your trips" (`ActiveTripCard`). This
+  is the *management* surface, not the consumption one. The sharing card gains the
+  per-trip "open to followers" switch and the follower count.
+- `/follow/[token]` gains a "Follow the travellers" card when a session exists
+  (everyone preselected), and a "create an account" card when none does.
+- **First check-in nudge** — when a trip is still `'off'` and the traveller has
+  followers, offer to open it.
 
 ### What Phase A deliberately does not do
 
-- No author names in the feed projection. A merged feed is disambiguated by **whose
-  trip** a row belongs to, not which traveller posted it. The projection stays
-  byte-identical to today, so nothing anon-facing changes mid-trip.
+- No widening beyond names. Feed rows carry `author`/`authorName` and the summary
+  carries `travellers` (first names) — needed to follow a person — and nothing else
+  changes in the anonymous projection mid-trip.
 - No change to `fetchTrips` / `resolveActiveTrip`. Because followers never become
   `trip_members`, a followed trip can never become your *active* trip.
 
@@ -234,8 +290,8 @@ Fixed set of six:
   wraps.
 - `🥹` renders inconsistently on older Android — a known, accepted cosmetic risk.
 
-**Visibility asymmetry (deliberate):** the reaction *tally* — and who reacted with what —
-is visible to **trip members only**. A follower sees only their **own** reaction. This
+**Visibility asymmetry (deliberate, reconfirmed 2026-09-17):** the reaction *tally* — and who
+reacted with what — is visible to **trip members only**. A follower sees only their **own** reaction. This
 avoids Instagram popularity dynamics. The UI trap: a follower who taps and sees nothing
 change thinks it is broken, so their own state must always reflect back.
 
@@ -276,6 +332,10 @@ Target:
 
 Plus a **per-trip mute** overriding everything for that trip.
 
+Decided 2026-09-17: "comment on a post" defaults to **my own** check-ins; a per-trip
+toggle widens it to every post of the trip. Reaction visibility stays asymmetric
+(tally for travellers only) — revisit only on real user pushback.
+
 The simplification that stops this exploding: **"reply to my comment" follows the
 person, not the trip** — one channel cutting across both columns.
 
@@ -309,7 +369,7 @@ integration pass. `user_push_subscriptions` already accepts `transport = 'apns'`
 |---|---|---|
 | 1 | Follower projection stays as-is; no widening to stays/transport/money | Those carry addresses, booking refs and cash position, broadcast near-real-time. Migration 29 exists because a review found leaks *around* this boundary. |
 | 2 | Followers never become `trip_members` | `can_view_trip` gates every private table. Widening it re-opens everything 06/29 closed. |
-| 3 | Follows attach to the **trip**, not the share | Otherwise a leaked link leaves revoke-all as the only tool. Door, not tether. (Reversed an earlier `share_id` proposal — the tether generated every awkward edge case.) |
+| 3 | Follows attach to **people**; trips opt in with `follower_access` | 2026-09-16, Patrik: a traveller has many trips and followers should not need a new link each time. Reverses the trip-attached model of 09-15 (which itself reversed a `share_id` tether). Default `'off'` per trip so nothing is broadcast by accident; arrivals show trip-wide, posts by followed author only. |
 | 4 | `can_follow_trip` never appears in table RLS | One "for consistency" edit would collapse the model. |
 | 5 | Commenting and reacting require an account | Anonymous followers have no identity: no attribution, no per-person removal, no "who reacted with what". |
 | 6 | Comments visible to all who can see the check-in | Invisible comments make threading meaningless and turn the feature into a private inbox. Noise is a *notification* problem. |
@@ -320,7 +380,7 @@ integration pass. `user_push_subscriptions` already accepts `transport = 'apns'`
 | 11 | Removal revokes access, not history | Threads with holes confuse; rage-quits should not delete conversations. |
 | 12 | Merged Home feed merges client-side, not in SQL | Two authorization models must not share one projection. |
 | 13 | `/journeys/[trip]` as a near-copy of `FollowClient` first | That file is live and load-bearing for family mid-trip. |
-| 14 | Check-in author names deferred | A merged feed is disambiguated by trip, not by traveller. Needed once trips routinely carry more than two people. |
+| 14 | ~~Check-in author names deferred~~ — **first names shipped in 33** | Following a person is impossible without a name. First name from auth metadata, never the profile name (seeded from the email prefix). |
 
 ---
 
@@ -334,6 +394,8 @@ integration pass. `user_push_subscriptions` already accepts `transport = 'apns'`
 | #11 | **C2** — reactions | #8 |
 | #12 | **C3** — blocks + link rotation | #8 |
 | #13 | **C4** — notification matrix | #8, #10, #11 |
+| #14 | Approval-required follow links (a link mode; base for in-app discovery) | #8 |
+| #15 | Close friends layer with delayed release for everyone else | #8, #13 |
 
 ## 9. Deferred / filed
 
@@ -341,15 +403,15 @@ integration pass. `user_push_subscriptions` already accepts `transport = 'apns'`
 |---|---|
 | Advisor / "editorial" role — a non-travelling reviewer who can comment | #6 (low priority, may be overruled) |
 | Location-scoped discovery — same city / similar trip, **not** global | #7 (low priority; stalker risk, DPIA required) |
-| Per-author follow *within* one trip | deferred — the one feature that forces author identity into the feed projection |
+| ~~Per-author follow *within* one trip~~ | shipped by the person model: untick a traveller on the follow page |
 | User-configurable reaction sets | deferred, but **intended** — the `reaction_kinds` registry is designed for it; ships as the fixed six |
 | Account-level push for followed journeys | rides `user_push_subscriptions` (migration 27) |
 
 ## 10. Known blockers
 
-- **The digest Edge Functions are undeployed** (`docs/NOTES.md`, open since 2026-08-28).
-  Phase C rewrites `push-fanout` routing, so this must be resolved first or the
-  notification work lands on a function nobody is running.
+- ~~The digest Edge Functions are undeployed~~ — **deployed 2026-09-16** (`docs/NOTES.md`).
+  Phase C still rewrites `push-fanout` routing; check that function's deploy state
+  separately before starting C4.
 - **The trip is live.** Departure was 31 Aug; real followers are on real links daily.
   Anything touching `/follow/[token]` or the shared RPCs is a change to production for
   people who cannot report a bug.
