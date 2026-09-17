@@ -11,11 +11,12 @@ import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { tripPhase } from '@/lib/trips/recap'
 import { tripRecap } from '@/lib/trips/recap'
-import { fetchTripEvents, type TripEvent } from '@/lib/trips/events'
+import { fetchTripEvents } from '@/lib/trips/events'
 import { tk } from '@/lib/trips/keys'
 import { useTripScope } from '@/lib/trips/TripScope'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { BeforeYouFly, ComingUp } from '../reminders/HomeReminders'
+import HomeActivity from '@/components/social/HomeActivity'
 
 // Home — the one phase-aware tab (handoff frames 07–10). The trip phase
 // (pre / arrive / live / off-plan / post) decides the whole layout:
@@ -44,9 +45,11 @@ function fmtDay(d: Date, withYear = false) {
 export default function DashboardClient({
   userEmail,
   userName,
+  userId,
 }: {
   userEmail?: string
   userName?: string
+  userId?: string
 }) {
   const sb = createClient()
   const { fmt } = useMoney()
@@ -61,7 +64,7 @@ export default function DashboardClient({
 
   const events = useQuery({
     queryKey: tk.events(tripId ?? 'none'),
-    queryFn: () => fetchTripEvents(sb, tripId!, 8),
+    queryFn: () => fetchTripEvents(sb, tripId!),
     enabled: tripId !== null,
   })
 
@@ -418,44 +421,14 @@ export default function DashboardClient({
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
 
-      <div className="flex items-center justify-between">
-        <span className="text-base font-semibold uppercase tracking-[.12em] text-tx2">Recent activity{events.data ? ` · ${events.data.length}` : ''}</span>
-        <Link href="/live" className="-my-2.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2">All check-ins ›</Link>
-      </div>
-      {events.data && events.data.length > 0 && (
-        <div className="rounded-[var(--r)] bg-sf px-3.5 text-tx">
-          {events.data.slice(0, 4).map((e, i, arr) => (
-            <FeedRow key={e.id} e={e} last={i === arr.length - 1} />
-          ))}
-        </div>
-      )}
+      {/* Activity: this trip's own rows merged with the posts of the people
+          you follow (docs/SOCIAL-SCOPE.md §2). Keeps working — own rows only —
+          when the social RPCs are not there yet. */}
+      <HomeActivity own={events.data ?? []} ownPending={events.isPending} userId={userId} />
     </main>
   )
 }
 
-function FeedRow({ e, last }: { e: TripEvent; last: boolean }) {
-  const title =
-    e.kind === 'arrived'
-      ? `Arrived in ${(e.payload.city as string) ?? ''}`
-      : ((e.payload.placeName as string) ?? (e.payload.text as string) ?? 'Check-in')
-  const when = new Date(e.occurred_at).toLocaleDateString('en-GB', { month: 'short', day: '2-digit' }) +
-    ', ' + new Date(e.occurred_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  return (
-    <div className={'flex items-start gap-3 py-[13px] ' + (last ? '' : 'border-b border-ln')}>
-      <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[20px] bg-tag text-tag-ink">
-        {e.kind === 'arrived' ? <PlaneLanding className="size-5" strokeWidth={2} /> : <MapPin className="size-5" strokeWidth={2} />}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-base font-semibold">{title}</span>
-        {e.check_in?.rating != null && (
-          <span className="block text-base tracking-[.1em] text-warn">{'★'.repeat(e.check_in.rating)}{'☆'.repeat(5 - e.check_in.rating)}</span>
-        )}
-        {e.check_in?.comment && <span className="block text-base leading-snug text-tx2">{e.check_in.comment}</span>}
-        <span className="block text-base text-tx2">{when}</span>
-      </span>
-    </div>
-  )
-}
 
 // Scroll to top whenever the Home phase flips (handoff rule: phase/screen
 // change resets scroll).

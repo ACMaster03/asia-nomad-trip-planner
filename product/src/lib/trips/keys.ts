@@ -19,4 +19,22 @@ export const tk = {
   pendingInvites: ['pending-invites'] as const,
   // Invites this trip has sent that nobody has answered (the inviter's list).
   sentInvites: (tripId: string) => ['sent-invites', tripId] as const,
+  // People the signed-in user follows (migration 33). Account-scoped, not
+  // trip-scoped: the list is the same whichever of your own trips is active.
+  following: ['following'] as const,
+  // The sanitized read view of one followed trip (/journeys/[trip]).
+  followedSummary: (tripId: string) => ['followed-summary', tripId] as const,
+  // Follower-visible events across every followed trip, for the merged Home
+  // feed. Fetched separately from tk.events and merged on the client — two
+  // authorization models never share one query.
+  followingFeed: ['following-feed'] as const,
+  // People who follow the signed-in user (migration 34).
+  followers: ['followers'] as const,
+  // One post, as the follower projection shows it (own posts included).
+  post: (eventId: string) => ['post', eventId] as const,
+  // The comment thread under a post.
+  comments: (eventId: string) => ['comments', eventId] as const,
+  // Own reaction / comment count / tally for a set of posts, keyed by the
+  // sorted id list so the same feed page hits the same cache entry.
+  feedSocial: (eventIds: readonly string[]) => ['feed-social', [...eventIds].sort().join(',')] as const,
 }

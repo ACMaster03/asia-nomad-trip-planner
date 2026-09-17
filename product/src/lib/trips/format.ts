@@ -67,3 +67,19 @@ export const monthShort = (key: string) =>
   new Date(key + '-01T00:00:00').toLocaleString('en-US', { month: 'short', year: '2-digit' })
 
 export const TIER_LABELS = ['Budget', 'Mid', 'Comfort'] as const
+
+// Relative time for feed rows and comments ("2h ago"). Lifted from the follow
+// page so the journey, post and Home feeds all say it the same way.
+export function timeAgo(iso: string, now = Date.now()): string {
+  const mins = Math.max(0, Math.round((now - +new Date(iso)) / 60_000))
+  if (mins < 60) return `${mins}m ago`
+  const h = Math.round(mins / 60)
+  if (h < 48) return `${h}h ago`
+  return `${Math.round(h / 24)}d ago`
+}
+
+// Local calendar date as ISO (YYYY-MM-DD) — the viewer's clock, not UTC.
+export function localISODate(d = new Date()): string {
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}

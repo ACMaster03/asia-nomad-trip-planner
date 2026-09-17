@@ -1,19 +1,21 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import { useQuery } from '@tanstack/react-query'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { LucideIcon } from 'lucide-react'
-import {
-  Bell, CirclePause, Compass, Dot, Image as ImageIcon, Mail, MapPin,
-  NotebookPen, PlaneLanding, RadioTower,
-} from 'lucide-react'
+import { Bell, CirclePause, Compass, Mail, UserPlus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { fetchSharedFeed, fetchSharedSummary, followMediaUrl, subscribeDigest, type SharedEvent, type SharedSummary } from '@/lib/follow/api'
+import { fetchSharedFeed, fetchSharedSummary, subscribeDigest, type SharedEvent, type SharedSummary, type Traveller } from '@/lib/follow/api'
+import { followByToken } from '@/lib/follow/follows'
+import { fetchSharedFeedSocial } from '@/lib/follow/social'
+import { clearPendingFollow, readPendingFollow, savePendingFollow } from '@/lib/follow/pending'
 import { disablePush, enablePush, getPushState, type PushState } from '@/lib/follow/push'
-import { nightsBetween } from '@/lib/trips/format'
+import { SocialRow } from '@/components/social/SocialRow'
+import { tk } from '@/lib/trips/keys'
+import { localISODate, nightsBetween, timeAgo } from '@/lib/trips/format'
 
 // /follow/[token] — the no-account family view (LIVHOLD handoff frame 30).
 // States: invalid link · pre-trip countdown · live (globe + current stop +
@@ -29,40 +31,47 @@ const FollowGlobe = dynamic(() => import('@/components/follow/FollowGlobe'), {
   ),
 })
 
-// mauve = people/memories accents (handoff color semantics)
-const EVENT_ICON: Record<string, LucideIcon> = {
-  checkin: MapPin, note: NotebookPen, arrived: PlaneLanding, media: ImageIcon, location: RadioTower,
-}
-
 const kicker = 'text-base font-medium uppercase tracking-[.14em] text-ac2-deep'
 const card = 'rounded-[var(--r)] bg-sf'
-
-function localISODate(d = new Date()) {
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
-}
-
-function timeAgo(iso: string) {
-  const mins = Math.max(0, Math.round((Date.now() - +new Date(iso)) / 60_000))
-  if (mins < 60) return `${mins}m ago`
-  const h = Math.round(mins / 60)
-  if (h < 48) return `${h}h ago`
-  return `${Math.round(h / 24)}d ago`
-}
-
-function Stars({ n }: { n: number }) {
-  return <span className="text-warn">{'★'.repeat(n)}<span className="text-ln3">{'★'.repeat(5 - n)}</span></span>
-}
 
 export default function FollowClient({
   token, initialSummary,
 }: { token: string; initialSummary: SharedSummary | null }) {
   const sb = createClient()
   const qc = useQueryClient()
+  const router = useRouter()
 
   // "today" is clock-dependent → compute after mount (SSR/hydration safety).
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
+
+  // Signed in or not decides what "Follow" does: follow right away, or first
+  // get an account. Read once on mount; the cookie refresh in proxy.ts skips
+  // /follow, so this is the page's own look at the session.
+  const [session, setSession] = useState<'unknown' | 'anon' | 'signed-in'>('unknown')
+  useEffect(() => {
+    sb.auth.getSession().then(({ data }) => setSession(data.session ? 'signed-in' : 'anon'))
+  }, [sb])
+
+  // Coming back from the magic link with a follow still pending for THIS
+  // link: finish it now and go to the journey. The pending record is cleared
+  // whatever happens, so a dead link cannot loop.
+  const [pendingFailed, setPendingFailed] = useState(false)
+  const pendingRan = useRef(false)
+  useEffect(() => {
+    if (session !== 'signed-in' || pendingRan.current) return
+    const pending = readPendingFollow()
+    if (!pending || pending.token !== token) return
+    pendingRan.current = true
+    clearPendingFollow()
+    followByToken(sb, token, pending.travellers)
+      .then((r) => {
+        if (r) {
+          qc.invalidateQueries({ queryKey: tk.following })
+          router.replace(`/journeys/${r.trip_id}`)
+        } else setPendingFailed(true)
+      })
+      .catch(() => setPendingFailed(true))
+  }, [session, sb, token, qc, router])
 
   const summary = useQuery({
     queryKey: ['shared-summary', token],
@@ -77,6 +86,17 @@ export default function FollowClient({
     enabled: !!summary.data,
     refetchInterval: 45_000, // the plan's 30-60s polling window
   })
+  // Comment counts for the rows (migration 34). Fails soft: a link page on a
+  // database without 34 still renders the feed, just without the counts.
+  const feedIds = useMemo(() => (feed.data ?? []).map((e) => e.id), [feed.data])
+  const social = useQuery({
+    queryKey: ['shared-feed-social', token, feedIds.join(',')],
+    queryFn: () => fetchSharedFeedSocial(sb, token, feedIds),
+    enabled: feedIds.length > 0,
+    refetchInterval: 45_000,
+    retry: false,
+  })
+  const commentCount = useMemo(() => new Map((social.data ?? []).map((r) => [r.event_id, r.commentCount])), [social.data])
 
   // Realtime nudge (migration 18). The ping carries NOTHING — it just says
   // "re-read", and the sanitized RPCs stay the only data path. Polling above is
@@ -142,9 +162,7 @@ export default function FollowClient({
   const current = s.route.find((r) => r.arrive <= today && today < r.depart) ?? null
   const events = (feed.data ?? []) as SharedEvent[]
   const latest = events[0]
-  const quietDays = latest
-    ? Math.floor((Date.now() - +new Date(latest.occurred_at)) / 86_400_000)
-    : null
+  const quietDays = latest && mounted ? nightsBetween(latest.occurred_at.slice(0, 10), today) : null
   const dayNum = nightsBetween(s.startDate, today) + 1
   const totalDays = s.endDate ? nightsBetween(s.startDate, s.endDate) + 1 : null
   const lastSeenCity =
@@ -156,6 +174,9 @@ export default function FollowClient({
       <header className="mb-4">
         <div className={kicker}>Following</div>
         <h1 className="mt-1 font-serif text-[27px] font-semibold leading-[1.15] tracking-[-.01em]">{s.tripName}</h1>
+        {s.travellers.length > 0 && (
+          <p className="mt-1 text-base text-tx2">{s.travellers.map((t) => t.name).join(' & ')}</p>
+        )}
         <div className="mt-2.5 inline-flex items-center rounded-full bg-tag px-3.5 py-1.5 text-base font-medium text-tag-ink">
           {phase === 'pre' && 'Departure countdown'}
           {phase === 'live' && (totalDays ? `Day ${dayNum} of ${totalDays}` : `Day ${dayNum}`)}
@@ -167,6 +188,15 @@ export default function FollowClient({
           </p>
         )}
       </header>
+
+      {s.travellers.length > 0 && session !== 'unknown' && (
+        <FollowCard
+          token={token}
+          travellers={s.travellers}
+          signedIn={session === 'signed-in'}
+          pendingFailed={pendingFailed}
+        />
+      )}
 
       {phase === 'pre' ? (
         <section className={`${card} p-6 text-center`}>
@@ -245,46 +275,35 @@ export default function FollowClient({
                 {phase === 'post' ? 'The journal has ended — thanks for following along!' : 'No updates yet — check back soon.'}
               </p>
             )}
-            <ul className="space-y-2">
-              {events.map((e) => {
-                const Icon = EVENT_ICON[e.kind] ?? Dot
-                return (
-                  <li key={e.id} className={`${card} p-4`}>
-                    <div className="flex items-start gap-2.5">
-                      <Icon size={18} strokeWidth={2} className="mt-1 flex-none text-ac2" aria-hidden />
-                      <div className="min-w-0 grow">
-                        {e.kind === 'checkin' && (
-                          <span className="text-[17px] font-semibold">{e.payload.placeName ?? 'Checked in'}</span>
-                        )}
-                        {e.kind === 'arrived' && (
-                          <span className="text-[17px] font-semibold">Arrived in {e.payload.city}</span>
-                        )}
-                        {e.kind === 'note' && <span className="text-base">{e.payload.text}</span>}
-                        {e.rating != null && (
-                          <span className="ml-2 text-base"><Stars n={e.rating} /></span>
-                        )}
-                        {e.comment && (
-                          <p className="mt-1 text-base leading-[1.55] text-tx2">{e.comment}</p>
-                        )}
-                        {!!e.payload.photos?.length && (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {e.payload.photos.map((p) => (
-                              <a key={p} href={followMediaUrl(p)} target="_blank" rel="noreferrer">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={followMediaUrl(p)} alt="" loading="lazy" className="h-24 w-24 rounded-[12px] object-cover" />
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <span className="shrink-0 text-base text-tx3">{timeAgo(e.occurred_at)}</span>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
+            {events.length > 0 && (
+              <ul className={`${card} px-3.5`}>
+                {events.map((e) => (
+                  <SocialRow
+                    key={e.id}
+                    e={e}
+                    href={`/follow/${token}/post/${e.id}`}
+                    byline={e.authorName}
+                    social={{ commentCount: commentCount.get(e.id) ?? 0 }}
+                  />
+                ))}
+              </ul>
+            )}
           </section>
         </>
+      )}
+
+      {session === 'anon' && s.travellers.length > 0 && (
+        <section className={`${card} mt-5 p-4`}>
+          <div className="text-base font-semibold">Follow {s.travellers.map((t) => t.name).join(' and ')} with an account</div>
+          <p className="mt-0.5 text-base leading-[1.5] text-tx2">
+            Their trips gather on one Home, and you can react and comment.
+          </p>
+          <p className="mt-2 text-base font-semibold text-ac2">
+            <Link href={`/login?next=${encodeURIComponent(`/follow/${token}`)}`}>Create an account</Link>
+            <span className="font-normal text-tx3"> · </span>
+            <Link href={`/login?next=${encodeURIComponent(`/follow/${token}`)}`}>Sign in</Link>
+          </p>
+        </section>
       )}
 
       {/* transparency footer (frame 30's tag-wash privacy note, follower-facing) */}
@@ -304,6 +323,10 @@ export default function FollowClient({
     </Shell>
   )
 }
+
+const subscribeNever = () => () => {}
+const snapTrue = () => true
+const snapFalse = () => false
 
 function Shell({ children }: { children: React.ReactNode }) {
   // Phone-first narrow column on the honeydew page wash, same on desktop.
@@ -470,5 +493,178 @@ function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
         </div>
       </div>
     </section>
+  )
+}
+
+// The one card that turns a link into a relationship. Everyone on the trip is
+// preselected; untick a name to keep only the others. Signed in, Follow does it
+// now and opens the journey. Anonymous, Follow first asks for an account —
+// the selection is remembered across the magic-link round trip.
+function FollowCard({
+  token, travellers, signedIn, pendingFailed,
+}: { token: string; travellers: Traveller[]; signedIn: boolean; pendingFailed: boolean }) {
+  const sb = createClient()
+  const qc = useQueryClient()
+  const router = useRouter()
+  const [picked, setPicked] = useState<Set<string>>(() => new Set(travellers.map((t) => t.id)))
+  const [sheet, setSheet] = useState(false)
+  const chosen = travellers.filter((t) => picked.has(t.id))
+  const all = chosen.length === travellers.length
+
+  const follow = useMutation({
+    mutationFn: () => followByToken(sb, token, all ? null : chosen.map((t) => t.id)),
+    onSuccess: (r) => {
+      if (!r) return
+      qc.invalidateQueries({ queryKey: tk.following })
+      router.push(`/journeys/${r.trip_id}`)
+    },
+  })
+  const dead = follow.isSuccess && follow.data === null
+
+  const toggle = (id: string) =>
+    setPicked((prev) => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+
+  const label = chosen.length === 0 ? 'Pick someone to follow' : `Follow ${chosen.map((t) => t.name).join(' & ')}`
+
+  return (
+    <section className={`${card} mb-4 p-4`}>
+      <div className="flex items-start gap-3">
+        <UserPlus size={22} strokeWidth={2} className="mt-0.5 flex-none text-ac2" aria-hidden />
+        <div className="min-w-0 grow">
+          <div className="font-serif text-lg font-semibold">Follow the travellers</div>
+          <p className="mt-0.5 text-base leading-[1.5] text-tx2">
+            Their check-ins land on your Home, on this trip and the next.
+          </p>
+          {travellers.length > 1 && (
+            <ul className="mt-2.5 flex flex-wrap gap-2">
+              {travellers.map((t) => {
+                const on = picked.has(t.id)
+                return (
+                  <li key={t.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggle(t.id)}
+                      aria-pressed={on}
+                      className={
+                        'rounded-full px-3 py-1.5 text-base font-medium ' +
+                        (on ? 'bg-ac2-soft text-ac2-deep' : 'border-[1.4px] border-ln3 text-tx2')
+                      }
+                    >
+                      {on ? '✓ ' : ''}{t.name}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          <button
+            type="button"
+            disabled={chosen.length === 0 || follow.isPending}
+            onClick={() => (signedIn ? follow.mutate() : setSheet(true))}
+            className="mt-2.5 w-full rounded-[calc(var(--r)-3px)] bg-ac px-4 py-2.5 text-base font-semibold text-on disabled:opacity-50"
+          >
+            {follow.isPending ? 'Following…' : label}
+          </button>
+          {(dead || pendingFailed || follow.isError) && (
+            <p className="mt-1.5 text-base text-warn">
+              That did not work — the link may have expired, or the travellers paused it. Ask them for a fresh one.
+            </p>
+          )}
+        </div>
+      </div>
+      {sheet && (
+        <AccountSheet
+          token={token}
+          travellers={all ? null : chosen.map((t) => t.id)}
+          names={chosen.map((t) => t.name)}
+          onClose={() => setSheet(false)}
+        />
+      )}
+    </section>
+  )
+}
+
+// Magic-link sign-in that comes back HERE. The pending follow is saved before
+// the email goes out, so the return trip finishes it without a second tap.
+function AccountSheet({
+  token, travellers, names, onClose,
+}: { token: string; travellers: string[] | null; names: string[]; onClose: () => void }) {
+  const sb = createClient()
+  const [email, setEmail] = useState('')
+  const [status, setStatus] = useState<'idle' | 'busy' | 'sent' | 'error'>('idle')
+  const [error, setError] = useState('')
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('busy')
+    savePendingFollow(token, travellers)
+    const { error } = await sb.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/follow/${token}`)}` },
+    })
+    if (error) {
+      setError(error.message)
+      setStatus('error')
+    } else setStatus('sent')
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-tx/45"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Get an account"
+        className="lv-sheet fixed inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col gap-[13px] overflow-y-auto rounded-t-[var(--r)] bg-sf px-[18px] pb-[max(26px,env(safe-area-inset-bottom))] pt-2.5 text-tx"
+      >
+        <div aria-hidden className="mx-auto h-[5px] w-11 flex-none rounded-full bg-ln3" />
+        <h2 className="font-serif text-[21px] font-semibold">Follow {names.join(' & ')}</h2>
+        {status === 'sent' ? (
+          <p className="text-base leading-[1.55]">
+            Check <strong>{email}</strong> and tap the link in the email. It brings you back here, already following.
+          </p>
+        ) : (
+          <>
+            <p className="-mt-2 text-base leading-[1.5] text-tx2">
+              Following needs an account, so their trips can find you. One email, no password.
+            </p>
+            <form onSubmit={submit} className="flex flex-col gap-2.5">
+              <input
+                type="email"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base outline-none focus:border-ac"
+              />
+              <button
+                type="submit"
+                disabled={status === 'busy'}
+                className="rounded-[calc(var(--r)-3px)] bg-ac py-3 text-base font-semibold text-on disabled:opacity-50"
+              >
+                {status === 'busy' ? '…' : 'Email me a sign-in link'}
+              </button>
+              {status === 'error' && <p className="text-base text-warn">{error || 'Could not send the email — try again.'}</p>}
+            </form>
+            <p className="text-[13px] leading-[1.5] text-tx3">
+              Already have an account? The same link signs you in.
+            </p>
+          </>
+        )}
+        <button type="button" onClick={onClose} className="rounded-[var(--rCtl)] border-[1.5px] border-ln2 bg-sf py-3 text-base font-medium">
+          {status === 'sent' ? 'Done' : 'Not now'}
+        </button>
+      </div>
+    </div>
   )
 }

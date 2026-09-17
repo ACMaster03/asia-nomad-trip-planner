@@ -16,6 +16,7 @@ export default async function DashboardPage() {
       <DashboardClient
         userEmail={data?.claims?.email as string | undefined}
         userName={meta?.first_name}
+        userId={data?.claims?.sub as string | undefined}
       />
     </HydrationBoundary>
   )

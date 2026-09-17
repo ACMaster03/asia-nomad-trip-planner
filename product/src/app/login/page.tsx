@@ -1,48 +1,64 @@
 'use client'
 import { useEffect, useState } from 'react'
-import type { AuthError } from '@supabase/supabase-js'
+import Link from 'next/link'
 import { createOtpClient } from '@/lib/supabase/otp'
+import { DEFAULT_NEXT, safeNextPath } from '@/lib/auth/safeNext'
+import { createClient } from '@/lib/supabase/client'
+import { humanAuthError, looksLikeNoPasswordSet } from '@/lib/auth/authError'
 
 // Login — handoff frame 01 (the only screen on the 2a "valley morning" wash;
 // invite-accept shares it in Phase 4). Behavior follows the rig: sending stays
 // on this screen, the button label cycles Sending… → "Sent · again in N s"
 // (60s cooldown, disabled) → "Send again", and the honeydew chip confirms.
-// Apple sign-in: DEFERRED (owner decision 2026-08-06) — magic link only.
-
-// supabase-js treats every 5xx as retryable and short-circuits BEFORE parsing the
-// response body, handing its message extractor the raw Response — which carries no
-// message field, so the extractor falls through to JSON.stringify() and the thrown
-// error's `.message` is literally "{}". A mailer outage therefore reached the
-// traveller as a red box containing two braces (2026-08-21: Resend key rotated out
-// from under the project, every send 500ing on SMTP 535).
+// Apple sign-in: DEFERRED (owner decision 2026-08-06).
 //
-// The real cause is only ever in the Supabase auth logs, so there is nothing more
-// specific to say here — but "try again in a moment" is at least actionable, and it
-// keeps the raw text for 4xx errors, which DO carry a useful message (rate limits,
-// "Signups not allowed for otp", address rejected).
-function humanAuthError(error: AuthError): string {
-  const raw = error.message?.trim()
-  if (!raw || raw === '{}') {
-    return "We couldn't send the link just now. Please try again in a moment."
-  }
-  if (/failed to fetch|networkerror|load failed/i.test(raw)) {
-    return 'No connection. Check your network and try again.'
-  }
-  return raw
-}
+// TWO WAYS IN (2026-09-14). The magic link stays the hero — it is what every
+// existing account uses and what the onboarding copy assumes. Password sign-in
+// sits behind a text link, for accounts that have SET one in Account → Password:
+// there is no sign-up here, so it can only ever be a second key to a door you
+// already have.
+//
+// It earns its place twice over. Google Play requires reusable credentials for
+// app review and says so explicitly for apps gated behind one-time passwords,
+// which is exactly what a magic link is. And it is simply the more dependable
+// way in on the road: no email round trip means no waiting on a mail server and
+// no in-app-browser handoff (see lib/supabase/otp.ts for what that handoff
+// cost us once already).
+type Mode = 'link' | 'password'
 
 export default function Login() {
+  const [mode, setMode] = useState<Mode>('link')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  // One cooldown covers BOTH emails on purpose: Supabase rate-limits sends per
+  // address, so a reset requested right after a magic link is refused by the
+  // server anyway. Better to show the wait than to earn a 429.
   const [cooldown, setCooldown] = useState(0)
   const [error, setError] = useState('')
+
+  // Where to land after sign-in. A follow link sends people here with
+  // ?next=/follow/<token> so the follow they started can finish; anything
+  // off-site is refused by safeNextPath.
+  const nextPath = () => safeNextPath(new URLSearchParams(window.location.search).get('next'))
 
   useEffect(() => {
     if (cooldown <= 0) return
     const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
     return () => clearTimeout(t)
   }, [cooldown])
+
+  function switchTo(next: Mode) {
+    setMode(next)
+    // Carry the address across — it is the one field both ways in share — but
+    // never a stale outcome from the other mode.
+    setError('')
+    setSent(false)
+    setResetSent(false)
+    setPassword('')
+  }
 
   async function send(e: React.FormEvent) {
     e.preventDefault()
@@ -58,11 +74,17 @@ export default function Login() {
     const sb = createOtpClient()
     const { error } = await sb.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        emailRedirectTo: nextPath() === DEFAULT_NEXT
+          ? `${window.location.origin}/auth/callback`
+          : `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath())}`,
+      },
     })
     setSending(false)
     if (error) {
-      setError(humanAuthError(error))
+      setError(
+        humanAuthError(error, "We couldn't send the link just now. Please try again in a moment."),
+      )
     } else {
       setError('')
       setSent(true)
@@ -70,13 +92,70 @@ export default function Login() {
     }
   }
 
-  const label = sending
+  async function signIn(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email || !password || sending) return
+    setSending(true)
+    // The SESSION-OWNING client, never the send-only one in lib/supabase/otp.ts.
+    // That client is persistSession:false, so signing in through it would return
+    // a perfectly successful result, write no cookie, and leave the server guard
+    // in (app)/layout.tsx to bounce the traveller straight back to this screen —
+    // a failure that reads as a bug in the guard, nowhere near its cause.
+    const sb = createClient()
+    const { error } = await sb.auth.signInWithPassword({ email, password })
+    setSending(false)
+    if (error) {
+      setError(
+        humanAuthError(error, "We couldn't sign you in just now. Please try again in a moment."),
+      )
+      return
+    }
+    setError('')
+    // A full navigation, not router.push: the session cookies were written a
+    // moment ago and every server component on the other side has to read them.
+    // Account's sign-out reloads for the mirror-image reason.
+    window.location.href = nextPath()
+  }
+
+  async function sendReset() {
+    if (!email || sending || cooldown > 0) return
+    setSending(true)
+    // Implicit (non-PKCE) client again, and for exactly the reason the magic
+    // link uses it: this puts a LINK in an email, and reset links get opened
+    // from the mail app. redirectTo lands on /auth/callback, which honours
+    // ?next= — a shape that works whether or not the Supabase "Reset Password"
+    // template has been repointed at /auth/confirm, so this needs no dashboard
+    // change to start working.
+    const sb = createOtpClient()
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/account')}`,
+    })
+    setSending(false)
+    if (error) {
+      setError(
+        humanAuthError(
+          error,
+          "We couldn't send the reset link just now. Please try again in a moment.",
+        ),
+      )
+    } else {
+      setError('')
+      setResetSent(true)
+      setCooldown(60)
+    }
+  }
+
+  const linkLabel = sending
     ? 'Sending…'
     : cooldown > 0
       ? `Sent · again in ${cooldown} s`
       : sent
         ? 'Send again'
         : 'Send magic link'
+
+  const chip =
+    'rounded-2xl px-3.5 py-2.5 text-center text-base leading-normal text-[#1F2A24] backdrop-blur-[3px]'
+  const chipBg = { background: 'rgba(255,255,255,.72)' }
 
   return (
     <main
@@ -99,7 +178,7 @@ export default function Login() {
             traveller
           </h1>
 
-          <form onSubmit={send} className="mt-7 flex flex-col gap-[11px]">
+          <form onSubmit={mode === 'link' ? send : signIn} className="mt-7 flex flex-col gap-[11px]">
             <label className="rounded-[22px] border-[1.5px] border-ln2 bg-sf/90 px-4 py-3.5 text-tx transition-[border-color,box-shadow] duration-[180ms] focus-within:border-ac focus-within:shadow-[0_0_0_4px_var(--acSoft)]">
               <span className="block text-base uppercase tracking-[.1em] text-tx2">Email</span>
               <input
@@ -112,48 +191,109 @@ export default function Login() {
                 className="mt-[5px] w-full bg-transparent text-base font-medium outline-none placeholder:text-tx3"
               />
             </label>
+
+            {mode === 'password' && (
+              <label className="rounded-[22px] border-[1.5px] border-ln2 bg-sf/90 px-4 py-3.5 text-tx transition-[border-color,box-shadow] duration-[180ms] focus-within:border-ac focus-within:shadow-[0_0_0_4px_var(--acSoft)]">
+                <span className="block text-base uppercase tracking-[.1em] text-tx2">Password</span>
+                <input
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-[5px] w-full bg-transparent text-base font-medium outline-none placeholder:text-tx3"
+                />
+              </label>
+            )}
+
             <button
               type="submit"
-              disabled={sending || cooldown > 0}
+              disabled={sending || (mode === 'link' && cooldown > 0)}
               className={
                 'flex items-center justify-center gap-[9px] rounded-[22px] bg-ac py-4 text-[17px] font-semibold text-on transition-opacity duration-200 ' +
-                (cooldown > 0 ? 'opacity-55' : sending ? 'opacity-85' : '')
+                (mode === 'link' && cooldown > 0 ? 'opacity-55' : sending ? 'opacity-85' : '')
               }
             >
               {sending && (
                 <i className="block size-[17px] animate-spin rounded-full border-[2.4px] border-white/35 border-t-white" />
               )}
-              {label}
+              {mode === 'link' ? linkLabel : sending ? 'Signing in…' : 'Sign in'}
             </button>
 
-            {sent && (
+            {sent && mode === 'link' && (
               <div className="lv-enter rounded-[22px] bg-tag px-4 py-3.5 text-base font-medium leading-normal text-tag-ink">
                 ✓ Check your email for the sign-in link.
+              </div>
+            )}
+            {resetSent && mode === 'password' && (
+              <div className="lv-enter rounded-[22px] bg-tag px-4 py-3.5 text-base font-medium leading-normal text-tag-ink">
+                ✓ Check your email — the link opens your account so you can set a new password.
               </div>
             )}
             {error && (
               <div className="lv-enter rounded-[22px] border border-warn-line bg-warn-soft px-4 py-3.5 text-base leading-normal text-warn">
                 {error}
+                {mode === 'password' && looksLikeNoPasswordSet(error) && (
+                  <>
+                    {' '}
+                    If you have never set a password on this account, sign in with a magic link and
+                    add one under Account → Password.
+                  </>
+                )}
               </div>
+            )}
+
+            {mode === 'password' && (
+              <button
+                type="button"
+                onClick={sendReset}
+                disabled={sending || cooldown > 0 || !email}
+                className="self-center py-1 text-base font-medium text-ac2-deep underline disabled:opacity-55"
+              >
+                {cooldown > 0 ? `Email me again in ${cooldown} s` : 'Forgot your password?'}
+              </button>
             )}
 
             {/* frosted chips — fixed light values on purpose: they sit over the
                 photographic wash in both themes (handoff frame 01) */}
-            <div
-              className="rounded-2xl px-3.5 py-2.5 text-center text-base leading-normal text-[#1F2A24] backdrop-blur-[3px]"
-              style={{ background: 'rgba(255,255,255,.72)' }}
-            >
-              No password - the link signs you in.
-              <br />
-              First sign-in starts the 3-step setup.
+            <div className={chip} style={chipBg}>
+              {mode === 'link' ? (
+                <>
+                  No password - the link signs you in.
+                  <br />
+                  First sign-in starts the 3-step setup.
+                </>
+              ) : (
+                <>
+                  For accounts that have set a password.
+                  <br />
+                  No email to wait for - useful on a slow connection.
+                </>
+              )}
             </div>
-            <div
-              className="mt-0.5 rounded-2xl px-3.5 py-2.5 text-center text-[13px] leading-normal text-[#1F2A24] backdrop-blur-[3px]"
-              style={{ background: 'rgba(255,255,255,.72)' }}
+
+            <button
+              type="button"
+              onClick={() => switchTo(mode === 'link' ? 'password' : 'link')}
+              className="self-center py-1 text-base font-medium text-ac2-deep underline"
             >
+              {mode === 'link' ? 'Use a password instead' : 'Email me a link instead'}
+            </button>
+
+            {/* These were <span>s until 2026-09-14 — the sentence claimed two
+                documents that did not exist, and Play will not list an app
+                without a reachable privacy policy. Both pages are public. */}
+            <div className={'mt-0.5 ' + chip + ' text-[13px]'} style={chipBg}>
               By continuing you agree to the{' '}
-              <span className="font-medium text-ac2-deep underline">Terms</span> and{' '}
-              <span className="font-medium text-ac2-deep underline">Privacy Policy</span>.
+              <Link href="/terms" className="font-medium text-ac2-deep underline">
+                Terms
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="font-medium text-ac2-deep underline">
+                Privacy Policy
+              </Link>
+              .
             </div>
           </form>
         </div>
