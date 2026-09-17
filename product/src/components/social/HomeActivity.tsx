@@ -1,12 +1,15 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { TripEvent } from '@/lib/trips/events'
 import type { SharedEvent } from '@/lib/follow/api'
-import { fetchFollowingFeed, fetchMyFollowerCount, fetchMyFollowing } from '@/lib/follow/follows'
+import { fetchFollowingFeed, fetchMyFollowerCount, fetchMyFollowing, followByToken } from '@/lib/follow/follows'
+import { clearPendingFollow, readPendingFollow } from '@/lib/follow/pending'
+import { useToast } from '@/components/Toast'
 import { fetchFeedSocial, react as sendReaction, type PostSocial } from '@/lib/follow/social'
 import { mergeFeeds } from '@/lib/follow/merge'
 import { currentTrip } from '@/lib/follow/people'
@@ -25,7 +28,33 @@ const PAGE = 30
 export default function HomeActivity({ own, ownPending, userId }: { own: TripEvent[]; ownPending: boolean; userId?: string }) {
   const sb = createClient()
   const qc = useQueryClient()
+  const router = useRouter()
+  const toast = useToast()
   const [onlyMine, setOnlyMine] = useState(false)
+
+  // A follow started on an anonymous link page and interrupted by the sign-in
+  // round trip. The follow page finishes it when the magic link returns
+  // there; when the email template sends people to Home instead, Home does.
+  const pendingRan = useRef(false)
+  useEffect(() => {
+    if (pendingRan.current) return
+    const pending = readPendingFollow()
+    if (!pending) return
+    pendingRan.current = true
+    clearPendingFollow()
+    followByToken(sb, pending.token, pending.travellers)
+      .then((r) => {
+        if (!r) {
+          toast('That follow link no longer works')
+          return
+        }
+        qc.invalidateQueries({ queryKey: tk.following })
+        qc.invalidateQueries({ queryKey: tk.followingFeed })
+        toast(`You now follow ${r.followed.map((t) => t.name).join(' & ')}`)
+        router.push(`/journeys/${r.trip_id}`)
+      })
+      .catch(() => toast('Could not finish following — open the link again'))
+  }, [sb, qc, router, toast])
   const [shown, setShown] = useState(PAGE)
 
   const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
