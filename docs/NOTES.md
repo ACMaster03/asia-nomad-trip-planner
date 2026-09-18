@@ -7,12 +7,11 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-18 (evening)
 
-### BUILT, NOT PUSHED — the planner globe: issues #32 and #9
+### IN REVIEW — the planner globe: issues #32 and #9 (PRs #33, #34)
 
-Two stacked branches, one commit each, waiting for Patrik to push and open
-the PRs (the auto-mode session cannot push): `fix/globe-eight` (#32) and
-`feat/routes-touch` on top of it (#9). Merge #32 alone if #9 needs another
-round.
+Two stacked PRs: #33 `fix/globe-eight` (#32) and #34 `feat/routes-touch` on
+top of it (#9). Merge #33 alone if #9 needs another round, then retarget #34
+to main.
 
 **#32, the eight fixes**, all in `components/Globe.tsx` and `app/(app)/map`:
 one globe.gl instance for the life of the screen, patched in place (the
