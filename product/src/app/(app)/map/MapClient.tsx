@@ -14,9 +14,9 @@ import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { tk } from '@/lib/trips/keys'
 import { fetchMyFollowing } from '@/lib/follow/follows'
 import { useFollowedRoutes } from '@/lib/follow/useFollowedRoutes'
-import { peopleByCity, type PeopleAtCity, type PersonHere } from '@/lib/map/people'
+import { peopleByCity, type PeopleAtCity } from '@/lib/map/people'
 import { CityInfoCard, knowledgeHref } from '@/components/map/CityInfoCard'
-import { PeopleSheet } from '@/components/map/PeopleSheet'
+import { PeopleSheet, type TripPick } from '@/components/map/PeopleSheet'
 
 // Stable fallbacks: a fresh `[]` per render used to change the globe's prop
 // identity every render while the trip loaded (issue #32 fix 3).
@@ -54,7 +54,7 @@ export default function MapClient() {
   const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
   const summaries = useFollowedRoutes(following.data)
   const [peopleAt, setPeopleAt] = useState<PeopleAtCity | null>(null)
-  const [selected, setSelected] = useState<PersonHere | null>(null)
+  const [selected, setSelected] = useState<TripPick | null>(null)
 
   // Bottom city card (frame 19): the current stop while travelling, otherwise
   // the next one coming up (or the first, pre-trip).
@@ -65,7 +65,7 @@ export default function MapClient() {
   )
   const theirRoute = useMemo(() => {
     const route = selected ? summaries[selected.trip_id]?.route : undefined
-    return selected && route ? { name: selected.name, route } : null
+    return selected && route ? { name: selected.label, route } : null
   }, [selected, summaries])
   const sorted = (state?.segments ?? [])
     .filter((x) => x.include !== false)
@@ -114,7 +114,7 @@ export default function MapClient() {
           onClick={() => setSelected(null)}
           className="absolute left-4 top-[64px] z-10 flex items-center gap-2 rounded-full border border-[rgba(140,184,220,.5)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base font-medium text-[#8CB8DC] backdrop-blur"
         >
-          {selected.name}&rsquo;s route
+          {selected.label}&rsquo;s route
           <X aria-hidden className="size-4" strokeWidth={2} />
         </button>
       )}
@@ -124,7 +124,7 @@ export default function MapClient() {
           segments={state?.segments ?? NO_SEGMENTS}
           summaries={summaries}
           today={todayIso}
-          selectedId={selected?.user_id ?? null}
+          selectedTrip={selected?.trip_id ?? null}
           onSelect={(p) => { setSelected(p); setPeopleAt(null) }}
           onClose={() => setPeopleAt(null)}
         />
