@@ -39,7 +39,7 @@ type TripRow = {
 }
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const FROM = Deno.env.get('ALERTS_FROM') ?? 'Nomad Planner <onboarding@resend.dev>'
+const FROM = Deno.env.get('ALERTS_FROM') ?? 'Livhold <hello@livhold.com>'
 
 // kind → how many days before the date the alert fires
 const CANCEL_OFFSETS: Record<string, number> = { 'cancel-7': 7, 'cancel-3': 3, 'cancel-1': 1 }
