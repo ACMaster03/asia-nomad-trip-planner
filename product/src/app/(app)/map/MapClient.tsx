@@ -1,8 +1,8 @@
 'use client'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Search, X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchCities, fetchCountries } from '@/lib/catalogue/queries'
@@ -11,7 +11,12 @@ import { qk } from '@/lib/catalogue/keys'
 import type { City } from '@/lib/catalogue/types'
 import type { Segment, TransportLeg } from '@/lib/trips/types'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
+import { tk } from '@/lib/trips/keys'
+import { fetchMyFollowing } from '@/lib/follow/follows'
+import { useFollowedRoutes } from '@/lib/follow/useFollowedRoutes'
+import { peopleByCity, type PeopleAtCity, type PersonHere } from '@/lib/map/people'
 import { CityInfoCard, knowledgeHref } from '@/components/map/CityInfoCard'
+import { PeopleSheet } from '@/components/map/PeopleSheet'
 
 // Stable fallbacks: a fresh `[]` per render used to change the globe's prop
 // identity every render while the trip loaded (issue #32 fix 3).
@@ -43,9 +48,25 @@ export default function MapClient() {
   // the stop card back.
   const [picked, setPicked] = useState<City | null>(null)
 
+  // Issue #9: the people you follow, by the city they are in, and one of
+  // their routes drawn beside yours. Fails soft: without migration 33 the
+  // query errors once and the map is simply yours.
+  const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
+  const summaries = useFollowedRoutes(following.data)
+  const [peopleAt, setPeopleAt] = useState<PeopleAtCity | null>(null)
+  const [selected, setSelected] = useState<PersonHere | null>(null)
+
   // Bottom city card (frame 19): the current stop while travelling, otherwise
   // the next one coming up (or the first, pre-trip).
   const todayIso = new Date().toISOString().slice(0, 10)
+  const people = useMemo(
+    () => peopleByCity(following.data ?? [], cities.data ?? [], summaries, todayIso),
+    [following.data, cities.data, summaries, todayIso],
+  )
+  const theirRoute = useMemo(() => {
+    const route = selected ? summaries[selected.trip_id]?.route : undefined
+    return selected && route ? { name: selected.name, route } : null
+  }, [selected, summaries])
   const sorted = (state?.segments ?? [])
     .filter((x) => x.include !== false)
     .slice()
@@ -82,7 +103,32 @@ export default function MapClient() {
         transport={state?.transport ?? NO_TRANSPORT}
         rates={state?.rates ?? NO_RATES}
         onPickCity={setPicked}
+        people={people}
+        theirRoute={theirRoute}
+        today={todayIso}
+        onPickPeople={setPeopleAt}
       />
+      {selected && (
+        <button
+          type="button"
+          onClick={() => setSelected(null)}
+          className="absolute left-4 top-[64px] z-10 flex items-center gap-2 rounded-full border border-[rgba(140,184,220,.5)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base font-medium text-[#8CB8DC] backdrop-blur"
+        >
+          {selected.name}&rsquo;s route
+          <X aria-hidden className="size-4" strokeWidth={2} />
+        </button>
+      )}
+      {peopleAt && (
+        <PeopleSheet
+          group={peopleAt}
+          segments={state?.segments ?? NO_SEGMENTS}
+          summaries={summaries}
+          today={todayIso}
+          selectedId={selected?.user_id ?? null}
+          onSelect={(p) => { setSelected(p); setPeopleAt(null) }}
+          onClose={() => setPeopleAt(null)}
+        />
+      )}
       {picked && <CityInfoCard city={picked} cost={cityIdx[picked.city]} onClose={() => setPicked(null)} />}
       {!picked && stop && (
         <div className="lv-enter absolute inset-x-4 bottom-4 z-10 rounded-[var(--r)] bg-sf p-4 text-tx">

@@ -2,14 +2,17 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { TripEvent } from '@/lib/trips/events'
+import type { Segment } from '@/lib/trips/types'
 import type { SharedEvent } from '@/lib/follow/api'
 import { fetchFollowingFeed, fetchMyFollowerCount, fetchMyFollowing } from '@/lib/follow/follows'
 import { fetchFeedSocial, react as sendReaction, type PostSocial } from '@/lib/follow/social'
 import { mergeFeeds } from '@/lib/follow/merge'
 import { currentTrip } from '@/lib/follow/people'
+import { useFollowedRoutes } from '@/lib/follow/useFollowedRoutes'
+import { allOverlaps, formatOverlap } from '@/lib/map/people'
 import { tk } from '@/lib/trips/keys'
 import { SocialRow } from './SocialRow'
 
@@ -22,7 +25,9 @@ import { SocialRow } from './SocialRow'
 
 const PAGE = 30
 
-export default function HomeActivity({ own, ownPending, userId }: { own: TripEvent[]; ownPending: boolean; userId?: string }) {
+const MAX_MEETUPS = 3
+
+export default function HomeActivity({ own, ownPending, userId, segments }: { own: TripEvent[]; ownPending: boolean; userId?: string; segments?: Segment[] }) {
   const sb = createClient()
   const qc = useQueryClient()
   const [onlyMine, setOnlyMine] = useState(false)
@@ -70,6 +75,12 @@ export default function HomeActivity({ own, ownPending, userId }: { own: TripEve
   const people = following.data ?? []
   const travelling = people.filter((p) => currentTrip(p.trips)?.state === 'on' && currentTrip(p.trips)?.currentCity)
 
+  // Where our routes touch (issue #9): same city, intersecting dates, between
+  // this trip and every open trip of the people you follow. Soonest first.
+  const summaries = useFollowedRoutes(following.data, (segments?.length ?? 0) > 0)
+  const today = new Date().toISOString().slice(0, 10)
+  const meetups = useMemo(() => allOverlaps(segments ?? [], following.data ?? [], summaries, today), [segments, following.data, summaries, today])
+
   return (
     <>
       {/* people strip: who you follow, who follows you — the door to /people */}
@@ -87,6 +98,19 @@ export default function HomeActivity({ own, ownPending, userId }: { own: TripEve
             </span>
           )}
         </div>
+      )}
+      {meetups.length > 0 && (
+        <Link href="/map" className="flex flex-col gap-1.5 rounded-[var(--r)] bg-sf px-3.5 py-3 text-tx">
+          {meetups.slice(0, MAX_MEETUPS).map((o) => (
+            <span key={`${o.trip_id}${o.city}${o.start}`} className="flex items-start gap-2.5 text-base leading-snug">
+              <Users aria-hidden className="mt-[3px] size-4 flex-none text-ac2-deep" strokeWidth={2} />
+              {formatOverlap(o, o.names, today)}
+            </span>
+          ))}
+          {meetups.length > MAX_MEETUPS && (
+            <span className="pl-[26px] text-base text-tx2">and {meetups.length - MAX_MEETUPS} more on the map</span>
+          )}
+        </Link>
       )}
 
       <div className="flex items-center justify-between">

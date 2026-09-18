@@ -4,14 +4,16 @@ import { HydrationBoundary } from '@/lib/query/HydrationBoundary'
 import { tk } from '@/lib/trips/keys'
 import { qk } from '@/lib/catalogue/keys'
 import { fixtureTrip } from '../money-preview/fixture'
-import { cities, countries } from './fixture'
-import Preview from './Preview'
+import { cities, countries, following, summaries } from './fixture'
+import Preview, { type Screen } from './Preview'
 
 // DEV ONLY: the Map screen from fixtures, no sign-in needed (same wiring as
 // money-preview). The catalogue refetches fail without a session and React
 // Query keeps the seeded rows, which is what a preview wants. 404s outside
 // development.
 //   ?screen=knowledge&city=<id>  the Explore screen the map hands off to (fix 1)
+//   ?screen=home                 Home, for the meet-up line under the people strip (#9)
+const SCREENS: Screen[] = ['map', 'knowledge', 'home']
 export default async function MapPreviewPage({ searchParams }: { searchParams: Promise<{ screen?: string; city?: string }> }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   const params = await searchParams
@@ -24,10 +26,14 @@ export default async function MapPreviewPage({ searchParams }: { searchParams: P
   const names = [...new Set(trip.state.segments.map((s) => s.city))]
   qc.setQueryData(qk.tripCities(names), cities.filter((c) => names.includes(c.city)))
   qc.setQueryData(qk.fields, [])
+  qc.setQueryData(tk.following, following)
+  qc.setQueryData(tk.events('fixture'), [])
+  qc.setQueryData(['follower-count'], 2)
+  for (const [id, sm] of Object.entries(summaries)) qc.setQueryData(tk.followedSummary(id), sm)
   for (const c of cities) qc.setQueryData(['city-detail', c.id], c)
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <Preview screen={params.screen === 'knowledge' ? 'knowledge' : 'map'} />
+      <Preview screen={SCREENS.includes(params.screen as Screen) ? (params.screen as Screen) : 'map'} />
     </HydrationBoundary>
   )
 }
