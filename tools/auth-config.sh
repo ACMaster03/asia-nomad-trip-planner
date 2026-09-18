@@ -124,19 +124,22 @@ PY
     ;;
 
   push)
-    # The sender credential is required for prod and irrelevant for staging,
-    # where [remotes.staging.auth.email.smtp] disables SMTP. The CLI still wants
-    # the variable to exist while parsing, hence the placeholder.
-    if [[ "$TARGET" == prod ]]; then
-      if [[ ! -s "$SMTP_FILE" ]]; then
-        echo "✗ $SMTP_FILE is missing. Pushing prod without it would move sign-in" >&2
-        echo "  email off Resend onto Supabase's shared sender. See this script's header." >&2
-        exit 1
-      fi
-      export SUPABASE_AUTH_SMTP_PASS="$(tr -d ' \n\r' < "$SMTP_FILE")"
-    else
-      export SUPABASE_AUTH_SMTP_PASS="unused-on-staging"
+    # BOTH targets send through Resend, so both need the real credential.
+    #
+    # This used to export a placeholder for staging, on the assumption that
+    # [remotes.staging] left SMTP disabled. When staging gained its own SMTP the
+    # placeholder was pushed as the password, and staging answered every sign-in
+    # with HTTP 500; the reason was only visible in the project's auth logs,
+    # as 535 "Authentication credentials invalid" from Resend. An env() value
+    # that is wrong fails exactly like one that is missing, except later and
+    # somewhere you are not looking — so there is no placeholder branch now.
+    if [[ ! -s "$SMTP_FILE" ]]; then
+      echo "✗ $SMTP_FILE is missing. Both projects send auth mail through Resend," >&2
+      echo "  and a push without the credential breaks sign-in on the target." >&2
+      echo "  See this script's header for how to create it." >&2
+      exit 1
     fi
+    export SUPABASE_AUTH_SMTP_PASS="$(tr -d ' \n\r' < "$SMTP_FILE")"
 
     echo "── snapshotting $TARGET before the push"
     fetch "$SNAP"

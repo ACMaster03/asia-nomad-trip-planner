@@ -40,6 +40,31 @@
 
 project_id = "livhold"
 
+# Storage is here for one reason: a push touches it whether or not you mention
+# it. With no [storage] block, the CLI sent its own default `vector.enabled =
+# true` at prod, which answered 402 "Please upgrade the project to a paid tier
+# to enable vector buckets" and aborted the push half way — after auth had
+# already been updated. These values mirror what prod runs; staging's differ and
+# are in [remotes.staging.storage] below. Nothing here is a feature anyone asked
+# for, it is a lock on the door.
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[storage.s3_protocol]
+enabled = true
+
+[storage.analytics]
+enabled = false
+max_namespaces = 10
+max_tables = 10
+max_catalogs = 2
+
+[storage.vector]
+enabled = false
+max_buckets = 10
+max_indexes = 5
+
 [auth]
 enabled = true
 # Prod's own origin. Overridden for staging below.
@@ -138,6 +163,15 @@ max_frequency = "5s"
 
 [remotes.staging]
 project_id = "fdcncqnklscbztcydtye"
+
+# Staging has these storage features on, prod does not. Mirrored rather than
+# aligned: this file records what the projects are, and turning features off on
+# staging is not something an auth-config change should quietly do.
+[remotes.staging.storage.analytics]
+enabled = true
+
+[remotes.staging.storage.vector]
+enabled = true
 
 [remotes.staging.auth]
 # Staging's magic links are meant to open a dev server, not the live site.
