@@ -11,7 +11,7 @@ import Preview, { type Screen } from './Preview'
 // RPC refetches fail against a real database (no session), and React Query
 // keeps the seeded data on error, which is exactly what a preview wants.
 //   ?screen=home | nohome (follower without a trip) | journey | people | post | follow
-const SCREENS: Screen[] = ['home', 'nohome', 'notrip', 'journey', 'people', 'post', 'follow', 'alerts', 'sharing']
+const SCREENS: Screen[] = ['home', 'nohome', 'nobody', 'notrip', 'journey', 'people', 'post', 'follow', 'alerts', 'sharing']
 
 export default async function SocialPreviewPage({ searchParams }: { searchParams: Promise<{ screen?: string; tab?: string }> }) {
   if (process.env.NODE_ENV !== 'development') notFound()
@@ -20,10 +20,11 @@ export default async function SocialPreviewPage({ searchParams }: { searchParams
   const qc = new QueryClient()
   qc.setQueryData(tk.trip('fixture'), fixtureTrip(new Date().toISOString().slice(0, 10)))
   qc.setQueryData(tk.events('fixture'), fx.ownEvents)
-  qc.setQueryData(tk.following, fx.following)
-  qc.setQueryData(tk.followers, fx.followers)
-  qc.setQueryData(['follower-count'], fx.followers.length)
-  qc.setQueryData(tk.followingFeed, fx.followingFeed)
+  // 'nobody': a follower account whose follow never completed — nothing to show
+  qc.setQueryData(tk.following, screen === 'nobody' ? [] : fx.following)
+  qc.setQueryData(tk.followers, screen === 'nobody' ? [] : fx.followers)
+  qc.setQueryData(['follower-count'], screen === 'nobody' ? 0 : fx.followers.length)
+  qc.setQueryData(tk.followingFeed, screen === 'nobody' ? [] : fx.followingFeed)
   qc.setQueryData(tk.followedSummary(fx.JOURNEY_TRIP), fx.journeySummary)
   qc.setQueryData(tk.post(fx.POST_ID), fx.followingFeed[0])
   qc.setQueryData(tk.comments(fx.POST_ID), fx.comments)
