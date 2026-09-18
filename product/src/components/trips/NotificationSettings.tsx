@@ -3,25 +3,33 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { TriangleAlert } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { fetchTrips } from '@/lib/trips/queries'
+import { fetchMyFollowing } from '@/lib/follow/follows'
+import { tk } from '@/lib/trips/keys'
 import {
+  DEFAULT_NOTIFY_PREFS,
   disableUserPush,
   enableUserPush,
   fetchNotifyPrefs,
+  fetchTripNotify,
   getUserPushState,
+  setTripNotify,
   updateNotifyPrefs,
   type NotifyPrefs,
+  type TripNotify,
   type UserPushState,
 } from '@/lib/trips/userPush'
 
-// Settings → Alerts (LIVHOLD v1 frame 27b). Each alert the backend actually
-// supports (migration 27) gets its own switch row; the denied state mirrors the
-// personalisation flow's P5b amber notice, with email as the stated fallback.
+// Account → Alerts (LIVHOLD v1 frame 27b, widened for the social round). The
+// notification matrix from migration 37: one switch per kind of alert, split
+// by whose trip it is about, then a per-trip list where any trip can be
+// muted outright. Lives on Account rather than Settings because it belongs
+// to the person: a follower with no trip of their own needs it just as much.
 
-const PREFS_KEY = ['notify-prefs'] as const
-
-function Toggle({ on, disabled, label, onChange }: { on: boolean; disabled?: boolean; label: string; onChange: (v: boolean) => void }) {
+export function Toggle({ on, disabled, label, onChange }: { on: boolean; disabled?: boolean; label: string; onChange: (v: boolean) => void }) {
   return (
     <button
+      type="button"
       role="switch"
       aria-checked={on}
       aria-label={label}
@@ -42,6 +50,29 @@ function Toggle({ on, disabled, label, onChange }: { on: boolean; disabled?: boo
   )
 }
 
+type Row = { key: keyof NotifyPrefs; title: string; desc: string }
+type Group = { title: string; rows: Row[] }
+
+const GROUPS: Group[] = [
+  {
+    title: 'Your trips',
+    rows: [
+      { key: 'deadlinePush', title: 'Free-cancellation deadline', desc: 'and card charges · push 7 and 1 days before' },
+      { key: 'ownTripPosts', title: 'Updates from co-travellers', desc: 'check-ins, arrivals, notes' },
+      { key: 'commentsOnMine', title: 'Comments on your posts', desc: 'from co-travellers and followers' },
+      { key: 'reactions', title: 'Reactions on your posts', desc: 'off by default — hearts add up fast' },
+    ],
+  },
+  {
+    title: 'People you follow',
+    rows: [{ key: 'followPosts', title: 'New posts', desc: 'check-ins, arrivals and notes from the people you follow' }],
+  },
+  {
+    title: 'Anywhere',
+    rows: [{ key: 'replies', title: 'Replies to your comments', desc: 'on your trips and on the ones you follow' }],
+  },
+]
+
 export function NotificationSettings() {
   const sb = createClient()
   const qc = useQueryClient()
@@ -52,21 +83,54 @@ export function NotificationSettings() {
     getUserPushState().then(setPushState)
   }, [])
 
-  const prefs = useQuery({ queryKey: PREFS_KEY, queryFn: () => fetchNotifyPrefs(sb) })
+  const prefs = useQuery({ queryKey: tk.notifyPrefs, queryFn: () => fetchNotifyPrefs(sb), retry: false })
+  const current = prefs.data ?? DEFAULT_NOTIFY_PREFS
 
   const savePrefs = useMutation({
-    mutationFn: (patch: Partial<NotifyPrefs>) => updateNotifyPrefs(sb, patch),
-    onMutate: async (patch) => {
-      await qc.cancelQueries({ queryKey: PREFS_KEY })
-      const prev = qc.getQueryData<NotifyPrefs>(PREFS_KEY)
-      if (prev) qc.setQueryData(PREFS_KEY, { ...prev, ...patch })
+    mutationFn: (next: NotifyPrefs) => updateNotifyPrefs(sb, next),
+    onMutate: async (next) => {
+      await qc.cancelQueries({ queryKey: tk.notifyPrefs })
+      const prev = qc.getQueryData<NotifyPrefs>(tk.notifyPrefs)
+      qc.setQueryData(tk.notifyPrefs, next)
       return { prev }
     },
     onError: (_e, _p, ctx) => {
-      if (ctx?.prev) qc.setQueryData(PREFS_KEY, ctx.prev)
+      if (ctx?.prev) qc.setQueryData(tk.notifyPrefs, ctx.prev)
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: PREFS_KEY }),
+    onSettled: () => qc.invalidateQueries({ queryKey: tk.notifyPrefs }),
   })
+
+  // ---- per trip: everything of mine, everything I follow -----------------
+  const trips = useQuery({ queryKey: tk.trips, queryFn: () => fetchTrips(sb), staleTime: 5 * 60_000, retry: false })
+  const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
+  const tripNotify = useQuery({ queryKey: tk.tripNotify, queryFn: () => fetchTripNotify(sb), retry: false })
+
+  const saveTrip = useMutation({
+    mutationFn: ({ tripId, patch }: { tripId: string; patch: Partial<Pick<TripNotify, 'muted' | 'all_comments'>> }) =>
+      setTripNotify(sb, tripId, patch, tripNotify.data?.find((r) => r.trip_id === tripId)),
+    onMutate: async ({ tripId, patch }) => {
+      await qc.cancelQueries({ queryKey: tk.tripNotify })
+      const prev = qc.getQueryData<TripNotify[]>(tk.tripNotify) ?? []
+      const cur = prev.find((r) => r.trip_id === tripId) ?? { trip_id: tripId, muted: false, all_comments: false }
+      qc.setQueryData(tk.tripNotify, [...prev.filter((r) => r.trip_id !== tripId), { ...cur, ...patch }])
+      return { prev }
+    },
+    onError: (_e, _p, ctx) => {
+      if (ctx?.prev) qc.setQueryData(tk.tripNotify, ctx.prev)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: tk.tripNotify }),
+  })
+
+  const own = (trips.data ?? []).map((t) => ({ id: t.id, name: t.name || 'Trip', sub: 'Your trip', mine: true }))
+  const followed: { id: string; name: string; sub: string; mine: boolean }[] = []
+  for (const p of following.data ?? []) {
+    for (const t of p.trips) {
+      if (own.some((o) => o.id === t.trip_id) || followed.some((f) => f.id === t.trip_id)) continue
+      followed.push({ id: t.trip_id, name: t.tripName, sub: t.travellers.map((x) => x.name).join(' & '), mine: false })
+    }
+  }
+  const perTrip = [...own, ...followed]
+  const notifyFor = (id: string) => tripNotify.data?.find((r) => r.trip_id === id)
 
   async function togglePush() {
     setBusy(true)
@@ -78,26 +142,9 @@ export function NotificationSettings() {
   }
 
   const denied = pushState === 'denied'
-  const deadlineOn = prefs.data?.notifyDeadlinePush ?? true
-  const eventOn = prefs.data?.notifyEventPush ?? true
-
-  const rows: { title: string; desc: string; on: boolean; patch: (v: boolean) => Partial<NotifyPrefs> }[] = [
-    {
-      title: 'Free-cancellation deadline',
-      desc: 'and card charges · push 7 and 1 days before',
-      on: deadlineOn,
-      patch: (v) => ({ notifyDeadlinePush: v }),
-    },
-    {
-      title: 'Trip updates from co-travellers',
-      desc: 'check-ins, arrivals, notes',
-      on: eventOn,
-      patch: (v) => ({ notifyEventPush: v }),
-    },
-  ]
 
   return (
-    <section className="mt-3 flex flex-col gap-3">
+    <section className="flex flex-col gap-3">
       <h2 className="font-serif text-[19px] font-semibold">Alerts</h2>
       <p className="text-base leading-normal text-tx2">
         {pushState === 'subscribed'
@@ -133,23 +180,73 @@ export function NotificationSettings() {
         </div>
       )}
 
-      <div className="rounded-[var(--r)] bg-sf px-4 py-0.5">
-        {rows.map((r, i) => (
-          <div
-            key={r.title}
-            className={'flex items-center gap-3 py-3.5' + (i < rows.length - 1 ? ' border-b border-ln' : '')}
-          >
-            <div className="min-w-0 flex-1">
-              <div className="text-base font-semibold">{r.title}</div>
-              <div className="mt-0.5 text-base leading-normal text-tx2">
-                {r.desc}
-                {denied && r.on ? ' · by email for now' : ''}
-              </div>
-            </div>
-            <Toggle on={r.on} disabled={prefs.isPending} label={r.title} onChange={(v) => savePrefs.mutate(r.patch(v))} />
+      {GROUPS.map((g) => (
+        <div key={g.title}>
+          <div className="mb-1.5 text-[13px] font-semibold uppercase tracking-[.12em] text-tx3">{g.title}</div>
+          <div className="rounded-[var(--r)] bg-sf px-4 py-0.5">
+            {g.rows.map((r, i) => {
+              const on = current[r.key]
+              return (
+                <div
+                  key={r.key}
+                  className={'flex items-center gap-3 py-3.5' + (i < g.rows.length - 1 ? ' border-b border-ln' : '')}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-semibold">{r.title}</div>
+                    <div className="mt-0.5 text-base leading-normal text-tx2">
+                      {r.desc}
+                      {denied && on ? ' · by email for now' : ''}
+                    </div>
+                  </div>
+                  <Toggle on={on} disabled={prefs.isPending} label={r.title} onChange={(v) => savePrefs.mutate({ ...current, [r.key]: v })} />
+                </div>
+              )
+            })}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
+
+      {perTrip.length > 0 && (
+        <div>
+          <div className="mb-1.5 text-[13px] font-semibold uppercase tracking-[.12em] text-tx3">Per trip</div>
+          <div className="rounded-[var(--r)] bg-sf px-4 py-0.5">
+            {perTrip.map((t, i) => {
+              const n = notifyFor(t.id)
+              const muted = n?.muted ?? false
+              return (
+                <div key={t.id} className={'py-3.5' + (i < perTrip.length - 1 ? ' border-b border-ln' : '')}>
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-base font-semibold">{t.name}</div>
+                      <div className="mt-0.5 text-base leading-normal text-tx2">
+                        {muted ? 'Muted — nothing from this trip buzzes' : t.sub}
+                      </div>
+                    </div>
+                    <Toggle
+                      on={!muted}
+                      disabled={tripNotify.isPending}
+                      label={`Alerts for ${t.name}`}
+                      onChange={(v) => saveTrip.mutate({ tripId: t.id, patch: { muted: !v } })}
+                    />
+                  </div>
+                  {t.mine && !muted && (
+                    <label className="mt-2.5 flex cursor-pointer items-center gap-2.5 text-base text-tx2">
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-[var(--ac)]"
+                        checked={n?.all_comments ?? false}
+                        disabled={tripNotify.isPending}
+                        onChange={(e) => saveTrip.mutate({ tripId: t.id, patch: { all_comments: e.target.checked } })}
+                      />
+                      Comments on every post of this trip, not only yours
+                    </label>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {(pushState === 'ready' || pushState === 'subscribed') && (
         <button
@@ -165,8 +262,8 @@ export function NotificationSettings() {
         </button>
       )}
 
-      {savePrefs.isError && (
-        <p className="text-base text-ac2">Could not save — is migration 27 applied to this database?</p>
+      {(savePrefs.isError || saveTrip.isError) && (
+        <p className="text-base text-ac2">Could not save — is migration 37 applied to this database?</p>
       )}
     </section>
   )

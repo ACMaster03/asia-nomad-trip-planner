@@ -10,6 +10,8 @@ import { fetchFollowedSummary, fetchFollowingFeed, unfollow, type FollowedEvent 
 import { fetchFeedSocial, react as sendReaction, type PostSocial } from '@/lib/follow/social'
 import { SocialRow } from '@/components/social/SocialRow'
 import { Sheet } from '@/app/(app)/live/Sheet'
+import { Toggle } from '@/components/trips/NotificationSettings'
+import { fetchTripNotify, setTripNotify, type TripNotify } from '@/lib/trips/userPush'
 import { tk } from '@/lib/trips/keys'
 import { localISODate, nightsBetween, timeAgo } from '@/lib/trips/format'
 
@@ -289,6 +291,23 @@ function FollowSettings({
   const [confirm, setConfirm] = useState<{ id: string; name: string } | 'all' | null>(null)
   const followedHere = travellers.filter((t) => following.includes(t.id))
 
+  // Per-trip mute (migration 37): the one switch a follower reaches for when
+  // a trip gets chatty. Everything else lives under Account → Alerts.
+  const tripNotify = useQuery({ queryKey: tk.tripNotify, queryFn: () => fetchTripNotify(sb), retry: false })
+  const muted = tripNotify.data?.find((r) => r.trip_id === tripId)?.muted ?? false
+  const mute = useMutation({
+    mutationFn: (m: boolean) => setTripNotify(sb, tripId, { muted: m }, tripNotify.data?.find((r) => r.trip_id === tripId)),
+    onMutate: async (m) => {
+      await qc.cancelQueries({ queryKey: tk.tripNotify })
+      const prev = qc.getQueryData<TripNotify[]>(tk.tripNotify) ?? []
+      const cur = prev.find((r) => r.trip_id === tripId) ?? { trip_id: tripId, muted: false, all_comments: false }
+      qc.setQueryData(tk.tripNotify, [...prev.filter((r) => r.trip_id !== tripId), { ...cur, muted: m }])
+      return { prev }
+    },
+    onError: (_e, _m, ctx) => { if (ctx?.prev) qc.setQueryData(tk.tripNotify, ctx.prev) },
+    onSettled: () => qc.invalidateQueries({ queryKey: tk.tripNotify }),
+  })
+
   const leave = useMutation({
     mutationFn: async (ids: string[]) => {
       for (const id of ids) await unfollow(sb, id)
@@ -337,6 +356,16 @@ function FollowSettings({
       <p className="text-[13px] leading-[1.5] text-tx3">
         To follow someone you don&apos;t yet, open the link they shared with you.
       </p>
+
+      <div className="flex items-center gap-3 rounded-[14px] bg-fill px-3.5 py-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-base font-semibold">Alerts for this trip</div>
+          <div className="mt-0.5 text-base leading-[1.4] text-tx2">
+            {muted ? 'Muted — nothing from this trip buzzes' : 'New posts buzz, as set under Account → Alerts'}
+          </div>
+        </div>
+        <Toggle on={!muted} disabled={tripNotify.isPending} label="Alerts for this trip" onChange={(v) => mute.mutate(!v)} />
+      </div>
 
       {confirm && (
         <div className="rounded-[14px] bg-warn-soft p-3.5 text-base leading-[1.5]">

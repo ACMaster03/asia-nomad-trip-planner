@@ -37,4 +37,8 @@ export const tk = {
   // Own reaction / comment count / tally for a set of posts, keyed by the
   // sorted id list so the same feed page hits the same cache entry.
   feedSocial: (eventIds: readonly string[]) => ['feed-social', [...eventIds].sort().join(',')] as const,
+  // The signed-in person's notification matrix (migration 37) and their
+  // per-trip mutes — account-scoped, like following.
+  notifyPrefs: ['notify-prefs'] as const,
+  tripNotify: ['trip-notify'] as const,
 }

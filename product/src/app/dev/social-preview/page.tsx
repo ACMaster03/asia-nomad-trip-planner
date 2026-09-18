@@ -11,7 +11,7 @@ import Preview, { type Screen } from './Preview'
 // RPC refetches fail against a real database (no session), and React Query
 // keeps the seeded data on error, which is exactly what a preview wants.
 //   ?screen=home | nohome (follower without a trip) | journey | people | post | follow
-const SCREENS: Screen[] = ['home', 'nohome', 'notrip', 'journey', 'people', 'post', 'follow']
+const SCREENS: Screen[] = ['home', 'nohome', 'notrip', 'journey', 'people', 'post', 'follow', 'alerts', 'sharing']
 
 export default async function SocialPreviewPage({ searchParams }: { searchParams: Promise<{ screen?: string; tab?: string }> }) {
   if (process.env.NODE_ENV !== 'development') notFound()
@@ -28,6 +28,13 @@ export default async function SocialPreviewPage({ searchParams }: { searchParams
   qc.setQueryData(tk.post(fx.POST_ID), fx.followingFeed[0])
   qc.setQueryData(tk.comments(fx.POST_ID), fx.comments)
   qc.setQueryData(['shared-summary', fx.TOKEN], fx.sharedSummary)
+  // alerts + sharing (issues #12/#13)
+  qc.setQueryData(tk.trips, fx.ownTrips)
+  qc.setQueryData(tk.notifyPrefs, fx.notifyPrefs)
+  qc.setQueryData(tk.tripNotify, fx.tripNotify)
+  qc.setQueryData(tk.shares('fixture'), fx.shares)
+  qc.setQueryData(['share-stats', 'fixture'], fx.shareStats)
+  qc.setQueryData(['follower-access', 'fixture'], 'on')
   qc.setQueryData(['shared-feed', fx.TOKEN], fx.sharedFeed)
   qc.setQueryData(['shared-feed-social', fx.TOKEN, fx.sharedFeed.map((e) => e.id).join(',')], fx.feedSocial.map(({ event_id, commentCount }) => ({ event_id, commentCount })))
   // every id set the screens will ask for

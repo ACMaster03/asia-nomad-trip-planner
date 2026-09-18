@@ -10,6 +10,7 @@ import {
   fetchShares,
   fetchShareStats,
   revokeShare,
+  rotateShareLink,
   setShareLinkPaused,
   setTripSharingPaused,
 } from '@/lib/trips/shares'
@@ -21,6 +22,7 @@ import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { AccountDeletion } from '@/components/trips/DangerZone'
 import { Modal } from '@/components/trips/Modal'
+import { NotificationSettings } from '@/components/trips/NotificationSettings'
 import { useToast } from '@/components/Toast'
 import { applyLarger, applyTheme, storedLarger, storedTheme, type Theme } from '@/lib/theme'
 import { ActiveTripCard } from '@/app/(app)/settings/ActiveTripCard'
@@ -270,7 +272,7 @@ function AppearanceCard() {
 // counts, per-link pause/resume, revoke, pause-all switch, and the privacy
 // line. Tokens are hashed at rest, so the link is copyable ONCE at creation —
 // a per-row Copy can't exist (plan requirement).
-function SharingCard({ endDate }: { endDate?: string }) {
+export function SharingCard({ endDate }: { endDate?: string }) {
   const sb = createClient()
   const qc = useQueryClient()
   const toast = useToast()
@@ -354,13 +356,40 @@ function SharingCard({ endDate }: { endDate?: string }) {
     mutationFn: (id: string) => revokeShare(sb, id),
     onSettled: () => qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') }),
   })
+  // Rotate (migration 36): the leaked-link tool. Same row, new URL — every
+  // opt-in keyed by share_id survives, every copy of the old URL dies. The
+  // new link shows once, in the same modal a fresh link uses.
+  const [rotated, setRotated] = useState(false)
+  const rotate = useMutation({
+    mutationFn: (id: string) => rotateShareLink(sb, id),
+    onSuccess: (token) => {
+      setNewLink(`${window.location.origin}/follow/${token}`)
+      setCopied(false)
+      setRotated(true)
+      setCreateOpen(true)
+      setConfirmFor(null)
+      toast('Link rotated — the old URL stopped working')
+      qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') })
+    },
+    onError: () => setLinkErr('Could not rotate that link — try again.'),
+  })
+  // Revoke and rotate both destroy URLs people hold, so both confirm inline
+  // with the cost spelled out from the per-link counts (issue #12).
+  const [confirmFor, setConfirmFor] = useState<{ id: string; action: 'revoke' | 'rotate' } | null>(null)
 
   function openCreate() {
     setLabel('Family')
     setExpiry(defaultExpiry())
     setNewLink(null)
     setCopied(false)
+    setRotated(false)
     setCreateOpen(true)
+  }
+  // "3 devices with push and 2 email digests" — the cost, from the per-link counts.
+  const holders = (id: string) => {
+    const st = statFor(id)
+    if (!st) return 'the people on this link'
+    return `${st.push} device${st.push === 1 ? '' : 's'} with push and ${st.email} email digest${st.email === 1 ? '' : 's'}`
   }
   async function copy() {
     if (!newLink) return
@@ -475,13 +504,15 @@ function SharingCard({ endDate }: { endDate?: string }) {
               </div>
               <div className="text-base text-tx2">
                 /follow/{s.token_prefix ?? '??????'}…
-                {s.expires_at ? ` · expires ${new Date(s.expires_at).toLocaleDateString()}` : ' · no expiry'}
+                {s.expires_at
+                  ? ` · expires ${new Date(s.expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                  : ' · no expiry'}
                 {statFor(s.id) && ` · ${statFor(s.id)!.push} push · ${statFor(s.id)!.email} email`}
               </div>
             </div>
             {/* own line: three affordances beside the label would truncate it
                 to nothing at 375px wide (PeopleCard's copy-link rule) */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => linkPause.mutate({ id: s.id, paused: !s.paused_at })}
                 disabled={linkPause.isPending}
@@ -490,19 +521,53 @@ function SharingCard({ endDate }: { endDate?: string }) {
                 {s.paused_at ? 'Resume' : 'Pause'}
               </button>
               <button
-                onClick={() => {
-                  if (confirm(`Revoke "${s.label || 'this link'}"? Followers using it lose access immediately.`))
-                    revoke.mutate(s.id, {
-                      onSuccess: () =>
-                        toast(`${s.label || 'Follow'} link revoked - that URL stops working`),
-                    })
-                }}
+                onClick={() => setConfirmFor(confirmFor?.id === s.id && confirmFor.action === 'rotate' ? null : { id: s.id, action: 'rotate' })}
+                disabled={rotate.isPending}
+                className={pill + ' flex-none'}
+              >
+                Rotate
+              </button>
+              <button
+                onClick={() => setConfirmFor(confirmFor?.id === s.id && confirmFor.action === 'revoke' ? null : { id: s.id, action: 'revoke' })}
                 disabled={revoke.isPending}
                 className={pillMauve + ' flex-none'}
               >
                 Revoke
               </button>
             </div>
+            {confirmFor?.id === s.id && (
+              <div className="lv-enter rounded-[14px] bg-warn-soft p-3.5 text-base leading-[1.5]">
+                <p className="text-warn">
+                  {confirmFor.action === 'revoke'
+                    ? `Revoke "${s.label || 'this link'}"? The URL stops working for everyone: ${holders(s.id)} lose their alerts and their access. People who follow you with an account keep following.`
+                    : `Rotate "${s.label || 'this link'}"? Every copy of the current URL stops working, saved home-screen icons included. The ${holders(s.id)} on it keep their alerts, but need the new link to open the trip again. You see the new link once — send it to whoever should keep watching.`}
+                </p>
+                <div className="mt-2.5 flex gap-2">
+                  <button
+                    type="button"
+                    disabled={revoke.isPending || rotate.isPending}
+                    onClick={() => {
+                      if (confirmFor.action === 'revoke') {
+                        revoke.mutate(s.id, {
+                          onSuccess: () => {
+                            setConfirmFor(null)
+                            toast(`${s.label || 'Follow'} link revoked - that URL stops working`)
+                          },
+                        })
+                      } else {
+                        rotate.mutate(s.id)
+                      }
+                    }}
+                    className="rounded-full border-[1.4px] border-warn-line px-3.5 py-1.5 text-base font-semibold text-warn disabled:opacity-50"
+                  >
+                    {revoke.isPending || rotate.isPending ? '…' : confirmFor.action === 'revoke' ? 'Revoke link' : 'Rotate link'}
+                  </button>
+                  <button type="button" onClick={() => setConfirmFor(null)} className={pill}>
+                    Keep
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
         {linkErr && <p className="border-t border-ln px-4 py-3.5 text-base text-ac2">{linkErr}</p>}
@@ -515,7 +580,7 @@ function SharingCard({ endDate }: { endDate?: string }) {
       </div>
 
       {createOpen && (
-        <Modal title={newLink ? 'Follow link created' : 'Create follow link'} onClose={() => setCreateOpen(false)}>
+        <Modal title={newLink ? (rotated ? 'Link rotated' : 'Follow link created') : 'Create follow link'} onClose={() => setCreateOpen(false)}>
           {!newLink ? (
             <div>
               <p className="mb-3 text-base leading-normal text-tx2">
@@ -543,7 +608,9 @@ function SharingCard({ endDate }: { endDate?: string }) {
           ) : (
             <div>
               <p className="text-base leading-normal text-tx2">
-                Copy it now — for security the full link is shown <strong>only this once</strong>. If you lose it, revoke and create a new one.
+                {rotated
+                  ? <>The old URL is dead. Copy this one now — it is shown <strong>only this once</strong> — and send it to the people who should keep watching.</>
+                  : <>Copy it now — for security the full link is shown <strong>only this once</strong>. If you lose it, rotate the link for a new one.</>}
               </p>
               <div className="mt-3 break-all rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp p-3 font-mono text-base">
                 {newLink}
@@ -647,6 +714,12 @@ export default function AccountClient({
       <ActiveTripCard />
 
       <PeopleRow />
+
+      {/* The notification matrix (issue #13). Here and not on Settings: it
+          is about the person, and a follower without a trip needs it too. */}
+      <div id="alerts" className="scroll-mt-4">
+        <NotificationSettings />
+      </div>
 
       <AppearanceCard />
 

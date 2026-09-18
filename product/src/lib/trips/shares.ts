@@ -43,6 +43,15 @@ export async function createShareLink(
   return data as string
 }
 
+// Rotate (migration 36): a fresh token on the SAME row, so every copy of
+// the old URL dies while push, digest and account-follow rows keyed by
+// share_id survive. Returns the new raw token, shown once like createShareLink.
+export async function rotateShareLink(sb: SupabaseClient, shareId: string): Promise<string> {
+  const { data, error } = await sb.rpc('rotate_share_link', { p_share: shareId })
+  if (error) throw error
+  return data as string
+}
+
 export async function revokeShare(sb: SupabaseClient, shareId: string): Promise<void> {
   const { error } = await sb
     .from('trip_shares')

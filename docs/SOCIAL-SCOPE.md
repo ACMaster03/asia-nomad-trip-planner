@@ -26,6 +26,17 @@ follow-link system already defends.
 > Dev preview: `/dev/social-preview?screen=home|journey|people|post|follow`.
 > **33, 34 and 35 are on prod** (applied 2026-09-17, all testplans green). PR #16 carries the UI.
 >
+> **2026-09-18:** PRs #16, #17, #20 are merged and live; 33–35 on prod. **C3 and C4
+> built** on `feat/link-rotation-notifications`: `36-link-rotation.sql`
+> (`rotate_share_link`, same row, new token) and `37-notify-matrix.sql`
+> (`notify_prefs`, `trip_notify`, the three service-role `push_audience_*` readers,
+> comment/reaction fan-out triggers, profiles booleans mirrored). Both testplans green
+> in rolled-back dry runs on staging. `push-fanout` rewritten to route through the
+> readers — it must be redeployed to both projects after 37 is applied. UI: Account →
+> Alerts (the matrix + per-trip mutes; moved off Settings so trip-less followers reach
+> it), Rotate + inline confirms on Follow links, mute switch in the journey sheet.
+> Dev preview gained `?screen=alerts|sharing`.
+>
 > **Model change, 2026-09-16 (Patrik):** follows attach to **people, not trips**.
 > Section 2 below is rewritten for that; decision 3 in the log records the reversal.
 > Everything else in this document still holds.
@@ -410,6 +421,7 @@ integration pass. `user_push_subscriptions` already accepts `transport = 'apns'`
 ## 10. Known blockers
 
 - ~~The digest Edge Functions are undeployed~~ — **deployed 2026-09-16** (`docs/NOTES.md`).
+  `push-fanout` is rewritten for 37 (2026-09-18) and needs its own deploy — see NOTES.
   Phase C still rewrites `push-fanout` routing; check that function's deploy state
   separately before starting C4.
 - **The trip is live.** Departure was 31 Aug; real followers are on real links daily.

@@ -98,31 +98,111 @@ export async function disableUserPush(sb: SupabaseClient): Promise<UserPushState
 }
 
 // ---------------------------------------------------------------------------
-// Notification preferences (profiles.notify_*, migration 27 — applied to
-// prod and staging 2026-07-29).
+// Notification preferences (migration 37): one notify_prefs row per person,
+// no row = the defaults below. The two profiles booleans from 27 are
+// mirrored from this row by trigger, so nothing here writes them.
 // ---------------------------------------------------------------------------
-export type NotifyPrefs = { notifyDeadlinePush: boolean; notifyEventPush: boolean }
+export type NotifyPrefs = {
+  /** stay deadlines: cancel-by and card-charge warnings */
+  deadlinePush: boolean
+  /** co-travellers' check-ins, arrivals and notes on my own trips */
+  ownTripPosts: boolean
+  /** new posts by the people I follow */
+  followPosts: boolean
+  /** comments on my own posts */
+  commentsOnMine: boolean
+  /** replies to my comments, on any trip */
+  replies: boolean
+  /** reactions on my posts — the one that defaults off */
+  reactions: boolean
+}
+
+export const DEFAULT_NOTIFY_PREFS: NotifyPrefs = {
+  deadlinePush: true,
+  ownTripPosts: true,
+  followPosts: true,
+  commentsOnMine: true,
+  replies: true,
+  reactions: false,
+}
+
+type PrefsRow = {
+  deadline_push: boolean
+  own_trip_posts: boolean
+  follow_posts: boolean
+  comments_on_mine: boolean
+  replies: boolean
+  reactions: boolean
+}
+const PREF_COLS: Record<keyof NotifyPrefs, keyof PrefsRow> = {
+  deadlinePush: 'deadline_push',
+  ownTripPosts: 'own_trip_posts',
+  followPosts: 'follow_posts',
+  commentsOnMine: 'comments_on_mine',
+  replies: 'replies',
+  reactions: 'reactions',
+}
 
 export async function fetchNotifyPrefs(sb: SupabaseClient): Promise<NotifyPrefs> {
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user?.id
   if (!uid) throw new Error('Not signed in')
-  const { data, error } = await sb.from('profiles').select('notify_deadline_push,notify_event_push').eq('id', uid).maybeSingle()
+  const { data, error } = await sb
+    .from('notify_prefs')
+    .select('deadline_push,own_trip_posts,follow_posts,comments_on_mine,replies,reactions')
+    .eq('user_id', uid)
+    .maybeSingle()
   if (error) throw error
-  const row = data as { notify_deadline_push?: boolean; notify_event_push?: boolean } | null
+  const row = data as PrefsRow | null
+  if (!row) return DEFAULT_NOTIFY_PREFS
   return {
-    notifyDeadlinePush: row?.notify_deadline_push ?? true,
-    notifyEventPush: row?.notify_event_push ?? true,
+    deadlinePush: row.deadline_push,
+    ownTripPosts: row.own_trip_posts,
+    followPosts: row.follow_posts,
+    commentsOnMine: row.comments_on_mine,
+    replies: row.replies,
+    reactions: row.reactions,
   }
 }
 
-export async function updateNotifyPrefs(sb: SupabaseClient, prefs: Partial<NotifyPrefs>): Promise<void> {
+// Upsert of the whole row: the caller passes the merged state (the query
+// cache has it), so a first-ever save does not silently reset the other
+// switches to their defaults.
+export async function updateNotifyPrefs(sb: SupabaseClient, prefs: NotifyPrefs): Promise<void> {
   const { data: auth } = await sb.auth.getUser()
   const uid = auth.user?.id
   if (!uid) throw new Error('Not signed in')
-  const patch: Record<string, boolean> = {}
-  if (prefs.notifyDeadlinePush !== undefined) patch.notify_deadline_push = prefs.notifyDeadlinePush
-  if (prefs.notifyEventPush !== undefined) patch.notify_event_push = prefs.notifyEventPush
-  const { error } = await sb.from('profiles').update(patch).eq('id', uid)
+  const row: Record<string, boolean | string> = { user_id: uid }
+  for (const k of Object.keys(PREF_COLS) as (keyof NotifyPrefs)[]) row[PREF_COLS[k]] = prefs[k]
+  const { error } = await sb.from('notify_prefs').upsert(row, { onConflict: 'user_id' })
+  if (error) throw error
+}
+
+// Per-trip overrides: muted wins over everything for that trip; all_comments
+// widens "comments on my posts" to every post of a trip I travel on.
+export type TripNotify = { trip_id: string; muted: boolean; all_comments: boolean }
+
+export async function fetchTripNotify(sb: SupabaseClient): Promise<TripNotify[]> {
+  const { data, error } = await sb.from('trip_notify').select('trip_id,muted,all_comments')
+  if (error) throw error
+  return (data as TripNotify[]) ?? []
+}
+
+export async function setTripNotify(
+  sb: SupabaseClient,
+  tripId: string,
+  patch: Partial<Pick<TripNotify, 'muted' | 'all_comments'>>,
+  current?: TripNotify,
+): Promise<void> {
+  const { data: auth } = await sb.auth.getUser()
+  const uid = auth.user?.id
+  if (!uid) throw new Error('Not signed in')
+  const row = {
+    user_id: uid,
+    trip_id: tripId,
+    muted: patch.muted ?? current?.muted ?? false,
+    all_comments: patch.all_comments ?? current?.all_comments ?? false,
+  }
+  const { error } = await sb.from('trip_notify').upsert(row, { onConflict: 'user_id,trip_id' })
   if (error) throw error
 }
