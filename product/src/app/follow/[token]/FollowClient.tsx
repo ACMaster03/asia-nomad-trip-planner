@@ -59,11 +59,18 @@ export default function FollowClient({
   const pendingRan = useRef(false)
   useEffect(() => {
     if (session !== 'signed-in' || pendingRan.current) return
+    // Two ways the choice survives the sign-in round trip: localStorage
+    // (same browser) and the ?auto= the magic link's redirect carries (any
+    // browser — the email may open somewhere else entirely). Either wins.
     const pending = readPendingFollow()
-    if (!pending || pending.token !== token) return
+    const auto = new URLSearchParams(window.location.search).get('auto')
+    let travellers: string[] | null | undefined
+    if (pending && pending.token === token) travellers = pending.travellers
+    else if (auto) travellers = auto === 'all' ? null : auto.split(',').filter(Boolean)
+    if (travellers === undefined) return
     pendingRan.current = true
     clearPendingFollow()
-    followByToken(sb, token, pending.travellers)
+    followByToken(sb, token, travellers)
       .then((r) => {
         if (r) {
           qc.invalidateQueries({ queryKey: tk.following })
@@ -600,7 +607,11 @@ function AccountSheet({
     savePendingFollow(token, travellers)
     const { error } = await sb.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/follow/${token}`)}` },
+      options: {
+        // The redirect carries the choice too, so a link opened in another
+        // browser (no localStorage) still finishes the follow on arrival.
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/follow/${token}?auto=${travellers ? travellers.join(',') : 'all'}`)}`,
+      },
     })
     if (error) {
       setError(error.message)

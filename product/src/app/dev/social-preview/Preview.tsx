@@ -12,16 +12,16 @@ import { NotificationSettings } from '@/components/trips/NotificationSettings'
 import { SharingCard } from '@/app/(app)/account/AccountClient'
 import { JOURNEY_TRIP, ME, POST_ID, TOKEN, sharedSummary } from './fixture'
 
-export type Screen = 'home' | 'nohome' | 'notrip' | 'journey' | 'people' | 'post' | 'follow' | 'alerts' | 'sharing'
+export type Screen = 'home' | 'nohome' | 'nobody' | 'notrip' | 'journey' | 'people' | 'post' | 'follow' | 'alerts' | 'sharing'
 
 // The (app) layout's providers, minus auth (see money-preview/Preview.tsx).
 export default function Preview({ screen, tab }: { screen: Screen; tab: 'following' | 'followers' }) {
   return (
-    <TripScopeProvider initialTripId={screen === 'nohome' || screen === 'notrip' ? null : 'fixture'} initialRole="owner">
+    <TripScopeProvider initialTripId={screen === 'nohome' || screen === 'nobody' || screen === 'notrip' ? null : 'fixture'} initialRole="owner">
       <MoneyProvider initialBase="HUF">
         <ToastProvider>
           <div className="pb-20">
-            {(screen === 'home' || screen === 'nohome') && <DashboardClient userEmail="dev@example.com" userName="Patrik" userId={ME} />}
+            {(screen === 'home' || screen === 'nohome' || screen === 'nobody') && <DashboardClient userEmail="dev@example.com" userName="Patrik" userId={ME} />}
             {screen === 'notrip' && <MoneyPage />}
             {screen === 'journey' && <JourneyClient tripId={JOURNEY_TRIP} />}
             {screen === 'people' && <PeopleClient initialTab={tab} />}
