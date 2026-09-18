@@ -38,6 +38,10 @@ const pillMauve = 'rounded-full border-[1.4px] border-ac2-line px-3 py-1.5 text-
 const subscribeNever = () => () => {}
 const snapTrue = () => true
 const snapFalse = () => false
+// "now", read through the store so render stays pure (react-hooks/purity):
+// '' on the server and during hydration, the real clock right after.
+const snapNowIso = () => new Date().toISOString()
+const snapNoTime = () => ''
 
 // "Your name" — the first name lives in auth user metadata, not on any trip:
 // it follows the person (Home avatar, and eventually anywhere the app talks
@@ -277,6 +281,7 @@ export function SharingCard({ endDate }: { endDate?: string }) {
   const qc = useQueryClient()
   const toast = useToast()
   const { tripId } = useTripScope()
+  const nowIso = useSyncExternalStore(subscribeNever, snapNowIso, snapNoTime)
   const shares = useQuery({
     queryKey: tk.shares(tripId ?? 'none'),
     queryFn: () => (tripId ? fetchShares(sb, tripId) : Promise.resolve([])),
@@ -495,12 +500,17 @@ export function SharingCard({ endDate }: { endDate?: string }) {
           Anyone with the link sees your route, dates, last check-in city and shared comments —{' '}
           <b className="font-semibold text-ac2-deep">never money, private notes or exact GPS</b>.
         </p>
-        {list.map((s, i) => (
+        {list.map((s, i) => {
+          // An expired link has nothing left to rotate: the new URL would be
+          // just as dead (migration 39 refuses it). Revoke is the only tool.
+          const expired = !!s.expires_at && !!nowIso && +new Date(s.expires_at) <= +new Date(nowIso)
+          return (
           <div key={s.id} className={'flex flex-col gap-2 px-4 py-3.5' + (i > 0 ? ' border-t border-ln' : '')}>
             <div className="min-w-0">
               <div className="truncate text-base font-semibold">
                 {s.label || 'Follow link'}
-                {s.paused_at && <span className="ml-1.5 font-normal text-warn">· Paused</span>}
+                {expired && <span className="ml-1.5 font-normal text-warn">· Expired</span>}
+                {!expired && s.paused_at && <span className="ml-1.5 font-normal text-warn">· Paused</span>}
               </div>
               <div className="text-base text-tx2">
                 /follow/{s.token_prefix ?? '??????'}…
@@ -520,13 +530,15 @@ export function SharingCard({ endDate }: { endDate?: string }) {
               >
                 {s.paused_at ? 'Resume' : 'Pause'}
               </button>
-              <button
-                onClick={() => setConfirmFor(confirmFor?.id === s.id && confirmFor.action === 'rotate' ? null : { id: s.id, action: 'rotate' })}
-                disabled={rotate.isPending}
-                className={pill + ' flex-none'}
-              >
-                Rotate
-              </button>
+              {!expired && (
+                <button
+                  onClick={() => setConfirmFor(confirmFor?.id === s.id && confirmFor.action === 'rotate' ? null : { id: s.id, action: 'rotate' })}
+                  disabled={rotate.isPending}
+                  className={pill + ' flex-none'}
+                >
+                  Rotate
+                </button>
+              )}
               <button
                 onClick={() => setConfirmFor(confirmFor?.id === s.id && confirmFor.action === 'revoke' ? null : { id: s.id, action: 'revoke' })}
                 disabled={revoke.isPending}
@@ -569,7 +581,8 @@ export function SharingCard({ endDate }: { endDate?: string }) {
               </div>
             )}
           </div>
-        ))}
+          )
+        })}
         {linkErr && <p className="border-t border-ln px-4 py-3.5 text-base text-ac2">{linkErr}</p>}
         {!shares.isPending && !list.length && (
           <p className="px-4 py-3.5 text-base text-tx2">

@@ -104,7 +104,12 @@ Deno.serve(async (req) => {
     // push is an extra buzz on top of the guaranteed email.
     const { data: prefs } = await admin
       .from('profiles').select('id,notify_deadline_push').in('id', userIds)
-    const pushUids = (prefs ?? []).filter((p) => p.notify_deadline_push).map((p) => p.id)
+    // Migration 37: a trip muted under Account → Alerts buzzes for nothing,
+    // deadlines included — the email still goes out. Mirrors _trip_muted().
+    const { data: mutes } = await admin
+      .from('trip_notify').select('user_id').eq('trip_id', trip.id).eq('muted', true).in('user_id', userIds)
+    const mutedUids = new Set((mutes ?? []).map((m: { user_id: string }) => m.user_id))
+    const pushUids = (prefs ?? []).filter((p) => p.notify_deadline_push && !mutedUids.has(p.id)).map((p) => p.id)
     const subsByUid = new Map<string, WebPushTarget[]>()
     if (pushUids.length) {
       const { data: userSubs } = await admin

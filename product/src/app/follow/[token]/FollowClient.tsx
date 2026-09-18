@@ -66,7 +66,7 @@ export default function FollowClient({
     const auto = new URLSearchParams(window.location.search).get('auto')
     let travellers: string[] | null | undefined
     if (pending && pending.token === token) travellers = pending.travellers
-    else if (auto) travellers = auto === 'all' ? null : auto.split(',').filter(Boolean)
+    else if (auto) travellers = auto === 'all' ? null : auto.split(',').filter((id) => UUID_RE.test(id))
     if (travellers === undefined) return
     pendingRan.current = true
     clearPendingFollow()
@@ -325,6 +325,10 @@ export default function FollowClient({
     </Shell>
   )
 }
+
+// ?auto= is attacker-typeable; anything that is not a uuid would only turn
+// into a Postgres cast error dressed up as "the link may have expired".
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const subscribeNever = () => () => {}
 const snapTrue = () => true

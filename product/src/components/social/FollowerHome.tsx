@@ -59,7 +59,10 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
     )
   }
 
-  const nobody = !following.isPending && !(following.data?.length ?? 0)
+  // "Nobody" only once the list actually loaded: a failed fetch (offline, a
+  // token refresh mid-flight) must not read as "you follow nobody" and send
+  // the person off to re-open a follow link they never lost.
+  const nobody = following.isSuccess && following.data.length === 0
   const initial = (userName?.trim()[0] ?? userEmail?.trim()[0] ?? '?').toUpperCase()
   const first = userName?.trim()
 
@@ -68,13 +71,17 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-base font-medium uppercase tracking-[.14em] text-ac2-deep">
-            {nobody ? 'Welcome' : 'Following along'}
+            {nobody ? 'Welcome' : following.isError ? 'Home' : 'Following along'}
           </div>
           <h1 className="mt-1 font-serif text-[28px] font-semibold leading-[1.12] tracking-[-.01em]">
             {first ? `Hello, ${first}` : 'Hello'}
           </h1>
           <p className="mt-[5px] text-base text-tx2">
-            {nobody ? 'No trip of your own yet, and nobody followed yet.' : 'The people you follow, as they go.'}
+            {nobody
+              ? 'No trip of your own yet, and nobody followed yet.'
+              : following.isError
+                ? 'Could not load the people you follow.'
+                : 'The people you follow, as they go.'}
           </p>
         </div>
         <Link
@@ -129,8 +136,18 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
         </section>
       )}
 
-      {!following.isPending && <HomeActivity own={[]} ownPending={false} userId={userId} />}
+      {following.isSuccess && <HomeActivity own={[]} ownPending={false} userId={userId} />}
       {following.isPending && <p className="text-base text-tx2">Loading…</p>}
+      {following.isError && (
+        <button
+          type="button"
+          onClick={() => following.refetch()}
+          className="rounded-[var(--r)] bg-sf p-4 text-left text-base leading-[1.5] text-tx2"
+        >
+          <span className="font-semibold text-tx">Something got in the way.</span> Check the connection and tap
+          here to try again.
+        </button>
+      )}
 
       {dismissed && (
         <button type="button" onClick={() => setPlanning(true)} className="flex w-full items-center justify-between rounded-[var(--r)] bg-sf p-4 text-left">

@@ -54,7 +54,7 @@ export function ActiveTripCard() {
           >
             <div className="min-w-0 grow">
               <div className="truncate text-base font-semibold">{t.name}</div>
-              <div className="text-base text-tx2">updated {new Date(t.updated_at).toLocaleDateString()}</div>
+              <div className="text-base text-tx2">updated {new Date(t.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
             </div>
             {t.id === tripId ? (
               <span className="rounded-full border-[1.4px] border-ac bg-ac-soft px-3 py-1.5 text-base font-medium text-tx2">

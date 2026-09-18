@@ -85,6 +85,10 @@ export function NotificationSettings() {
 
   const prefs = useQuery({ queryKey: tk.notifyPrefs, queryFn: () => fetchNotifyPrefs(sb), retry: false })
   const current = prefs.data ?? DEFAULT_NOTIFY_PREFS
+  // The save is a whole-row upsert built from `current`. Until the fetch has
+  // succeeded, `current` is the defaults, and one tap would overwrite every
+  // real switch with them — so the switches stay off-limits (audit 2026-09-18).
+  const prefsLocked = !prefs.isSuccess
 
   const savePrefs = useMutation({
     mutationFn: (next: NotifyPrefs) => updateNotifyPrefs(sb, next),
@@ -104,6 +108,7 @@ export function NotificationSettings() {
   const trips = useQuery({ queryKey: tk.trips, queryFn: () => fetchTrips(sb), staleTime: 5 * 60_000, retry: false })
   const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
   const tripNotify = useQuery({ queryKey: tk.tripNotify, queryFn: () => fetchTripNotify(sb), retry: false })
+  const tripLocked = !tripNotify.isSuccess // same reason: the patch merges over the fetched row
 
   const saveTrip = useMutation({
     mutationFn: ({ tripId, patch }: { tripId: string; patch: Partial<Pick<TripNotify, 'muted' | 'all_comments'>> }) =>
@@ -148,7 +153,7 @@ export function NotificationSettings() {
       <h2 className="font-serif text-[19px] font-semibold">Alerts</h2>
       <p className="text-base leading-normal text-tx2">
         {pushState === 'subscribed'
-          ? 'Push is allowed on this phone. Email stays the fallback for anything switched off.'
+          ? 'Push is allowed on this phone. Deadline warnings also go to your email, whatever is set here.'
           : 'Deadline warnings always go to your email. Push adds a buzz on this device.'}
       </p>
 
@@ -198,7 +203,7 @@ export function NotificationSettings() {
                       {denied && on ? ' · by email for now' : ''}
                     </div>
                   </div>
-                  <Toggle on={on} disabled={prefs.isPending} label={r.title} onChange={(v) => savePrefs.mutate({ ...current, [r.key]: v })} />
+                  <Toggle on={on} disabled={prefsLocked} label={r.title} onChange={(v) => savePrefs.mutate({ ...current, [r.key]: v })} />
                 </div>
               )
             })}
@@ -224,7 +229,7 @@ export function NotificationSettings() {
                     </div>
                     <Toggle
                       on={!muted}
-                      disabled={tripNotify.isPending}
+                      disabled={tripLocked}
                       label={`Alerts for ${t.name}`}
                       onChange={(v) => saveTrip.mutate({ tripId: t.id, patch: { muted: !v } })}
                     />
@@ -235,7 +240,7 @@ export function NotificationSettings() {
                         type="checkbox"
                         className="size-4 accent-[var(--ac)]"
                         checked={n?.all_comments ?? false}
-                        disabled={tripNotify.isPending}
+                        disabled={tripLocked}
                         onChange={(e) => saveTrip.mutate({ tripId: t.id, patch: { all_comments: e.target.checked } })}
                       />
                       Comments on every post of this trip, not only yours
@@ -262,6 +267,9 @@ export function NotificationSettings() {
         </button>
       )}
 
+      {(prefs.isError || tripNotify.isError) && (
+        <p className="text-base text-ac2">Could not load your alert settings — the switches stay locked so nothing is overwritten. Try again in a moment.</p>
+      )}
       {(savePrefs.isError || saveTrip.isError) && (
         <p className="text-base text-ac2">Could not save — is migration 37 applied to this database?</p>
       )}
