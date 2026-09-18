@@ -149,12 +149,20 @@ fi
 # (the migrations' progress lines) are not returned by the API, and only the
 # LAST statement's rows are printed.
 run() {
+  # Absolutise first. The API path runs the CLI with `--workdir "$LINKDIR"`,
+  # which is where it resolves a RELATIVE -f path from — so `tools/db.sh sql
+  # supabase/checks/x.sql` looked for it under supabase/.links/prod/ and failed
+  # with NotFound (2026-09-16). The built-in checks never hit this because they
+  # are passed as "$CHECKS/…", already absolute.
+  local f="$1"
+  [[ "$f" == /* ]] || f="$PWD/$f"
+
   if [[ "$MODE" == psql ]]; then
-    "$PSQL" "$CONN" -v ON_ERROR_STOP=1 --no-psqlrc -f "$1"
+    "$PSQL" "$CONN" -v ON_ERROR_STOP=1 --no-psqlrc -f "$f"
   else
     # psql metacommands (\echo, \set …) are client-side; the API is plain SQL.
-    if grep -qE '^[[:space:]]*\\' "$1"; then
-      echo "✗ $(basename "$1") uses psql metacommands — run it with --psql" >&2
+    if grep -qE '^[[:space:]]*\\' "$f"; then
+      echo "✗ $(basename "$f") uses psql metacommands — run it with --psql" >&2
       return 1
     fi
     # Capture, then print: piping straight into grep made an EMPTY result (a
@@ -164,7 +172,7 @@ run() {
     # the SQL already run and no "✓ applied" (2026-09-13, migration 32 landed
     # on staging only).
     local out rc=0
-    if out="$(supabase --workdir "$LINKDIR" db query --linked -f "$1" 2>&1)"; then rc=0; else rc=$?; fi
+    if out="$(supabase --workdir "$LINKDIR" db query --linked -f "$f" 2>&1)"; then rc=0; else rc=$?; fi
     printf '%s\n' "$out" | grep -v '^Initialising login role' || true
     return "$rc"
   fi
