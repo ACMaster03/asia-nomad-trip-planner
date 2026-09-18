@@ -87,6 +87,9 @@ export const TRIP_E = 'trip-eva'
 export const TRIP_M = 'trip-mari'
 export const TRIP_B = 'trip-bangkok-five'
 export const TRIP_C = 'trip-chiang-mai-four'
+// three solo trips in Bangkok now: Home's queue holds three lines, the fourth waits
+export const SOLO = ['Kim', 'Lou', 'Noa'] as const
+export const soloTrip = (name: string) => `trip-solo-${name.toLowerCase()}`
 const at = (name: string): { lat: number; lng: number } => { const c = cities.find((x) => x.city === name)!; return { lat: c.lat!, lng: c.lng! } }
 const stop = (city: string, country: string, arrive: string, depart: string, pos = at(city)): SharedRouteStop => ({ city, country, arrive, depart, ...pos })
 const routeA = [
@@ -99,6 +102,7 @@ const routeE = [stop('Kyoto', 'Japan', '2026-09-10', '2026-09-28'), stop('Tokyo'
 const routeM = [stop('Lisbon', 'Portugal', '2026-09-10', '2026-12-01')]
 const routeB = [stop('Bangkok', 'Thailand', '2026-09-10', '2026-10-10')]
 const routeC = [stop('Chiang Mai', 'Thailand', '2026-09-10', '2026-10-10')]
+const routeS = [stop('Bangkok', 'Thailand', '2026-09-15', '2026-09-25'), stop('Chiang Mai', 'Thailand', '2026-09-25', '2026-10-08')]
 const card = (trip_id: string, tripName: string, travellers: Array<[string, string]>, currentCity: string, currentCountry: string) => ({
   trip_id, tripName, startDate: '2026-09-05', endDate: null, state: 'on' as const,
   travellers: travellers.map(([id, name]) => ({ id, name })), currentCity, currentCountry, lastEventAt: null, lastSeenCity: currentCity,
@@ -114,6 +118,10 @@ export const following: FollowedPerson[] = [
   })),
   { user_id: 'mari', name: 'Mari', followedAt: '2026-07-01', trips: [card(TRIP_M, 'Lisbon weeks', [['mari', 'Mari']], 'Lisbon', 'Portugal')] },
   { user_id: 'dani', name: 'Dani', followedAt: '2026-06-01', trips: [] },
+  ...SOLO.map((name) => ({
+    user_id: name.toLowerCase(), name, followedAt: '2026-09-01',
+    trips: [card(soloTrip(name), `${name} in Thailand`, [[name.toLowerCase(), name]], 'Bangkok', 'Thailand')],
+  })),
   // five on one Bangkok trip: the mark stops growing here and gains a plus
   ...['Bea', 'Cas', 'Dov', 'Eli', 'Fin'].map((name) => ({
     user_id: name.toLowerCase(), name, followedAt: '2026-08-20',
@@ -130,4 +138,5 @@ export const summaries: Record<string, FollowedSummary> = {
   [TRIP_M]: summary('Lisbon weeks', routeM, [['mari', 'Mari']]),
   [TRIP_B]: summary('Bangkok month', routeB, [['bea', 'Bea'], ['cas', 'Cas'], ['dov', 'Dov'], ['eli', 'Eli'], ['fin', 'Fin']]),
   [TRIP_C]: summary('Chiang Mai month', routeC, [['gus', 'Gus'], ['hal', 'Hal'], ['ida', 'Ida'], ['jo', 'Jo']]),
+  ...Object.fromEntries(SOLO.map((name) => [soloTrip(name), summary(`${name} in Thailand`, routeS, [[name.toLowerCase(), name]])])),
 }

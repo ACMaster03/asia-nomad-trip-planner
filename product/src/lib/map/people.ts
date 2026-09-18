@@ -162,3 +162,21 @@ export function formatOverlap(o: Overlap, who: string | readonly string[], today
   if (o.start === o.end) return `${subject} in ${o.city} on ${day(o.start)}`
   return `${subject} in ${o.city}, ${formatRange(o.start, o.end)}`
 }
+
+// Home shows only the meet-ups that are happening (Patrik, 2026-09-18): no
+// forecasting there — the map sheet keeps the future ones. A shown line is a
+// notification: it stays until dismissed, and a dismissal is remembered per
+// trip and city, so the same stay does not come back tomorrow.
+
+/** The overlaps that include today. */
+export function overlappingNow<T extends Overlap>(rows: readonly T[], today: string): T[] {
+  return rows.filter((o) => o.start <= today && today <= o.end)
+}
+
+/** What a dismissal remembers: that trip, in that city. */
+export const meetupKey = (o: PersonOverlap) => `${o.trip_id}|${normCity(o.city)}`
+
+/** The next `limit` lines that have not been dismissed, in order. */
+export function meetupQueue(rows: readonly PersonOverlap[], dismissed: ReadonlySet<string>, limit: number): PersonOverlap[] {
+  return rows.filter((o) => !dismissed.has(meetupKey(o))).slice(0, limit)
+}

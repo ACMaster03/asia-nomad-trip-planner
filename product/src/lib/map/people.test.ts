@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { allOverlaps, formatOverlap, formatRange, overlaps, peopleByCity, stopOn } from './people.ts'
+import { allOverlaps, formatOverlap, formatRange, meetupKey, meetupQueue, overlappingNow, overlaps, peopleByCity, stopOn } from './people.ts'
 import type { City } from '../catalogue/types.ts'
 import type { Segment } from '../trips/types.ts'
 import type { SharedRouteStop } from '../follow/api.ts'
@@ -84,4 +84,14 @@ test('formatting: ranges and the overlap line', () => {
 test('stopOn: the stop covering today', () => {
   assert.equal(stopOn([stop('A', '2026-09-10', '2026-09-18'), stop('B', '2026-09-18', '2026-09-25')], TODAY)?.city, 'B')
   assert.equal(stopOn([stop('A', '2026-09-10', '2026-09-12')], TODAY), null)
+})
+
+test('Home: only the touches happening today, dismissed ones skipped, three at a time', () => {
+  const row = (trip_id: string, city: string, start: string, end: string) => ({ trip_id, names: ['A'], city, country: 'X', start, end })
+  const rows = [row('t1', 'Hanoi', '2026-09-10', '2026-09-20'), row('t2', 'Hanoi', '2026-09-18', '2026-09-18'), row('t3', 'Hue', '2026-09-19', '2026-09-22'), row('t4', 'Hoi An', '2026-09-01', '2026-09-30'), row('t5', 'Da Nang', '2026-09-17', '2026-09-19')]
+  const now = overlappingNow(rows, TODAY)
+  assert.deepEqual(now.map((o) => o.trip_id), ['t1', 't2', 't4', 't5'])
+  assert.equal(meetupKey(rows[0]), 't1|hanoi')
+  assert.deepEqual(meetupQueue(now, new Set(), 3).map((o) => o.trip_id), ['t1', 't2', 't4'])
+  assert.deepEqual(meetupQueue(now, new Set(['t2|hanoi']), 3).map((o) => o.trip_id), ['t1', 't4', 't5'])
 })
