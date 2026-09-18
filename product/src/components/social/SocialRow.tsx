@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
 import { Dot, Image as ImageIcon, MapPin, MessageCircle, NotebookPen, PlaneLanding, RadioTower } from 'lucide-react'
@@ -73,7 +74,7 @@ export function SocialRow({
         </span>
       </Link>
       {social && (
-        <div className="-mt-1.5 mb-2.5 ml-[54px] flex items-center gap-2">
+        <div className="-mt-1.5 mb-2.5 ml-[54px] flex flex-wrap items-center gap-2">
           {onReact ? (
             <ReactChip mine={social.mine ?? null} glyph={mineGlyph ?? null} total={tallyTotal} tally={social.tally} onReact={onReact} busy={!!reacting} />
           ) : tallyTotal > 0 ? (
@@ -91,33 +92,57 @@ export function SocialRow({
   )
 }
 
-// The inline reaction chip: shows your own glyph (or "＋"), tapping cycles
-// through the six kinds; the tally beside it is only there for travellers,
-// because feed_social only sends it to them.
+// The inline reaction chip: your own glyph (or "＋"). Tapping opens the six
+// kinds right under the row; tapping the one you already have clears it. The
+// tally beside the glyph is only there for travellers, because feed_social
+// only sends it to them.
 function ReactChip({
   mine, glyph, total, tally, onReact, busy,
 }: { mine: string | null; glyph: string | null; total: number; tally?: PostSocial['tally']; onReact: (k: string | null) => void; busy: boolean }) {
-  const next = () => {
-    const idx = mine ? REACTION_KINDS.findIndex((k) => k.key === mine) : -1
-    onReact(idx + 1 >= REACTION_KINDS.length ? null : REACTION_KINDS[idx + 1].key)
+  const [open, setOpen] = useState(false)
+  const pick = (k: string) => {
+    setOpen(false)
+    onReact(mine === k ? null : k)
   }
   return (
-    <button
-      type="button"
-      onClick={next}
-      disabled={busy}
-      aria-label={mine ? `Your reaction: ${mine}. Tap to change` : 'React'}
-      className={
-        'inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[13px] font-semibold disabled:opacity-60 ' +
-        (mine ? 'bg-ac2-soft text-ac2-deep' : 'bg-fill text-tx2')
-      }
-    >
-      <span aria-hidden className="text-base leading-none">{glyph ?? '＋'}</span>
-      {tally ? (
-        <span>{(tally.slice(0, 3).map((t) => REACTION_KINDS.find((k) => k.key === t.kind)?.glyph ?? '').join(''))}{total > 0 ? ` ${total}` : ''}</span>
-      ) : (
-        mine ? null : <span>React</span>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        disabled={busy}
+        aria-expanded={open}
+        aria-label={mine ? `Your reaction: ${mine}. Tap to change` : 'React'}
+        className={
+          'inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[13px] font-semibold disabled:opacity-60 ' +
+          (mine ? 'bg-ac2-soft text-ac2-deep' : 'bg-fill text-tx2')
+        }
+      >
+        <span aria-hidden className="text-base leading-none">{glyph ?? '＋'}</span>
+        {tally ? (
+          <span>{(tally.slice(0, 3).map((t) => REACTION_KINDS.find((k) => k.key === t.kind)?.glyph ?? '').join(''))}{total > 0 ? ` ${total}` : ''}</span>
+        ) : (
+          mine ? null : <span>React</span>
+        )}
+      </button>
+      {open && (
+        <div role="group" aria-label="Pick a reaction" className="lv-enter flex gap-1">
+          {REACTION_KINDS.map((k) => (
+            <button
+              key={k.key}
+              type="button"
+              onClick={() => pick(k.key)}
+              aria-label={k.label}
+              aria-pressed={mine === k.key}
+              className={
+                'flex h-9 w-9 items-center justify-center rounded-full text-lg ' +
+                (mine === k.key ? 'bg-ac2-soft ring-1 ring-ac2' : 'bg-fill')
+              }
+            >
+              <span aria-hidden>{k.glyph}</span>
+            </button>
+          ))}
+        </div>
       )}
-    </button>
+    </>
   )
 }

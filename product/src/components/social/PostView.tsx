@@ -50,19 +50,19 @@ export default function PostView({ mode, eventId, initial }: { mode: PostMode; e
   const post = useQuery({
     queryKey: tk.post(eventId),
     queryFn: () => (mode.kind === 'auth' ? fetchFollowedEvent(sb, eventId) : fetchSharedEvent(sb, mode.token, eventId)),
-    initialData: initial ?? undefined,
+    initialData: initial === undefined ? undefined : initial,
     staleTime: 60_000,
   })
   const social = useQuery({
     queryKey: tk.feedSocial([eventId]),
     queryFn: () => fetchFeedSocial(sb, [eventId]),
-    enabled: mode.kind === 'auth' && !!post.data,
+    enabled: mode.kind === 'auth' && post.data !== null,
     refetchInterval: 45_000,
   })
   const comments = useQuery({
     queryKey: tk.comments(eventId),
     queryFn: () => (mode.kind === 'auth' ? fetchComments(sb, eventId) : fetchSharedComments(sb, mode.token, eventId)),
-    enabled: !!post.data,
+    enabled: post.data !== null,
     refetchInterval: 45_000,
   })
 

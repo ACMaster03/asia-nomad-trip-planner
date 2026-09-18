@@ -9,16 +9,16 @@ import PostView from '@/components/social/PostView'
 import FollowClient from '@/app/follow/[token]/FollowClient'
 import { JOURNEY_TRIP, ME, POST_ID, TOKEN, sharedSummary } from './fixture'
 
-export type Screen = 'home' | 'journey' | 'people' | 'post' | 'follow'
+export type Screen = 'home' | 'nohome' | 'journey' | 'people' | 'post' | 'follow'
 
 // The (app) layout's providers, minus auth (see money-preview/Preview.tsx).
 export default function Preview({ screen, tab }: { screen: Screen; tab: 'following' | 'followers' }) {
   return (
-    <TripScopeProvider initialTripId="fixture" initialRole="owner">
+    <TripScopeProvider initialTripId={screen === 'nohome' ? null : 'fixture'} initialRole="owner">
       <MoneyProvider initialBase="HUF">
         <ToastProvider>
           <div className="pb-20">
-            {screen === 'home' && <DashboardClient userEmail="dev@example.com" userName="Patrik" userId={ME} />}
+            {(screen === 'home' || screen === 'nohome') && <DashboardClient userEmail="dev@example.com" userName="Patrik" userId={ME} />}
             {screen === 'journey' && <JourneyClient tripId={JOURNEY_TRIP} />}
             {screen === 'people' && <PeopleClient initialTab={tab} />}
             {screen === 'post' && (
