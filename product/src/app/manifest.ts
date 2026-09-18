@@ -5,8 +5,8 @@ import type { MetadataRoute } from 'next'
 // matches the app's teal accent.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Asia Nomad Planner',
-    short_name: 'Nomad',
+    name: 'Livhold',
+    short_name: 'Livhold',
     description: 'Plan the trip, live the trip, let them follow.',
     start_url: '/dashboard',
     display: 'standalone',

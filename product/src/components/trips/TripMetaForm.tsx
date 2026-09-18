@@ -46,7 +46,7 @@ export function TripMetaForm({ onSubmit, busy, submitLabel = 'Create trip →' }
     <form onSubmit={submit} noValidate>
       <label className={label}>
         Trip name
-        <input className={input} value={tripName} onChange={(e) => setTripName(e.target.value)} placeholder="Asia 2026–27" autoFocus />
+        <input className={input} value={tripName} onChange={(e) => setTripName(e.target.value)} placeholder="e.g. Autumn in Japan" autoFocus />
       </label>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">

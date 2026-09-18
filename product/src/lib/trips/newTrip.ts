@@ -7,7 +7,8 @@ import type { TripState, CurrencyCode } from './types'
 // the owner's real trip — seeding new trips from it copied real booking
 // confirmation numbers into every account (the privacy leak called out in the
 // approved plan). New trips start EMPTY, from the basics the wizard collects.
-// defaultState.ts stays in the repo purely as the owner's own trip data.
+// The old DEFAULT_STATE seed file is gone (2026-09-18): every trip is named
+// and shaped by the person creating it.
 
 export interface NewTripInput {
   tripName: string

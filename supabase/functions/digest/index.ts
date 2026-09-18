@@ -25,8 +25,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendEmail } from '../_shared/resend.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const FROM = Deno.env.get('ALERTS_FROM') ?? 'Nomad Planner <onboarding@resend.dev>'
-const FALLBACK_SITE = 'https://asia-nomad-trip-planner.vercel.app'
+const FROM = Deno.env.get('ALERTS_FROM') ?? 'Livhold <hello@livhold.com>'
+const FALLBACK_SITE = 'https://www.livhold.com'
 const SITE = (Deno.env.get('SITE_URL') ?? FALLBACK_SITE).replace(/\/+$/, '')
 
 const sb = createClient(
