@@ -56,27 +56,41 @@ interface HtmlLayer {
 }
 const NO_PEOPLE: PeopleAtCity[] = []
 
-// The people mark (Patrik's spec, 2026-09-18): a solid sky dot with a person
-// glyph inside. One more glyph per head and one size step per head up to five;
-// from five on it stops growing and gains a plus. No number, no halo.
+// The people mark (Patrik's spec, 2026-09-18): a solid sky dot with person
+// glyphs inside. One head is one glyph; two sit side by side; three make a
+// pyramid (two below, one on top); from four on it is the pyramid and a plus.
+// The dot grows a step per head up to five. Every offset is a fraction of the
+// diameter, so the glyphs always sit inside the circle.
 const PERSON_PATH = '<circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0z"/>'
 export const MARK_CAP = 5
 export function markDiameter(n: number) { return 20 + 3 * (Math.min(n, MARK_CAP) - 1) }
+/** glyph centres (x, y as fractions of the diameter, from the centre) and sizes */
+export function markLayout(n: number): { d: number; glyphs: Array<{ x: number; y: number; s: number }>; plus: { x: number; y: number; s: number } | null } {
+  const d = markDiameter(n)
+  if (n <= 1) return { d, glyphs: [{ x: 0, y: 0, s: 0.58 }], plus: null }
+  if (n === 2) return { d, glyphs: [{ x: -0.16, y: 0, s: 0.46 }, { x: 0.16, y: 0, s: 0.46 }], plus: null }
+  const pyramid = (cx: number, g: number) => [
+    { x: cx, y: -0.15, s: g },
+    { x: cx - 0.17, y: 0.13, s: g },
+    { x: cx + 0.17, y: 0.13, s: g },
+  ]
+  if (n === 3) return { d, glyphs: pyramid(0, 0.4), plus: null }
+  return { d, glyphs: pyramid(-0.11, 0.34), plus: { x: 0.3, y: 0, s: 0.26 } }
+}
+function place(x: number, y: number, s: number, d: number) {
+  const px = s * d
+  return `position:absolute;left:${(0.5 + x) * d - px / 2}px;top:${(0.5 + y) * d - px / 2}px;width:${px}px;height:${px}px`
+}
 function peopleMark(g: PeopleAtCity, onTap: (g: PeopleAtCity) => void, onDown: () => void): HTMLElement {
   const n = g.people.length
-  const d = markDiameter(n)
-  const heads = Math.min(n, MARK_CAP - 1)
-  const glyph = n === 1 ? d * 0.56 : d * 0.4
+  const { d, glyphs, plus } = markLayout(n)
   const el = document.createElement('button')
   el.type = 'button'
   el.setAttribute('aria-label', `${n} traveller${n === 1 ? '' : 's'} you follow in ${g.city}`)
-  el.style.cssText = `pointer-events:auto;cursor:pointer;width:${d}px;height:${d}px;padding:0;border:0;border-radius:50%;background:${SKY};color:#0b0f14;box-shadow:0 0 0 2px rgba(11,15,20,.55);display:flex;align-items:center;justify-content:center;transition:opacity .2s`
-  const svgs = Array.from({ length: heads }, (_, i) =>
-    `<svg viewBox="0 0 24 24" width="${glyph}" height="${glyph}" fill="currentColor" style="flex:none;margin-left:${i ? -glyph * 0.45 : 0}px" aria-hidden="true">${PERSON_PATH}</svg>`)
-  const plus = n >= MARK_CAP
-    ? `<svg viewBox="0 0 24 24" width="${glyph * 0.9}" height="${glyph * 0.9}" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" style="flex:none;margin-left:1px" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`
-    : ''
-  el.innerHTML = svgs.join('') + plus
+  el.style.cssText = `pointer-events:auto;cursor:pointer;position:relative;width:${d}px;height:${d}px;padding:0;border:0;border-radius:50%;background:${SKY};color:#0b0f14;box-shadow:0 0 0 2px rgba(11,15,20,.55);overflow:hidden;transition:opacity .2s`
+  el.innerHTML = glyphs.map((q) =>
+    `<svg viewBox="0 0 24 24" fill="currentColor" style="${place(q.x, q.y, q.s, d)}" aria-hidden="true">${PERSON_PATH}</svg>`).join('')
+    + (plus ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" style="${place(plus.x, plus.y, plus.s, d)}" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg>` : '')
   // A mark usually sits right over a route pin: tell the globe this tap is
   // taken before its own click resolution and the fallback hit-test run.
   el.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); onDown() })
