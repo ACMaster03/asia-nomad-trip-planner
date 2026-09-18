@@ -7,11 +7,12 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-18 (evening)
 
-### IN REVIEW — the planner globe: issues #32 and #9 (PRs #33, #34)
+### IN REVIEW — the planner globe: #32 MERGED (PR #33), #9 open as PR #34
 
-Two stacked PRs: #33 `fix/globe-eight` (#32) and #34 `feat/routes-touch` on
-top of it (#9). Merge #33 alone if #9 needs another round, then retarget #34
-to main.
+PR #33 (`fix/globe-eight`, issue #32) merged to main 2026-09-18. PR #34
+(`feat/routes-touch`, issue #9) now targets main directly and is clean;
+the review page's three questions are all answered and built (mark glyphs,
+sheet per trip, Home showing only today's meet-ups as a dismissible queue).
 
 **#32, the eight fixes**, all in `components/Globe.tsx` and `app/(app)/map`:
 one globe.gl instance for the life of the screen, patched in place (the
