@@ -6,7 +6,7 @@
 // refetch. Detection is by the RPC's SQLSTATE — NEVER by comparing updated_at.
 export class RevConflictError extends Error {
   constructor() {
-    super('Trip was changed elsewhere — reloaded the latest version.')
+    super('Trip was changed elsewhere, so the latest version was reloaded.')
     this.name = 'RevConflictError'
   }
 }

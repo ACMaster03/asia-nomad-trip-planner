@@ -63,7 +63,7 @@ export function FollowerNudge({ tripId, onClose }: { tripId: string; onClose: ()
           </p>
         </div>
       </div>
-      {open.isError && <p className="text-base text-warn">Could not open the trip — try again from Account.</p>}
+      {open.isError && <p className="text-base text-warn">Could not open the trip. Try again from Account.</p>}
       <button
         type="button"
         onClick={() => open.mutate()}

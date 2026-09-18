@@ -41,6 +41,6 @@ export function TripScopeProvider({
 
 export function useTripScope(): TripScopeValue {
   const ctx = useContext(TripScopeContext)
-  if (!ctx) throw new Error('useTripScope must be used inside TripScopeProvider — is the (app) layout mounted?')
+  if (!ctx) throw new Error('useTripScope must be used inside TripScopeProvider. Is the (app) layout mounted?')
   return ctx
 }

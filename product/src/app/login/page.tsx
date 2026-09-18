@@ -228,7 +228,7 @@ export default function Login() {
             )}
             {resetSent && mode === 'password' && (
               <div className="lv-enter rounded-[22px] bg-tag px-4 py-3.5 text-base font-medium leading-normal text-tag-ink">
-                ✓ Check your email — the link opens your account so you can set a new password.
+                ✓ Check your email. The link opens your account so you can set a new password.
               </div>
             )}
             {error && (

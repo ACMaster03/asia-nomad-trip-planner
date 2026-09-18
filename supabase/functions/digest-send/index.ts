@@ -54,7 +54,7 @@ interface EventRow {
 
 function eventLine(e: EventRow): string {
   const stars = e.check_ins?.rating ? ' ' + '★'.repeat(e.check_ins.rating) : ''
-  const cmt = e.check_ins?.comment ? ` — “${e.check_ins.comment}”` : ''
+  const cmt = e.check_ins?.comment ? `: “${e.check_ins.comment}”` : ''
   const photos = e.payload.photos?.length ? ` (${e.payload.photos.length} photo${e.payload.photos.length > 1 ? 's' : ''})` : ''
   switch (e.kind) {
     case 'checkin': return `  📍 ${e.payload.placeName ?? 'Check-in'}${stars}${cmt}${photos}`
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
       `See the photos and where they are right now:`,
       `${SITE}/follow/${s.view_token}`,
       ``,
-      `—`,
+      `---`,
       `Unsubscribe:`,
       `${SITE}/digest/unsubscribe?t=${s.unsub_token}`,
     )
@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
     const res = await sendEmail(RESEND_API_KEY, {
       from: FROM,
       to: s.email,
-      subject: `🧭 ${tripName} — ${events.length} update${events.length > 1 ? 's' : ''}`,
+      subject: `🧭 ${tripName}: ${events.length} update${events.length > 1 ? 's' : ''}`,
       text: body.join('\n'),
       // RFC 8058. The POST arm is what makes the client's own Unsubscribe
       // button a true opt-out rather than a link it merely offers to open.

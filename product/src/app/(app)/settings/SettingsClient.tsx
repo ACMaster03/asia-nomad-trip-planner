@@ -77,7 +77,7 @@ function PeopleCard() {
       <h2 className="font-serif text-[19px] font-semibold">People on this trip</h2>
       <div className="flex flex-col gap-[11px] rounded-[var(--r)] bg-sf p-4">
         <p className="text-base leading-normal text-tx2">
-          Invite by email, then copy their link below and send it yourself —{' '}
+          Invite by email, then copy their link below and send it yourself:{' '}
           <b className="font-semibold text-tx">nothing is emailed automatically</b>. Signing in
           with that address also shows the invite in-app.
         </p>
@@ -114,11 +114,11 @@ function PeopleCard() {
         <p className="text-base leading-normal text-tx2">
           <b className="font-semibold text-tx">Edit</b> can change the plan;{' '}
           <b className="font-semibold text-tx">View</b> sees everything but changes nothing. Either
-          way they must sign in with this address, so the invite is useless to anyone else — that is
+          way they must sign in with this address, so the invite is useless to anyone else. That is
           the difference from a follow link, which opens for whoever holds it.
         </p>
         {invite.isError && (
-          <p className="text-base text-ac2">Could not create the invite — try again.</p>
+          <p className="text-base text-ac2">Could not create the invite. Try again.</p>
         )}
 
         {pending.map((i) => (
@@ -296,10 +296,10 @@ export default function SettingsClient() {
           {mut.isError && (
             <span className="text-base text-ac2">
               {isPermissionDenied(mut.error)
-                ? 'Your edit access to this trip was removed — the change was rolled back.'
+                ? 'Your edit access to this trip was removed. The change was rolled back.'
                 : isRevConflict(mut.error)
-                  ? 'Someone else saved this trip first — the latest version was loaded. Please redo your edit.'
-                  : 'Save failed — try again.'}
+                  ? 'Someone else saved this trip first. The latest version was loaded. Please redo your edit.'
+                  : 'Save failed. Try again.'}
             </span>
           )}
         </div>
@@ -311,7 +311,7 @@ export default function SettingsClient() {
       <Link href="/account#alerts" className="flex items-center justify-between rounded-[var(--r)] bg-sf p-4">
         <span>
           <span className="block font-serif text-[19px] font-semibold">Alerts</span>
-          <span className="block text-base text-tx2">Push, per-trip mutes — now under Account</span>
+          <span className="block text-base text-tx2">Push and per-trip mutes, now under Account</span>
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>

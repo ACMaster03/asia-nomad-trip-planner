@@ -79,7 +79,7 @@ export default function CallbackClient() {
       fail(
         seen.length
           ? `no sign-in token; the link carried: ${seen.join(', ')}`
-          : 'no sign-in token, and the link carried nothing at all — the address may have lost it in a redirect',
+          : 'no sign-in token, and the link carried nothing at all; the address may have lost it in a redirect',
       )
       return
     }

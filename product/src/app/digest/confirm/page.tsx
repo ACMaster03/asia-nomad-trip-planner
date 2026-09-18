@@ -52,13 +52,13 @@ export default async function ConfirmPage(
           title="To start getting emails again"
           steps={[
             <>
-              Open your follow link — the live page your family sent you. It’s also in the
+              Open your follow link, the live page your family sent you. It’s also in the
               confirmation email, under the confirm button.
             </>,
             <>
               Scroll to <b className="text-tx">Get email updates</b> at the bottom.
             </>,
-            <>Enter your address again — a fresh confirmation arrives in a minute.</>,
+            <>Enter your address again. A fresh confirmation arrives in a minute.</>,
           ]}
         />
       </DigestCard>
@@ -85,7 +85,7 @@ export default async function ConfirmPage(
             trip at <b className="text-tx">{result.email}</b>.
           </p>
           <p>
-            Quiet {result.frequency === 'weekly' ? 'weeks' : 'days'} send nothing at all — the
+            Quiet {result.frequency === 'weekly' ? 'weeks' : 'days'} send nothing at all. The
             next email just covers a longer stretch.
           </p>
         </>

@@ -39,7 +39,7 @@ export default function GoodbyePage() {
           </ul>
           <p className="mt-3 text-base leading-normal text-tx2">
             Nothing is kept, and there is nothing to restore. You can start fresh with the same
-            email whenever you like — it just begins empty.
+            email whenever you like. It just begins empty.
           </p>
         </div>
 

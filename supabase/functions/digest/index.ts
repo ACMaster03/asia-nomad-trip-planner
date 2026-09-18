@@ -153,14 +153,14 @@ async function subscribe(req: Request): Promise<Response> {
       `Confirm your subscription:`,
       confirmPageUrl(confirmRaw),
       ``,
-      `Your live page — photos, the map and the latest check-ins:`,
+      `Your live page, with photos, the map and the latest check-ins:`,
       followUrl(saved.view_token),
-      `(bookmark this one — it works even without the emails)`,
+      `(bookmark this one, it works even without the emails)`,
       ``,
       `Didn't request this? Ignore this email and nothing will be sent.`,
     ].join('\n'),
   )
-  if (!sent.ok) return json({ error: 'email failed — try again' }, 502)
+  if (!sent.ok) return json({ error: 'email failed. Try again' }, 502)
   // Cooldown stamp only AFTER a successful send — a Resend failure must not
   // block the follower's immediate retry.
   await sb.from('digest_subscriptions')

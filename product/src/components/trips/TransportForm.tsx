@@ -77,7 +77,7 @@ export function TransportForm({
           <input type="date" className={input} value={chargeDate} onChange={(e) => setChargeDate(e.target.value)} />
           <span className="mt-1 block text-base font-normal text-tx3">
             Leave blank if the fare is taken on the travel date. Fares are
-            usually paid at booking — fill this in and Money counts it as spent
+            usually paid at booking, so fill this in and Money counts it as spent
             then, instead of waiting for the flight.
           </span>
         </label>

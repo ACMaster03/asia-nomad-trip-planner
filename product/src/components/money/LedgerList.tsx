@@ -49,7 +49,7 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
   if (!sorted.length) {
     return (
       <div className="rounded-[var(--r)] bg-sf px-[18px] py-4 text-base text-tx2">
-        {canEdit ? 'Nothing logged yet — tap ＋ Entry to add the first one. Booked stays and flights arrive here on their charge date.' : 'Nothing logged yet.'}
+        {canEdit ? 'Nothing logged yet. Tap ＋ Entry to add the first one. Booked stays and flights arrive here on their charge date.' : 'Nothing logged yet.'}
       </div>
     )
   }

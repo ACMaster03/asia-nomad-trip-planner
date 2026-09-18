@@ -78,7 +78,7 @@ export default function NewCountryBanner({ state }: { state: TripState }) {
   return (
     <div className="lv-enter mb-4 flex items-start gap-3 rounded-[var(--rCtl)] border border-l-4 border-ln2 border-l-ac bg-sf px-3.5 py-3 text-base text-tx">
       <span>
-        <b>{announced.country} is new on your route</b> — {announced.codes.join(' and ')}{' '}
+        <b>{announced.country} is new on your route</b>. {announced.codes.join(' and ')}{' '}
         {announced.codes.length === 1 ? 'was' : 'were'} added to your FX watchlist.{' '}
         <Link href="/settings" className="font-medium text-ac2-deep underline">
           View in Settings

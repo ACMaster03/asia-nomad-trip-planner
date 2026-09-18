@@ -49,7 +49,7 @@ export function PendingInvites() {
       // steps (trip setup skipped — the trip already exists).
       router.push('/welcome?short=1')
     },
-    onError: () => setError('Could not accept the invite — it may have been withdrawn.'),
+    onError: () => setError('Could not accept the invite. It may have been withdrawn.'),
   })
 
   const decline = useMutation({
@@ -58,7 +58,7 @@ export function PendingInvites() {
       setError(null)
       qc.invalidateQueries({ queryKey: tk.pendingInvites })
     },
-    onError: () => setError('Could not decline the invite — please try again.'),
+    onError: () => setError('Could not decline the invite. Please try again.'),
   })
 
   const list = invites.data ?? []
@@ -80,8 +80,8 @@ export function PendingInvites() {
               </div>
               <div className="mt-0.5 text-base leading-normal text-tx2">
                 {inv.role === 'editor'
-                  ? 'As a co-editor — you can plan the trip together.'
-                  : 'As a viewer — you can see everything, but not change it.'}
+                  ? 'As a co-editor, you can plan the trip together.'
+                  : 'As a viewer, you can see everything, but not change it.'}
               </div>
             </div>
             <button

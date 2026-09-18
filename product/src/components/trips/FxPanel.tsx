@@ -128,7 +128,7 @@ export default function FxPanel({
         </span>
       </div>
       <p className="mt-[7px] text-base leading-normal text-tx2">
-        Updated daily and read-only — one mistyped rate would quietly distort every total in the
+        Updated daily and read-only, because one mistyped rate would quietly distort every total in the
         trip. A currency appears here as soon as a stop needs it. All figures are {base} per 1 unit.
       </p>
 
@@ -140,11 +140,11 @@ export default function FxPanel({
         >
           <span className="leading-normal">
             {!online ? (
-              <>Offline — showing the rates saved on this device</>
+              <>Offline, showing the rates saved on this device</>
             ) : failed ? (
               <>Couldn’t reach the rate feed · showing values from <b>{ago(fx?.lastSuccessAt ?? null)}</b></>
             ) : (
-              <>Last updated <b>{ago(fx?.lastSuccessAt ?? null)}</b> — totals may have drifted</>
+              <>Last updated <b>{ago(fx?.lastSuccessAt ?? null)}</b>. Totals may have drifted</>
             )}
           </span>
         </div>
@@ -226,7 +226,7 @@ export default function FxPanel({
               {addable.map((c) => (
                 <option key={c} value={c}>
                   {c}
-                  {currencyCountries(c).length ? ` — ${currencyCountries(c)[0]}` : ''}
+                  {currencyCountries(c).length ? `, ${currencyCountries(c)[0]}` : ''}
                 </option>
               ))}
             </select>

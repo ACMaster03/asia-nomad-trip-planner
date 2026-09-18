@@ -167,7 +167,7 @@ export function StopsTab() {
         })}
         {!all.length && (
           <div className="rounded-[var(--r)] bg-sf p-[18px] text-base text-tx2">
-            {canEdit ? 'No stops yet — add your first one.' : 'No stops yet.'}
+            {canEdit ? 'No stops yet. Add your first one.' : 'No stops yet.'}
           </div>
         )}
         {planned.length > 0 && (

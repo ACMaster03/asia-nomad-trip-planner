@@ -40,7 +40,7 @@ export default function TermsPage() {
     >
       <Section id="account" title="Your account">
         <p>
-          Accounts are created by invitation — there is no public sign-up. You need a working email
+          Accounts are created by invitation. There is no public sign-up. You need a working email
           address, and you are responsible for what happens through your account, including anything
           done by someone you invited or gave a password to.
         </p>
@@ -53,7 +53,7 @@ export default function TermsPage() {
       <Section id="your-content" title="Your content stays yours">
         <p>
           The itinerary, the notes, the numbers and the photos are yours. We claim no ownership of
-          them and no right to use them for anything beyond running the service for you — no
+          them and no right to use them for anything beyond running the service for you: no
           training, no publishing, no selling.
         </p>
         <p>
@@ -62,7 +62,7 @@ export default function TermsPage() {
           content.
         </p>
         <p>
-          You are responsible for having the right to upload what you upload — a photograph with
+          You are responsible for having the right to upload what you upload: a photograph with
           someone else in it, most of all.
         </p>
       </Section>
@@ -72,7 +72,7 @@ export default function TermsPage() {
           A follow link opens for anyone who has it. There is no sign-in on it, so a link that gets
           forwarded works just as well for whoever receives it. That is the design, and you should
           decide who to send one to on that basis. To share with one named person instead, invite
-          them as a Viewer — they have to sign in with that address, and the invitation cannot be
+          them as a Viewer. They have to sign in with that address, and the invitation cannot be
           passed on.
         </p>
         <p>
@@ -116,7 +116,7 @@ export default function TermsPage() {
         <p>
           To the extent the law allows, we are not liable for indirect or consequential loss, for
           lost profit, or for data you did not keep a copy of. Nothing here limits liability that
-          cannot lawfully be limited — including for death, personal injury, or fraud — and nothing
+          cannot lawfully be limited (including for death, personal injury, or fraud), and nothing
           here takes away the rights you have as a consumer under the law of the country you live
           in.
         </p>
@@ -125,7 +125,7 @@ export default function TermsPage() {
       <Section id="ending" title="Ending it">
         <p>
           You can stop at any time by deleting your account, which erases the trips you own and
-          their photos with no undo — the{' '}
+          their photos with no undo. The{' '}
           <Link href="/privacy#retention" className="font-medium text-ac2-deep underline">
             Privacy Policy
           </Link>{' '}
@@ -144,7 +144,7 @@ export default function TermsPage() {
         </p>
         <p>
           They are governed by the law of <LegalValue value={LEGAL.jurisdiction} />, and its courts
-          have jurisdiction — without depriving you of the protection of the mandatory law of where
+          have jurisdiction, without depriving you of the protection of the mandatory law of where
           you live.
         </p>
         <p className="pt-1">

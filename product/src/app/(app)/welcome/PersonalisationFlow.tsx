@@ -222,7 +222,7 @@ export default function PersonalisationFlow() {
         </div>
         {save.isError && (
           <div className="rounded-[calc(var(--r)-2px)] border border-warn-line bg-warn-soft px-3 py-2 text-base text-warn">
-            Couldn&apos;t save your setup — it still applies on this phone. Retry, or adjust later in Settings.
+            Couldn&apos;t save your setup, but it still applies on this phone. Retry, or adjust later in Settings.
           </div>
         )}
         <div className="mt-auto flex flex-col gap-[11px]">

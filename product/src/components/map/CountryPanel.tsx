@@ -47,7 +47,7 @@ export function CountryPanel({
       {co?.safety && <p className="mt-1 text-base"><b>Safety:</b> {co.safety}</p>}
       {list.length ? (
         <>
-          <h4 className="mb-1.5 mt-3.5 text-base font-semibold">Cities — cheapest to priciest (daily living, 2 ppl)</h4>
+          <h4 className="mb-1.5 mt-3.5 text-base font-semibold">Cities, cheapest to priciest (daily living, 2 ppl)</h4>
           <div className="max-h-64 overflow-auto">
             <table className="w-full text-left text-base">
               <thead>

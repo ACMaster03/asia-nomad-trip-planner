@@ -153,7 +153,7 @@ export default function FollowClient({
           <CirclePause size={36} strokeWidth={2} className="mx-auto text-ac2" aria-hidden />
           <h2 className="mt-3 font-serif text-xl font-semibold">Sharing is paused</h2>
           <p className="mx-auto mt-2 max-w-sm text-base leading-[1.55] text-tx2">
-            The travellers have paused sharing for a while — nothing is wrong, people sometimes
+            The travellers have paused sharing for a while. Nothing is wrong, people sometimes
             go off-grid on purpose. This page fills up again the moment sharing resumes, and
             your notification settings are kept.
           </p>
@@ -267,7 +267,7 @@ export default function FollowClient({
           {/* quiet period */}
           {phase === 'live' && quietDays !== null && quietDays >= 3 && (
             <p className="mt-3 rounded-[var(--r)] bg-tag p-4 text-center text-base leading-[1.55] text-tag-ink">
-              Quiet days on the road — no updates in {quietDays} days. No news is usually good news.
+              Quiet days on the road. No updates in {quietDays} days. No news is usually good news.
             </p>
           )}
 
@@ -279,7 +279,7 @@ export default function FollowClient({
             {feed.isPending && <p className="text-base text-tx2">Loading updates…</p>}
             {!feed.isPending && !events.length && (
               <p className="text-base text-tx2">
-                {phase === 'post' ? 'The journal has ended — thanks for following along!' : 'No updates yet — check back soon.'}
+                {phase === 'post' ? 'The journal has ended. Thanks for following along!' : 'No updates yet. Check back soon.'}
               </p>
             )}
             {events.length > 0 && (
@@ -367,8 +367,8 @@ function DigestCard({ token }: { token: string }) {
       <section className={`${card} mt-3 p-4`}>
         <p className="text-base leading-[1.55]">
           {status === 'sent'
-            ? <>Almost there — open the email we just sent to <strong>{email}</strong> and tap the confirmation link.</>
-            : <>Done — <strong>{email}</strong> now gets a <strong>{freq}</strong> summary.</>}
+            ? <>Almost there. Open the email we just sent to <strong>{email}</strong> and tap the confirmation link.</>
+            : <>Done. <strong>{email}</strong> now gets a <strong>{freq}</strong> summary.</>}
         </p>
       </section>
     )
@@ -381,7 +381,7 @@ function DigestCard({ token }: { token: string }) {
         <div className="min-w-0 grow">
           <div className="font-serif text-lg font-semibold">Prefer email?</div>
           <p className="mt-0.5 text-base leading-[1.5] text-tx2">
-            Get a summary of new check-ins and photos — no app, no push needed.
+            Get a summary of new check-ins and photos. No app, no push needed.
           </p>
           <form onSubmit={submit} className="mt-2.5 flex flex-wrap gap-2">
             <input
@@ -410,7 +410,7 @@ function DigestCard({ token }: { token: string }) {
             </button>
           </form>
           {status === 'error' && (
-            <p className="mt-1.5 text-base text-warn">Could not subscribe — check the address and try again.</p>
+            <p className="mt-1.5 text-base text-warn">Could not subscribe. Check the address and try again.</p>
           )}
           <p className="mt-1.5 text-base text-tx3">
             We&apos;ll send a confirmation first · unsubscribe link in every email
@@ -474,11 +474,11 @@ function NotifyCard({ sb, token }: { sb: SupabaseClient; token: string }) {
           <p className="mt-0.5 text-base leading-[1.5] text-tx2">
             {state === 'subscribed'
               ? 'Notifications are on for this device.'
-              : 'Get a ping the moment something new is shared — check-ins, arrivals, notes. Nothing else, no marketing.'}
+              : 'Get a ping the moment something new is shared: check-ins, arrivals, notes. Nothing else, no marketing.'}
           </p>
           {state === 'denied' ? (
             <p className="mt-2 text-base text-tx3">
-              Notifications are blocked for this site — enable them in your browser settings to opt in.
+              Notifications are blocked for this site. Enable them in your browser settings to opt in.
             </p>
           ) : (
             <button
@@ -578,7 +578,7 @@ function FollowCard({
           </button>
           {(dead || pendingFailed || follow.isError) && (
             <p className="mt-1.5 text-base text-warn">
-              That did not work — the link may have expired, or the travellers paused it. Ask them for a fresh one.
+              That did not work. The link may have expired, or the travellers paused it. Ask them for a fresh one.
             </p>
           )}
         </div>
@@ -664,7 +664,7 @@ function AccountSheet({
               >
                 {status === 'busy' ? '…' : 'Email me a sign-in link'}
               </button>
-              {status === 'error' && <p className="text-base text-warn">{error || 'Could not send the email — try again.'}</p>}
+              {status === 'error' && <p className="text-base text-warn">{error || 'Could not send the email. Try again.'}</p>}
             </form>
             <p className="text-[13px] leading-[1.5] text-tx3">
               Already have an account? The same link signs you in.

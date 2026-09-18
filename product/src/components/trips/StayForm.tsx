@@ -72,12 +72,12 @@ export function StayForm({
               else setSegId(e.target.value)
             }}
           >
-            {!segments.length && <option value="">— no stops yet —</option>}
+            {!segments.length && <option value="">(no stops yet)</option>}
             {segments.map((s) => <option key={s.id} value={s.id}>{s.city} ({s.arrive})</option>)}
             {onCreateStop && <option value={NEW_STOP}>＋ New stop…</option>}
           </select>
           <span className="mt-1 block text-base font-normal text-tx3">
-            Accommodation always belongs to a stop — the city, dates and nightly
+            Accommodation always belongs to a stop: the city, dates and nightly
             budget math come from it.
           </span>
         </label>

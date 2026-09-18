@@ -60,7 +60,7 @@ const GROUPS: Group[] = [
       { key: 'deadlinePush', title: 'Free-cancellation deadline', desc: 'and card charges · push 7 and 1 days before' },
       { key: 'ownTripPosts', title: 'Updates from co-travellers', desc: 'check-ins, arrivals, notes' },
       { key: 'commentsOnMine', title: 'Comments on your posts', desc: 'from co-travellers and followers' },
-      { key: 'reactions', title: 'Reactions on your posts', desc: 'off by default — hearts add up fast' },
+      { key: 'reactions', title: 'Reactions on your posts', desc: 'off by default, hearts add up fast' },
     ],
   },
   {
@@ -224,7 +224,7 @@ export function NotificationSettings() {
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-base font-semibold">{t.name}</div>
                       <div className="mt-0.5 text-base leading-normal text-tx2">
-                        {muted ? 'Muted — nothing from this trip buzzes' : t.sub}
+                        {muted ? 'Muted, nothing from this trip buzzes' : t.sub}
                       </div>
                     </div>
                     <Toggle
@@ -268,10 +268,10 @@ export function NotificationSettings() {
       )}
 
       {(prefs.isError || tripNotify.isError) && (
-        <p className="text-base text-ac2">Could not load your alert settings — the switches stay locked so nothing is overwritten. Try again in a moment.</p>
+        <p className="text-base text-ac2">Could not load your alert settings. The switches stay locked so nothing is overwritten. Try again in a moment.</p>
       )}
       {(savePrefs.isError || saveTrip.isError) && (
-        <p className="text-base text-ac2">Could not save — is migration 37 applied to this database?</p>
+        <p className="text-base text-ac2">Could not save. Is migration 37 applied to this database?</p>
       )}
     </section>
   )

@@ -56,7 +56,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
     aliases: ['accessory', 'jewellery', 'jewelry', 'sunglasses', 'hair pins', 'phone strap'] },
   { id: 'souvenirs', label: 'Souvenirs', kind: 'expense', hint: 'gifts, keepsakes, postcards',
     aliases: ['souvenir', 'gift', 'gifts', 'keepsake', 'postcard', 'postcards'] },
-  { id: 'gear', label: 'Gear', kind: 'expense', hint: 'backpacks, electronics, adapters — trip kit',
+  { id: 'gear', label: 'Gear', kind: 'expense', hint: 'backpacks, electronics, adapters, trip kit',
     aliases: ['gear', 'equipment', 'backpack', 'luggage', 'electronics', 'adapter', 'charger', 'trip gear', 'kit', 'one-off', 'one off', 'extras'] },
   { id: 'connectivity', label: 'Phone & internet', kind: 'expense', hint: 'eSIM, data, wifi',
     aliases: ['connectivity', 'e-sim', 'esim', 'sim', 'sim card', 'internet', 'phone', 'data', 'wifi'] },
