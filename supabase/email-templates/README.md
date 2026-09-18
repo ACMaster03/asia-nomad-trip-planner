@@ -5,6 +5,13 @@ Paste into **Supabase → Authentication → Email Templates**. Both use
 `signInWithOtp()` in `product/src/app/login/page.tsx` sets `emailRedirectTo`, Supabase
 appends `?code=…`, and `product/src/app/auth/callback` exchanges it.
 
+> ⚠️ **Editing a file here changes nothing on its own.** These are copies. There is
+> no `supabase/config.toml` in this repo, so nothing links them to the project and no
+> deploy carries them up — the version that actually goes out is whatever is pasted
+> into the dashboard. After changing a template, paste it in, or it is a diff nobody
+> receives. (Tracking them at all is half of the "put the email templates under
+> version control" entry in `docs/NOTES.md`; the config.toml half is still open.)
+
 | File | Supabase template | Who gets it |
 |---|---|---|
 | `confirm-signup.html` | **Confirm signup** | Any address with no account yet |
@@ -32,4 +39,16 @@ appends `?code=…`, and `product/src/app/auth/callback` exchanges it.
   which verifies server-side and has no such constraint.
 - **Redirect allowlist.** Every origin the app is served from needs its
   `/auth/callback` in Auth → URL Configuration, because `emailRedirectTo` is built from
-  `window.location.origin`. Both `livhold.com` and `www.livhold.com` are listed today.
+  `window.location.origin`. Both `livhold.com` and `www.livhold.com` are listed today
+  (as `…/auth/callback**` — the wildcard matters, see `docs/NOTES.md` 2026-09-18).
+- **Don't promise that passwords don't exist.** *Confirm signup* used to end on "no
+  password, ever". Password sign-in is built — the login screen and Account → Password
+  — and waits only on Authentication → Providers → Email → enable password, which
+  Google Play's review account requires, so that line was a promise with a date on it.
+  The copy now says what is true of this particular email: the link signs you in, and
+  signing up asks for no password. Say that, not "never".
+- **Turning the password grant on adds a third template.** Supabase sends *Reset
+  Password* for `resetPasswordForEmail()`, and there is no branded copy of it here —
+  the first person to use the reset flow gets Supabase's unstyled default, which is
+  the same gap that once made new travellers see an unbranded *Confirm signup*. Worth
+  writing before the switch is flipped rather than after.
