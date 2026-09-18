@@ -1,13 +1,24 @@
 'use client'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchCities, fetchCountries } from '@/lib/catalogue/queries'
 import { getAtJsonPath } from '@/lib/catalogue/getAtJsonPath'
 import { qk } from '@/lib/catalogue/keys'
+import type { City } from '@/lib/catalogue/types'
+import type { Segment, TransportLeg } from '@/lib/trips/types'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
+import { CityInfoCard, knowledgeHref } from '@/components/map/CityInfoCard'
+
+// Stable fallbacks: a fresh `[]` per render used to change the globe's prop
+// identity every render while the trip loaded (issue #32 fix 3).
+const NO_CITIES: City[] = []
+const NO_SEGMENTS: Segment[] = []
+const NO_TRANSPORT: TransportLeg[] = []
+const NO_RATES: Record<string, number> = {}
 
 // ssr:false is allowed only inside a Client Component (Next 16). three.js touches window.
 const GlobeView = dynamic(() => import('@/components/Globe'), {
@@ -28,6 +39,9 @@ export default function MapClient() {
   })
   const { data: countries = [] } = useQuery({ queryKey: qk.countries, queryFn: () => fetchCountries(sb) })
   const state = trip.data?.state
+  // A tapped pin swaps the bottom card to that city (fix 2); closing it brings
+  // the stop card back.
+  const [picked, setPicked] = useState<City | null>(null)
 
   // Bottom city card (frame 19): the current stop while travelling, otherwise
   // the next one coming up (or the first, pre-trip).
@@ -42,7 +56,8 @@ export default function MapClient() {
     sorted[0]
   const stopNo = stop ? sorted.indexOf(stop) + 1 : 0
   const nights = stop ? Math.max(1, Math.round((+new Date(stop.depart) - +new Date(stop.arrive)) / 86400000)) : 0
-  const wifiRaw = stop ? getAtJsonPath((cities.data ?? []).find((c) => c.city === stop.city)?.attributes, 'internet') : undefined
+  const stopCity = stop ? (cities.data ?? []).find((c) => c.city === stop.city) : undefined
+  const wifiRaw = getAtJsonPath(stopCity?.attributes, 'internet')
   const wifi = typeof wifiRaw === 'string' || typeof wifiRaw === 'number' ? String(wifiRaw) : null
 
   // Full-bleed to the top now that the top bar is gone; the bottom tab bar is
@@ -60,14 +75,16 @@ export default function MapClient() {
         <Search aria-hidden className="size-5" strokeWidth={2} />
       </Link>
       <GlobeView
-        cities={cities.data ?? []}
+        cities={cities.data ?? NO_CITIES}
         countries={countries}
         cityIdx={cityIdx}
-        segments={state?.segments ?? []}
-        transport={state?.transport ?? []}
-        rates={state?.rates ?? {}}
+        segments={state?.segments ?? NO_SEGMENTS}
+        transport={state?.transport ?? NO_TRANSPORT}
+        rates={state?.rates ?? NO_RATES}
+        onPickCity={setPicked}
       />
-      {stop && (
+      {picked && <CityInfoCard city={picked} cost={cityIdx[picked.city]} onClose={() => setPicked(null)} />}
+      {!picked && stop && (
         <div className="lv-enter absolute inset-x-4 bottom-4 z-10 rounded-[var(--r)] bg-sf p-4 text-tx">
           <div className="flex items-center justify-between gap-2.5">
             <div className="min-w-0">
@@ -77,7 +94,7 @@ export default function MapClient() {
               </div>
             </div>
             <Link
-              href="/knowledge"
+              href={knowledgeHref(stopCity?.id)}
               className="flex-none rounded-full bg-ac px-4 py-[11px] text-base font-semibold text-on"
             >
               Details

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { ArrowLeft, MapPin, Search, WifiOff } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   fetchFields,
@@ -40,7 +41,18 @@ export default function KnowledgeClient() {
   const [term, setTerm] = useState('')
   const [q, setQ] = useState('')
   const [country, setCountry] = useState('')
-  const [openCity, setOpenCity] = useState<number | null>(null)
+  // A tapped place carries its identity to the next screen (issue #32 fix 1):
+  // the map arrives with ?city=<cities.id>, and that city opens straight away.
+  const cityParam = Number(useSearchParams().get('city'))
+  const cityFromUrl = Number.isInteger(cityParam) && cityParam > 0 ? cityParam : null
+  const [openCity, setOpenCity] = useState<number | null>(cityFromUrl)
+  // Adjusting state on a prop change, during render (react.dev pattern): a
+  // second pin tapped while this screen is already mounted re-opens.
+  const [seenFromUrl, setSeenFromUrl] = useState(cityFromUrl)
+  if (cityFromUrl !== seenFromUrl) {
+    setSeenFromUrl(cityFromUrl)
+    if (cityFromUrl !== null) setOpenCity(cityFromUrl)
+  }
 
   // Debounced: every keystroke is a round trip, so the input stays responsive
   // while the list lags slightly behind (mock 08).
@@ -186,11 +198,11 @@ export default function KnowledgeClient() {
           </div>
           {country ? (
             <CityRows cities={browse} onOpen={setOpenCity} />
-          ) : (
+          ) : openCity === null ? (
             <p className="mt-10 text-center text-base text-tx3">
               Pick a country above, or search for a city or place.
             </p>
-          )}
+          ) : null}
         </>
       )}
 

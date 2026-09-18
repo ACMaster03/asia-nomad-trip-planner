@@ -53,6 +53,25 @@ export interface Hazard {
   city?: string; rain?: number; hazardText?: string
   mag?: number; place?: string; time?: number; url?: string
   color: string; radius: number; alt: number; maxR: number; speed: number; period: number
+  /** only the strong ones pulse (issue #32 fix 4): the route must stay the subject */
+  ring: boolean
+}
+
+// What the hover tooltip and the phone's tapped-city card both show (#32 fix 2):
+// one list, so the two can never drift.
+export interface InfoRow { text: string; muted?: boolean }
+export function cityInfoRows(c: City | undefined, k: CityCost | undefined): InfoRow[] {
+  const rows: InfoRow[] = []
+  if (k?.live) rows.push({ text: `Daily living: ~$${k.live[0]}–$${k.live[2]} /day (2 ppl)` })
+  if (k?.accom) rows.push({ text: `Stay (mid): ~$${k.accom[1]} /night` })
+  if (c?.rent_monthly) rows.push({ text: `Rent: ~$${c.rent_monthly} /mo` })
+  const net = c && getAtJsonPath(c.attributes, 'internet')
+  if (net) rows.push({ text: `Wi-Fi: ${String(net)}`, muted: true })
+  const land = c && (getAtJsonPath(c.attributes, 'landmarks') as unknown[] | undefined)
+  if (Array.isArray(land) && land.length) rows.push({ text: `${land.length} landmark${land.length > 1 ? 's' : ''} in KB`, muted: true })
+  const wx = c && getAtJsonPath(c.attributes, 'weather.hazard')
+  if (wx) rows.push({ text: String(wx), muted: true })
+  return rows
 }
 
 export function detectOrigin(stops: RouteNode[], transport: TransportLeg[], cities: City[]): RouteNode | null {
@@ -125,15 +144,17 @@ export function seasonalHazards(segments: Segment[], cities: City[]): Hazard[] {
       out.push({
         lat: c.lat, lng: c.lng!, kind: 'season', haz: true, city: s.city, rain,
         hazardText: (getAtJsonPath(c.attributes, 'weather.hazard') as string) || '',
-        color: '#f0a83c', radius: 0.5 + Math.min(0.5, (rain - 250) / 700), alt: 0.02,
-        maxR: rain >= 400 ? 6 : 5, speed: 2, period: 1400,
+        color: 'rgba(217,168,92,0.55)', radius: 0.22 + Math.min(0.18, (rain - 250) / 1500), alt: 0.006,
+        maxR: 4, speed: 1.6, period: 1800, ring: rain >= 400,
       })
     }
   }
   return out
 }
 
-export const qColor = (m: number) => (m >= 6 ? '#ff4d4d' : m >= 5 ? '#ff7a45' : '#ffa270')
+// Amber at three weights: a quake reads stronger by alpha and size, never by hue.
+export const qColor = (m: number) => `rgba(217,168,92,${m >= 6 ? 0.85 : m >= 5 ? 0.65 : 0.45})`
+export const QUAKE_RING_MIN = 5.5
 export function quakesFromFeed(j: { features?: unknown[] } | null): Hazard[] {
   return ((j?.features ?? []) as Array<{ geometry?: { coordinates?: number[] }; properties?: { mag?: number; place?: string; time?: number; url?: string } }>)
     .map((f) => {
@@ -141,8 +162,8 @@ export function quakesFromFeed(j: { features?: unknown[] } | null): Hazard[] {
       return c
         ? ({
             lat: c[1], lng: c[0], kind: 'quake', haz: true, mag, place: p.place ?? '', time: p.time, url: p.url,
-            color: qColor(mag), radius: Math.min(1.2, 0.42 + mag * 0.11), alt: 0.02,
-            maxR: Math.min(9, 1.5 + mag), speed: 3, period: 900,
+            color: qColor(mag), radius: Math.min(0.6, 0.1 + mag * 0.06), alt: 0.006,
+            maxR: Math.min(6, mag - 1), speed: 2, period: 1400, ring: mag >= QUAKE_RING_MIN,
           } as Hazard)
         : null
     })

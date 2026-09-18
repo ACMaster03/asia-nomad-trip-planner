@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { dehydrate, QueryClient } from '@tanstack/react-query'
 import { HydrationBoundary } from '@/lib/query/HydrationBoundary'
 import { createClient } from '@/lib/supabase/server'
@@ -15,7 +16,10 @@ export default async function KnowledgePage() {
   ])
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <KnowledgeClient />
+      {/* useSearchParams (?city=) wants a Suspense boundary above it */}
+      <Suspense fallback={null}>
+        <KnowledgeClient />
+      </Suspense>
     </HydrationBoundary>
   )
 }
