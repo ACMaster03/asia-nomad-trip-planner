@@ -40,9 +40,10 @@ export default function TermsPage() {
     >
       <Section id="account" title="Your account">
         <p>
-          Accounts are created by invitation. There is no public sign-up. You need a working email
-          address, and you are responsible for what happens through your account, including anything
-          done by someone you invited or gave a password to.
+          Anyone with a working email address can create one. The sign-in link we send to that
+          address is the only check, which is why it has to be an address you can actually read. You
+          are responsible for what happens through your account, including anything done by someone
+          you invited or gave a password to.
         </p>
         <p>
           You must be at least 16 to use {LEGAL.product}. Do not create an account for anybody else

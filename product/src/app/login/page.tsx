@@ -14,9 +14,9 @@ import { humanAuthError, looksLikeNoPasswordSet } from '@/lib/auth/authError'
 //
 // TWO WAYS IN (2026-09-14). The magic link stays the hero — it is what every
 // existing account uses and what the onboarding copy assumes. Password sign-in
-// sits behind a text link, for accounts that have SET one in Account → Password:
-// there is no sign-up here, so it can only ever be a second key to a door you
-// already have.
+// sits behind a text link, for accounts that have SET one in Account → Password.
+// It can only ever be a second key to a door you already have: signing up happens
+// through the magic link, and `signInWithPassword` creates nothing.
 //
 // It earns its place twice over. Google Play requires reusable credentials for
 // app review and says so explicitly for apps gated behind one-time passwords,

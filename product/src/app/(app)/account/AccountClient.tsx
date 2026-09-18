@@ -103,10 +103,12 @@ function NameCard({ initialFirstName }: { initialFirstName: string }) {
   )
 }
 
-// Password (2026-09-14). Accounts here arrive by invitation and sign in with a
-// magic link; a password is a SECOND key to a door you already have, never a way
-// to make a new account — this app has no sign-up anywhere, and the Supabase
-// project keeps signups closed.
+// Password (2026-09-14). An account starts with a magic link to a working email
+// address, which is both the sign-up and the check that the address is real. A
+// password is a SECOND key to a door you already have: `signInWithPassword`
+// never creates an account, so nothing here is a way in for a stranger.
+// (Corrected 2026-09-18: this comment used to say the project keeps signups
+// closed. It does not, by design.)
 //
 // Two reasons it exists. Google Play requires reusable sign-in credentials for
 // app review, and says so in as many words for apps gated behind one-time

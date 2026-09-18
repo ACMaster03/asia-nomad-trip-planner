@@ -146,9 +146,13 @@ has the password grant disabled, so every attempt answers
 `Invalid login credentials` no matter what anyone types.
 
 1. **Authentication → Providers → Email → enable password.**
-2. **Leave "Allow new users to sign up" OFF.** This app has no sign-up anywhere
-   and the Play submission is simpler without one. A password here is a second
-   key to a door you already have.
+2. **Leave "Allow new users to sign up" ON.** ⚠ An earlier version of this
+   entry said to switch it off, on the premise that the app has no sign-up.
+   That premise is wrong: public sign-up is deliberate and is the main way
+   people start a journey (Patrik, 2026-09-18). A magic link to a working
+   address is the check that the address is real. Turning it off would close
+   the front door. Enabling the password grant does not require it, and the
+   Play review account is created by hand either way.
 3. **Create the review account by hand** (Authentication → Users → Add user,
    with a password), then give Play Console that address and password under
    **App access**.
