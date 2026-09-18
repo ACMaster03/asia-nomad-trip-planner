@@ -17,7 +17,9 @@ export function Legend({ people = false }: { people?: boolean }) {
         </span>
         {people && (
           <span className="flex items-center gap-2">
-            <i aria-hidden className="block h-[9px] w-[9px] rounded-full bg-[#8CB8DC] shadow-[0_0_0_3px_rgba(140,184,220,.25)]" />People you follow
+            <i aria-hidden className="flex h-[12px] w-[12px] items-center justify-center rounded-full bg-[#8CB8DC] text-[#0b0f14]">
+              <svg viewBox="0 0 24 24" width="8" height="8" fill="currentColor"><circle cx="12" cy="7" r="4" /><path d="M4 21a8 8 0 0 1 16 0z" /></svg>
+            </i>People you follow
           </span>
         )}
       </div>

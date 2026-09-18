@@ -12,7 +12,7 @@ import type { PeopleAtCity } from '@/lib/map/people'
 import { regName, toBase } from '@/lib/trips/format'
 import {
   type MapOpts, type GlobePoint, type GlobeArc, type Hazard,
-  loadMapOpts, saveMapOpts, buildRoute, buildArcs, seasonalHazards, cityInfoRows, theirRouteLayers, SKY, SKY_RGB,
+  loadMapOpts, saveMapOpts, buildRoute, buildArcs, seasonalHazards, cityInfoRows, theirRouteLayers, SKY,
 } from '@/lib/map/globeData'
 import { fetchQuakes, QUAKES_KEY, QUAKES_STALE_MS } from '@/lib/map/hazards'
 import { CountryPanel } from './map/CountryPanel'
@@ -56,18 +56,27 @@ interface HtmlLayer {
 }
 const NO_PEOPLE: PeopleAtCity[] = []
 
-// The people mark: a sky dot in a soft halo, one size per head-count band —
-// one traveller is a whisper, a handful reads as a crowd, never a number.
+// The people mark (Patrik's spec, 2026-09-18): a solid sky dot with a person
+// glyph inside. One more glyph per head and one size step per head up to five;
+// from five on it stops growing and gains a plus. No number, no halo.
+const PERSON_PATH = '<circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0z"/>'
+export const MARK_CAP = 5
+export function markDiameter(n: number) { return 20 + 3 * (Math.min(n, MARK_CAP) - 1) }
 function peopleMark(g: PeopleAtCity, onTap: (g: PeopleAtCity) => void, onDown: () => void): HTMLElement {
   const n = g.people.length
-  const [dot, halo] = n >= 4 ? [14, 40] : n >= 2 ? [11, 30] : [8, 22]
+  const d = markDiameter(n)
+  const heads = Math.min(n, MARK_CAP - 1)
+  const glyph = n === 1 ? d * 0.56 : d * 0.4
   const el = document.createElement('button')
   el.type = 'button'
   el.setAttribute('aria-label', `${n} traveller${n === 1 ? '' : 's'} you follow in ${g.city}`)
-  el.style.cssText = `pointer-events:auto;cursor:pointer;width:${halo}px;height:${halo}px;padding:0;border-radius:50%;border:1.5px solid rgba(${SKY_RGB},.55);background:rgba(${SKY_RGB},.14);display:grid;place-items:center;transition:opacity .2s`
-  const core = document.createElement('span')
-  core.style.cssText = `width:${dot}px;height:${dot}px;border-radius:50%;background:${SKY};box-shadow:0 0 0 3px rgba(${SKY_RGB},.25)`
-  el.appendChild(core)
+  el.style.cssText = `pointer-events:auto;cursor:pointer;width:${d}px;height:${d}px;padding:0;border:0;border-radius:50%;background:${SKY};color:#0b0f14;box-shadow:0 0 0 2px rgba(11,15,20,.55);display:flex;align-items:center;justify-content:center;transition:opacity .2s`
+  const svgs = Array.from({ length: heads }, (_, i) =>
+    `<svg viewBox="0 0 24 24" width="${glyph}" height="${glyph}" fill="currentColor" style="flex:none;margin-left:${i ? -glyph * 0.45 : 0}px" aria-hidden="true">${PERSON_PATH}</svg>`)
+  const plus = n >= MARK_CAP
+    ? `<svg viewBox="0 0 24 24" width="${glyph * 0.9}" height="${glyph * 0.9}" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" style="flex:none;margin-left:1px" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`
+    : ''
+  el.innerHTML = svgs.join('') + plus
   // A mark usually sits right over a route pin: tell the globe this tap is
   // taken before its own click resolution and the fallback hit-test run.
   el.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); onDown() })
@@ -75,6 +84,7 @@ function peopleMark(g: PeopleAtCity, onTap: (g: PeopleAtCity) => void, onDown: (
   el.addEventListener('click', (ev) => { ev.stopPropagation(); onTap(g) })
   return el
 }
+
 const POV = { lat: 28, lng: 92, altitude: 2.4 }
 // Globe radius is 100 world units: same clamps as FollowGlobe (fix 6) — "city
 // level" to "whole hemisphere", never inside the planet, never a dot in space.
