@@ -123,7 +123,7 @@ export function AccountDeletion() {
       // memory belongs to a user who no longer exists.
       window.location.href = '/goodbye'
     },
-    onError: () => setError('Could not delete your account — please try again.'),
+    onError: () => setError('Could not delete your account. Please try again.'),
   })
 
   return (
@@ -185,13 +185,13 @@ export function DangerZone({ tripName }: { tripName: string }) {
   const delTrip = useMutation({
     mutationFn: () => deleteTrip(sb, tripId!),
     onSuccess: afterTripGone,
-    onError: () => setError('Could not delete the trip. Nothing was removed — please try again.'),
+    onError: () => setError('Could not delete the trip. Nothing was removed. Please try again.'),
   })
 
   const leave = useMutation({
     mutationFn: () => leaveTrip(sb, tripId!),
     onSuccess: afterTripGone,
-    onError: () => setError('Could not leave the trip — please try again.'),
+    onError: () => setError('Could not leave the trip. Please try again.'),
   })
 
   // Withheld until the role is known, so nobody is offered "Leave trip" for a
@@ -220,7 +220,7 @@ export function DangerZone({ tripName }: { tripName: string }) {
           {open === 'trip' && (
             <ConfirmFlow
               title="Delete this trip?"
-              explanation="Everything in it goes — stops, stays, transport, extras and the whole ledger — for everyone on the trip, along with every photo and follow link."
+              explanation="Everything in it goes for everyone on the trip: stops, stays, transport, extras and the whole ledger, along with every photo and follow link."
               phrase={tripName}
               label={
                 <>

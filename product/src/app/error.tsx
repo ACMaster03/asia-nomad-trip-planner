@@ -15,7 +15,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       <h1 className="font-serif text-[25px] font-semibold">{auth ? 'Couldn’t reach the sign-in service' : 'Something went wrong'}</h1>
       <p className="text-base text-tx2">
         {auth
-          ? 'You are still signed in — the server just didn’t answer in time. Try again in a moment.'
+          ? 'You are still signed in. The server just didn’t answer in time. Try again in a moment.'
           : 'The page hit an error while loading. Try again; if it keeps happening, reload the app.'}
       </p>
       <button onClick={reset} className="mt-2 rounded-[var(--rCtl)] bg-ac px-[18px] py-3 text-base font-semibold text-on">

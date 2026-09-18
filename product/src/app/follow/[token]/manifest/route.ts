@@ -18,7 +18,7 @@ export async function GET(
     {
       name,
       short_name: 'Follow',
-      description: 'Live trip updates — route, check-ins and notes.',
+      description: 'Live trip updates: route, check-ins and notes.',
       start_url: `/follow/${token}`,
       scope: `/follow/${token}`,
       display: 'standalone',

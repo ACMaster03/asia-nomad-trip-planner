@@ -97,16 +97,18 @@ function NameCard({ initialFirstName }: { initialFirstName: string }) {
         </button>
       </div>
       {save.isError && (
-        <p className="mt-2 text-base text-ac2">Could not save your name — try again.</p>
+        <p className="mt-2 text-base text-ac2">Could not save your name. Try again.</p>
       )}
     </section>
   )
 }
 
-// Password (2026-09-14). Accounts here arrive by invitation and sign in with a
-// magic link; a password is a SECOND key to a door you already have, never a way
-// to make a new account — this app has no sign-up anywhere, and the Supabase
-// project keeps signups closed.
+// Password (2026-09-14). An account starts with a magic link to a working email
+// address, which is both the sign-up and the check that the address is real. A
+// password is a SECOND key to a door you already have: `signInWithPassword`
+// never creates an account, so nothing here is a way in for a stranger.
+// (Corrected 2026-09-18: this comment used to say the project keeps signups
+// closed. It does not, by design.)
 //
 // Two reasons it exists. Google Play requires reusable sign-in credentials for
 // app review, and says so in as many words for apps gated behind one-time
@@ -152,7 +154,7 @@ function PasswordCard() {
     <section className="rounded-[var(--r)] bg-sf p-4">
       <h2 className="font-serif text-[19px] font-semibold">Password</h2>
       <p className="mt-1 text-base leading-normal text-tx2">
-        Optional. A magic link always works — a password is a second way in, and the quicker one
+        Optional. A magic link always works. A password is a second way in, and the quicker one
         when the mail is slow to arrive. Set a new one here at any time.
       </p>
       <label className="mt-2 block text-base font-medium text-tx2">
@@ -329,7 +331,7 @@ export function SharingCard({ endDate }: { endDate?: string }) {
       setLinkErr(null)
       toast(paused ? 'Link paused - that URL shows the paused page' : 'Link resumed')
     },
-    onError: () => setLinkErr('Could not update that link — try again.'),
+    onError: () => setLinkErr('Could not update that link. Try again.'),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') })
       qc.invalidateQueries({ queryKey: ['share-stats', tripId ?? 'none'] })
@@ -373,10 +375,10 @@ export function SharingCard({ endDate }: { endDate?: string }) {
       setRotated(true)
       setCreateOpen(true)
       setConfirmFor(null)
-      toast('Link rotated — the old URL stopped working')
+      toast('Link rotated. The old URL stopped working')
       qc.invalidateQueries({ queryKey: tk.shares(tripId ?? 'none') })
     },
-    onError: () => setLinkErr('Could not rotate that link — try again.'),
+    onError: () => setLinkErr('Could not rotate that link. Try again.'),
   })
   // Revoke and rotate both destroy URLs people hold, so both confirm inline
   // with the cost spelled out from the per-link counts (issue #12).
@@ -423,11 +425,11 @@ export function SharingCard({ endDate }: { endDate?: string }) {
           account-protected without becoming a different feature — so the card
           says so plainly and points at the one that already is. */}
       <p className="text-base leading-normal text-tx2">
-        A follow link opens for <b className="font-semibold text-tx">anyone who has it</b> — there
+        A follow link opens for <b className="font-semibold text-tx">anyone who has it</b>. There
         is no sign-in, so a forwarded link works just as well for whoever receives it. Followers see
         the route, dates and check-ins; never money, bookings or notes. To share with a specific
         person instead, invite them as a <b className="font-semibold text-tx">Viewer</b> under People
-        on this trip in Trip settings — they have to sign in with that address, and the invite
+        on this trip in Trip settings. They have to sign in with that address, and the invite
         cannot be passed on.
       </p>
 
@@ -497,7 +499,7 @@ export function SharingCard({ endDate }: { endDate?: string }) {
 
       <div className="overflow-hidden rounded-[var(--r)] bg-sf">
         <p className="border-b border-ln px-4 pb-3.5 pt-4 text-base leading-normal text-tx2">
-          Anyone with the link sees your route, dates, last check-in city and shared comments —{' '}
+          Anyone with the link sees your route, dates, last check-in city and shared comments:{' '}
           <b className="font-semibold text-ac2-deep">never money, private notes or exact GPS</b>.
         </p>
         {list.map((s, i) => {
@@ -552,7 +554,7 @@ export function SharingCard({ endDate }: { endDate?: string }) {
                 <p className="text-warn">
                   {confirmFor.action === 'revoke'
                     ? `Revoke "${s.label || 'this link'}"? The URL stops working for everyone: ${holders(s.id)} lose their alerts and their access. People who follow you with an account keep following.`
-                    : `Rotate "${s.label || 'this link'}"? Every copy of the current URL stops working, saved home-screen icons included. The ${holders(s.id)} on it keep their alerts, but need the new link to open the trip again. You see the new link once — send it to whoever should keep watching.`}
+                    : `Rotate "${s.label || 'this link'}"? Every copy of the current URL stops working, saved home-screen icons included. The ${holders(s.id)} on it keep their alerts, but need the new link to open the trip again. You see the new link once, so send it to whoever should keep watching.`}
                 </p>
                 <div className="mt-2.5 flex gap-2">
                   <button
@@ -586,7 +588,7 @@ export function SharingCard({ endDate }: { endDate?: string }) {
         {linkErr && <p className="border-t border-ln px-4 py-3.5 text-base text-ac2">{linkErr}</p>}
         {!shares.isPending && !list.length && (
           <p className="px-4 py-3.5 text-base text-tx2">
-            No follow links yet — create one and send it to your family.
+            No follow links yet. Create one and send it to your family.
           </p>
         )}
         {shares.isPending && <p className="px-4 py-3.5 text-base text-tx2">Loading…</p>}
@@ -597,7 +599,7 @@ export function SharingCard({ endDate }: { endDate?: string }) {
           {!newLink ? (
             <div>
               <p className="mb-3 text-base leading-normal text-tx2">
-                For family who just want to watch along — anyone the link reaches can open it. If it
+                For family who just want to watch along: anyone the link reaches can open it. If it
                 should only work for one named person, invite them as a Viewer in Trip settings
                 instead.
               </p>
@@ -606,10 +608,10 @@ export function SharingCard({ endDate }: { endDate?: string }) {
                 <input className={input} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Family" autoFocus />
               </label>
               <label className="mt-3 block text-base font-medium text-tx2">
-                Expires <span className="text-tx3">— optional, default trip end + 30 days</span>
+                Expires <span className="text-tx3">(optional, default trip end + 30 days)</span>
                 <input type="date" className={input} value={expiry} onChange={(e) => setExpiry(e.target.value)} />
               </label>
-              {create.isError && <p className="mt-2 text-base text-ac2">Could not create the link — try again.</p>}
+              {create.isError && <p className="mt-2 text-base text-ac2">Could not create the link. Try again.</p>}
               <button
                 onClick={() => create.mutate()}
                 disabled={create.isPending || !tripId}
@@ -622,8 +624,8 @@ export function SharingCard({ endDate }: { endDate?: string }) {
             <div>
               <p className="text-base leading-normal text-tx2">
                 {rotated
-                  ? <>The old URL is dead. Copy this one now — it is shown <strong>only this once</strong> — and send it to the people who should keep watching.</>
-                  : <>Copy it now — for security the full link is shown <strong>only this once</strong>. If you lose it, rotate the link for a new one.</>}
+                  ? <>The old URL is dead. Copy this one now and send it to the people who should keep watching. It is shown <strong>only this once</strong>.</>
+                  : <>Copy it now. For security the full link is shown <strong>only this once</strong>. If you lose it, rotate the link for a new one.</>}
               </p>
               <div className="mt-3 break-all rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp p-3 font-mono text-base">
                 {newLink}

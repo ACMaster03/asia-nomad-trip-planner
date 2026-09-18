@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
             `Heads-up from your trip "${tripName}":`,
             ``,
             `Stay: ${item.stay.name}`,
-            `Deadline: ${item.date} — ${item.label}.`,
+            `Deadline: ${item.date}, ${item.label}.`,
             ``,
             `Open the planner to review or act on it.`,
           ].join('\n'),
@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
         const tripName = trip.state?.meta?.tripName ?? trip.name
         const { sent: ok } = await sendWebPush(admin, targets, {
           title: `⏰ ${item.stay.name}`,
-          body: `${item.label} (${item.date}) — ${tripName}`,
+          body: `${item.label} (${item.date}) · ${tripName}`,
           url: '/itinerary',
         })
         if (ok > 0) {

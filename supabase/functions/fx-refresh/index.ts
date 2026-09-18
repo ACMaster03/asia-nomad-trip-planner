@@ -79,7 +79,7 @@ async function refresh(): Promise<Response> {
   // A shrunken payload means something is wrong upstream; overwriting a good
   // snapshot with it would be worse than skipping this run.
   if (rows.length < 100) {
-    const error = `feed returned only ${rows.length} usable currencies — refusing to overwrite`
+    const error = `feed returned only ${rows.length} usable currencies, refusing to overwrite`
     console.error('[fx-refresh]', error)
     await stampFailure(error)
     return json({ ok: false, error }, 502)
@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
     ? Date.now() - +new Date(status.last_attempt_at)
     : Number.POSITIVE_INFINITY
   if (since < MANUAL_COOLDOWN_MS) {
-    return json({ ok: false, error: 'just checked — try again in a moment' }, 429)
+    return json({ ok: false, error: 'just checked, try again in a moment' }, 429)
   }
 
   return refresh()

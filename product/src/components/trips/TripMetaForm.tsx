@@ -55,12 +55,12 @@ export function TripMetaForm({ onSubmit, busy, submitLabel = 'Create trip →' }
           <input type="date" className={input} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
         </label>
         <label className={label}>
-          End date <span className="text-tx3">— optional</span>
+          End date <span className="text-tx3">(optional)</span>
           <input type="date" className={input} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </label>
       </div>
       <p className="mt-1.5 text-base text-tx3">
-        Leave the end date off for an open-ended trip — budget pace will use “so far” instead of “per remaining day”.
+        Leave the end date off for an open-ended trip. Budget pace will use “so far” instead of “per remaining day”.
       </p>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -76,7 +76,7 @@ export function TripMetaForm({ onSubmit, busy, submitLabel = 'Create trip →' }
           <p className="mt-1.5 text-base text-tx3">You can name them later.</p>
         </div>
         <div className={label}>
-          Budget cap <span className="text-tx3">— optional</span>
+          Budget cap <span className="text-tx3">(optional)</span>
           <div className="mt-1 flex gap-2">
             <input
               type="number" min={0} className={input + ' mt-0'} value={budgetCap}

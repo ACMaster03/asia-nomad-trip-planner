@@ -135,7 +135,7 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
             <div className={card}>
               <h2 className="mb-3 font-serif text-[19px] font-semibold">Trip basics</h2>
               <TripMetaForm onSubmit={(v) => { if (!create.isPending) create.mutate(v) }} busy={create.isPending} />
-              {create.isError && <p className={warn}>Could not create the trip — try again.</p>}
+              {create.isError && <p className={warn}>Could not create the trip. Try again.</p>}
             </div>
             <div
               className="mt-3.5 rounded-2xl px-3.5 py-2.5 text-center text-base leading-normal text-[#1F2A24] backdrop-blur-[3px]"
@@ -156,7 +156,7 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
               City, country
               <input className={input} value={homeBase} onChange={(e) => setHomeBase(e.target.value)} placeholder="Budapest, Hungary" autoFocus />
             </label>
-            {saveHome.isError && <p className={warn}>Could not save — you can set this later in Settings.</p>}
+            {saveHome.isError && <p className={warn}>Could not save. You can set this later in Settings.</p>}
             <div className="mt-4 flex items-center gap-3.5">
               <button
                 onClick={() => (homeBase.trim() ? saveHome.mutate() : setStep(3))}
@@ -188,7 +188,7 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
                   Their email
                   <input type="email" className={input} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="partner@example.com" autoFocus />
                 </label>
-                {invite.isError && <p className={warn}>Could not record the invite — you can do it later in Settings.</p>}
+                {invite.isError && <p className={warn}>Could not record the invite. You can do it later in Settings.</p>}
               </>
             )}
             <div className="mt-4 flex items-center gap-3.5">

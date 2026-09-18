@@ -100,7 +100,7 @@ export function SegmentForm({
           <div className="-mt-1 overflow-hidden rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-sf">
             {!online && (
               <div className="border-b border-ln bg-warn-soft px-3 py-2 text-base text-warn">
-                📴 Offline — suggestions are limited. Type the name and it will be saved as-is.
+                📴 Offline, suggestions are limited. Type the name and it will be saved as-is.
               </div>
             )}
             {results.map((c) => (
@@ -142,7 +142,7 @@ export function SegmentForm({
               <span className="flex-1">
                 <span className="text-base text-tx2">Use “{city.trim()}” as typed</span>
                 <span className="block text-base text-tx3">
-                  Not in the catalogue — costs won’t be estimated
+                  Not in the catalogue, costs won’t be estimated
                 </span>
               </span>
             </button>

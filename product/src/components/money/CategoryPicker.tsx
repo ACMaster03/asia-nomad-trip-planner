@@ -89,7 +89,7 @@ export function CategoryPicker({
             </div>
           ) : null,
         )}
-        {empty && <p className="py-4 text-base text-tx2">Nothing matches “{q}”. Try a plainer word — the closest category is probably in Everyday.</p>}
+        {empty && <p className="py-4 text-base text-tx2">Nothing matches “{q}”. Try a plainer word. The closest category is probably in Everyday.</p>}
       </div>
     </Sheet>
   )

@@ -57,10 +57,10 @@ export function HazardPanel({ d, onClose }: { d: Hazard; onClose: () => void }) 
       label="Heavy-rain / monsoon season"
       onClose={onClose}
     >
-      <div className={sub}>{d.city} — {monthName()}</div>
-      <p className="my-2 text-base">~<b>{d.rain} mm</b> of rain expected this month — well into the wet season.</p>
+      <div className={sub}>{d.city}, {monthName()}</div>
+      <p className="my-2 text-base">~<b>{d.rain} mm</b> of rain expected this month, well into the wet season.</p>
       {d.hazardText && <p className="text-base">{d.hazardText}</p>}
-      <p className={'mt-2.5 ' + sub}>From your city climate data — expect frequent downpours and possible flooding/transport disruption; check live forecasts close to your dates.</p>
+      <p className={'mt-2.5 ' + sub}>From your city climate data: expect frequent downpours and possible flooding/transport disruption; check live forecasts close to your dates.</p>
       {closeBtn}
     </MapModal>
   )

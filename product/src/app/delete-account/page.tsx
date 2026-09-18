@@ -38,7 +38,7 @@ export default function DeleteAccountPage() {
         </>
       }
     >
-      <Section id="in-app" title="From inside the app — takes a minute">
+      <Section id="in-app" title="From inside the app (takes a minute)">
         <ol className="list-decimal space-y-1 pl-5">
           <li>
             Sign in at{' '}
@@ -64,15 +64,15 @@ export default function DeleteAccountPage() {
       <Section id="by-email" title="If you cannot sign in">
         <p>
           Write to <LegalValue value={LEGAL.contactEmail} /> from the email address the account uses
-          and ask for it to be deleted. We will confirm it is your address before erasing anything —
-          which is the whole reason this page is not a button — and complete the deletion within 30
+          and ask for it to be deleted. We will confirm it is your address before erasing anything,
+          which is the whole reason this page is not a button, and complete the deletion within 30
           days, usually far sooner.
         </p>
       </Section>
 
       <Section id="what-goes" title="What is erased">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Every trip you own — the itinerary, stays, transport, notes, check-ins and money entries.</li>
+          <li>Every trip you own: the itinerary, stays, transport, notes, check-ins and money entries.</li>
           <li>The photos attached to those trips.</li>
           <li>Your place on trips somebody else owns. Their trip survives; you are simply no longer on it.</li>
           <li>Your follow links, which stop working for everyone holding them.</li>
@@ -84,7 +84,7 @@ export default function DeleteAccountPage() {
             Nothing is retained, nothing is archived, and there is no undo.
           </b>{' '}
           We keep no backup copy we could restore you from, so export anything you want to keep
-          before you do this — the app writes your trip and your money ledger out as files.
+          before you do this. The app writes your trip and your money ledger out as files.
         </p>
         <p>
           A trip owned by someone else that you had joined is theirs, and stays. If you want your

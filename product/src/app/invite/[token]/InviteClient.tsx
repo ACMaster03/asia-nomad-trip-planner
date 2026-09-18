@@ -117,7 +117,7 @@ export default function InviteClient({
             style={{ background: 'rgba(255,255,255,.72)' }}
           >
             It may have been accepted already or withdrawn. Ask the person who sent it for a fresh
-            link — or sign in if you already joined.
+            link, or sign in if you already joined.
           </div>
           <a
             href="/login"
@@ -198,7 +198,7 @@ export default function InviteClient({
           )}
           {phase === 'mismatch' && (
             <div className="lv-enter rounded-[22px] border border-warn-line bg-warn-soft px-4 py-3.5 text-base leading-normal text-warn">
-              This invite was sent to {p.email} — you&apos;re signed in as someone else. Accept it
+              This invite was sent to {p.email}, but you&apos;re signed in as someone else. Accept it
               from that account, or ask for an invite to yours.
             </div>
           )}

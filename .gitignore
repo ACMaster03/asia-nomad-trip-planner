@@ -10,6 +10,9 @@ docs/archive/transcripts/
 # Database connection strings for tools/db.sh — .staging-conn, .prod-conn.
 # Globbed, not listed: a new target must never be committable by omission.
 supabase/.*-conn
+# Supabase Management API personal access token, for reading and pushing the
+# auth config (supabase/config.toml). Same rule: globbed, never listed.
+supabase/.*-token
 supabase/backups/
 
 # Serwist build output — regenerated every `next build --webpack`

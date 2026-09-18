@@ -51,7 +51,7 @@ export default function PeopleClient({ initialTab }: { initialTab: Tab }) {
       qc.invalidateQueries({ queryKey: tk.followers })
       qc.invalidateQueries({ queryKey: tk.followingFeed })
     },
-    onError: () => toast('That did not go through — try again'),
+    onError: () => toast('That did not go through. Try again'),
   })
 
   const pending = tab === 'following' ? following.isPending : followers.isPending
@@ -112,7 +112,7 @@ export default function PeopleClient({ initialTab }: { initialTab: Tab }) {
       )}
 
       {pending && <p className="text-base text-tx2">Loading…</p>}
-      {failed && <p className="text-base text-warn">Could not load this list — pull to refresh or try again later.</p>}
+      {failed && <p className="text-base text-warn">Could not load this list. Pull to refresh or try again later.</p>}
       {!pending && !failed && rows.length === 0 && (
         <section className="rounded-[var(--r)] bg-sf p-5 text-center">
           <p className="text-base leading-[1.55] text-tx2">

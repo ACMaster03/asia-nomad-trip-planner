@@ -75,7 +75,7 @@ export function BookingsCard({ stays, transport, paid, toPay, draftedStays, draf
       {transport.map(row)}
       {draftStays > 0 && (
         <p className="border-t border-ln pt-2.5 text-[13px] text-tx2">
-          {draftStays === 1 ? 'One stay is' : `${draftStays} stays are`} still a draft —
+          {draftStays === 1 ? 'One stay is' : `${draftStays} stays are`} still a draft,
           {' '}{fmt(draftedStays)} that nobody owes yet. Set the status to <b>chosen</b> on the Trip page to count it.
         </p>
       )}

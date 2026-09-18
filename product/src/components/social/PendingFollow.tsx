@@ -37,7 +37,7 @@ export function PendingFollow() {
         toast(`You now follow ${r.followed.map((t) => t.name).join(' & ')}`)
         router.replace(`/journeys/${r.trip_id}`)
       })
-      .catch(() => toast('Could not finish following — open the link again'))
+      .catch(() => toast('Could not finish following. Open the link again'))
   }, [sb, qc, router, toast])
 
   return null

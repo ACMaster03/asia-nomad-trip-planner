@@ -207,7 +207,7 @@ export default function JourneyClient({ tripId }: { tripId: string }) {
 
           {phase === 'live' && quietDays !== null && quietDays >= 3 && (
             <p className="mt-3 rounded-[var(--r)] bg-tag p-4 text-center text-base leading-[1.55] text-tag-ink">
-              Quiet days on the road — no updates in {quietDays} days. No news is usually good news.
+              Quiet days on the road. No updates in {quietDays} days. No news is usually good news.
             </p>
           )}
 
@@ -216,7 +216,7 @@ export default function JourneyClient({ tripId }: { tripId: string }) {
             {feed.isPending && <p className="text-base text-tx2">Loading updates…</p>}
             {!feed.isPending && !events.length && (
               <p className="text-base text-tx2">
-                {phase === 'post' ? 'The journal has ended — thanks for following along!' : 'No updates yet — check back soon.'}
+                {phase === 'post' ? 'The journal has ended. Thanks for following along!' : 'No updates yet. Check back soon.'}
               </p>
             )}
             {events.length > 0 && (
@@ -361,7 +361,7 @@ function FollowSettings({
         <div className="min-w-0 flex-1">
           <div className="text-base font-semibold">Alerts for this trip</div>
           <div className="mt-0.5 text-base leading-[1.4] text-tx2">
-            {muted ? 'Muted — nothing from this trip buzzes' : 'New posts buzz, as set under Account → Alerts'}
+            {muted ? 'Muted, nothing from this trip buzzes' : 'New posts buzz, as set under Account → Alerts'}
           </div>
         </div>
         <Toggle on={!muted} disabled={!tripNotify.isSuccess} label="Alerts for this trip" onChange={(v) => mute.mutate(!v)} />

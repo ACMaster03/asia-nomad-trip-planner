@@ -25,7 +25,7 @@ export function ViewerNotice() {
         ) : (
           <>
             <span className="font-medium text-tx">Read-only.</span>{' '}
-            You were invited to this trip as a viewer — you can see everything, but only the
+            You were invited to this trip as a viewer, so you can see everything, but only the
             owner and co-editors can change it.
           </>
         )}

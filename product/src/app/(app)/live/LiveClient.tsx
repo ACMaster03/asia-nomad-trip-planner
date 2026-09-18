@@ -339,7 +339,7 @@ export default function LiveClient() {
         </div>
         <h1 className="mt-1 font-serif text-[28px] font-semibold leading-[1.12] tracking-[-.01em]">
           {phase === 'pre' && s.meta.tripName}
-          {phase === 'post' && `${s.meta.tripName} — trip complete`}
+          {phase === 'post' && `${s.meta.tripName}: trip complete`}
           {phase === 'live' && (
             <>
               Day {dayNum}
@@ -507,8 +507,8 @@ export default function LiveClient() {
         {events.data && events.data.length === 0 && (
           <div className="px-3.5 py-6 text-center text-base text-tx2">
             {phase === 'pre'
-              ? 'Nothing yet — the feed wakes up with the trip.'
-              : 'No check-ins yet — tap “Check in” when you get somewhere.'}
+              ? 'Nothing yet. The feed wakes up with the trip.'
+              : 'No check-ins yet. Tap “Check in” when you get somewhere.'}
           </div>
         )}
         {(events.data ?? []).map((ev) => (
@@ -519,7 +519,7 @@ export default function LiveClient() {
             queued={pausedIds.has(ev.id)}
             onEdit={() => setEditEvent(ev)}
             onDelete={() => {
-              if (confirm('Delete this entry? This is the undo — the row is removed for everyone.'))
+              if (confirm('Delete this entry? This is the undo: the row is removed for everyone.'))
                 delEvent.mutate(ev.id, {
                   onSuccess: () =>
                     toast(
@@ -680,7 +680,7 @@ function PreTrip({
         <div className="mt-2 grid gap-1.5 text-base text-tx2">
           <div>One-tap check-ins with ratings &amp; comments</div>
           <div>Current stop, nights left, what&apos;s next</div>
-          <div>Plan vs actual — are we still on the route we drew?</div>
+          <div>Plan vs actual: are we still on the route we drew?</div>
           <div>Arrival events that update the follower map</div>
         </div>
       </div>

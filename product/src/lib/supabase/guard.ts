@@ -25,7 +25,7 @@ export function isTransientAuthError(error: unknown): boolean {
 
 export class AuthUnavailableError extends Error {
   constructor(cause?: unknown) {
-    super("Couldn't verify your sign-in — the auth service didn't answer.")
+    super("Couldn't verify your sign-in. The auth service didn't answer.")
     this.name = 'AuthUnavailableError'
     this.cause = cause
   }

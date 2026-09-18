@@ -152,10 +152,10 @@ export function quakesFromFeed(j: { features?: unknown[] } | null): Hazard[] {
 export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 export const monthName = () => MONTHS[new Date().getMonth()]
 export function quakeSafetyNote(m: number) {
-  if (m >= 6.5) return 'Strong quake — capable of serious damage near the epicentre. If this is on your route, check local news and authorities before travelling there.'
-  if (m >= 5.5) return 'Moderate–strong — can cause damage close to the epicentre; usually localised.'
-  if (m >= 4.5) return 'Light–moderate — widely felt but rarely damaging.'
-  return 'Minor — generally not damaging.'
+  if (m >= 6.5) return 'Strong quake, capable of serious damage near the epicentre. If this is on your route, check local news and authorities before travelling there.'
+  if (m >= 5.5) return 'Moderate–strong: can cause damage close to the epicentre; usually localised.'
+  if (m >= 4.5) return 'Light–moderate: widely felt but rarely damaging.'
+  return 'Minor: generally not damaging.'
 }
 export const COUNTRY_ALIAS: Record<string, string> = { 'Lao PDR': 'Laos', 'Viet Nam': 'Vietnam', 'Republic of Korea': 'South Korea', 'Korea, Rep.': 'South Korea' }
 export function isoToFlag(iso?: string | null) {

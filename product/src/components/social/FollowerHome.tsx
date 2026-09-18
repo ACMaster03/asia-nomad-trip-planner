@@ -102,7 +102,7 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
           <Link2 className="mt-0.5 size-5 flex-none text-ac2" aria-hidden />
           <p className="text-base leading-[1.5] text-tx2">
             <span className="font-semibold text-tx">Did someone send you a follow link?</span> Open it again now
-            that you are signed in — one tap follows them, and their journey shows up here.
+            that you are signed in. One tap follows them, and their journey shows up here.
           </p>
         </div>
       )}

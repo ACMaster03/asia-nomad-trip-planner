@@ -1,7 +1,7 @@
 <!-- Livhold — CONFIRM SIGNUP. Supabase → Auth → Email Templates → "Confirm signup".
      This is the FIRST email anyone ever receives: signInWithOtp() creates the account,
      so a brand-new address gets this one, never the Magic Link template. -->
-<div style="display:none;font-size:1px;color:#f0eee9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Confirm your email and your journey begins — the link expires in 15 minutes.</div>
+<div style="display:none;font-size:1px;color:#f0eee9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Confirm your email and your journey begins. The link expires in 15 minutes.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0eee9;padding:32px 16px;">
   <tr>
     <td align="center">
@@ -13,7 +13,7 @@
             <div style="margin-top:6px;font-size:14px;letter-spacing:0.06em;color:#8a938c;">the living journey, held together</div>
 
             <h1 style="margin:26px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;font-weight:500;color:#1F2A24;">Welcome, traveller</h1>
-            <p style="margin:12px 0 0;font-size:16px;line-height:1.55;color:#3F5A3E;">Confirm <strong style="font-weight:600;">{{ .Email }}</strong> and your journey begins &mdash; the link signs you in, with no password to choose.</p>
+            <p style="margin:12px 0 0;font-size:16px;line-height:1.55;color:#3F5A3E;">Confirm <strong style="font-weight:600;">{{ .Email }}</strong> and your journey begins. The link signs you in.</p>
 
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto 0;width:100%;">
               <tr>
@@ -27,12 +27,12 @@
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px auto 0;width:100%;">
               <tr>
                 <td style="background-color:#E4EEE6;border-radius:16px;padding:12px 16px;font-size:15px;line-height:1.5;color:#2B3A4A;" align="center">
-                  Next comes a 3-step setup &mdash; about a minute.<br />The link works once and expires in 15 minutes.
+                  Next comes a 3-step setup, about a minute.<br />The link works once and expires in 15 minutes.
                 </td>
               </tr>
             </table>
 
-            <p style="margin:18px 0 0;font-size:14px;line-height:1.55;color:#8a938c;">Didn&rsquo;t sign up? Ignore this email &mdash; no account is created until the link is opened.</p>
+            <p style="margin:18px 0 0;font-size:14px;line-height:1.55;color:#8a938c;">Didn&rsquo;t sign up? Ignore this email: no account is created until the link is opened.</p>
 
             <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#8a938c;">
               Button not working? Copy this link into your browser:<br />

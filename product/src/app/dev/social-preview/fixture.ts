@@ -102,7 +102,7 @@ export const journeySummary: FollowedSummary = {
 
 export const comments: PostComment[] = [
   { id: 'c1', parent_id: null, author: 'mum-uuid', authorName: 'Zsuzsa', isTraveller: false, body: 'Beautiful!! Did you go up to the top?', deleted: false, created_at: ago(2.5) },
-  { id: 'c2', parent_id: 'c1', author: ANNA, authorName: 'Anna', isTraveller: true, body: 'Halfway — the crowds catch up around 8.', deleted: false, created_at: ago(2) },
+  { id: 'c2', parent_id: 'c1', author: ANNA, authorName: 'Anna', isTraveller: true, body: 'Halfway, the crowds catch up around 8.', deleted: false, created_at: ago(2) },
   { id: 'c3', parent_id: null, author: ME, authorName: 'Patrik', isTraveller: false, body: 'Adding it to our list for next year.', deleted: false, created_at: ago(1) },
 ]
 

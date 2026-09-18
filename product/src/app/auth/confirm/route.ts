@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     return fail(
       rawType
         ? `unsupported link type: ${rawType}`
-        : 'the link carried an empty type — the email template needs a literal type=magiclink or type=signup, not a placeholder',
+        : 'the link carried an empty type; the email template needs a literal type=magiclink or type=signup, not a placeholder',
     )
   }
 

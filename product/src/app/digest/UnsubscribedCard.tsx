@@ -36,7 +36,7 @@ export default function UnsubscribedCard({
         footnote="Every summary has a one-click unsubscribe link at the bottom."
       >
         <p>
-          Nothing changed after all — {frequency ? `${frequency} ` : ''}summaries will keep
+          Nothing changed after all, {frequency ? `${frequency} ` : ''}summaries will keep
           arriving at <b className="text-tx">{email}</b>.
         </p>
       </DigestCard>
@@ -81,7 +81,7 @@ export default function UnsubscribedCard({
         No more email summaries will be sent to <b className="text-tx">{email}</b>.
       </p>
       <p>
-        The live page still works — unsubscribing only stops the emails, it doesn’t take away
+        The live page still works. Unsubscribing only stops the emails, it doesn’t take away
         your access.
       </p>
     </DigestCard>

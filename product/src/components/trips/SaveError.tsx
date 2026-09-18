@@ -9,10 +9,10 @@ import { isRevConflict, isPermissionDenied } from '@/lib/trips/queries'
 export function SaveError({ show, error }: { show: boolean; error?: unknown }) {
   if (!show) return null
   const msg = isPermissionDenied(error)
-    ? 'Your edit access to this trip was removed, so the change was rolled back. You can still view the trip — ask the owner if you think this is a mistake.'
+    ? 'Your edit access to this trip was removed, so the change was rolled back. You can still view the trip. Ask the owner if you think this is a mistake.'
     : isRevConflict(error)
-      ? 'Someone else changed this trip at the same time — your change was rolled back and the latest version was loaded. Please redo your edit.'
-      : "Couldn't save your change — it was rolled back. Please retry."
+      ? 'Someone else changed this trip at the same time, so your change was rolled back and the latest version was loaded. Please redo your edit.'
+      : "Couldn't save your change, so it was rolled back. Please retry."
   return (
     // Amber, not red — the palette has no red; amber owns warnings/risk.
     <div className="mb-3 rounded-[var(--rCtl)] border border-warn-line bg-warn-soft px-3 py-2 text-base text-warn">

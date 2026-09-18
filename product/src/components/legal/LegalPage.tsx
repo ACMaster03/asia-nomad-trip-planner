@@ -21,7 +21,7 @@ export function LegalValue({ value }: { value: string }) {
   if (!isUnset(value)) return <>{value}</>
   return (
     <mark className="rounded bg-warn-soft px-1 font-semibold text-warn">
-      [{value.replace(/^TODO_/, '').replace(/_/g, ' ').toLowerCase()} — not set yet]
+      [{value.replace(/^TODO_/, '').replace(/_/g, ' ').toLowerCase()}: not set yet]
     </mark>
   )
 }

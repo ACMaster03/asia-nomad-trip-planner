@@ -50,7 +50,7 @@ export default function PrivacyPage() {
         <p>Nothing here is inferred or bought. All of it is either needed to sign you in, or something you typed.</p>
         <p className="font-semibold text-tx">Your account</p>
         <ul className="list-disc space-y-1 pl-5">
-          <li>Your email address — it is how you sign in and how a trip is shared with you by name.</li>
+          <li>Your email address: it is how you sign in and how a trip is shared with you by name.</li>
           <li>
             A password, only if you set one. It is stored hashed by our authentication provider and
             is never visible to us or to you again.
@@ -62,8 +62,8 @@ export default function PrivacyPage() {
           <li>The itinerary: countries, cities, arrival and departure dates, and your own notes on each.</li>
           <li>Stays and transport: names, booking links, prices, dates, and whatever you wrote in the notes.</li>
           <li>
-            Money: income and expense entries — date, category, amount, currency and your note on
-            each. This is financial information about you, and it is the most private thing in the
+            Money: income and expense entries (date, category, amount, currency and your note on
+            each). This is financial information about you, and it is the most private thing in the
             app. It is never shown to followers.
           </li>
           <li>Check-ins: the place, a rating, your comment, and when it happened.</li>
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Who you invited to a trip and whether they can edit or only view.</li>
           <li>
-            The follow links you created. The link itself is stored hashed — we keep the first six
+            The follow links you created. The link itself is stored hashed, and we keep the first six
             characters so you can tell your links apart in the list, and nothing more.
           </li>
         </ul>
@@ -95,8 +95,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <b className="font-semibold text-tx">Not the location in your photos.</b> Photos are
-            re-encoded on your phone before upload, which discards the camera&apos;s embedded data —
-            GPS coordinates, camera model, timestamp — so what leaves your device is the picture
+            re-encoded on your phone before upload, which discards the camera&apos;s embedded data
+            (GPS coordinates, camera model, timestamp), so what leaves your device is the picture
             and nothing else.
           </li>
           <li>
@@ -117,7 +117,7 @@ export default function PrivacyPage() {
 
       <Section id="why" title="Why we are allowed to hold it">
         <p>
-          Your account and your trip content are processed to provide the service you asked for —
+          Your account and your trip content are processed to provide the service you asked for, which is
           performing our agreement with you. Push notifications and email digests are processed on
           consent, which is why nothing is sent until someone switches it on, and why a single tap
           switches it back off.
@@ -128,19 +128,19 @@ export default function PrivacyPage() {
         <p>The service runs on a small number of providers. Each does one job.</p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <b className="font-semibold text-tx">Supabase</b> — the database, the sign-in system and
+            <b className="font-semibold text-tx">Supabase</b>: the database, the sign-in system and
             photo storage. Your data lives here, in <LegalValue value={LEGAL.dataRegion} />.
           </li>
           <li>
-            <b className="font-semibold text-tx">Vercel</b> — hosting. The server code runs in
+            <b className="font-semibold text-tx">Vercel</b>: hosting. The server code runs in
             Dublin, Ireland.
           </li>
           <li>
-            <b className="font-semibold text-tx">Resend</b> — sends the emails: sign-in links, trip
+            <b className="font-semibold text-tx">Resend</b>: sends the emails: sign-in links, trip
             invitations and follower digests. It handles the address the mail is going to.
           </li>
           <li>
-            <b className="font-semibold text-tx">Your browser&apos;s push service</b> — if you turn
+            <b className="font-semibold text-tx">Your browser&apos;s push service</b>: if you turn
             push on, the notification travels through the service your browser uses (Google,
             Mozilla or Apple, depending on the browser). The content is encrypted to your device.
           </li>
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
         <p>
           Photos are stored at web addresses that are impossible to guess, but they are not behind a
           sign-in check. Anyone who has the exact address of a photo can open it. In practice that
-          address only ever reaches people you shared the trip with — but it means a photo URL, once
+          address only ever reaches people you shared the trip with, but it means a photo URL, once
           passed on, keeps working. Treat a photo you upload the way you would treat one you texted
           to somebody.
         </p>
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
 
       <Section id="followers" title="If you follow a trip without an account">
         <p>
-          A follow link opens for anyone who has it — no account, no sign-in. Follow along and we
+          A follow link opens for anyone who has it: no account, no sign-in. Follow along and we
           store nothing about you at all.
         </p>
         <p>
@@ -231,7 +231,7 @@ export default function PrivacyPage() {
           The company is in the United Kingdom and the service runs on providers in{' '}
           <LegalValue value={LEGAL.dataRegion} />, so your data moves between the UK and the EEA in
           the ordinary course of the service working. Both directions are covered by adequacy
-          decisions — the EU recognises the UK, and the UK recognises the EEA — so no extra
+          decisions (the EU recognises the UK, and the UK recognises the EEA), so no extra
           safeguard is needed for that leg.
         </p>
         <p>
