@@ -306,15 +306,10 @@ export default function FollowClient({
         </section>
       )}
 
-      {/* transparency footer (frame 30's tag-wash privacy note, follower-facing) */}
+      {/* Footer: the mark only. The old "what you can see here" card named what
+          the page withholds (money, exact locations, private notes), which reads
+          as a map of where to dig — issue #19. */}
       <footer className="mt-8 space-y-4">
-        <div className="rounded-[var(--r)] bg-tag p-4 text-base leading-[1.55] text-tag-ink">
-          <p className="font-medium">What you can see here</p>
-          <p className="mt-1">
-            Route cities &amp; dates, check-ins and notes the travellers chose to share. Money,
-            bookings, exact locations and private notes are never part of this page.
-          </p>
-        </div>
         <p className="flex items-center justify-center gap-2 text-base text-tx3">
           <Image src="/brand/livhold-mark.png" alt="" width={20} height={20} aria-hidden />
           <span className="font-serif font-semibold tracking-[.08em]">LIVHOLD</span>

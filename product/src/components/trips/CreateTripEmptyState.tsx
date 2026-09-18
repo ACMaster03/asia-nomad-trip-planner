@@ -1,5 +1,7 @@
 'use client'
-import { DoorClosed } from 'lucide-react'
+import { useState } from 'react'
+import Link from 'next/link'
+import { Compass, DoorClosed } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { fetchTrip } from '@/lib/trips/queries'
@@ -34,14 +36,7 @@ export default function CreateTripEmptyState() {
     enabled: tripId !== null,
   })
 
-  if (tripId === null) {
-    // The wizard brings its own full-bleed 2b wash — no page padding here.
-    return (
-      <main>
-        <OnboardingWizard />
-      </main>
-    )
-  }
+  if (tripId === null) return <NoTripScreen />
 
   if (trip.isPending) return null
 
@@ -62,6 +57,55 @@ export default function CreateTripEmptyState() {
           Pick another trip or start your own
         </a>
       </div>
+    </main>
+  )
+}
+
+// Zero trips, on any screen but Home (Home has its own follower view). The
+// wizard used to open here by itself, which made every tab an onboarding
+// interception for an account that only follows people — and, after a trip
+// ends, for anyone who has not planned the next one yet. Now the screen says
+// what it is for and offers the wizard behind one tap (Patrik, 2026-09-18).
+function NoTripScreen() {
+  const [planning, setPlanning] = useState(false)
+  if (planning) {
+    // The wizard brings its own full-bleed 2b wash — no page padding here.
+    return (
+      <main>
+        <OnboardingWizard />
+      </main>
+    )
+  }
+  return (
+    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+      <div>
+        <h1 className="font-serif text-[25px] font-semibold">No trip of your own yet</h1>
+        <p className="mt-[5px] text-base leading-normal text-tx2">
+          This part of Livhold is for planning and living your own trip. Following people works
+          without one.
+        </p>
+      </div>
+      <section className="rounded-[var(--r)] bg-sf p-4">
+        <div className="flex items-start gap-3">
+          <Compass className="mt-0.5 size-5 flex-none text-ac2" aria-hidden />
+          <div className="min-w-0 grow">
+            <div className="font-serif text-lg font-semibold">Going somewhere?</div>
+            <p className="mt-0.5 text-base leading-[1.5] text-tx2">
+              Set up a trip in three short steps. The people who follow you see it only when you let them.
+            </p>
+            <button
+              type="button"
+              onClick={() => setPlanning(true)}
+              className="mt-3 w-full rounded-[calc(var(--r)-3px)] bg-ac py-3 text-base font-semibold text-on"
+            >
+              Plan a trip
+            </button>
+          </div>
+        </div>
+      </section>
+      <Link href="/dashboard" className="text-center text-base font-semibold text-ac2">
+        Back to Home
+      </Link>
     </main>
   )
 }
