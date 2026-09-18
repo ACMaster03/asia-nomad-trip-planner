@@ -5,6 +5,40 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-18 (later)
+
+### FIXED — every scheduled function call on prod had been refused for weeks
+
+The post-shipping audit checked whether 37's signed push fan-out actually
+reached prod, and found something older: all three `cron.job` rows on BOTH
+projects still sent the pre-30 raw `x-cron-secret` header, and prod's
+functions held a `CRON_SECRET` whose digest did not match
+`app_config.cron_secret`. Every call from the database — fx-refresh at
+02:00, stay-deadline-alerts at 07:00, digest-send at 13:00, and the new
+push fan-out — came back 403. Migration 30's cron block never landed
+anywhere; `tools/db.sh` keeps no applied ledger, so "in the repo" was read as
+"live".
+
+Done today: migration 38 (30's cron block alone, defensive, `extensions.hmac`)
+applied on staging and prod; `tools/rotate-cron-secret.sh` set one fresh
+secret on both sides of both projects, digests only on screen; the probe
+`supabase/checks/cron-kick.sql` (push-fanout, nil event id, no side effects)
+answers 200 on staging and prod. Read-only probes for next time live in
+`supabase/checks/`: `cron-jobs.sql`, `cron-secret-digest.sql`,
+`push-fanout-health.sql`.
+
+**Do not re-apply 30**: its `notify_push_fanout` body would overwrite 37's.
+
+**Still to do:** redeploy `fx-refresh` on both projects — it sat on a pre-30
+build (staging answered 200 to the RAW header at 02:00 today) and rejects the
+signed form until then. The first real check-in on prod should then produce a
+200 row in `push-fanout-health.sql` with a `links`/`accounts` summary.
+
+Note for `tools/db.sh` in API mode: only the LAST statement's rows are
+printed. A two-query check file silently loses its first table — write one
+statement (union) or two files.
+
+
 ## 2026-09-14
 
 ### OPEN — turn password sign-in on in the Supabase dashboard (Patrik)
