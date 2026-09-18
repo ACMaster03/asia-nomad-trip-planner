@@ -7,13 +7,46 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-18 (later)
 
+### CLOSED — the three deploy TODOs below were already done; and what was never committed
+
+Two separate things, both the same shape: work that happened but left no trace
+where the next person looks.
+
+**The deploy TODOs were stale.** Checked against the live projects rather than
+the file, with `supabase functions list --project-ref <ref>`:
+
+| Function | staging | prod | code last changed | verdict |
+|---|---|---|---|---|
+| `push-fanout` | v9 @ 10:14 | v9 @ 10:18 | 10:04 (37 rewrite) | 37-aware build live |
+| `fx-refresh` | v3 @ 12:47 | v5 @ 12:48 | 08-08 (signed auth) | signed build live |
+| `stay-deadline-alerts` | v10 @ 12:58 | v11 @ 12:58 | 12:53 (mute fix) | mute fix live |
+
+A version bump only proves *something* was deployed, so the two that mattered
+were read back: prod `stay-deadline-alerts` contains the `trip_notify` /
+`muted` filter, and prod `fx-refresh` ships a `_shared/cronAuth.ts` identical to
+this repo's. **Nothing is waiting on a function deploy.** Downloading a
+deployed function is the check to reach for — see the fx-refresh paragraph
+below for the one trap in it.
+
+**Three pieces of finished work existed only on the Mac**, untracked or
+unstaged, and would have died with the laptop:
+
+- the `tools/db.sh` relative-path fix and its entry here (2026-09-16),
+- `supabase/checks/stay-status-scan.sql` — the file that entry points at,
+- `supabase/email-templates/` — README and both HTML templates, written
+  2026-08-21 and never added.
+
+All three are committed now. The last one is half of the "WORTH DOING" entry at
+the bottom of this file: the templates are under version control from today,
+though still pasted into the dashboard by hand.
+
 ### FIXED — the audit's other holes (PR after the cron one)
 
 - **Deadline pushes ignored the per-trip mute.** `stay-deadline-alerts` read
   only `profiles.notify_deadline_push`; a trip muted under Account → Alerts
   still buzzed for cancel-by dates while the screen promised silence. It now
   drops users with a `trip_notify.muted` row for that trip (email unchanged).
-  Needs a redeploy on both projects.
+  Deployed on both projects at 12:58 the same day (staging v10, prod v11).
 - **The Alerts screen could overwrite real settings.** The save is a whole-row
   upsert built from the fetched row, and a failed fetch fell back to the
   defaults with the switches still live. Switches (and the per-trip ones, on
@@ -26,13 +59,13 @@ when a decision needs to survive the conversation it was made in.
   en-GB like the others. Alerts intro copy no longer claims an email fallback
   for everything.
 
-**Still to check in the Supabase dashboard (Patrik):** Auth → URL
-Configuration. A redirect is accepted on the Site URL host regardless of
-path, but on the other host (apex vs www) only an allowlist match counts, and
-an exact `/auth/callback` entry does not match `/auth/callback?next=…`.
-Supabase then silently sends the person to the Site URL — signed in, no
-follow. Entries should be `https://livhold.com/auth/callback**` and the www
-twin.
+**Checked in the Supabase dashboard, 2026-09-18 (Patrik):** Auth → URL
+Configuration now carries `https://livhold.com/auth/callback**` and the www
+twin, so `?next=` survives on both hosts. Why the wildcards, for next time: a
+redirect is accepted on the Site URL host regardless of path, but on the other
+host (apex vs www) only an allowlist match counts, and an exact
+`/auth/callback` entry does not match `/auth/callback?next=…`. Supabase then
+silently sends the person to the Site URL — signed in, no follow.
 
 
 ### FIXED — every scheduled function call on prod had been refused for weeks
@@ -57,15 +90,51 @@ answers 200 on staging and prod. Read-only probes for next time live in
 
 **Do not re-apply 30**: its `notify_push_fanout` body would overwrite 37's.
 
-**Still to do:** redeploy `fx-refresh` on both projects — it sat on a pre-30
-build (staging answered 200 to the RAW header at 02:00 today) and rejects the
-signed form until then. The first real check-in on prod should then produce a
-200 row in `push-fanout-health.sql` with a `links`/`accounts` summary.
+**Done the same afternoon:** `fx-refresh` redeployed on both projects (staging
+v3, prod v5, 12:47/12:48) — it had sat on a pre-30 build and rejected the signed
+form. Verified after the fact, not assumed: the deployed bundle's
+`_shared/cronAuth.ts` is byte-identical to the repo's signed-HMAC version on
+both projects. `supabase functions download <slug> --project-ref <ref> --workdir
+<a scratch dir>` is the way to check — it writes into
+`<workdir>/supabase/functions/<slug>`, so never run it in the repo root or it
+overwrites the source. The 02:00 run is the first real proof in the logs; the
+first check-in on prod should produce a 200 row in `push-fanout-health.sql`
+with a `links`/`accounts` summary.
 
 Note for `tools/db.sh` in API mode: only the LAST statement's rows are
 printed. A two-query check file silently loses its first table — write one
 statement (union) or two files.
 
+
+## 2026-09-16
+
+### DONE — scanned prod for stays with no `status` (the risk in ed0a471)
+
+Gating stay money on `status` (`commitment.ts`) fixed ticked drafts being
+billed as owed, but it flipped the failure mode: a stay that is genuinely
+booked and carries no `status` now reads as a draft and stops counting. Every
+code path sets one, so this was a "probably fine" shipped to testers.
+
+Scanned it instead of assuming: `supabase/checks/stay-status-scan.sql`.
+
+**Zero flagged rows.** All 16 stays in prod carry a valid status — 15 `chosen`
+(14 ticked), 1 `shortlist` (ticked). No null, empty or unrecognised values.
+The predicate was validated against a fixture first (case-insensitivity,
+whitespace, missing key, missing `include`), because staging has no stays and
+an empty result there proves nothing.
+
+**One thing left to eyeball, not a code issue.** The ticked `shortlist` stay is
+excluded from committed money by design. That is right only if it is really
+unpaid — if the tester booked it and left the status alone, Money now
+UNDER-reports, the mirror of the bug this fixed. Worth one look at that stay.
+
+### FIXED — `tools/db.sh sql <file>` with a relative path
+
+The API path runs the CLI with `--workdir "$LINKDIR"`, so a relative `-f` was
+resolved against `supabase/.links/<target>/` and failed with a `NotFound`
+pointing at a directory you would never think to look in. Broken for every
+relative path since CLI mode landed; the built-in checks never hit it because
+they are passed as `"$CHECKS/…"`. `run()` now absolutises before dispatching.
 
 ## 2026-09-14
 
@@ -251,21 +320,25 @@ would silently turn the form into a false declaration.
 
 ## 2026-09-18
 
-### TODO — deploy push-fanout after migrations 36/37 (both projects)
+### DONE — deploy push-fanout after migrations 36/37 (both projects)
 
 `37-notify-matrix.sql` moves push routing into the database (`push_audience_event`
 / `_comment` / `_reaction`, service_role only) and adds fan-out triggers on
-`event_comments` and `event_reactions`. The Edge Function in the repo now expects
-those readers; the deployed v7 still reads `profiles.notify_event_push` directly
-and knows nothing about comments or reactions. Order: apply 36 + 37, run their
+`event_comments` and `event_reactions`. The Edge Function in the repo expects
+those readers; the deployed v7 read `profiles.notify_event_push` directly and
+knew nothing about comments or reactions. Order: apply 36 + 37, run their
 TESTPLANs, then
 
     supabase functions deploy push-fanout --project-ref fdcncqnklscbztcydtye   # staging
     supabase functions deploy push-fanout --project-ref wvmnudcwcqktcugouqoe   # prod
 
-Docker must be running (see the 2026-09-16 entry). Until the deploy lands the old
-function keeps working for events, and the comment/reaction bodies it does not
-understand answer 400 — nothing breaks, nobody gets those pushes yet.
+Docker must be running (see the 2026-09-16 entry).
+
+**Deployed 2026-09-18**, v9 on both projects (10:14 staging, 10:18 prod), after
+the rewrite commit at 10:04. `stay-deadline-alerts` followed at 12:58 on both
+(v10 staging, v11 prod) for the per-trip mute fix in the audit PR. Nothing in
+this file is waiting on a function deploy any more — see the audit entry at the
+top.
 
 ### FOUND — the signed fan-out trigger could never resolve hmac()
 
@@ -366,3 +439,12 @@ Supabase supports managing templates in `supabase/config.toml` and deploying
 them with the CLI, alongside the migrations already tracked here. Roughly half
 an hour, needs no dashboard access, and turns that whole class of failure into
 an ordinary code review.
+
+**Half done, 2026-09-18.** `supabase/email-templates/` (README + both HTML
+files) had been written on 2026-08-21 and left untracked — it is committed now,
+so a change to a template is at least visible in a diff. The other half is
+still open: there is no `supabase/config.toml` in this repo, so nothing ties
+those files to the project, and the dashboard copy is still the one that runs.
+Until that exists, a template edited in the dashboard and not mirrored here
+drifts exactly as before — the repo only records what someone remembered to
+copy back.
