@@ -18,6 +18,7 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
   const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
 
   if (following.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
+  // Follows nobody and has no trip: the calm no-trip screen, wizard behind one tap.
   if (!following.data?.length) return <CreateTripEmptyState />
 
   const initial = (userName?.trim()[0] ?? userEmail?.trim()[0] ?? '?').toUpperCase()
