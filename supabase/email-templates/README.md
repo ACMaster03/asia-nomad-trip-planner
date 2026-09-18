@@ -1,16 +1,23 @@
 # Livhold auth email templates
 
-Paste into **Supabase → Authentication → Email Templates**. Both use
+The bodies of the two emails Supabase sends on this project's behalf. Both use
 `{{ .ConfirmationURL }}`, which matches the PKCE flow the app actually runs:
 `signInWithOtp()` in `product/src/app/login/page.tsx` sets `emailRedirectTo`, Supabase
 appends `?code=…`, and `product/src/app/auth/callback` exchanges it.
 
-> ⚠️ **Editing a file here changes nothing on its own.** These are copies. There is
-> no `supabase/config.toml` in this repo, so nothing links them to the project and no
-> deploy carries them up — the version that actually goes out is whatever is pasted
-> into the dashboard. After changing a template, paste it in, or it is a diff nobody
-> receives. (Tracking them at all is half of the "put the email templates under
-> version control" entry in `docs/NOTES.md`; the config.toml half is still open.)
+> **These files are deployed, not pasted.** They are the source of truth for the
+> *Confirm signup* and *Magic Link* emails on both projects, wired up in
+> `supabase/config.toml` and shipped with:
+>
+> ```
+> tools/auth-config.sh --staging push
+> tools/auth-config.sh --prod    push
+> ```
+>
+> The wrapper reads the live config back afterwards and prints every field that
+> moved, so a push is never a leap of faith. Editing a template here and not
+> pushing means the change is real in the repo and invisible to travellers —
+> which is the failure this directory was created to end, just one step later.
 
 | File | Supabase template | Who gets it |
 |---|---|---|

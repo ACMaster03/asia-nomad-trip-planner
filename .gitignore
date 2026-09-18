@@ -13,6 +13,11 @@ supabase/.*-conn
 # Supabase Management API personal access token, for reading and pushing the
 # auth config (supabase/config.toml). Same rule: globbed, never listed.
 supabase/.*-token
+# Mail sender credential read by `supabase config push`. Same rule: globbed.
+supabase/.*-pass
+# Snapshots of the live auth config taken by tools/auth-config.sh; they carry
+# the sender credential verbatim, so they never go near a commit.
+supabase/.authcfg/
 supabase/backups/
 
 # Serwist build output — regenerated every `next build --webpack`

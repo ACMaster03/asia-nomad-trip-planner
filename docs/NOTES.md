@@ -7,6 +7,70 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-18 (later)
 
+### DONE — the auth config lives in the repo, and both projects run it
+
+`supabase/config.toml` + `tools/auth-config.sh`. The dashboard is no longer the
+source of truth for auth: change the file, push, review the diff the wrapper
+prints. A second push to either project reports every service `up_to_date` and
+changes nothing, which is the only real proof the file matches what runs.
+
+    tools/auth-config.sh --staging push     # snapshot → push → diff what moved
+    tools/auth-config.sh --prod    push
+    tools/auth-config.sh --prod    show     # live config, secrets redacted
+
+Needs two gitignored files: `supabase/.mgmt-token` (a Supabase PAT, for READING
+the live config) and `supabase/.smtp-pass` (the Resend key, for either push).
+
+**Four things that only came out by doing it:**
+
+- **A push sends the whole config, and it reaches storage as well as auth.** A
+  key missing from the file is sent as the CLI's DEFAULT. With no `[storage]`
+  block the CLI offered prod `vector.enabled = true`, which answered 402 and
+  aborted the push *after* auth had been written. Never delete a key here to
+  "reset" it.
+- **`config push` does not prompt.** It prints a diff and applies. It also
+  ignores `--workdir` (reads `supabase/config.toml` from the shell's cwd), and
+  `content_path` resolves from that same cwd, hence `./supabase/email-templates/…`.
+- **A wrong `env()` value fails like a missing one, only later.** The wrapper
+  used to export a placeholder credential for staging; when staging gained SMTP
+  that placeholder became its mail credential, and every sign-in answered 500.
+  The reason was visible only in the project's auth logs:
+  `535 "Authentication credentials invalid"`. Read them with
+  `GET /v1/projects/<ref>/analytics/endpoints/logs.all?sql=select timestamp,
+  event_message from auth_logs order by timestamp desc limit 15`.
+- **A free tier project on Supabase's default sender cannot change email
+  templates at all** (HTTP 400, "please upgrade your plan or configure a custom
+  SMTP provider"), and because the auth update is atomic the whole push fails.
+  Staging therefore sends through Resend too now, as "Livhold (staging)".
+
+**What prod changed:** the signup subject had a typo since it was written
+("Start you journey with Livhold!"), both template bodies, and `smtp_pass` —
+prod's stored hash differed, so prod now sends on the key in
+`supabase/.smtp-pass`. **Keep that key alive in Resend; sign-in depends on it.**
+Verified with a real `/otp` call to prod: 200, no error in the auth logs.
+
+Also corrected while reading the live config: both templates promised "expires
+in 15 minutes" while prod's `mailer_otp_exp` is 3600. The copy says an hour now.
+
+### OPEN — rotate the project JWT secret (Patrik), deferred 2026-09-18
+
+Both projects' `jwt_secret` was printed into a Claude session transcript on
+2026-09-18 (an unfiltered dump of `GET /v1/projects/<ref>/postgrest`). It never
+left the machine or that session, so this is deferred rather than urgent —
+Patrik's call, not to be done during departure season. What it costs when you
+do it:
+
+1. Dashboard → Project Settings → API → rotate the JWT secret.
+2. Paste the new anon key into Vercel as `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   (Production **and** Preview), then redeploy. That is the only place the app
+   holds it: `product/src` reads `NEXT_PUBLIC_SUPABASE_URL` and the anon key,
+   and no service-role key at all.
+3. Edge Functions need nothing: `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_URL`
+   are injected by the platform.
+4. Everyone signed in is signed out once and needs a fresh magic link.
+   Followers on share links are unaffected — those are share tokens, not auth.
+
+
 ### CLOSED — the three deploy TODOs below were already done; and what was never committed
 
 Two separate things, both the same shape: work that happened but left no trace

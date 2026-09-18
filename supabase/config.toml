@@ -1,0 +1,195 @@
+# Supabase auth configuration, under version control.
+#
+# WHY THIS FILE EXISTS. The sign-in outage (docs/NOTES.md, 2026-08-28) happened
+# because the email template lived only in the dashboard: it drifted from what
+# `auth/confirm/route.ts` expected and no diff anywhere could catch it. The cron
+# outage was the same shape. Auth settings belong where migrations and Edge
+# Functions already are — in the repo, reviewable in a pull request.
+#
+# HOW TO PUSH. Never `supabase config push` by hand; use the wrapper, which sets
+# the per-target values and refuses a target it has no sender credential for:
+#
+#     tools/auth-config.sh --staging push
+#     tools/auth-config.sh --prod    push
+#
+# `supabase config push` reads THIS PATH relative to the shell's cwd and ignores
+# --workdir, so it must be run from the repo root. The content_path values below
+# are resolved from that same cwd — hence "./supabase/email-templates/…", not a
+# path relative to this file.
+#
+# ⚠ THE TRAP THAT MAKES THIS FILE DANGEROUS. A push sends the WHOLE auth config.
+# There is no "leave this one alone": every key the CLI knows about is sent, and
+# a key missing from this file is sent as the CLI's DEFAULT, not as whatever the
+# project currently has. Defaults that would do real damage here:
+#
+#     site_url                 → http://127.0.0.1:3000   (magic links to nowhere)
+#     additional_redirect_urls → []                      (the allowlist, gone)
+#     enable_confirmations     → false                   (no email confirmation)
+#     auth.email.smtp.enabled  → false                   (prod stops using Resend)
+#     rate_limit.email_sent    → 2/hour                  (prod is 30)
+#     mfa.totp.*_enabled       → false                   (prod has TOTP on)
+#
+# So: never delete a key here to "reset" it, and after every push run
+# `tools/auth-config.sh --<target> diff`, which re-reads the live config and
+# reports every field that moved.
+#
+# Values below mirror what prod ran on 2026-09-18, read from
+# GET /v1/projects/<ref>/config/auth. Where the two projects legitimately differ,
+# the difference lives in the [remotes.staging] block at the bottom — not in a
+# second copy of this file.
+
+project_id = "livhold"
+
+# Storage is here for one reason: a push touches it whether or not you mention
+# it. With no [storage] block, the CLI sent its own default `vector.enabled =
+# true` at prod, which answered 402 "Please upgrade the project to a paid tier
+# to enable vector buckets" and aborted the push half way — after auth had
+# already been updated. These values mirror what prod runs; staging's differ and
+# are in [remotes.staging.storage] below. Nothing here is a feature anyone asked
+# for, it is a lock on the door.
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[storage.s3_protocol]
+enabled = true
+
+[storage.analytics]
+enabled = false
+max_namespaces = 10
+max_tables = 10
+max_catalogs = 2
+
+[storage.vector]
+enabled = false
+max_buckets = 10
+max_indexes = 5
+
+[auth]
+enabled = true
+# Prod's own origin. Overridden for staging below.
+site_url = "https://www.livhold.com"
+# Every origin an auth redirect may land on. The `**` entries matter: an exact
+# `/auth/callback` does NOT match `/auth/callback?next=…`, and without a match
+# Supabase silently sends the person to site_url — signed in, but with the
+# follow they clicked on dropped (docs/NOTES.md, 2026-09-18).
+additional_redirect_urls = [
+  "https://www.livhold.com/auth/callback",
+  "https://livhold.com/**",
+  "https://www.livhold.com/auth/confirm",
+  "https://livhold.com/auth/confirm",
+  "https://livhold.com/auth/callback**",
+  "https://www.livhold.com/auth/callback**",
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# PUBLIC SIGN-UP IS DELIBERATE. A magic link to a working address is how someone
+# starts a journey, and it is the main way in (Patrik, 2026-09-18). Comments and
+# docs written on 2026-09-14 claimed the opposite; they were wrong and are fixed.
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+minimum_password_length = 6
+password_requirements = ""
+
+[auth.rate_limit]
+# 30/hour is only available because prod sends through its own SMTP; the CLI
+# default of 2 would throttle sign-ins to a trickle.
+email_sent = 30
+sms_sent = 30
+anonymous_users = 30
+token_refresh = 150
+sign_in_sign_ups = 30
+token_verifications = 30
+web3 = 30
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Confirmation email required. The CLI default (false) means auto-confirm, i.e.
+# an account usable without ever proving the address — which is exactly the
+# check that public sign-up relies on.
+enable_confirmations = true
+secure_password_change = false
+max_frequency = "1m0s"
+otp_length = 8
+# One hour. Both templates say "expires in an hour"; if this changes, that copy
+# changes with it.
+otp_expiry = 3600
+
+[auth.email.smtp]
+# Prod sends auth mail through Resend so it is not on Supabase's shared sender
+# and not capped at 2/hour. Disabled for staging in [remotes.staging] below.
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(SUPABASE_AUTH_SMTP_PASS)"
+admin_email = "hello@livhold.com"
+sender_name = "Livhold Team"
+
+[auth.email.template.confirmation]
+# The first email anyone ever receives: signInWithOtp() creates the account, so
+# a brand-new address always gets this one, never Magic Link.
+subject = "Start your journey with Livhold!"
+content_path = "./supabase/email-templates/confirm-signup.html"
+
+[auth.email.template.magic_link]
+subject = "Your Livhold sign-in link"
+content_path = "./supabase/email-templates/magic-link.html"
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false
+otp_length = 6
+max_frequency = "5s"
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+max_frequency = "5s"
+
+# --- per-target differences -------------------------------------------------
+# Selected by project ref: `supabase config push --project-ref <ref>` applies the
+# remote whose project_id matches. Everything not repeated here is inherited.
+
+[remotes.staging]
+project_id = "fdcncqnklscbztcydtye"
+
+# Staging has these storage features on, prod does not. Mirrored rather than
+# aligned: this file records what the projects are, and turning features off on
+# staging is not something an auth-config change should quietly do.
+[remotes.staging.storage.analytics]
+enabled = true
+
+[remotes.staging.storage.vector]
+enabled = true
+
+[remotes.staging.auth]
+# Staging's magic links are meant to open a dev server, not the live site.
+site_url = "http://localhost:3000"
+
+[remotes.staging.auth.email.smtp]
+# Staging sends through Resend too, on the same key. Not for the quota: a free
+# tier project on Supabase's DEFAULT sender refuses template changes outright
+# ("Email template modification is not available for free tier projects using
+# the default email provider", HTTP 400), which made staging useless as a
+# rehearsal for exactly the thing this file exists to ship. Custom SMTP lifts
+# that restriction.
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(SUPABASE_AUTH_SMTP_PASS)"
+admin_email = "hello@livhold.com"
+# The one deliberate difference from prod: a test email must be recognisable as
+# a test email at a glance in the inbox.
+sender_name = "Livhold (staging)"
