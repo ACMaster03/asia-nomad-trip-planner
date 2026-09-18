@@ -5,6 +5,45 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-18 (evening)
+
+### BUILT, NOT PUSHED — the planner globe: issues #32 and #9
+
+Two stacked branches, one commit each, waiting for Patrik to push and open
+the PRs (the auto-mode session cannot push): `fix/globe-eight` (#32) and
+`feat/routes-touch` on top of it (#9). Merge #32 alone if #9 needs another
+round.
+
+**#32, the eight fixes**, all in `components/Globe.tsx` and `app/(app)/map`:
+one globe.gl instance for the life of the screen, patched in place (the
+camera no longer resets on a trip edit); `?city=<id>` carries a tapped pin
+to Explore; a tap swaps the bottom card to that city (touch has no hover);
+hazards demoted to amber, half-size, translucent, rings only for M5.5+ and
+400mm+; Borders toggles the polygons themselves; 130/480 zoom clamps; spin
+pauses on touch and resumes after 10 s; the USGS feed goes through React
+Query (15 min stale, 8 s timeout). One extra thing found on the way:
+globe.gl resolves a click through the object hovered on the last frame and
+re-raycasts at most every 50 ms, so a quick tap could land on nothing —
+there is now a fallback hit-test that picks the nearest pin under the finger.
+
+**#9, where our routes touch**: `lib/map/people.ts` (pure, tested) groups
+the people you follow by the city they are in and computes overlaps between
+your segments and their `followed_trip_summary` routes. Sky-blue HTML marks
+on the globe (the one hue outside mauve/hunter/amber), thicker per head
+count, names only in the sheet; "Show route" draws one person's itinerary
+beside yours; the same overlap line sits under Home's people strip. No
+migration and no new RPC. Verified on staging with a rolled-back run
+(scratch SQL, seeded follow graph, both RPCs asserted; nothing persisted).
+
+**Dev-only preview, no sign-in:** `/dev/map-preview` (`?screen=knowledge&city=4`,
+`?screen=home`). Fixtures in `app/dev/map-preview/fixture.ts`.
+
+**Open, for Patrik's review:** the review page (artifact) has one question
+per screen — mark sizing bands, the sheet's copy, whether Home shows more
+than three meet-ups. Nothing is blocked on the answers.
+
+---
+
 ## 2026-09-18 (later)
 
 ### DONE — the auth config lives in the repo, and both projects run it
