@@ -7,6 +7,34 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-18 (later)
 
+### FIXED — the audit's other holes (PR after the cron one)
+
+- **Deadline pushes ignored the per-trip mute.** `stay-deadline-alerts` read
+  only `profiles.notify_deadline_push`; a trip muted under Account → Alerts
+  still buzzed for cancel-by dates while the screen promised silence. It now
+  drops users with a `trip_notify.muted` row for that trip (email unchanged).
+  Needs a redeploy on both projects.
+- **The Alerts screen could overwrite real settings.** The save is a whole-row
+  upsert built from the fetched row, and a failed fetch fell back to the
+  defaults with the switches still live. Switches (and the per-trip ones, on
+  Account and in the journey sheet) are locked until the fetch succeeded.
+- **Migration 39:** `rotate_share_link()` refuses an expired link (36 refused
+  revoked only); the UI marks expired links and hides Rotate.
+- Follower Home no longer reads a failed `my_following` as "you follow nobody";
+  it shows a retry row instead. `?auto=` on the follow page only accepts UUIDs.
+  The last locale-less `toLocaleDateString()` (ActiveTripCard) is pinned to
+  en-GB like the others. Alerts intro copy no longer claims an email fallback
+  for everything.
+
+**Still to check in the Supabase dashboard (Patrik):** Auth → URL
+Configuration. A redirect is accepted on the Site URL host regardless of
+path, but on the other host (apex vs www) only an allowlist match counts, and
+an exact `/auth/callback` entry does not match `/auth/callback?next=…`.
+Supabase then silently sends the person to the Site URL — signed in, no
+follow. Entries should be `https://livhold.com/auth/callback**` and the www
+twin.
+
+
 ### FIXED — every scheduled function call on prod had been refused for weeks
 
 The post-shipping audit checked whether 37's signed push fan-out actually

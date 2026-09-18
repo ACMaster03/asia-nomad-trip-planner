@@ -127,6 +127,8 @@ export const tripNotify: TripNotify[] = [{ trip_id: JOURNEY_TRIP, muted: true, a
 export const shares: TripShare[] = [
   { id: 'share-family', trip_id: 'fixture', token_prefix: 'a1b2c3', label: 'Family', created_at: ago(300), expires_at: '2027-01-01T00:00:00Z', revoked_at: null, paused_at: null },
   { id: 'share-office', trip_id: 'fixture', token_prefix: 'd4e5f6', label: 'Office', created_at: ago(200), expires_at: null, revoked_at: null, paused_at: ago(20) },
+  // Expired: shows the label and hides Rotate (39 would refuse it anyway).
+  { id: 'share-old', trip_id: 'fixture', token_prefix: '9f8e7d', label: 'Summer trip', created_at: ago(900), expires_at: '2026-06-30T23:59:59Z', revoked_at: null, paused_at: null },
 ]
 export const shareStats: ShareStats[] = [
   { share_id: 'share-family', push: 3, email: 2 },

@@ -364,7 +364,7 @@ function FollowSettings({
             {muted ? 'Muted — nothing from this trip buzzes' : 'New posts buzz, as set under Account → Alerts'}
           </div>
         </div>
-        <Toggle on={!muted} disabled={tripNotify.isPending} label="Alerts for this trip" onChange={(v) => mute.mutate(!v)} />
+        <Toggle on={!muted} disabled={!tripNotify.isSuccess} label="Alerts for this trip" onChange={(v) => mute.mutate(!v)} />
       </div>
 
       {confirm && (
