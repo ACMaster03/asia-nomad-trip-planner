@@ -144,6 +144,18 @@ project_id = "fdcncqnklscbztcydtye"
 site_url = "http://localhost:3000"
 
 [remotes.staging.auth.email.smtp]
-# Staging stays on Supabase's built-in sender: no Resend quota spent on tests,
-# and no staging mail that looks like it came from Livhold.
-enabled = false
+# Staging sends through Resend too, on the same key. Not for the quota: a free
+# tier project on Supabase's DEFAULT sender refuses template changes outright
+# ("Email template modification is not available for free tier projects using
+# the default email provider", HTTP 400), which made staging useless as a
+# rehearsal for exactly the thing this file exists to ship. Custom SMTP lifts
+# that restriction.
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(SUPABASE_AUTH_SMTP_PASS)"
+admin_email = "hello@livhold.com"
+# The one deliberate difference from prod: a test email must be recognisable as
+# a test email at a glance in the inbox.
+sender_name = "Livhold (staging)"
