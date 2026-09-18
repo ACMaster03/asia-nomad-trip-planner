@@ -83,3 +83,66 @@ Not components. Three platforms now, so the shared layer is:
 
 The three data regimes, the mock-first design gate, the milestone ordering, and the
 "live mode + family follow ship before UI polish" sequencing all stand unchanged.
+
+---
+
+## Amendment — 2026-09-18: SwiftUI re-affirmed, Flutter declined
+
+Raised again because iOS matters (both of us carry iPhones) and cross-platform toolkits had
+never been weighed explicitly — only React Native had, above.
+
+**Flutter buys the one thing we already have.** Its value is a single codebase for iOS and
+Android; Android is served by the TWA in ~1 day for $25. Using Flutter properly would mean
+*replacing* a working Android target with a second app to maintain — more work, not less, and
+Dart as a third language beside TypeScript and SQL.
+
+Point by point, for this app rather than in general:
+
+| | SwiftUI | Flutter |
+|---|---|---|
+| Sign in with Apple | first-class; it is a launch priority | plugin wrapper |
+| Maps | MapKit — native, free, satellite, zoomable | Apple Maps only through community platform views; the trodden path is Google Maps, i.e. the bill declined on 2026-09-18 |
+| Widgets, Live Activities | native | **WidgetKit is SwiftUI-only.** A Flutter app that wants them contains Swift anyway |
+| Supabase | official Swift SDK | official Flutter SDK — genuinely a wash |
+| Machine state | Xcode 26.6, Swift 6.3.3, fastlane match, $99 paid | the same Xcode, signing and review friction, plus another toolchain |
+
+The widgets row settles it: a Live Activity reading "3 days in Hanoi, next stop Da Nang" is
+exactly what this app wants on a lock screen, and it is SwiftUI whatever wraps the rest.
+
+The deeper reason is the one already recorded above for React Native: the iOS app is a
+**4-tab companion, a quarter of the surface, deliberately different from web**. When sharing
+was never the prize, a framework selling sharing has nothing to offer.
+
+Also rejected again, for the record: Capacitor or any wrapper around the PWA (Guideline 4.2,
+and RSC + middleware rule out a static export), and Compose Multiplatform (non-native
+rendering, smaller ecosystem, same downside as Flutter).
+
+### The open question is timing, not language
+
+As of this date **no Swift exists** — no Xcode project, no `Package.swift`, nothing in git
+history — and the "both stores before Aug 31 2026" target has passed. The estimate above stands:
+several weeks for the companion, months for parity.
+
+Weigh that against what the PWA already does on our own phones: installed to the home screen,
+and since iOS 16.4 receiving web push, which the notification matrix (migration 37) already
+sends. What the native app adds beyond that is Sign in with Apple, widgets and Live Activities,
+background location, genuine offline, and App Store presence. Those are real; they are also
+several weeks that currently compete with everything else on the roadmap.
+
+**Decision: the platform choice stands (SwiftUI). The schedule is deliberately left open.**
+
+### What crosses from web to iOS, and what does not
+
+Learned while planning the map work on 2026-09-18, and worth stating because it is easy to
+assume a fix list ports:
+
+* **Features in the schema travel.** `my_following()`, `followed_trip_summary`, the per-city
+  OSM places layer, meet-up overlaps and a `via` on a transport leg are all read through the
+  same RLS by any client. This is the shared contract the table above already names.
+* **Fixes in the renderer do not.** Auto-rotate, invisible polygon hit-targets and zoom clamps
+  are globe.gl artefacts with no MapKit counterpart. Three of the eight map fixes carry as
+  *decisions* — a tapped place must keep its identity, the route outranks hazards, remote feeds
+  are cached and timed out — and the rest simply do not exist natively.
+* **MapKit is free detail.** The zoom-detail problem that costs $20–25/month in tiles on web is
+  solved on iOS by the platform, at no cost. The reverse is also true: the solar terminator is a
+  WebGL shader with no MapKit equivalent, so on iOS it is its own work or it is absent.
