@@ -17,6 +17,7 @@ import { useTripScope } from '@/lib/trips/TripScope'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { BeforeYouFly, ComingUp } from '../reminders/HomeReminders'
 import HomeActivity from '@/components/social/HomeActivity'
+import FollowerHome from '@/components/social/FollowerHome'
 
 // Home — the one phase-aware tab (handoff frames 07–10). The trip phase
 // (pre / arrive / live / off-plan / post) decides the whole layout:
@@ -105,6 +106,8 @@ export default function DashboardClient({
   // Phase changes reset scroll (handoff rule).
   useScrollReset(phase)
 
+  // No trip of your own: a follower's Home, or the wizard if you follow nobody.
+  if (tripId === null) return <FollowerHome userEmail={userEmail} userName={userName} userId={userId} />
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data || !s || !b) return <CreateTripEmptyState />
 

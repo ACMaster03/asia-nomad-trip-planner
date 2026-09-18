@@ -10,8 +10,8 @@ import Preview, { type Screen } from './Preview'
 // as money-preview — server-seeded cache, dehydrated into the boundary. The
 // RPC refetches fail against a real database (no session), and React Query
 // keeps the seeded data on error, which is exactly what a preview wants.
-//   ?screen=home | journey | people | post | follow
-const SCREENS: Screen[] = ['home', 'journey', 'people', 'post', 'follow']
+//   ?screen=home | nohome (follower without a trip) | journey | people | post | follow
+const SCREENS: Screen[] = ['home', 'nohome', 'journey', 'people', 'post', 'follow']
 
 export default async function SocialPreviewPage({ searchParams }: { searchParams: Promise<{ screen?: string; tab?: string }> }) {
   if (process.env.NODE_ENV !== 'development') notFound()

@@ -8,6 +8,7 @@ import { AppNav } from '@/components/AppNav'
 import { OfflineWarmup } from '@/components/OfflineWarmup'
 import { ToastProvider } from '@/components/Toast'
 import { PendingInvites } from '@/components/trips/PendingInvites'
+import { PendingFollow } from '@/components/social/PendingFollow'
 
 // Server-side auth guard. The shared catalogue RLS is `to authenticated`, so an
 // unauthenticated visitor would get zero rows; require a session here instead.
@@ -65,6 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 yet, so it has no page of its own to live on. Renders nothing
                 unless you actually have one. */}
             <PendingInvites />
+            <PendingFollow />
             {children}
             <AppNav showCheckIn={showLive} />
           </div>
