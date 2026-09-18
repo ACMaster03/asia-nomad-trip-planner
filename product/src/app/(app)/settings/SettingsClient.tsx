@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { useOnline } from '@/lib/useOnline'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
@@ -17,7 +17,6 @@ import { useTripRole } from '@/lib/trips/useTripRole'
 import { roleLabel } from '@/lib/trips/role'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import { DangerZone } from '@/components/trips/DangerZone'
-import { NotificationSettings } from '@/components/trips/NotificationSettings'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { ActiveTripCard } from './ActiveTripCard'
 
@@ -306,10 +305,16 @@ export default function SettingsClient() {
         </div>
       )}
 
-      {/* Personal (device/account-level), so every role sees it — the deadline
-          buzz belongs to the person, not the trip. Appearance and Follow links
-          moved to /account (testing round 1 designer decision). */}
-      <NotificationSettings />
+      {/* Alerts moved to /account with the notification matrix (issue #13):
+          they belong to the person, and a follower with no trip needs them
+          too. One row keeps the old path working for whoever looks here. */}
+      <Link href="/account#alerts" className="flex items-center justify-between rounded-[var(--r)] bg-sf p-4">
+        <span>
+          <span className="block font-serif text-[19px] font-semibold">Alerts</span>
+          <span className="block text-base text-tx2">Push, per-trip mutes — now under Account</span>
+        </span>
+        <ChevronRight aria-hidden className="size-5 text-ac2" />
+      </Link>
 
       {/* Editors, not just the owner: invites_insert gates on can_edit_trip
           (migration 25), so hiding this from a co-editor would be the UI

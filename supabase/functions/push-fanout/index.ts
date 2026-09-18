@@ -1,86 +1,156 @@
-// push-fanout — sends Web Push for one trip event.
-// Invoked by the trip_events_push_fanout trigger (migrations 13 + 27) via
-// pg_net with the shared x-cron-secret. Free-tier: VAPID only, no vendor.
+// push-fanout — sends Web Push for one trip event, comment or reaction.
+// Invoked by the fan-out triggers (migrations 13 → 27 → 30 → 37) via pg_net
+// with the signed x-cron-ts / x-cron-sig headers. Free-tier: VAPID only.
 //
-// Two audiences, decided here (the trigger fires for EVERY insert since 27):
-//   followers  — share-link subscriptions (13), only for follower-visible
-//                events; paused/revoked/expired shares are muted. Payload
-//                mirrors the shared_feed whitelist.
-//   travellers — the trip owner + members (27), for ALL visibilities, minus
-//                the event's author (you don't need a push about your own
-//                check-in), gated on profiles.notify_event_push.
+// Bodies, one key each:
+//   { event_id }                      a new trip_events row
+//   { comment_id }                    a new event_comments row
+//   { reaction: { event_id, user_id } }  a new event_reactions row
+//
+// WHO gets what is decided in the database (37's push_audience_* readers,
+// service_role only): the roster of the trip, the author's followers, the
+// post author, the parent comment's author — every preference, mute and
+// block already applied. This function only turns the answer into
+// notifications and finds the devices:
+//
+//   anonymous link devices — push_subscriptions by share (13/16), only for
+//                            follower-visible events; paused / revoked /
+//                            expired shares are muted. Unchanged since 27.
+//   accounts               — user_push_subscriptions (27) for the user ids
+//                            the reader returned. Copy differs per reason.
 //
 // Secrets (per project): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT,
 // CRON_SECRET (+ SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY, auto-provided).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { sendWebPush, type WebPushTarget } from '../_shared/webpush.ts'
+import { sendWebPush, type PushNote, type WebPushTarget } from '../_shared/webpush.ts'
 import { hasCronSecret } from '../_shared/cronAuth.ts'
-
 
 const sb = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 )
 
-interface EventRow {
-  id: string
+type Reason = 'trip' | 'follow' | 'reply' | 'comment' | 'reaction'
+interface Target { user_id: string; reason: Reason }
+
+interface EventCtx {
+  event_id: string
   trip_id: string
-  author: string | null
+  tripName: string
+  authorName: string
   kind: string
-  payload: { placeName?: string; text?: string; city?: string }
   visibility: string
-  check_ins: { rating: number | null; comment: string | null } | null
+  title: string
+  rating: number | null
+  comment: string | null
+  targets: Target[]
+}
+interface CommentCtx {
+  event_id: string
+  trip_id: string
+  tripName: string
+  authorName: string
+  body: string
+  title: string
+  targets: Target[]
+}
+interface ReactionCtx {
+  event_id: string
+  trip_id: string
+  tripName: string
+  authorName: string
+  glyph: string
+  title: string
+  targets: Target[]
 }
 
-function notification(ev: EventRow, tripName: string) {
-  const stars = ev.check_ins?.rating ? '★'.repeat(ev.check_ins.rating) + ' ' : ''
-  switch (ev.kind) {
+// ---- copy -----------------------------------------------------------------
+
+const EVENT_GLYPH: Record<string, string> = { checkin: '📍', arrived: '🛬', note: '📝' }
+
+// A co-traveller's view: the place is the headline, as it was under 27.
+function tripNote(c: EventCtx): PushNote {
+  const stars = c.rating ? '★'.repeat(c.rating) + ' ' : ''
+  switch (c.kind) {
     case 'checkin':
-      return {
-        title: `📍 ${ev.payload.placeName ?? 'New check-in'}`,
-        body: `${stars}${ev.check_ins?.comment ?? `New check-in on ${tripName}`}`,
-      }
+      return { title: `📍 ${c.title}`, body: `${stars}${c.comment ?? `New check-in on ${c.tripName}`}` }
     case 'arrived':
-      return { title: `🛬 Arrived in ${ev.payload.city ?? '…'}`, body: tripName }
+      return { title: `🛬 ${c.title}`, body: c.tripName }
     case 'note':
-      return { title: `📝 ${tripName}`, body: ev.payload.text ?? 'New note' }
+      return { title: `📝 ${c.tripName}`, body: c.title }
     default:
-      return { title: tripName, body: 'New update' }
+      return { title: c.tripName, body: 'New update' }
   }
 }
 
-Deno.serve(async (req) => {
-  if (!(await hasCronSecret(req))) {
-    return new Response('forbidden', { status: 403 })
+// A follower's view: the person comes first — they follow Anna, not a trip.
+function followNote(c: EventCtx): PushNote {
+  const stars = c.rating ? '★'.repeat(c.rating) + ' ' : ''
+  switch (c.kind) {
+    case 'checkin':
+      return { title: `📍 ${c.authorName} · ${c.title}`, body: `${stars}${c.comment ?? c.tripName}` }
+    case 'arrived':
+      return { title: `🛬 ${c.title}`, body: `${c.authorName} · ${c.tripName}` }
+    case 'note':
+      return { title: `📝 ${c.authorName}`, body: c.title }
+    default:
+      return { title: `${EVENT_GLYPH[c.kind] ?? ''} ${c.authorName}`.trim(), body: `New update on ${c.tripName}` }
   }
-  const { event_id } = await req.json().catch(() => ({}))
-  if (!event_id) return new Response('missing event_id', { status: 400 })
+}
 
-  const { data: ev, error } = await sb
-    .from('trip_events')
-    .select('id,trip_id,author,kind,payload,visibility,check_ins(rating,comment)')
-    .eq('id', event_id)
-    .maybeSingle<EventRow>()
+// ---- devices ----------------------------------------------------------------
+
+async function accountTargets(userIds: string[]): Promise<Map<string, WebPushTarget[]>> {
+  const byUser = new Map<string, WebPushTarget[]>()
+  if (!userIds.length) return byUser
+  const { data, error } = await sb
+    .from('user_push_subscriptions')
+    .select('id,user_id,endpoint,p256dh,auth')
+    .eq('transport', 'webpush')
+    .in('user_id', userIds)
+  if (error) throw new Error(error.message)
+  for (const s of data ?? []) {
+    const t: WebPushTarget = { id: s.id, endpoint: s.endpoint, p256dh: s.p256dh!, auth: s.auth!, table: 'user_push_subscriptions' }
+    byUser.set(s.user_id, [...(byUser.get(s.user_id) ?? []), t])
+  }
+  return byUser
+}
+
+// One send per reason: the same people may need different copy.
+async function sendByReason(
+  targets: Target[],
+  note: (reason: Reason) => PushNote,
+): Promise<Record<string, { subs: number; sent: number; dropped: number }>> {
+  const devices = await accountTargets(targets.map((t) => t.user_id))
+  const groups = new Map<Reason, WebPushTarget[]>()
+  for (const t of targets) {
+    const d = devices.get(t.user_id)
+    if (d?.length) groups.set(t.reason, [...(groups.get(t.reason) ?? []), ...d])
+  }
+  const out: Record<string, { subs: number; sent: number; dropped: number }> = {}
+  await Promise.all([...groups].map(async ([reason, list]) => {
+    const r = await sendWebPush(sb, list, note(reason))
+    out[reason] = { subs: list.length, ...r }
+  }))
+  return out
+}
+
+// ---- handlers ----------------------------------------------------------------
+
+async function handleEvent(eventId: string): Promise<Response> {
+  const { data, error } = await sb.rpc('push_audience_event', { p_event: eventId })
   if (error) return new Response(error.message, { status: 500 })
-  if (!ev) return Response.json({ sent: 0, reason: 'no such event' })
+  const ctx = data as EventCtx | null
+  if (!ctx) return Response.json({ sent: 0, reason: 'no such event' })
 
-  const { data: trip } = await sb
-    .from('trips').select('owner,state').eq('id', ev.trip_id).maybeSingle()
-  const tripName: string =
-    (trip?.state as { meta?: { tripName?: string } })?.meta?.tripName ?? 'Trip update'
-
-  const note = notification(ev, tripName)
-
-  // ---- audience 1: followers (share-link subs, follower-visible only) ------
-  const followerTargets: WebPushTarget[] = []
-  if (['followers', 'public'].includes(ev.visibility)) {
-    // Subscriptions of LIVE (unrevoked, unexpired, unpaused) shares of this
-    // trip. Paused shares keep their subscriptions but are muted (mock 09).
+  // ---- anonymous link devices (13/16): live shares of this trip only -------
+  const linkTargets: WebPushTarget[] = []
+  if (['followers', 'public'].includes(ctx.visibility)) {
     const { data: subs, error: subErr } = await sb
       .from('push_subscriptions')
       .select('id,endpoint,p256dh,auth,trip_shares!inner(trip_id,revoked_at,expires_at,paused_at)')
-      .eq('trip_shares.trip_id', ev.trip_id)
+      .eq('trip_shares.trip_id', ctx.trip_id)
       .is('trip_shares.revoked_at', null)
       .is('trip_shares.paused_at', null)
     if (subErr) return new Response(subErr.message, { status: 500 })
@@ -88,52 +158,65 @@ Deno.serve(async (req) => {
     for (const s of subs ?? []) {
       const share = s.trip_shares as unknown as { expires_at: string | null }
       if (!share.expires_at || +new Date(share.expires_at) > now) {
-        followerTargets.push({ ...s, table: 'push_subscriptions' })
+        linkTargets.push({ id: s.id, endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth, table: 'push_subscriptions' })
       }
     }
   }
 
-  // ---- audience 2: travellers (owner + members, minus author, prefs on) ----
-  const { data: members } = await sb
-    .from('trip_members').select('user_id').eq('trip_id', ev.trip_id)
-  const memberIds = [...new Set(
-    [trip?.owner, ...(members ?? []).map((m: { user_id: string }) => m.user_id)]
-      .filter((id): id is string => !!id && id !== ev.author),
-  )]
-
-  const travellerTargets: WebPushTarget[] = []
-  if (memberIds.length) {
-    const { data: prefs } = await sb
-      .from('profiles').select('id,notify_event_push').in('id', memberIds)
-    const wantsPush = new Set(
-      (prefs ?? []).filter((p) => p.notify_event_push).map((p) => p.id),
-    )
-    if (wantsPush.size) {
-      const { data: userSubs } = await sb
-        .from('user_push_subscriptions')
-        .select('id,user_id,endpoint,p256dh,auth')
-        .eq('transport', 'webpush')
-        .in('user_id', [...wantsPush])
-      for (const s of userSubs ?? []) {
-        travellerTargets.push({
-          id: s.id, endpoint: s.endpoint, p256dh: s.p256dh!, auth: s.auth!,
-          table: 'user_push_subscriptions',
-        })
-      }
-    }
-  }
-
-  // Follower clicks route via device-local state (their device stored the
-  // follow URL at subscribe time — the DB never holds raw tokens, so we
-  // can't put their URL in a payload). Traveller clicks open /live.
-  const [followers, travellers] = await Promise.all([
-    sendWebPush(sb, followerTargets, note),
-    sendWebPush(sb, travellerTargets, { ...note, url: '/live' }),
+  // Link devices route via device-local state (the DB never holds raw
+  // tokens, so no URL in the payload). Accounts open the post.
+  const url = `/post/${ctx.event_id}`
+  const [links, accounts] = await Promise.all([
+    sendWebPush(sb, linkTargets, followNote(ctx)),
+    sendByReason(ctx.targets, (reason) => ({ ...(reason === 'follow' ? followNote(ctx) : tripNote(ctx)), url })),
   ])
+  return Response.json({ event: ctx.kind, links: { subs: linkTargets.length, ...links }, accounts })
+}
 
-  return Response.json({
-    event: ev.kind,
-    followers: { subs: followerTargets.length, ...followers },
-    travellers: { subs: travellerTargets.length, ...travellers },
-  })
+async function handleComment(commentId: string): Promise<Response> {
+  const { data, error } = await sb.rpc('push_audience_comment', { p_comment: commentId })
+  if (error) return new Response(error.message, { status: 500 })
+  const ctx = data as CommentCtx | null
+  if (!ctx) return Response.json({ sent: 0, reason: 'no such comment' })
+  const url = `/post/${ctx.event_id}`
+  const accounts = await sendByReason(ctx.targets, (reason) => ({
+    title: reason === 'reply' ? `💬 ${ctx.authorName} replied to you` : `💬 ${ctx.authorName} on ${ctx.title}`,
+    body: ctx.body,
+    url,
+  }))
+  return Response.json({ comment: commentId, accounts })
+}
+
+async function handleReaction(eventId: string, userId: string): Promise<Response> {
+  const { data, error } = await sb.rpc('push_audience_reaction', { p_event: eventId, p_user: userId })
+  if (error) return new Response(error.message, { status: 500 })
+  const ctx = data as ReactionCtx | null
+  if (!ctx) return Response.json({ sent: 0, reason: 'no such reaction' })
+  const accounts = await sendByReason(ctx.targets, () => ({
+    title: `${ctx.glyph} ${ctx.authorName} reacted to ${ctx.title}`,
+    body: ctx.tripName,
+    url: `/post/${ctx.event_id}`,
+  }))
+  return Response.json({ reaction: eventId, accounts })
+}
+
+Deno.serve(async (req) => {
+  if (!(await hasCronSecret(req))) {
+    return new Response('forbidden', { status: 403 })
+  }
+  const body = await req.json().catch(() => ({})) as {
+    event_id?: string
+    comment_id?: string
+    reaction?: { event_id?: string; user_id?: string }
+  }
+  try {
+    if (body.comment_id) return await handleComment(body.comment_id)
+    if (body.reaction?.event_id && body.reaction.user_id) {
+      return await handleReaction(body.reaction.event_id, body.reaction.user_id)
+    }
+    if (body.event_id) return await handleEvent(body.event_id)
+  } catch (e) {
+    return new Response((e as Error).message, { status: 500 })
+  }
+  return new Response('missing event_id, comment_id or reaction', { status: 400 })
 })

@@ -8,9 +8,11 @@ import PeopleClient from '@/app/(app)/people/PeopleClient'
 import PostView from '@/components/social/PostView'
 import FollowClient from '@/app/follow/[token]/FollowClient'
 import MoneyPage from '@/components/money/MoneyPage'
+import { NotificationSettings } from '@/components/trips/NotificationSettings'
+import { SharingCard } from '@/app/(app)/account/AccountClient'
 import { JOURNEY_TRIP, ME, POST_ID, TOKEN, sharedSummary } from './fixture'
 
-export type Screen = 'home' | 'nohome' | 'notrip' | 'journey' | 'people' | 'post' | 'follow'
+export type Screen = 'home' | 'nohome' | 'notrip' | 'journey' | 'people' | 'post' | 'follow' | 'alerts' | 'sharing'
 
 // The (app) layout's providers, minus auth (see money-preview/Preview.tsx).
 export default function Preview({ screen, tab }: { screen: Screen; tab: 'following' | 'followers' }) {
@@ -29,6 +31,12 @@ export default function Preview({ screen, tab }: { screen: Screen; tab: 'followi
               </main>
             )}
             {screen === 'follow' && <FollowClient token={TOKEN} initialSummary={sharedSummary} />}
+            {screen === 'alerts' && (
+              <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]"><NotificationSettings /></main>
+            )}
+            {screen === 'sharing' && (
+              <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]"><SharingCard endDate="2026-12-01" /></main>
+            )}
           </div>
         </ToastProvider>
       </MoneyProvider>

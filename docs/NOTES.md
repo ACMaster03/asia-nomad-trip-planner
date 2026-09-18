@@ -187,6 +187,46 @@ would silently turn the form into a false declaration.
 
 ---
 
+## 2026-09-18
+
+### TODO — deploy push-fanout after migrations 36/37 (both projects)
+
+`37-notify-matrix.sql` moves push routing into the database (`push_audience_event`
+/ `_comment` / `_reaction`, service_role only) and adds fan-out triggers on
+`event_comments` and `event_reactions`. The Edge Function in the repo now expects
+those readers; the deployed v7 still reads `profiles.notify_event_push` directly
+and knows nothing about comments or reactions. Order: apply 36 + 37, run their
+TESTPLANs, then
+
+    supabase functions deploy push-fanout --project-ref fdcncqnklscbztcydtye   # staging
+    supabase functions deploy push-fanout --project-ref wvmnudcwcqktcugouqoe   # prod
+
+Docker must be running (see the 2026-09-16 entry). Until the deploy lands the old
+function keeps working for events, and the comment/reaction bodies it does not
+understand answer 400 — nothing breaks, nobody gets those pushes yet.
+
+### FOUND — the signed fan-out trigger could never resolve hmac()
+
+Migration 30 gave `notify_push_fanout()` `set search_path = public`, but Supabase
+installs pgcrypto in the `extensions` schema, so `hmac()` does not resolve inside
+it. The 37 dry run on staging hit this the moment the trigger's branch ran
+(staging has `functions_url` and `cron_secret` set). Staging turned out to still
+carry 27's unsigned body — 30 was never applied there — and push-fanout v7 only
+accepts the signed headers, so staging pushes were being refused with 403.
+
+37's `_push_fanout_post()` pins `search_path = public, extensions` and every
+fan-out trigger now goes through it, which fixes both projects on apply. **Check
+prod after applying** (the auto-mode classifier blocks prod reads from Claude):
+
+    select left(prosrc, 200), proconfig from pg_proc
+     where proname in ('notify_push_fanout', '_push_fanout_post');
+
+Before 37, if prod had 30's body, every `trip_events` insert would have raised on
+`hmac` — check-ins worked on 2026-09-17, so prod most likely still ran 27's body
+too, i.e. prod pushes have been 403'd since push-fanout v7 (2026-08-04). Worth
+verifying with one check-in after the deploy: the function's logs show the send
+counts per audience.
+
 ## 2026-08-28
 
 ### DONE — deploy the digest Edge Functions (2026-09-16)

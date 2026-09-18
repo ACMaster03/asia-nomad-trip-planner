@@ -2,6 +2,9 @@ import type { TripEvent } from '@/lib/trips/events'
 import type { SharedEvent, SharedSummary } from '@/lib/follow/api'
 import type { FollowedEvent, FollowedPerson, FollowedSummary } from '@/lib/follow/follows'
 import type { Follower, PostComment, PostSocial } from '@/lib/follow/social'
+import type { TripListItem } from '@/lib/trips/queries'
+import type { ShareStats, TripShare } from '@/lib/trips/shares'
+import { DEFAULT_NOTIFY_PREFS, type NotifyPrefs, type TripNotify } from '@/lib/trips/userPush'
 
 // Dev-only fixtures for the social screens: the people you follow, their
 // posts, your own trip's rows, one post with a thread, and what an anonymous
@@ -114,3 +117,18 @@ export const sharedSummary: SharedSummary = {
 export const sharedFeed: SharedEvent[] = followingFeed
   .filter((e) => e.trip_id === JOURNEY_TRIP)
   .map((e): SharedEvent => ({ id: e.id, kind: e.kind, occurred_at: e.occurred_at, author: e.author, authorName: e.authorName, payload: e.payload, rating: e.rating, comment: e.comment }))
+
+// ---- Account → Alerts and Follow links (issues #12/#13) --------------------
+export const ownTrips: TripListItem[] = [
+  { id: 'fixture', name: 'Asia 2026', owner: ME, updated_at: ago(1), created_at: ago(400) },
+]
+export const notifyPrefs: NotifyPrefs = { ...DEFAULT_NOTIFY_PREFS }
+export const tripNotify: TripNotify[] = [{ trip_id: JOURNEY_TRIP, muted: true, all_comments: false }]
+export const shares: TripShare[] = [
+  { id: 'share-family', trip_id: 'fixture', token_prefix: 'a1b2c3', label: 'Family', created_at: ago(300), expires_at: '2027-01-01T00:00:00Z', revoked_at: null, paused_at: null },
+  { id: 'share-office', trip_id: 'fixture', token_prefix: 'd4e5f6', label: 'Office', created_at: ago(200), expires_at: null, revoked_at: null, paused_at: ago(20) },
+]
+export const shareStats: ShareStats[] = [
+  { share_id: 'share-family', push: 3, email: 2 },
+  { share_id: 'share-office', push: 0, email: 1 },
+]
