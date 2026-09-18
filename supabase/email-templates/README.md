@@ -41,12 +41,11 @@ appends `?code=…`, and `product/src/app/auth/callback` exchanges it.
   `/auth/callback` in Auth → URL Configuration, because `emailRedirectTo` is built from
   `window.location.origin`. Both `livhold.com` and `www.livhold.com` are listed today
   (as `…/auth/callback**` — the wildcard matters, see `docs/NOTES.md` 2026-09-18).
-- **Don't promise that passwords don't exist.** *Confirm signup* used to end on "no
-  password, ever". Password sign-in is built — the login screen and Account → Password
-  — and waits only on Authentication → Providers → Email → enable password, which
-  Google Play's review account requires, so that line was a promise with a date on it.
-  The copy now says what is true of this particular email: the link signs you in, and
-  signing up asks for no password. Say that, not "never".
+- **Leave passwords out of these emails.** Signing up never involves one: a password is
+  opt-in, set later from Account → Password by someone already signed in, and
+  `signInWithPassword` only works for an account that has set one. *Confirm signup* used
+  to end on "no password, ever", a promise about the future made to a reader who had not
+  asked. Say what the link does and stop there.
 - **Turning the password grant on adds a third template.** Supabase sends *Reset
   Password* for `resetPasswordForEmail()`, and there is no branded copy of it here —
   the first person to use the reset flow gets Supabase's unstyled default, which is
