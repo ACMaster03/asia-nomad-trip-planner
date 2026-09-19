@@ -28,13 +28,15 @@ const dayLabel = (iso: string) =>
   iso === todayISO() ? 'Today' : new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 
 export function EntrySheet({
-  initial, ledger, rates, defaultCur, onSave, onDelete, onClose,
+  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose,
 }: {
   initial: LedgerEntry | null
   ledger: LedgerEntry[]
   rates: Record<string, number>
-  /** what the currency box starts on for a NEW entry (the last one used) */
+  /** what the currency box starts on for a NEW entry (see pickEntryCurrency) */
   defaultCur: string
+  /** the country that chose it, when the choice came from today's stop */
+  defaultCurWhere?: string | null
   onSave: (e: LedgerEntry) => void
   onDelete?: (e: LedgerEntry) => void
   onClose: () => void
@@ -45,10 +47,10 @@ export function EntrySheet({
   const [name, setName] = useState(initial?.note ?? '')
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '')
   const [cur, setCur] = useState(initial?.currency ?? defaultCur)
+  const [curTouched, setCurTouched] = useState(false)
   const [cat, setCat] = useState<string | null>(initial?.category ?? null)
   const [catTouched, setCatTouched] = useState(!!initial)
   const [date, setDate] = useState(initial?.date ?? todayISO())
-  const [dateOpen, setDateOpen] = useState(false)
   const [picker, setPicker] = useState(false)
 
   // The suggestion follows the name until the user picks a chip themselves.
@@ -63,6 +65,12 @@ export function EntrySheet({
   const amt = parseFloat(amount)
   const valid = isFinite(amt) && amt > 0
   const preview = valid && cur !== base ? fmt(toBase(amt, cur, rates)) : null
+  // Say WHY the box opened on this currency, but only while it is still the
+  // app's guess: once it has been changed by hand the note would be a lie.
+  const curNote =
+    !initial && !curTouched && defaultCurWhere && cur === defaultCur
+      ? `${cur} is the currency in ${defaultCurWhere}, where you are today.`
+      : null
 
   function switchType(t: CategoryKind) {
     setType(t)
@@ -136,7 +144,13 @@ export function EntrySheet({
         </label>
         <label className={label}>
           Currency
-          <select aria-label="Currency" className={box} disabled={imported} value={cur} onChange={(e) => setCur(e.target.value)}>
+          <select
+            aria-label="Currency"
+            className={box}
+            disabled={imported}
+            value={cur}
+            onChange={(e) => { setCur(e.target.value); setCurTouched(true) }}
+          >
             {!currencies.includes(cur) && <option value={cur}>{cur}</option>}
             {currencies.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -144,6 +158,12 @@ export function EntrySheet({
       </div>
       {imported && (
         <p className="-mt-1 text-[13px] text-tx2">Amount and date follow the booking on the Trip page; edit them there.</p>
+      )}
+      {(curNote || preview) && (
+        <p className="-mt-1 flex items-baseline justify-between gap-3 text-[13px] text-tx3">
+          <span>{curNote}</span>
+          {preview && <span className="shrink-0 tabular-nums">≈ {preview} in {base}</span>}
+        </p>
       )}
 
       <div>
@@ -164,24 +184,21 @@ export function EntrySheet({
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-1 text-[14px] text-tx2">
-        {dateOpen || imported ? (
-          <input
-            aria-label="Date"
-            type="date"
-            disabled={imported}
-            className="rounded-[12px] border-[1.5px] border-ln2 bg-inp px-2 py-1.5 text-base text-tx outline-none focus:border-ac"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        ) : (
-          <button onClick={() => setDateOpen(true)} className="-my-2 min-h-11 text-left">
-            {dayLabel(date)}{date !== todayISO() ? '' : `, ${new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
-            <span className="text-tx3"> · change</span>
-          </button>
-        )}
-        <span className="text-tx3">{preview ? `≈ ${preview}` : ''}</span>
-      </div>
+      {/* A field, not a grey "change" link. Logging yesterday's dinner this
+          morning is the normal case on the road, and the date it defaults to
+          has to be readable before anyone can notice it is wrong. */}
+      <label className={label}>
+        Date
+        <input
+          aria-label="Date"
+          type="date"
+          disabled={imported}
+          className={box}
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+        <span className="mt-1 block text-[13px] font-normal text-tx3">{dayLabel(date)}</span>
+      </label>
 
       <button
         onClick={submit}
