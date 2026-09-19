@@ -50,6 +50,38 @@ puts the rest behind native `<details>`. The summary reads the same keys
 migration 03 seeds, and `PROMOTED` in `CityCard.tsx` keeps them from appearing
 twice; if a key is ever renamed the cost is a repeat, never a blank screen.
 
+### PARTLY DIAGNOSED — Check in lands on a page that looks like a different app
+
+Reported from a screen recording 2026-09-19: tapping the raised Check in tab
+loads "a page that shouldn't be there, with another look". The recording could
+not be decoded in the session it was reported to, so the trigger is inferred,
+not observed. Two halves, and only the first is certain.
+
+**Certain: the page is `public/offline.html`.** It is the only page in the app
+not on the LIVHOLD tokens, so it is the only thing "another look" can mean:
+teal #0d9488 (twice), the Nomad compass, a system font stack, 14.4px type, 8px
+radii, and a background that ignores the theme chosen in Settings. It also
+opened with "You're offline", which sw.ts's own comment says is often false,
+since the same page answers a navigation that merely ran out of the worker's
+25-second budget. It is on the tokens now, runs the same theme and larger-text
+bootstrap layout.tsx runs, says the connection may be fine, offers Home as well
+as Try again, and reloads itself when the browser reports the connection back.
+
+**Inferred: the offline-shell warm-up is racing the navigation.** sw.ts already
+carries the scar: warming used to fire on mount and lose the user's navigation
+to the NetworkFirst timeout, and was made sequential and delayed by 5s. One
+sequential warm fetch still shares a phone's link with whatever the user taps
+during it, `/live` is the heaviest document in the list (claims, active trip,
+role, prefetch), and Check in is the button people press first, roughly 5
+seconds in. Warming now yields: the navigation route's `requestWillFetch`
+aborts the in-flight warm request, and warm fetches ask for low priority.
+
+If it recurs after this, the next thing to rule out is the RSC leg. A `<Link>`
+click fetches RSC (NetworkOnly here, deliberately), and a failed RSC fetch makes
+the Next router fall back to a document navigation, which is what reaches the
+fallback. Confirm by watching whether the URL bar says /live when the page
+appears, and whether it reproduces with the service worker unregistered.
+
 ### OPEN — an unticked stop still owes money for its bookings (Money, not fixed here)
 
 `computeBudget` drops a stop with `include === false`: its nights, its estimate
