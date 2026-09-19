@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
@@ -20,6 +20,35 @@ function ago(iso: string | null): string {
   const h = Math.round(mins / 60)
   if (h < 48) return `${h} hour${h === 1 ? '' : 's'} ago`
   return `${Math.round(h / 24)} days ago`
+}
+
+/**
+ * The one pill on the currency row. `inline-flex` + `whitespace-nowrap` are
+ * load-bearing, not decoration: an INLINE box that wraps paints its border and
+ * background once per line fragment, so "auto / Hong Kong" used to render as two
+ * stacked half-pills rather than one wrapped pill. Nothing here can wrap now,
+ * whatever the label turns out to be.
+ */
+function Pill({
+  tone = 'plain',
+  title,
+  children,
+}: {
+  tone?: 'plain' | 'accent'
+  title?: string
+  children: ReactNode
+}) {
+  return (
+    <span
+      title={title}
+      className={
+        'ml-2 inline-flex items-center whitespace-nowrap rounded-full border-[1.4px] px-2 py-[1px] text-base text-tx2 ' +
+        (tone === 'accent' ? 'border-ac-line bg-ac-soft' : 'border-ln3')
+      }
+    >
+      {children}
+    </span>
+  )
 }
 
 /** Currencies implied by the countries on the route, with their reason. */
@@ -184,15 +213,16 @@ export default function FxPanel({
                       : `${accepted[0]} +${accepted.length - 1}`}
                   </span>
                 )}
-                {code === base && (
-                  <span className="ml-2 rounded-full border-[1.4px] border-ln3 px-2 py-[1px] text-base text-tx2">
-                    base
-                  </span>
-                )}
+                {code === base && <Pill>base</Pill>}
+                {/* The country that pulled this currency in is redundant on screen: the
+                    code and its accepted-in list are on the same row. It is still the
+                    answer to "why is this here", so it survives as a tooltip and for
+                    screen readers. */}
                 {reason && code !== base && (
-                  <span className="ml-2 rounded-full border-[1.4px] border-ac-line bg-ac-soft px-2 py-[1px] text-base text-tx2">
-                    auto · {reason}
-                  </span>
+                  <Pill tone="accent" title={`Added automatically for ${reason}`}>
+                    auto
+                    <span className="sr-only">, added automatically for {reason}</span>
+                  </Pill>
                 )}
               </div>
               <span className="text-base tabular-nums">
