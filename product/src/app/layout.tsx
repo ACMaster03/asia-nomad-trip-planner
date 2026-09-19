@@ -4,13 +4,14 @@ import { Lora, Work_Sans } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { SWUpdate } from '@/components/SWUpdate'
+import { BRAND } from '@/lib/brand'
 
 const lora = Lora({ subsets: ['latin'], variable: '--font-lora' })
 const workSans = Work_Sans({ subsets: ['latin'], variable: '--font-work-sans' })
 
 export const metadata: Metadata = {
   title: 'Livhold',
-  description: 'The living journey, held together. Plan a long trip with a co-editor and hold on to it as you live it.',
+  description: BRAND.intro,
   // PWA (M2): installable on iOS — Safari ignores most of the manifest and
   // wants these instead. standalone + touch icon = real home-screen app.
   appleWebApp: {

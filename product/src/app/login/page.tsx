@@ -5,6 +5,7 @@ import { createOtpClient } from '@/lib/supabase/otp'
 import { DEFAULT_NEXT, safeNextPath } from '@/lib/auth/safeNext'
 import { createClient } from '@/lib/supabase/client'
 import { humanAuthError, looksLikeNoPasswordSet } from '@/lib/auth/authError'
+import { BRAND } from '@/lib/brand'
 
 // Login — handoff frame 01 (the only screen on the 2a "valley morning" wash;
 // invite-accept shares it in Phase 4). Behavior follows the rig: sending stays
@@ -168,7 +169,7 @@ export default function Login() {
           {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark */}
           <img src="/brand/livhold-mark.png" alt="Livhold" width={64} height={64} />
           <span className="text-lg font-medium uppercase tracking-[.18em] text-ac2-deep">Livhold</span>
-          <div className="-mt-1 text-[15px] tracking-[.06em] opacity-60">the living journey, held together</div>
+          <div className="-mt-1 text-[15px] tracking-[.06em] opacity-60">{BRAND.tagline}</div>
         </div>
 
         <div className="lv-reveal">

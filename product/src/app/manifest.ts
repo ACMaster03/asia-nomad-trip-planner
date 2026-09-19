@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { BRAND } from '@/lib/brand'
 
 // PWA manifest (M2): installable on both travellers' phones. start_url is the
 // dashboard — the auth guard redirects to /login when signed out.
@@ -11,7 +12,9 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Livhold',
     short_name: 'Livhold',
-    description: 'Plan the trip, live the trip, let them follow.',
+    // Same sentence as the <meta> description in layout.tsx: the install
+    // card and the search result must not describe different products.
+    description: BRAND.intro,
     start_url: '/dashboard',
     display: 'standalone',
     background_color: '#f0eee9',
