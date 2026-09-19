@@ -427,7 +427,7 @@ export default function DashboardClient({
       {/* Activity: this trip's own rows merged with the posts of the people
           you follow (docs/SOCIAL-SCOPE.md §2). Keeps working — own rows only —
           when the social RPCs are not there yet. */}
-      <HomeActivity own={events.data ?? []} ownPending={events.isPending} userId={userId} />
+      <HomeActivity own={events.data ?? []} ownPending={events.isPending} userId={userId} segments={s.segments} />
     </main>
   )
 }

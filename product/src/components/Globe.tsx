@@ -7,10 +7,12 @@ import { LocateFixed, Map as MapIcon, Moon, RotateCw, SlidersHorizontal, Sun, Za
 import type { City, Country } from '@/lib/catalogue/types'
 import type { Segment, TransportLeg } from '@/lib/trips/types'
 import type { CityCost } from '@/lib/trips/budget'
+import type { SharedRouteStop } from '@/lib/follow/api'
+import type { PeopleAtCity } from '@/lib/map/people'
 import { regName, toBase } from '@/lib/trips/format'
 import {
-  type MapOpts, type GlobePoint, type Hazard,
-  loadMapOpts, saveMapOpts, buildRoute, buildArcs, seasonalHazards, cityInfoRows,
+  type MapOpts, type GlobePoint, type GlobeArc, type Hazard,
+  loadMapOpts, saveMapOpts, buildRoute, buildArcs, seasonalHazards, cityInfoRows, theirRouteLayers, SKY,
 } from '@/lib/map/globeData'
 import { fetchQuakes, QUAKES_KEY, QUAKES_STALE_MS } from '@/lib/map/hazards'
 import { CountryPanel } from './map/CountryPanel'
@@ -34,7 +36,69 @@ interface GlobeProps {
   rates: Record<string, number>
   /** a catalogue pin was tapped (fix 2): the parent shows the card, no navigation here */
   onPickCity?: (c: City) => void
+  /** issue #9: the people you follow, by city; a mark per city, thicker as more arrive */
+  people?: PeopleAtCity[]
+  /** issue #9: one followed traveller's itinerary drawn beside yours */
+  theirRoute?: { name: string; route: SharedRouteStop[] } | null
+  /** local ISO date — splits a followed route into visited / now / upcoming */
+  today?: string
+  onPickPeople?: (g: PeopleAtCity) => void
 }
+// globe.gl's HTML layer is untyped in its .d.ts; this is the slice we use.
+interface HtmlLayer {
+  htmlElementsData(d: object[]): HtmlLayer
+  htmlLat(a: string): HtmlLayer
+  htmlLng(a: string): HtmlLayer
+  htmlAltitude(a: number): HtmlLayer
+  htmlElement(f: (d: object) => HTMLElement): HtmlLayer
+  htmlElementVisibilityModifier(f: (el: HTMLElement, visible: boolean) => void): HtmlLayer
+  htmlTransitionDuration(ms: number): HtmlLayer
+}
+const NO_PEOPLE: PeopleAtCity[] = []
+
+// The people mark (Patrik's spec, 2026-09-18): a solid sky dot with person
+// glyphs inside. One head is one glyph; two sit side by side; three make a
+// pyramid (two below, one on top); from four on it is the pyramid and a plus.
+// The dot grows a step per head up to five. Every offset is a fraction of the
+// diameter, so the glyphs always sit inside the circle.
+const PERSON_PATH = '<circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0z"/>'
+export const MARK_CAP = 5
+export function markDiameter(n: number) { return 20 + 3 * (Math.min(n, MARK_CAP) - 1) }
+/** glyph centres (x, y as fractions of the diameter, from the centre) and sizes */
+export function markLayout(n: number): { d: number; glyphs: Array<{ x: number; y: number; s: number }>; plus: { x: number; y: number; s: number } | null } {
+  const d = markDiameter(n)
+  if (n <= 1) return { d, glyphs: [{ x: 0, y: 0, s: 0.58 }], plus: null }
+  if (n === 2) return { d, glyphs: [{ x: -0.16, y: 0, s: 0.46 }, { x: 0.16, y: 0, s: 0.46 }], plus: null }
+  const pyramid = (cx: number, g: number) => [
+    { x: cx, y: -0.15, s: g },
+    { x: cx - 0.17, y: 0.13, s: g },
+    { x: cx + 0.17, y: 0.13, s: g },
+  ]
+  if (n === 3) return { d, glyphs: pyramid(0, 0.4), plus: null }
+  return { d, glyphs: pyramid(-0.11, 0.34), plus: { x: 0.3, y: 0, s: 0.26 } }
+}
+function place(x: number, y: number, s: number, d: number) {
+  const px = s * d
+  return `position:absolute;left:${(0.5 + x) * d - px / 2}px;top:${(0.5 + y) * d - px / 2}px;width:${px}px;height:${px}px`
+}
+function peopleMark(g: PeopleAtCity, onTap: (g: PeopleAtCity) => void, onDown: () => void): HTMLElement {
+  const n = g.people.length
+  const { d, glyphs, plus } = markLayout(n)
+  const el = document.createElement('button')
+  el.type = 'button'
+  el.setAttribute('aria-label', `${n} traveller${n === 1 ? '' : 's'} you follow in ${g.city}`)
+  el.style.cssText = `pointer-events:auto;cursor:pointer;position:relative;width:${d}px;height:${d}px;padding:0;border:0;border-radius:50%;background:${SKY};color:#0b0f14;box-shadow:0 0 0 2px rgba(11,15,20,.55);overflow:hidden;transition:opacity .2s`
+  el.innerHTML = glyphs.map((q) =>
+    `<svg viewBox="0 0 24 24" fill="currentColor" style="${place(q.x, q.y, q.s, d)}" aria-hidden="true">${PERSON_PATH}</svg>`).join('')
+    + (plus ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" style="${place(plus.x, plus.y, plus.s, d)}" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg>` : '')
+  // A mark usually sits right over a route pin: tell the globe this tap is
+  // taken before its own click resolution and the fallback hit-test run.
+  el.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); onDown() })
+  el.addEventListener('pointerup', (ev) => ev.stopPropagation())
+  el.addEventListener('click', (ev) => { ev.stopPropagation(); onTap(g) })
+  return el
+}
+
 const POV = { lat: 28, lng: 92, altitude: 2.4 }
 // Globe radius is 100 world units: same clamps as FollowGlobe (fix 6) — "city
 // level" to "whole hemisphere", never inside the planet, never a dot in space.
@@ -66,16 +130,20 @@ function hazLabel(d: Hazard) {
   return box(`<b style="color:#D9A85C">Heavy rain / monsoon</b><br><span style="${MUTED}">${esc(d.city)} · ~${d.rain}mm this month</span><br><span style="color:#D08795">tap for details</span>`)
 }
 
-export default function GlobeView({ cities, countries, cityIdx, segments, transport, rates, onPickCity }: GlobeProps) {
+export default function GlobeView({ cities, countries, cityIdx, segments, transport, rates, onPickCity, people = NO_PEOPLE, theirRoute = null, today = '', onPickPeople }: GlobeProps) {
   const { fmt } = useMoney()
   const boxRef = useRef<HTMLDivElement>(null)
   const instRef = useRef<Inst | null>(null)
   const readyRef = useRef(false)
   const basePtsRef = useRef<GlobePoint[]>([])
+  const myArcsRef = useRef<GlobeArc[]>([])
+  const theirPtsRef = useRef<GlobePoint[]>([])
+  const theirArcsRef = useRef<GlobeArc[]>([])
   const seasonalRef = useRef<Hazard[]>([])
   const quakesRef = useRef<Hazard[]>([])
   const featsRef = useRef<unknown[]>([])
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const markTapAt = useRef(0) // last pointerdown on a people mark; pin clicks yield to it
 
   const [opts, setOpts] = useState<MapOpts>(() => loadMapOpts())
   const optsRef = useRef(opts)
@@ -84,6 +152,8 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
   const ratesRef = useRef(rates)
   const fmtRef = useRef(fmt)
   const pickRef = useRef(onPickCity)
+  const pickPeopleRef = useRef(onPickPeople)
+  useEffect(() => { pickPeopleRef.current = onPickPeople }, [onPickPeople])
   useEffect(() => { cityIdxRef.current = cityIdx }, [cityIdx])
   useEffect(() => { ratesRef.current = rates }, [rates])
   useEffect(() => { fmtRef.current = fmt }, [fmt])
@@ -111,11 +181,13 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     if ('haz' in d && d.haz) return hazLabel(d as Hazard)
     const p = d as GlobePoint
     if (p.home) return box(`<div style="font-weight:600">${esc(p.city)}</div><div style="${MUTED}">home</div>`)
+    if (p.who) return box(`<div style="font-weight:600;color:${SKY}">${esc(p.who)}</div><div>${esc(p.city)}, ${esc(p.country)}</div><div style="${MUTED}">${p.when === 'now' ? 'there now' : p.when === 'visited' ? 'visited' : 'upcoming'}</div>`)
     const rows = cityInfoRows(p.city_, cityIdxRef.current[p.city])
       .map((r) => `<div style="${r.muted ? MUTED : ''}">${esc(r.text)}</div>`).join('')
     return box(`<div style="font-weight:600;font-size:17px;font-family:var(--font-lora),Georgia,serif">${esc(p.city)}</div><div style="${MUTED};margin-bottom:4px">${esc(p.country)} · ${esc(regName(p.r ?? ''))}</div>${rows}<div style="color:#D08795;margin-top:5px">Tap for details</div>`, 'max-width:270px;')
   }
-  function arcLabel(d: { from: string; to: string; flight: TransportLeg | null; booked: boolean }) {
+  function arcLabel(d: { from: string; to: string; flight: TransportLeg | null; booked: boolean; who?: string }) {
+    if (d.who) return box(`<b style="color:${SKY}">${esc(d.who)}</b> · ${esc(d.from)} → ${esc(d.to)}`)
     const head = `<b>${esc(d.from)} → ${esc(d.to)}</b>`
     let body: string
     if (d.flight) {
@@ -133,7 +205,8 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     const g = instRef.current
     if (!g) return
     const haz = optsRef.current.hazards ? seasonalRef.current.concat(quakesRef.current) : []
-    g.pointsData((haz as Array<GlobePoint | Hazard>).concat(basePtsRef.current) as object[])
+    g.pointsData((haz as Array<GlobePoint | Hazard>).concat(theirPtsRef.current, basePtsRef.current) as object[])
+    g.arcsData((myArcsRef.current as GlobeArc[]).concat(theirArcsRef.current) as object[])
     g.ringsData(haz.filter((h) => h.ring).slice() as object[])
     setHazInfo(optsRef.current.hazards
       ? { total: haz.length, quakes: quakesRef.current.length ? quakesRef.current.length : null }
@@ -157,11 +230,13 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
       .pointLabel(((d: object) => pointLabel(d as GlobePoint | Hazard)) as never)
       .onPointClick(((d: object) => {
         lastPointClick = performance.now()
+        if (lastPointClick - markTapAt.current < 500) return
         const p = d as GlobePoint & Partial<Hazard>
         if (p.haz) { setHazard(p as unknown as Hazard); return }
         if (p.home || !p.city_) return
         pickRef.current?.(p.city_)
       }) as never)
+      .pointsTransitionDuration(0)
       .arcsData([]).arcStartLat('startLat').arcStartLng('startLng').arcEndLat('endLat').arcEndLng('endLng')
       .arcColor('color').arcStroke('stroke').arcDashLength('dashLen').arcDashGap('dashGap')
       .arcDashAnimateTime(((d: { anim: number }) => d.anim) as never).arcLabel(((d: object) => arcLabel(d as Parameters<typeof arcLabel>[0])) as never)
@@ -183,6 +258,10 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
       })
 
     instRef.current = g
+    ;(g as unknown as HtmlLayer)
+      .htmlElementsData([]).htmlLat('lat').htmlLng('lng').htmlAltitude(0.012).htmlTransitionDuration(0)
+      .htmlElement((d) => peopleMark(d as PeopleAtCity, (grp) => pickPeopleRef.current?.(grp), () => { markTapAt.current = performance.now() }))
+      .htmlElementVisibilityModifier((el, visible) => { el.style.opacity = visible ? '1' : '0'; el.style.pointerEvents = visible ? 'auto' : 'none' })
 
     // globe.gl resolves a click through the object hovered on the last frame,
     // and it re-raycasts at most every 50 ms — so a quick tap (touch has no
@@ -278,11 +357,22 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
       points.push({ lat: origin.lat, lng: origin.lng, city: origin.city, country: origin.country, r: null, home: true, color: '#ffffff', radius: 0.72, alt: 0.025 })
     }
     basePtsRef.current = points
+    myArcsRef.current = buildArcs(route, transport)
     seasonalRef.current = seasonalHazards(segments, cities)
-    g.arcsData(buildArcs(route, transport) as object[])
     g.labelsData(route as object[])
     paint()
   }, [cities, cityIdx, segments, transport]) // NOT rates — read via ratesRef so an FX edit doesn't repaint
+
+  // ===== PATCH effects — the people layer (issue #9) =====
+  useEffect(() => {
+    (instRef.current as unknown as HtmlLayer | null)?.htmlElementsData(people.slice())
+  }, [people])
+  useEffect(() => {
+    const layers = theirRoute ? theirRouteLayers(theirRoute.name, theirRoute.route, today) : { points: [], arcs: [] }
+    theirPtsRef.current = layers.points
+    theirArcsRef.current = layers.arcs
+    paint()
+  }, [theirRoute, today])
 
   // ===== PATCH effects — options and the feed =====
   useEffect(() => { instRef.current?.globeImageUrl(opts.day ? '/vendor/earth-day.jpg' : '/vendor/earth-night.jpg') }, [opts.day])
@@ -333,7 +423,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
           {quakes.isFetching && hazInfo.quakes == null && <span className="text-[rgba(216,224,229,.6)]"> · checking quakes…</span>}
         </div>
       )}
-      <Legend />
+      <Legend people={people.length > 0 || !!theirRoute} />
       {countryFeat && <CountryPanel feat={countryFeat} countries={countries} cities={cities} segments={segments} rates={rates} onClose={() => setCountryFeat(null)} />}
       {hazard && <HazardPanel d={hazard} onClose={() => setHazard(null)} />}
     </>

@@ -1,15 +1,19 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Users, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { TripEvent } from '@/lib/trips/events'
+import type { Segment } from '@/lib/trips/types'
 import type { SharedEvent } from '@/lib/follow/api'
 import { fetchFollowingFeed, fetchMyFollowerCount, fetchMyFollowing } from '@/lib/follow/follows'
 import { fetchFeedSocial, react as sendReaction, type PostSocial } from '@/lib/follow/social'
 import { mergeFeeds } from '@/lib/follow/merge'
 import { currentTrip } from '@/lib/follow/people'
+import { useFollowedRoutes } from '@/lib/follow/useFollowedRoutes'
+import { allOverlaps, formatOverlap, meetupKey, meetupQueue, overlappingNow } from '@/lib/map/people'
+import { dismissMeetup, dismissedStore } from '@/lib/map/dismissed'
 import { tk } from '@/lib/trips/keys'
 import { SocialRow } from './SocialRow'
 
@@ -22,7 +26,10 @@ import { SocialRow } from './SocialRow'
 
 const PAGE = 30
 
-export default function HomeActivity({ own, ownPending, userId }: { own: TripEvent[]; ownPending: boolean; userId?: string }) {
+// Meet-up lines on screen at once; dismissing one pulls the next from the queue.
+const MAX_MEETUPS = 3
+
+export default function HomeActivity({ own, ownPending, userId, segments }: { own: TripEvent[]; ownPending: boolean; userId?: string; segments?: Segment[] }) {
   const sb = createClient()
   const qc = useQueryClient()
   const [onlyMine, setOnlyMine] = useState(false)
@@ -70,6 +77,17 @@ export default function HomeActivity({ own, ownPending, userId }: { own: TripEve
   const people = following.data ?? []
   const travelling = people.filter((p) => currentTrip(p.trips)?.state === 'on' && currentTrip(p.trips)?.currentCity)
 
+  // Where our routes touch (issue #9), but only the touches happening today:
+  // Home does not forecast, the map does. Each line is a notification — it
+  // stays until dismissed, three at a time, the queue refilling as you clear.
+  const summaries = useFollowedRoutes(following.data, (segments?.length ?? 0) > 0)
+  const today = new Date().toISOString().slice(0, 10)
+  const dismissed = useSyncExternalStore(dismissedStore.subscribe, dismissedStore.snapshot(userId), dismissedStore.serverSnapshot)
+  const meetups = useMemo(
+    () => meetupQueue(overlappingNow(allOverlaps(segments ?? [], following.data ?? [], summaries, today), today), dismissed, MAX_MEETUPS),
+    [segments, following.data, summaries, today, dismissed],
+  )
+
   return (
     <>
       {/* people strip: who you follow, who follows you — the door to /people */}
@@ -87,6 +105,26 @@ export default function HomeActivity({ own, ownPending, userId }: { own: TripEve
             </span>
           )}
         </div>
+      )}
+      {meetups.length > 0 && (
+        <ul className="flex flex-col rounded-[var(--r)] bg-sf px-3.5 py-1 text-tx">
+          {meetups.map((o) => (
+            <li key={meetupKey(o)} className="flex items-start gap-2.5 text-base leading-snug">
+              <Link href="/map" className="flex min-h-11 flex-1 items-start gap-2.5 py-2.5">
+                <Users aria-hidden className="mt-[3px] size-4 flex-none text-ac2-deep" strokeWidth={2} />
+                <span>{formatOverlap(o, o.names, today)}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => dismissMeetup(userId, meetupKey(o))}
+                aria-label={`Dismiss: ${formatOverlap(o, o.names, today)}`}
+                className="-mr-2 inline-flex size-11 flex-none items-center justify-center text-tx2"
+              >
+                <X className="size-4" aria-hidden />
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
 
       <div className="flex items-center justify-between">
