@@ -390,8 +390,10 @@ export default function DashboardClient({
         </div>
       )}
 
+      {/* Same destination as the raised tab: the sheet, not the screen that
+          holds another copy of this button. */}
       <Link
-        href="/live"
+        href="/live?checkin=1"
         className="flex items-center justify-center gap-2 rounded-[var(--r)] bg-ac py-[17px] text-lg font-semibold text-on"
       >
         <MapPin aria-hidden className="size-5" strokeWidth={2.2} /> Check in - where are you?

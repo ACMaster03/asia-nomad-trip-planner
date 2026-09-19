@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   onlineManager,
   useMutation,
@@ -192,7 +193,25 @@ export default function LiveClient() {
     onSettled: settle,
   })
 
-  const [checkinOpen, setCheckinOpen] = useState(false)
+  // ?checkin=1 means "the traveller already pressed Check in" — from the
+  // raised tab, or from Home's own check-in button. Both used to land here on
+  // a screen whose largest element is a THIRD button saying Check in, which
+  // reads as the tap having failed. The sheet opens on arrival instead, and
+  // the parameter is dropped so a reload or a back does not reopen it, and so
+  // the next press is a fresh transition rather than the same URL again.
+  const wantCheckin = useSearchParams().get('checkin') === '1'
+  const router = useRouter()
+  const [checkinOpen, setCheckinOpen] = useState(wantCheckin)
+  // Adjusting state on a changed input, during render (react.dev pattern, the
+  // same one KnowledgeClient uses for ?city=).
+  const [seenCheckinParam, setSeenCheckinParam] = useState(wantCheckin)
+  if (wantCheckin !== seenCheckinParam) {
+    setSeenCheckinParam(wantCheckin)
+    if (wantCheckin) setCheckinOpen(true)
+  }
+  useEffect(() => {
+    if (wantCheckin) router.replace('/live', { scroll: false })
+  }, [wantCheckin, router])
   const [noteOpen, setNoteOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [uploadingPhotos, setUploadingPhotos] = useState(false)

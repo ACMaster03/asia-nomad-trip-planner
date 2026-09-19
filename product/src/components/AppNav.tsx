@@ -64,8 +64,11 @@ export function AppNav({ showCheckIn }: { showCheckIn: boolean }) {
                 unlabelled icon in the one position the thumb reaches first is
                 the easiest thing on the bar to press by accident, and the
                 accessible name now matches the words on screen. */}
+            {/* Goes straight to the check-in sheet. Landing on /live and
+                leaving the traveller to press a second Check in button reads
+                as the first press having done nothing. */}
             <Link
-              href="/live"
+              href="/live?checkin=1"
               className="absolute left-1/2 top-0 flex -translate-x-1/2 -translate-y-[26px] flex-col items-center whitespace-nowrap"
             >
               <span className="flex size-[58px] items-center justify-center rounded-full bg-ac text-on shadow-lg ring-4 ring-sf">

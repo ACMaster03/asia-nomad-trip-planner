@@ -50,37 +50,44 @@ puts the rest behind native `<details>`. The summary reads the same keys
 migration 03 seeds, and `PROMOTED` in `CityCard.tsx` keeps them from appearing
 twice; if a key is ever renamed the cost is a repeat, never a blank screen.
 
-### PARTLY DIAGNOSED — Check in lands on a page that looks like a different app
+### FIXED (symptom) / OPEN (cause) — Check in went to a page, not to a check-in
 
-Reported from a screen recording 2026-09-19: tapping the raised Check in tab
-loads "a page that shouldn't be there, with another look". The recording could
-not be decoded in the session it was reported to, so the trigger is inferred,
-not observed. Two halves, and only the first is certain.
+Reported 2026-09-19 as "the check in button doesn't work, it loads a page that
+shouldn't be there, with another look". Screenshots of both screens settled it,
+and the first guess below was wrong.
 
-**Certain: the page is `public/offline.html`.** It is the only page in the app
-not on the LIVHOLD tokens, so it is the only thing "another look" can mean:
-teal #0d9488 (twice), the Nomad compass, a system font stack, 14.4px type, 8px
-radii, and a background that ignores the theme chosen in Settings. It also
-opened with "You're offline", which sw.ts's own comment says is often false,
-since the same page answers a navigation that merely ran out of the worker's
-25-second budget. It is on the tokens now, runs the same theme and larger-text
-bootstrap layout.tsx runs, says the connection may be fine, offers Home as well
-as Try again, and reloads itself when the browser reports the connection back.
+**What it is.** The raised tab linked to `/live`, and `/live` is Home again.
+Side by side they carry the same title ("Bangkok, night 19"), the same stay
+line, the same progress bar, the same "10 nights left", the same "Next: Hanoi ·
+30 Sep", the same activity count, and the same full-width green "Check in -
+where are you?" button. So pressing Check in produced a differently-arranged
+copy of the screen you were on, with an identical Check in button sitting in it.
+Read as "nothing happened", which is the correct reading.
 
-**Inferred: the offline-shell warm-up is racing the navigation.** sw.ts already
-carries the scar: warming used to fire on mount and lose the user's navigation
-to the NetworkFirst timeout, and was made sequential and delayed by 5s. One
-sequential warm fetch still shares a phone's link with whatever the user taps
-during it, `/live` is the heaviest document in the list (claims, active trip,
-role, prefetch), and Check in is the button people press first, roughly 5
-seconds in. Warming now yields: the navigation route's `requestWillFetch`
-aborts the in-flight warm request, and warm fetches ask for low priority.
+**Fixed:** both entry points (the raised tab and Home's own button) now go to
+`/live?checkin=1`, and LiveClient opens the check-in sheet on arrival, dropping
+the parameter so a reload or a back does not reopen it. One press, one sheet.
 
-If it recurs after this, the next thing to rule out is the RSC leg. A `<Link>`
-click fetches RSC (NetworkOnly here, deliberately), and a failed RSC fetch makes
-the Next router fall back to a document navigation, which is what reaches the
-fallback. Confirm by watching whether the URL bar says /live when the page
-appears, and whether it reproduces with the service worker unregistered.
+**Still open:** `/live` and Home should not be two screens. What `/live`
+genuinely adds over Home is Arrived, Note and PLAN VS ACTUAL; everything above
+those is Home restated. The intended end state is already named in AppNav
+("links to /live until Phase 7 replaces that screen with the check-in sheet"):
+the sheet belongs in the layout, and what remains of /live belongs on Home or
+behind Check-ins. That means lifting the check-in mutation, the photo upload
+and the offline outbox out of an 800-line LiveClient, which is a deliberate
+piece of work, not a fix to slip into a review pass. It also decides the
+vocabulary question below, since the Check in / Arrived / Note / Activity split
+is the same duplication seen from the wording side.
+
+### WRONG TURN, kept for the record — the offline page was not the cause
+
+Before the screenshots arrived, "a page with another look" was read as
+`public/offline.html`, on the grounds that it was the only page in the app not
+on the LIVHOLD tokens. It was not what the traveller saw. The rewrite of that
+page stands on its own merits (it was on the dead teal kit, and it asserted
+"You're offline" when the same page also answers a navigation that merely ran
+out of the worker's 25s budget), as does making the offline warm-up yield to a
+real navigation. Neither was this bug.
 
 ### OPEN — an unticked stop still owes money for its bookings (Money, not fixed here)
 
