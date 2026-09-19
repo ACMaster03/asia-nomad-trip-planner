@@ -362,13 +362,21 @@ body.no-notes .note { display: none; }
       <div class="lrow"><span class="grow"><span class="t">BUD → BKK · Qatar Airways</span><span class="m">Aug 31 · Transport · from booking</span></span><span class="a num">372 000 Ft</span></div>
       <div class="lrow"><span class="grow"><span class="t">The Quartz Residence · 30 n</span><span class="m">Aug 25 · Stays · from booking</span></span><span class="a num">437 000 Ft</span></div>
       <hr class="rule">
-      <div class="row"><button class="btn ghost sm">Show all 9 entries</button><span class="s13 faint">showing the latest 30</span></div>
+      <div class="row"><button class="btn ghost sm" style="width:100%;justify-content:center;">Load 20 more · August and earlier</button></div>
+      <div class="s13 faint" style="margin-top:8px;text-align:center;">showing 9 of 9</div>
     </div>
 
     <div class="note">
-      <b>#38 — the ledger sits last.</b> Splitting the page fixes it structurally: Plan, Monthly and the
-      cap live on the other tab, so the ledger has nothing left to bury. The latest-30 cut is
-      belt-and-braces for when Spending itself gets long.
+      <b>#38 — the ledger sits last, and starts short.</b> Twenty rows, then "load more" walking
+      backwards through the months.<br><br>
+      <b>But it will not save you any data, and it is worth knowing why.</b> The ledger is a
+      <code>jsonb</code> column on the trip row (<code>01-document-sync.sql:7</code>), and
+      <code>TRIP_COLS</code> (<code>queries.ts:8</code>) selects it whole in the same request as the trip
+      state. Every byte has already arrived before this card renders — and the chart, the donut, the
+      burn rate and the projection all need the complete array anyway. Truncating here buys render cost
+      and scroll length, not bandwidth. Real pagination would mean moving the ledger out of the trip
+      document into its own table: a migration, new RPCs, and the end of the offline-friendly
+      whole-document sync. Probably right eventually; definitely not what "show fewer rows" costs.
     </div>
   </section>
 
@@ -393,14 +401,34 @@ body.no-notes .note { display: none; }
     </div>
 
     <div class="sec"><span class="eyebrow">Bookings</span><span class="s12 faint">committed money</span></div>
-    <div class="card">
-      <div class="lrow"><span class="grow"><span class="t">BUD → BKK · Qatar Airways</span><span class="m">Aug 31 · transport</span></span><span class="chip ok">paid</span><span class="a num">372 000</span></div>
-      <div class="lrow"><span class="grow"><span class="t">The Quartz Residence</span><span class="m">Bangkok · 30 nights · charged Aug 25</span></span><span class="chip ok">paid</span><span class="a num">437 000</span></div>
-      <div class="lrow"><span class="grow"><span class="t">Nimman Loft Studio</span><span class="m">Chiang Mai · 31 nights</span></span><span class="chip warn">draft</span><span class="a num" style="color:var(--warn)">265 000</span></div>
-      <div class="lrow"><span class="grow"><span class="t">8 transport legs</span><span class="m">not booked yet</span></span><span class="chip">—</span><span class="a num muted">634 000</span></div>
+    <a href="#" class="card" style="text-decoration:none;color:inherit;display:block;">
+      <div class="two" style="gap:14px;">
+        <div>
+          <div class="eyebrow">Stays</div>
+          <div class="num" style="font-size:21px;font-weight:600;margin-top:2px;">702 000 Ft</div>
+          <div class="s13 muted">1 paid · 1 draft</div>
+        </div>
+        <div>
+          <div class="eyebrow">Transport</div>
+          <div class="num" style="font-size:21px;font-weight:600;margin-top:2px;">1 006 000 Ft</div>
+          <div class="s13 muted">1 of 9 booked</div>
+        </div>
+      </div>
       <hr class="rule">
-      <div class="row s14"><span class="muted">On the books</span><span class="grow"></span><b class="num">809 000 Ft</b></div>
-      <div class="row s14" style="margin-top:6px;"><span class="muted">Booked, still to pay</span><span class="grow"></span><b class="num">0 Ft</b></div>
+      <div class="row s14"><span class="muted">Paid</span><span class="grow"></span><b class="num">809 000 Ft</b></div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Scheduled &amp; to pay</span><span class="grow"></span><b class="num">0 Ft</b></div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Not booked yet</span><span class="grow"></span><b class="num" style="color:var(--warn)">899 000 Ft</b></div>
+      <hr class="rule">
+      <div class="row"><b style="font-size:16px">Total</b><span class="grow"></span><b class="num" style="font-size:16px">1 708 000 Ft</b><span class="faint">›</span></div>
+      <div class="s13 muted" style="margin-top:6px;">Edit stays and legs on the Trip page →</div>
+    </a>
+
+    <div class="note">
+      <b>Five numbers, not fourteen.</b> Today this card lists every stay and leg individually and then
+      closes with three separate footer lines, which is where it stops being readable. The detail already
+      exists on the Trip page and that is where you edit it — so Money shows the two halves you asked
+      for (stays, transport), the three states that matter (paid, scheduled, not booked), one total, and a
+      tap through. Nothing is lost; it moves to where it was already editable.
     </div>
 
     <div class="sec"><span class="eyebrow">Subscriptions</span><span class="s12 faint">the monthly ones from home</span></div>
@@ -470,13 +498,52 @@ body.no-notes .note { display: none; }
       row. Sum them and the backpacks count twice. Same card, never the same total.
     </div>
 
-    <div class="sec"><span class="eyebrow">Plan · by stop</span></div>
+    <div class="sec"><span class="eyebrow">Plan · by stop</span><span class="s12 faint">tap a number for the maths</span></div>
     <div class="card">
-      <div class="lrow"><span class="grow"><span class="t">Bangkok 🇹🇭</span><span class="m">30 n · 12 in · stay paid + 18 n at your pace</span></span><span class="a num">519 800</span></div>
-      <div class="lrow"><span class="grow"><span class="t">Chiang Mai 🇹🇭</span><span class="m">31 n · draft stay + 31 n at your pace</span></span><span class="a num" style="color:var(--warn)">640 000</span></div>
-      <div class="lrow"><span class="grow"><span class="t">Hanoi 🇻🇳</span><span class="m">14 n · city average</span></span><span class="a num">320 000</span></div>
-      <div class="lrow"><span class="grow"><span class="t">Hoi An 🇻🇳 · KL 🇲🇾 · Bali 🇮🇩</span><span class="m">78 n · city averages</span></span><span class="a num">1 640 000</span></div>
-      <div class="lrow"><span class="grow"><span class="t">Home leg + buffer</span><span class="m">24 n unassigned</span></span><span class="a num">360 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Bangkok 🇹🇭</span><span class="m">30 nights · 17 300 Ft/night</span></span><span class="a num">519 800</span></div>
+      <div style="border-radius:var(--rCtl);background:var(--in);padding:12px 14px;margin:2px 0 10px;">
+        <div class="s13 muted" style="line-height:1.7;">
+          Stay, paid <b style="color:var(--tx)">437 000</b><br>
+          + 18 nights left × 4 600 Ft <b style="color:var(--tx)">82 800</b><br>
+          <span style="display:inline-block;margin-top:4px;padding-top:4px;border-top:1px solid var(--ln)">= <b style="color:var(--tx)">519 800</b> over 30 nights · <b style="color:var(--tx)">17 300</b>/night</span>
+        </div>
+      </div>
+      <div class="lrow"><span class="grow"><span class="t">Chiang Mai 🇹🇭</span><span class="m">31 nights · 20 600 Ft/night</span></span><span class="a num" style="color:var(--warn)">640 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Hanoi 🇻🇳</span><span class="m">14 nights · 22 900 Ft/night</span></span><span class="a num">320 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Hoi An 🇻🇳</span><span class="m">16 nights · 20 600 Ft/night</span></span><span class="a num">330 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Kuala Lumpur 🇲🇾</span><span class="m">31 nights · 19 700 Ft/night</span></span><span class="a num">610 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Bali 🇮🇩</span><span class="m">31 nights · 22 600 Ft/night</span></span><span class="a num">700 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Home leg + buffer</span><span class="m">24 nights · 15 000 Ft/night</span></span><span class="a num">360 000</span></div>
+      <div class="row s14" style="margin-top:12px;padding-top:12px;border-top:1.5px solid var(--ln3);"><b>Stops subtotal</b><span class="grow"></span><b class="num">3 479 800 Ft</b></div>
+      <hr class="rule">
+      <div class="row s14"><span class="muted">Transport</span><span class="grow"></span><b class="num">372 000 Ft</b></div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Gear, e-SIM, insurance</span><span class="grow"></span><b class="num">180 000 Ft</b></div>
+      <div class="s13 faint" style="margin-top:2px;">logged spend that belongs to no stop and no booking</div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Subscriptions ahead</span><span class="grow"></span><b class="num">84 000 Ft</b></div>
+      <hr class="rule">
+      <div class="row"><b style="font-size:16px">Projected · live</b><span class="grow"></span><b class="num" style="font-size:16px">4 115 800 Ft</b></div>
+    </div>
+
+    <div class="note">
+      <b>One number per stop, one per-night average, and the maths on tap.</b> Today every row carries its
+      own breakdown line permanently, so seven stops means seven explanations competing with the seven
+      figures. The per-night average is the number that actually compares cities — Hanoi at 22 900 vs
+      Kuala Lumpur at 19 700 is the decision, not the totals.<br><br>
+      <b>The "Gear, e-SIM, insurance" line already exists</b> (<code>PlanCard.tsx:106</code>) — you
+      just could not reach it under the ledger. It is <code>projection.residual</code>: not a category
+      sum but a subtraction, <code>spent + scheduled − inStops − paidStays − paidTransport</code>.
+      On this fixture that is 1 044 200 − 55 200 − 437 000 − 372 000 = <b>180 000</b>, exactly the
+      backpacks. It needs a clearer label, because it also silently absorbs days between stops.
+    </div>
+
+    <div class="note">
+      <b>Open question this card exposes.</b> Its rows are the <i>live</i> projection — Bangkok at
+      519 800 because the stay is paid and the pace is known — and they sum to <b>4 115 800</b>. The
+      hero above quotes <b>4 202 000</b>, which is canon's <i>planning</i> figure (Bangkok at its
+      pre-trip 780 000) plus subscriptions. Both are correct and they are not the same number. Today the
+      page shows only one of them and never says which. Before any of this ships, pick: the hero follows
+      the card, or the card is labelled as the live read against a separate plan figure. This is the same
+      fictional-number problem you flagged on the overview, one card further down.
     </div>
 
     <div class="sec"><span class="eyebrow">To cover the plan</span><span class="s12 faint">what has to come in</span></div>
