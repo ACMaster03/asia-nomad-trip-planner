@@ -218,12 +218,25 @@ body.no-notes .note { display: none; }
 .ord.bulk { background: transparent; box-shadow: inset 0 0 0 1.4px var(--ln2); color: var(--tx2); }
 .cols { display: grid; grid-template-columns: 1fr; gap: 16px; }
 @media (min-width: 560px) { .cols.two-up { grid-template-columns: 1fr 1fr; } }
+/* ---- ONE page, two columns once there is room ---------------------------
+   Phone: a single 576px column, exactly as MoneyPage.tsx renders today.
+   Tablet and up: the cards pair off, and the hero and the ledger span both.
+   The order of the DOM is the order of the page — the grid never reorders
+   anything, so the phone reading order survives the wide layout. */
+main.screen { max-width: 576px; }
+@media (min-width: 900px) {
+  main.screen { max-width: 980px; display: grid; grid-template-columns: 1fr 1fr;
+    align-items: start; gap: 14px; column-gap: 16px; }
+  main.screen > .full { grid-column: 1 / -1; }
+  main.screen > .sec { grid-column: 1 / -1; }
+}
+.blk { display: flex; flex-direction: column; gap: 12px; }
 </style>
 </head>
 <body>
 
 <header class="mockbar">
-  <span class="ttl">MOCK · Money v2</span>
+  <span class="ttl">MOCK · Money</span>
   <span id="pills"></span>
   <span class="spacer"></span>
   <button class="tool" onclick="toggleNotes()">✎ notes</button>
@@ -233,23 +246,20 @@ body.no-notes .note { display: none; }
 
 <main class="screen">
 
-  <!-- ===================== shared header ===================== -->
-  <section data-state="spending plan subs">
-    <div class="row" style="align-items:flex-start;margin-bottom:14px;">
+  <!-- ============ header ============ -->
+  <section data-state="money subs" class="full">
+    <div class="row" style="align-items:flex-start;">
       <div class="grow">
         <h1 class="page">Money</h1>
         <p class="sub">Asia 2026–27 · day 13 · Bangkok</p>
       </div>
-      <button class="btn soft">＋ Entry</button>
-    </div>
-    <div class="seg">
-      <button data-go="spending">Spending</button>
-      <button data-go="plan">Plan</button>
+      <button class="btn soft" title="Add an entry" aria-label="Add an entry"
+        style="width:46px;height:46px;padding:0;justify-content:center;font-size:22px;line-height:1;">＋</button>
     </div>
   </section>
 
-  <!-- ===================== STATE: spending ===================== -->
-  <section data-state="spending" class="cols">
+  <!-- ============ 1 · overview ============ -->
+  <div data-state="money" class="full blk">
     <div class="card lg">
       <div class="eyebrow">Spent so far · 13 days</div>
       <div class="serif num" style="font-size:32px;font-weight:600;line-height:1.1;letter-spacing:-.02em;margin-top:2px;">1 044 200 Ft</div>
@@ -260,26 +270,41 @@ body.no-notes .note { display: none; }
           <div class="s13 muted">everyday costs over 12 days in Bangkok</div>
         </div>
         <div>
-          <div class="eyebrow">Everyday so far</div>
-          <div class="num" style="font-size:22px;font-weight:600;margin-top:2px;">55 200 Ft</div>
-          <div class="s13 muted">the 6 rows the rate is built from</div>
+          <div class="eyebrow">Projected total</div>
+          <div class="num" style="font-size:22px;font-weight:600;margin-top:2px;">4 115 800 Ft</div>
+          <div class="s13 muted">153 planned nights, at this pace</div>
         </div>
+      </div>
+      <div class="track" style="margin-top:16px;"><i style="width:23%;background:var(--ac)"></i></div>
+      <div class="row s13" style="margin-top:7px;">
+        <span><b>23% of your budget</b></span><span class="grow"></span>
+        <span class="muted">4 500 000 Ft · <b class="num">3 455 800</b> left</span>
       </div>
       <div class="beyond">
         <span class="grow">
           <span class="v num">+ 989 000 Ft beyond the everyday</span>
           <span class="w">flight, Bangkok stay, backpacks — real money, deliberately outside the per-day rate.</span>
         </span>
-        <a href="#plan" data-go="plan">See it →</a>
       </div>
     </div>
 
     <div class="note">
-      <b>This strip is the whole redesign (#35).</b> 989 000 of the 1 044 200 spent — <b>95%</b> — is
-      invisible on today's page: out of the chart, out of the donut, out of the rate, and shown nowhere
-      else. Keeping it out of the <i>rate</i> is right. Keeping it out of the <i>product</i> is the bug.
+      <b>The bar measures actual spend against the budget, not against a forecast.</b> Today it is
+      <code>spent / projected</code> with "pre-trip estimate 4 120 000" underneath
+      (<code>MoneyPage.tsx:91,177-178</code>) — a bar whose denominator moves every time the pace
+      changes, anchored to a number invented before departure. Now: <b>1 044 200 of 4 500 000 = 23%</b>,
+      against a ceiling you actually set. <b>Projected total keeps its place</b> in the pair above,
+      because it answers a different question and it is the honest one — <code>projection.projected</code>,
+      built from the real pace, not the pre-trip guess.<br><br>
+      Losing the pre-trip estimate has one consequence worth tracking: <code>budget.grand</code> was the
+      only consumer of <code>state.extras</code> on this page (<code>budget.ts:109</code>), so the
+      One-offs card below becomes the sole place they are visible at all. That raises #39, it does not
+      lower it.
     </div>
+  </div>
 
+  <!-- ============ 2 · daily spend ============ -->
+  <div data-state="money" class="blk">
     <div class="sec"><span class="eyebrow">Daily spend · last 12 days</span><span class="s12 faint">everyday costs</span></div>
     <div class="card">
       <div class="row" style="margin-bottom:10px;">
@@ -313,10 +338,13 @@ body.no-notes .note { display: none; }
       </svg>
       <div class="s13 muted" style="margin-top:2px;">Tap a bar to open that day in the ledger below.</div>
     </div>
+  </div>
 
+  <!-- ============ 3 · where it goes ============ -->
+  <div data-state="money" class="blk">
     <div class="sec"><span class="eyebrow">Where it goes · last 12 days</span><span class="s12 faint">everyday costs</span></div>
     <div class="card">
-      <div class="row" style="gap:16px;align-items:center;">
+      <div class="row" style="gap:16px;">
         <svg width="120" height="120" viewBox="0 0 120 120" style="flex:none" role="img" aria-label="Share of everyday spending by family">
           <circle cx="60" cy="60" r="44" fill="none" stroke="var(--tr)" stroke-width="18"/>
           <g transform="rotate(-90 60 60)">
@@ -341,65 +369,10 @@ body.no-notes .note { display: none; }
         <div class="crow"><i class="sw" style="background:var(--catGrocery)"></i><span class="grow">Convenience store</span><span class="amt num">6 400 Ft</span></div>
       </div>
     </div>
+  </div>
 
-    <div class="note">
-      "Phone &amp; internet" is 23% of a 12-day sample because of one ฿1,200 SIM pair — small-sample
-      noise, not a category problem, and an argument for defaulting to a longer window once the trip
-      has one.
-    </div>
-
-    <div class="sec"><span class="eyebrow">The ledger</span><span class="s12 faint">everything, newest first</span></div>
-    <div class="card">
-      <div class="monsep">September · out 55 200 · in 513 500</div>
-      <div class="lrow"><span class="grow"><span class="t">Chatuchak gifts</span><span class="m">Sep 12 · Souvenirs · Anna</span></span><span class="a num">8 800 Ft<em>฿850</em></span></div>
-      <div class="lrow"><span class="grow"><span class="t">Grab to Wat Pho</span><span class="m">Sep 11 · Getting around · Patrik</span></span><span class="a num">2 500 Ft<em>฿240</em></span></div>
-      <div class="lrow"><span class="grow"><span class="t">Jay Fai dinner</span><span class="m">Sep 10 · Food · Anna</span></span><span class="a num">19 800 Ft<em>฿1,900</em></span></div>
-      <div class="lrow"><span class="grow"><span class="t">Freelance payout</span><span class="m">Sep 9 · Freelance · Patrik</span></span><span class="a in num">+513 500 Ft<em>€1,300</em></span></div>
-      <div class="lrow"><span class="grow"><span class="t">7-Eleven</span><span class="m">Sep 8 · Convenience store · Patrik</span></span><span class="a num">6 400 Ft<em>฿620</em></span></div>
-      <div class="lrow"><span class="grow"><span class="t">SIM ×2</span><span class="m">Sep 5 · Phone &amp; internet · Patrik</span></span><span class="a num">12 500 Ft<em>฿1,200</em></span></div>
-      <div class="lrow"><span class="grow"><span class="t">BTS top-up</span><span class="m">Sep 2 · Getting around · Anna</span></span><span class="a num">5 200 Ft<em>฿500</em></span></div>
-      <div class="monsep">August · out 809 000</div>
-      <div class="lrow"><span class="grow"><span class="t">BUD → BKK · Qatar Airways</span><span class="m">Aug 31 · Transport · from booking</span></span><span class="a num">372 000 Ft</span></div>
-      <div class="lrow"><span class="grow"><span class="t">The Quartz Residence · 30 n</span><span class="m">Aug 25 · Stays · from booking</span></span><span class="a num">437 000 Ft</span></div>
-      <hr class="rule">
-      <div class="row"><button class="btn ghost sm" style="width:100%;justify-content:center;">Load 20 more · August and earlier</button></div>
-      <div class="s13 faint" style="margin-top:8px;text-align:center;">showing 9 of 9</div>
-    </div>
-
-    <div class="note">
-      <b>#38 — the ledger sits last, and starts short.</b> Twenty rows, then "load more" walking
-      backwards through the months.<br><br>
-      <b>But it will not save you any data, and it is worth knowing why.</b> The ledger is a
-      <code>jsonb</code> column on the trip row (<code>01-document-sync.sql:7</code>), and
-      <code>TRIP_COLS</code> (<code>queries.ts:8</code>) selects it whole in the same request as the trip
-      state. Every byte has already arrived before this card renders — and the chart, the donut, the
-      burn rate and the projection all need the complete array anyway. Truncating here buys render cost
-      and scroll length, not bandwidth. Real pagination would mean moving the ledger out of the trip
-      document into its own table: a migration, new RPCs, and the end of the offline-friendly
-      whole-document sync. Probably right eventually; definitely not what "show fewer rows" costs.
-    </div>
-  </section>
-
-  <!-- ===================== STATE: plan ===================== -->
-  <section data-state="plan" class="cols">
-    <div class="card lg">
-      <div class="eyebrow">Projected total</div>
-      <div class="serif num" style="font-size:32px;font-weight:600;line-height:1.1;letter-spacing:-.02em;margin-top:2px;color:var(--warn)">4 202 000 Ft</div>
-      <div class="s13 muted" style="margin-top:4px;">153 planned nights at 4 600 Ft/day, plus everything committed below</div>
-      <div class="track" style="margin-top:14px;"><i style="width:93%;background:var(--warn)"></i></div>
-      <div class="row s13" style="margin-top:7px;">
-        <span style="color:var(--warn)"><b>93% of cap</b></span><span class="grow"></span>
-        <span class="muted">cap <b>4 500 000</b> · headroom <b>298 000</b></span>
-      </div>
-    </div>
-
-    <div class="note">
-      Canon puts the projection at <b>4 112 000 = 91%</b>. This adds the <b>≈90 000 Ft of subscriptions</b>
-      that run all 179 days and that the app models nowhere → <b>4 202 000 = 93%</b>.
-      <b>That two-point move is the real argument for #37</b>, more than the reminders: a fixed cost from
-      home does not belong in the per-day rate, but it absolutely belongs in "can we afford this".
-    </div>
-
+  <!-- ============ 4 · bookings ============ -->
+  <div data-state="money" class="blk">
     <div class="sec"><span class="eyebrow">Bookings</span><span class="s12 faint">committed money</span></div>
     <a href="#" class="card" style="text-decoration:none;color:inherit;display:block;">
       <div class="two" style="gap:14px;">
@@ -422,15 +395,15 @@ body.no-notes .note { display: none; }
       <div class="row"><b style="font-size:16px">Total</b><span class="grow"></span><b class="num" style="font-size:16px">1 708 000 Ft</b><span class="faint">›</span></div>
       <div class="s13 muted" style="margin-top:6px;">Edit stays and legs on the Trip page →</div>
     </a>
-
     <div class="note">
-      <b>Five numbers, not fourteen.</b> Today this card lists every stay and leg individually and then
-      closes with three separate footer lines, which is where it stops being readable. The detail already
-      exists on the Trip page and that is where you edit it — so Money shows the two halves you asked
-      for (stays, transport), the three states that matter (paid, scheduled, not booked), one total, and a
-      tap through. Nothing is lost; it moves to where it was already editable.
+      <b>Five numbers, not fourteen.</b> Today this card lists every stay and leg and then closes with
+      three separate footer lines. The detail already exists on the Trip page and that is where you edit
+      it, so Money shows the two halves, the three states, one total, and a tap through.
     </div>
+  </div>
 
+  <!-- ============ 5 · subscriptions ============ -->
+  <div data-state="money" class="blk">
     <div class="sec"><span class="eyebrow">Subscriptions</span><span class="s12 faint">the monthly ones from home</span></div>
     <div class="card">
       <div class="srow" style="border-top:0">
@@ -445,7 +418,7 @@ body.no-notes .note { display: none; }
       </div>
       <div class="srow">
         <button class="bell on" title="reminds 3 days before">🔔</button>
-        <span class="grow"><span class="nm">Home internet · Budapest flat</span><span class="mt">monthly · the 23rd · reminds 3 days before</span></span>
+        <span class="grow"><span class="nm">Home internet · Budapest</span><span class="mt">monthly · the 23rd · reminds 3 days before</span></span>
         <span class="amt num"><b>7 990 Ft</b><em>/month</em></span>
       </div>
       <div class="srow">
@@ -455,7 +428,7 @@ body.no-notes .note { display: none; }
       </div>
       <div class="srow off">
         <span class="bell" style="display:inline-flex;align-items:center;justify-content:center;">—</span>
-        <span class="grow"><span class="nm">Netflix</span><span class="mt">cancelled 6 Sep · last charged Aug 20 · 0 charges on this trip</span></span>
+        <span class="grow"><span class="nm">Netflix</span><span class="mt">cancelled 6 Sep · 0 charges on this trip</span></span>
         <span class="amt num"><b>4 490 Ft</b><em>/month</em></span>
       </div>
       <hr class="rule">
@@ -463,17 +436,20 @@ body.no-notes .note { display: none; }
       <div class="row s13" style="margin-top:6px;"><span class="muted">across the remaining 166 days</span><span class="grow"></span><b class="num muted">≈ 84 000 Ft</b></div>
       <div class="row" style="margin-top:14px;gap:8px;">
         <button class="btn sm">＋ Subscription</button>
-        <button class="btn ghost sm" data-go="subs">Show cancelled (1)</button>
+        <button class="btn ghost sm" data-go="subs">Edit one</button>
       </div>
     </div>
-
     <div class="note">
-      Cadence is <b>declared, not inferred</b> (#37). Two rows 31 days apart could be monthly or two
-      instalments of an annual plan; one row logged late drags every future prediction. Anchor day +
-      cadence is arithmetic. Ledger rows only <i>confirm</i> each occurrence — and flag drift when the
-      amount moves.
+      Cadence is <b>declared, not inferred</b> (#37). Anchor day + cadence is arithmetic; ledger rows only
+      <i>confirm</i> each occurrence and flag drift. Folding the ≈84 000 into the projection moves it
+      <b>4 031 800 → 4 115 800</b>, i.e. <b>90% → 91% of cap</b>. One point — smaller than I claimed when
+      I was measuring against the pre-trip planning figure, and still the strongest argument for the
+      feature.
     </div>
+  </div>
 
+  <!-- ============ 6 · one-offs ============ -->
+  <div data-state="money" class="blk">
     <div class="sec"><span class="eyebrow">One-offs &amp; extras</span><span class="s12 faint">visas, insurance, gear</span></div>
     <div class="card">
       <table class="pvp">
@@ -488,16 +464,15 @@ body.no-notes .note { display: none; }
       <hr class="rule">
       <a href="#" class="s13" style="color:var(--ac2Deep);font-weight:600;text-decoration:none">Edit on Itinerary → Extras →</a>
     </div>
-
     <div class="note">
-      <b>#39 — this card existed and was dropped in the merge</b> (<code>59743fc</code>).
-      <code>ExtrasTab.tsx:115</code> still says "see 629 000 Ft in Money"; Money has zero references to
-      <code>extras</code>. Meanwhile <code>budget.ts:109</code> folds it into <code>grand</code>, so it is
-      inside the number the bar above measures against — invisible, but load-bearing.<br><br>
-      <b>The two columns are not optional.</b> Planned 629 000 is a forecast; Paid 180 000 is a ledger
-      row. Sum them and the backpacks count twice. Same card, never the same total.
+      <b>#39.</b> <code>ExtrasTab.tsx:115</code> says "see 629 000 Ft in Money" and Money has zero
+      references to <code>extras</code>. <b>Two columns, never one total</b> — Planned is a forecast,
+      Paid is a ledger row; sum them and the backpacks count twice.
     </div>
+  </div>
 
+  <!-- ============ 7 · plan by stop ============ -->
+  <div data-state="money" class="blk">
     <div class="sec"><span class="eyebrow">Plan · by stop</span><span class="s12 faint">tap a number for the maths</span></div>
     <div class="card">
       <div class="lrow"><span class="grow"><span class="t">Bangkok 🇹🇭</span><span class="m">30 nights · 17 300 Ft/night</span></span><span class="a num">519 800</span></div>
@@ -521,31 +496,23 @@ body.no-notes .note { display: none; }
       <div class="s13 faint" style="margin-top:2px;">logged spend that belongs to no stop and no booking</div>
       <div class="row s14" style="margin-top:7px;"><span class="muted">Subscriptions ahead</span><span class="grow"></span><b class="num">84 000 Ft</b></div>
       <hr class="rule">
-      <div class="row"><b style="font-size:16px">Projected · live</b><span class="grow"></span><b class="num" style="font-size:16px">4 115 800 Ft</b></div>
+      <div class="row"><b style="font-size:16px">Projected total</b><span class="grow"></span><b class="num" style="font-size:16px">4 115 800 Ft</b></div>
     </div>
-
     <div class="note">
-      <b>One number per stop, one per-night average, and the maths on tap.</b> Today every row carries its
-      own breakdown line permanently, so seven stops means seven explanations competing with the seven
-      figures. The per-night average is the number that actually compares cities — Hanoi at 22 900 vs
-      Kuala Lumpur at 19 700 is the decision, not the totals.<br><br>
-      <b>The "Gear, e-SIM, insurance" line already exists</b> (<code>PlanCard.tsx:106</code>) — you
-      just could not reach it under the ledger. It is <code>projection.residual</code>: not a category
-      sum but a subtraction, <code>spent + scheduled − inStops − paidStays − paidTransport</code>.
-      On this fixture that is 1 044 200 − 55 200 − 437 000 − 372 000 = <b>180 000</b>, exactly the
-      backpacks. It needs a clearer label, because it also silently absorbs days between stops.
+      <b>One figure per stop plus a per-night average</b>, maths on tap. Hanoi at 22 900/night against
+      Kuala Lumpur at 19 700 is the comparison that matters; the totals are not comparable because the
+      nights differ.<br><br>
+      This card now <b>ends on the same 4 115 800 the overview quotes</b> — the live projection, which is
+      what <code>projection.projected</code> actually computes. The earlier draft had the hero on canon's
+      pre-trip planning figure and this card on the live one, with nothing saying which. Fixed by
+      deleting the planning figure, which is the same call you made on the pre-trip estimate.<br><br>
+      <b>Gear, e-SIM, insurance</b> already exists at <code>PlanCard.tsx:106</code>. It is
+      <code>projection.residual</code>, a subtraction rather than a category sum.
     </div>
+  </div>
 
-    <div class="note">
-      <b>Open question this card exposes.</b> Its rows are the <i>live</i> projection — Bangkok at
-      519 800 because the stay is paid and the pace is known — and they sum to <b>4 115 800</b>. The
-      hero above quotes <b>4 202 000</b>, which is canon's <i>planning</i> figure (Bangkok at its
-      pre-trip 780 000) plus subscriptions. Both are correct and they are not the same number. Today the
-      page shows only one of them and never says which. Before any of this ships, pick: the hero follows
-      the card, or the card is labelled as the live read against a separate plan figure. This is the same
-      fictional-number problem you flagged on the overview, one card further down.
-    </div>
-
+  <!-- ============ 8 · to cover the plan ============ -->
+  <div data-state="money" class="blk">
     <div class="sec"><span class="eyebrow">To cover the plan</span><span class="s12 faint">what has to come in</span></div>
     <div class="card">
       <div class="mrow"><span class="m">Aug</span><span class="track grow"><i class="k-stay" style="width:54%"></i><i class="k-tran" style="width:46%"></i></span><span class="t">809 000</span></div>
@@ -564,25 +531,59 @@ body.no-notes .note { display: none; }
       <div class="row s14"><span class="muted">Earn target</span><span class="grow"></span><b class="num">3 000 000 Ft</b></div>
       <div class="row s14" style="margin-top:6px;"><span class="muted">Planned net burn</span><span class="grow"></span><b class="num" style="color:var(--warn)">−1 202 000 Ft</b></div>
     </div>
-
     <div class="note">
-      The <b>One-offs</b> and <b>Subscriptions</b> bands are the two families with no home today. Four
-      were designed originally — Stays / Daily living / Transport / One-off extras
-      (<code>design/handoff-v1/README.md:34</code>) — and subscriptions is the fifth, new here.
+      <b>Open item.</b> These bars still run off the pre-trip per-stop estimates and sum to ≈4 200 000,
+      while everything above now speaks in the live projection (4 115 800). Bangkok coming in under
+      estimate is the whole gap. This card is the last place a planning number survives, and it needs
+      the same treatment before build.
     </div>
+  </div>
 
+  <!-- ============ 9 · budget cap ============ -->
+  <div data-state="money" class="blk">
     <a href="#" class="card row" style="text-decoration:none;color:inherit;">
-      <span class="grow"><b style="font-size:15px">Budget cap</b><span class="s13 muted" style="display:block">4 500 000 Ft · projected uses 93%</span></span>
+      <span class="grow"><b style="font-size:15px">Budget cap</b><span class="s13 muted" style="display:block">4 500 000 Ft · projected uses 91%</span></span>
       <span class="faint">›</span>
     </a>
-  </section>
+  </div>
 
-  <!-- ===================== STATE: subs ===================== -->
-  <section data-state="subs" class="cols">
+  <!-- ============ 10 · the ledger, full width, last ============ -->
+  <div data-state="money" class="full blk">
+    <div class="sec"><span class="eyebrow">The ledger</span><span class="s12 faint">everything, newest first</span></div>
+    <div class="card">
+      <div class="monsep">September · out 55 200 · in 513 500</div>
+      <div class="lrow"><span class="grow"><span class="t">Chatuchak gifts</span><span class="m">Sep 12 · Souvenirs · Anna</span></span><span class="a num">8 800 Ft<em>฿850</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">Grab to Wat Pho</span><span class="m">Sep 11 · Getting around · Patrik</span></span><span class="a num">2 500 Ft<em>฿240</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">Jay Fai dinner</span><span class="m">Sep 10 · Food · Anna</span></span><span class="a num">19 800 Ft<em>฿1,900</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">Freelance payout</span><span class="m">Sep 9 · Freelance · Patrik</span></span><span class="a in num">+513 500 Ft<em>€1,300</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">7-Eleven</span><span class="m">Sep 8 · Convenience store · Patrik</span></span><span class="a num">6 400 Ft<em>฿620</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">SIM ×2</span><span class="m">Sep 5 · Phone &amp; internet · Patrik</span></span><span class="a num">12 500 Ft<em>฿1,200</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">BTS top-up</span><span class="m">Sep 2 · Getting around · Anna</span></span><span class="a num">5 200 Ft<em>฿500</em></span></div>
+      <div class="monsep">August · out 809 000</div>
+      <div class="lrow"><span class="grow"><span class="t">BUD → BKK · Qatar Airways</span><span class="m">Aug 31 · Transport · from booking</span></span><span class="a num">372 000 Ft</span></div>
+      <div class="lrow"><span class="grow"><span class="t">The Quartz Residence · 30 n</span><span class="m">Aug 25 · Stays · from booking</span></span><span class="a num">437 000 Ft</span></div>
+      <hr class="rule">
+      <button class="btn ghost sm" style="width:100%;justify-content:center;">Load 20 more · August and earlier</button>
+      <div class="s13 faint" style="margin-top:8px;text-align:center;">showing 9 of 9</div>
+    </div>
+    <div class="note">
+      <b>Last on the page, twenty rows at a time, paging backwards.</b> It saves render cost and scroll
+      length, <b>not bandwidth</b>: the ledger is a <code>jsonb</code> column on the trip row
+      (<code>01-document-sync.sql:7</code>) and <code>TRIP_COLS</code> (<code>queries.ts:8</code>) selects
+      it whole with the state — every byte has arrived before this card renders, and the chart, donut,
+      burn rate and projection all need the full array anyway.<br><br>
+      <b>On wide screens it spans both columns.</b> Everything above pairs off; the ledger is the one card
+      whose rows benefit from the full width, and putting it across the bottom keeps it last in the
+      reading order on every size.
+    </div>
+  </div>
+
+  <!-- ============ STATE: subs ============ -->
+  <div data-state="subs" class="full blk">
     <div class="sec"><span class="eyebrow">Subscription · edit</span></div>
     <div class="sheet-bg">
       <div class="sheet">
-        <h3 class="serif" style="font-size:19px;font-weight:600;margin-bottom:16px;">Home internet · Budapest flat</h3>
+        <h3 class="serif" style="font-size:19px;font-weight:600;margin-bottom:16px;">Home internet · Budapest</h3>
         <label class="field"><span class="lb">Amount</span><input class="inp" value="7 990 Ft"></label>
         <div class="two">
           <label class="field"><span class="lb">Repeats</span>
@@ -607,11 +608,9 @@ body.no-notes .note { display: none; }
         </div>
       </div>
     </div>
-
     <div class="note">
       <b>"Mark cancelled" is a state, not a delete.</b> Deleting loses what we paid. Cancelling stops the
-      prediction and the reminders, keeps every past charge in history, and lets the card show what it
-      cost before we killed it.
+      prediction and the reminders and keeps every past charge in history.
     </div>
 
     <div class="sec"><span class="eyebrow">Amount drift</span><span class="s12 faint">history confirms, never predicts</span></div>
@@ -626,11 +625,6 @@ body.no-notes .note { display: none; }
       </div>
     </div>
 
-    <div class="note">
-      The one place ledger history earns its keep: a confirmed charge that disagrees with the declared
-      amount is worth a prompt. Letting that same history <i>set</i> the cadence is what goes wrong.
-    </div>
-
     <div class="sec"><span class="eyebrow">The reminder, as it lands</span></div>
     <div class="card">
       <div class="row" style="gap:12px;">
@@ -640,89 +634,17 @@ body.no-notes .note { display: none; }
       <hr class="rule">
       <p class="s13 muted">
         Same pipe as the stay-deadline alerts: daily <code>pg_cron</code> → edge function → Resend + web
-        push, gated on <code>notify_prefs.deadline_push</code>, deduped forever through
-        <code>alert_log</code>. A subscription reminder is a <code>chargeDate</code> alert with a
-        different source list.
+        push, gated on <code>notify_prefs.deadline_push</code>, deduped through <code>alert_log</code>.
       </p>
     </div>
-  </section>
-
-  <!-- ===================== STATE: onepage ===================== -->
-  <section data-state="onepage" class="cols">
-    <div>
-      <h1 class="page">If we don't split it</h1>
-      <p class="sub">One page, ten cards, one scroll. Same fixes, worse navigation.</p>
-    </div>
-
-    <div class="cols two-up">
-      <div>
-        <div class="sec" style="margin-bottom:10px;"><span class="eyebrow">Today</span><span class="chip warn">broken</span></div>
-        <div class="ord"><span class="n">1</span><span class="grow">Overview</span></div>
-        <div class="ord"><span class="n">2</span><span class="grow">Daily spend chart</span></div>
-        <div class="ord"><span class="n">3</span><span class="grow">Where it goes</span></div>
-        <div class="ord"><span class="n">4</span><span class="grow">Bookings</span></div>
-        <div class="ord bulk"><span class="n">5</span><span class="grow">The ledger · ~100 rows</span><span class="chip warn">wall</span></div>
-        <div class="ord"><span class="n">6</span><span class="grow">Plan · by stop</span><span class="chip warn">buried</span></div>
-        <div class="ord"><span class="n">7</span><span class="grow">To cover the plan</span><span class="chip warn">buried</span></div>
-        <div class="ord"><span class="n">8</span><span class="grow">Budget cap</span><span class="chip warn">buried</span></div>
-      </div>
-      <div>
-        <div class="sec" style="margin-bottom:10px;"><span class="eyebrow">One-page fix</span><span class="chip ok">works</span></div>
-        <div class="ord"><span class="n">1</span><span class="grow">Overview <span style="color:var(--ac)">+ beyond-the-everyday line</span></span></div>
-        <div class="ord"><span class="n">2</span><span class="grow">Daily spend chart</span></div>
-        <div class="ord"><span class="n">3</span><span class="grow">Where it goes</span></div>
-        <div class="ord"><span class="n">4</span><span class="grow">Bookings</span></div>
-        <div class="ord new"><span class="n">5</span><span class="grow">Subscriptions</span><span class="chip ok">#37</span></div>
-        <div class="ord new"><span class="n">6</span><span class="grow">One-offs &amp; extras</span><span class="chip ok">#39</span></div>
-        <div class="ord moved"><span class="n">7</span><span class="grow">Plan · by stop</span><span class="chip">moved up</span></div>
-        <div class="ord moved"><span class="n">8</span><span class="grow">To cover the plan</span><span class="chip">moved up</span></div>
-        <div class="ord moved"><span class="n">9</span><span class="grow">Budget cap</span><span class="chip">moved up</span></div>
-        <div class="ord bulk"><span class="n">10</span><span class="grow">The ledger · latest 30 + show all</span><span class="chip">last</span></div>
-      </div>
-    </div>
-
-    <div class="note">
-      <b>The honest fallback, and it is not bad.</b> It closes #35, #38 and #39 with no routing work.
-      What it does not fix: ten cards is a long scroll on a phone, and the page still answers two
-      unrelated questions at once.
-    </div>
-
-    <div class="sec"><span class="eyebrow">Why the split is on <i>this</i> seam</span></div>
-    <div class="card">
-      <div class="cols two-up">
-        <div>
-          <span class="chip ok">Spending</span>
-          <p class="s13 muted" style="margin-top:10px;line-height:1.6;">Past tense. The tracker. Overview, chart, donut, ledger. Opened daily, on a phone, usually right after paying for something.</p>
-        </div>
-        <div>
-          <span class="chip mauve">Plan</span>
-          <p class="s13 muted" style="margin-top:10px;line-height:1.6;">Future tense. The commitments. Bookings, subscriptions, one-offs, per-stop forecast, monthly, cap. Opened weekly, while planning.</p>
-        </div>
-      </div>
-      <hr class="rule">
-      <p class="s13 muted" style="line-height:1.6;">
-        The old split was <b style="color:var(--tx)">Budget / Monthly / Ledger</b> — cut by <i>data type</i>,
-        which is why it got merged: you needed all three to answer one question. This cut is by
-        <b style="color:var(--tx)">tense</b>, and the halves are used at different moments. That is the
-        test the old tabs failed.
-      </p>
-    </div>
-
-    <div class="note">
-      <b>Recommendation:</b> ship the one-page fix first — the #38 one-liner plus the two new cards.
-      Nothing is wasted if we split later: the cards already sit in two contiguous blocks in the right
-      order, so the segmented control becomes a small change on top.
-    </div>
-  </section>
+  </div>
 
 </main>
 
 <script>
 var STATES = [
-  { id: 'spending', label: 'Spending',     desc: 'Patrik in Bangkok, Sat 12 Sep 2026 (day 13) — the tracker half, and one line admitting what the per-day rate leaves out. Issues #35, #38.' },
-  { id: 'plan',     label: 'Plan',         desc: 'A planning evening — bookings, the new Subscriptions and One-offs cards, per-stop forecast and the monthly ask. Issues #35, #37, #39.' },
-  { id: 'subs',     label: 'Subscription', desc: 'Editing "Home internet" — declared cadence, derived next charge, reminder lead time, cancel-as-a-state, drift detection. Issue #37.' },
-  { id: 'onepage',  label: 'Do not split', desc: 'The fallback: same fixes, one page, ledger last — plus the argument for where the seam belongs if we do split.' }
+  { id: 'money', label: 'Money',        desc: 'One page, ledger last. Patrik in Bangkok, Sat 12 Sep 2026 (day 13). Widen the window past 900px for the two-column layout; the ledger spans both. Issues #35, #37, #38, #39.' },
+  { id: 'subs',  label: 'Subscription', desc: 'Editing "Home internet" — declared cadence, derived next charge, reminder lead time, cancel-as-a-state, drift detection. Issue #37.' }
 ];
 var cur = STATES[0].id;
 try { var h = (location.hash || '').slice(1); if (h) cur = h; } catch (e) {}
@@ -732,15 +654,9 @@ function render() {
   document.getElementById('pills').innerHTML = STATES.map(function (s) {
     return '<button class="pill' + (s.id === cur ? ' on' : '') + '" data-go="' + s.id + '">' + s.label + '</button>';
   }).join(' ');
-  var st = STATES.filter(function (s) { return s.id === cur; })[0];
-  document.getElementById('desc').textContent = st.desc;
+  document.getElementById('desc').textContent = STATES.filter(function (s) { return s.id === cur; })[0].desc;
   Array.prototype.forEach.call(document.querySelectorAll('[data-state]'), function (el) {
-    var ids = el.getAttribute('data-state').split(/\s+/);
-    el.style.display = ids.indexOf(cur) > -1 ? '' : 'none';
-  });
-  Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (b) {
-    var t = b.getAttribute('data-go');
-    b.classList.toggle('on', t === cur || (t === 'plan' && cur === 'subs'));
+    el.style.display = el.getAttribute('data-state').split(/\s+/).indexOf(cur) > -1 ? '' : 'none';
   });
 }
 function setState(id) {
@@ -754,11 +670,7 @@ function setState(id) {
 document.addEventListener('click', function (ev) {
   var el = ev.target;
   while (el && el !== document.body) {
-    if (el.getAttribute && el.getAttribute('data-go')) {
-      ev.preventDefault();
-      setState(el.getAttribute('data-go'));
-      return;
-    }
+    if (el.getAttribute && el.getAttribute('data-go')) { ev.preventDefault(); setState(el.getAttribute('data-go')); return; }
     el = el.parentNode;
   }
 });

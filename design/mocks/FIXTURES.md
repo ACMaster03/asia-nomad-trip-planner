@@ -98,9 +98,19 @@ between Sep 1 and Sep 12, so the September ledger canon above stays untouched.
   It stays listed, struck through, behind a "Show cancelled (1)" toggle — cancel is a state, never
   a delete.
 - Across the whole 179-day trip ≈ **90,000 Ft**; across the 166 days remaining on Sep 12 ≈ **84,000 Ft**.
-- **Effect on the projection:** 4,112,000 + 90,000 = **4,202,000 = 93% of the 4,500,000 cap**
-  (still amber), headroom **298,000**, planned net burn **−1,202,000**. The per-day rate is
-  unchanged — subscriptions stay in `NON_DAILY_CATEGORIES`.
+- **Effect on the projection (live read, mock 14).** The Money overview quotes
+  `projection.projected`, built from the observed pace — not the pre-trip plan. Stops subtotal
+  3,479,800 + transport 372,000 + residual 180,000 = **4,031,800**; with subscriptions ahead
+  (84,000) = **4,115,800 = 91% of the 4,500,000 cap**. So subscriptions move it **90% → 91%**,
+  one point, not the two an earlier draft claimed by measuring against the planning figure.
+  The per-day rate is unchanged — subscriptions stay in `NON_DAILY_CATEGORIES`.
+- **The overview progress bar measures ACTUAL against the cap**, not spend against a forecast
+  (owner decision, 2026-09-19): **1,044,200 / 4,500,000 = 23%**, 3,455,800 left. The pre-trip
+  estimate line (`budget.grand`) is gone from the page; `projection.projected` keeps its tile.
+- **Planning figure, retained only for the monthly card** until that card is reconciled:
+  4,112,000 + 90,000 = 4,202,000. It differs from the live 4,115,800 because Bangkok is coming
+  in under its 780,000 pre-trip estimate. Two correct answers to two different questions — the
+  page must never show both without saying which.
 - Monthly cash-out with subscriptions folded in (amortised evenly; Feb is 25 days):
   Aug 809,000 · Sep **358,000** · Oct **655,000** · Nov **665,000** · Dec **625,000** ·
   Jan **715,000** · Feb **373,000** → **4,200,000** (2,000 below the 4,202,000 projection: the
