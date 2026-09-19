@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useMoney } from '@/lib/trips/Money'
 import Globe from 'globe.gl'
-import { LocateFixed, Map as MapIcon, Moon, RotateCw, SlidersHorizontal, Sun, Zap } from 'lucide-react'
+import { Info, LocateFixed, Map as MapIcon, Moon, RotateCw, SlidersHorizontal, Sun, Zap } from 'lucide-react'
 import type { City, Country } from '@/lib/catalogue/types'
 import type { Segment, TransportLeg } from '@/lib/trips/types'
 import type { CityCost } from '@/lib/trips/budget'
@@ -16,7 +16,7 @@ import {
 } from '@/lib/map/globeData'
 import { fetchQuakes, QUAKES_KEY, QUAKES_STALE_MS } from '@/lib/map/hazards'
 import { CountryPanel } from './map/CountryPanel'
-import { HazardPanel } from './map/HazardPanel'
+import { HazardPanel, HazardSourcesPanel } from './map/HazardPanel'
 import { Legend } from './map/Legend'
 
 // The planner globe. ONE globe.gl instance for the life of the page (issue #32
@@ -161,6 +161,8 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
   const [menuOpen, setMenuOpen] = useState(false)
   const [countryFeat, setCountryFeat] = useState<CountryFeat | null>(null)
   const [hazard, setHazard] = useState<Hazard | null>(null)
+  // The count chip answers "how many"; this answers "of what, and how old".
+  const [hazHelp, setHazHelp] = useState(false)
   const [hazInfo, setHazInfo] = useState<{ total: number; quakes: number | null } | null>(null)
 
   useEffect(() => { optsRef.current = opts; saveMapOpts(opts) }, [opts])
@@ -416,16 +418,30 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
         </div>
       </div>
       {opts.hazards && hazInfo && (
-        <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base text-[#d8e0e5] backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setHazHelp(true)}
+          aria-label="What Hazards shows"
+          className="absolute left-4 top-4 z-10 flex min-h-11 items-center gap-2 rounded-full border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base text-[#d8e0e5] backdrop-blur"
+        >
           <Zap aria-hidden className="size-4 text-[#D9A85C]" strokeWidth={2} />
           {hazInfo.total} hazard{hazInfo.total === 1 ? '' : 's'}
           {hazInfo.quakes != null && <span className="text-[#D9A85C]"> · {hazInfo.quakes} live quake{hazInfo.quakes === 1 ? '' : 's'}</span>}
           {quakes.isFetching && hazInfo.quakes == null && <span className="text-[rgba(216,224,229,.6)]"> · checking quakes…</span>}
-        </div>
+          <Info aria-hidden className="size-4 text-[rgba(216,224,229,.6)]" strokeWidth={2} />
+        </button>
       )}
       <Legend people={people.length > 0 || !!theirRoute} />
       {countryFeat && <CountryPanel feat={countryFeat} countries={countries} cities={cities} segments={segments} rates={rates} onClose={() => setCountryFeat(null)} />}
       {hazard && <HazardPanel d={hazard} onClose={() => setHazard(null)} />}
+      {hazHelp && (
+        <HazardSourcesPanel
+          quakeCount={hazInfo?.quakes ?? null}
+          updatedAt={quakes.dataUpdatedAt}
+          failed={quakes.isError}
+          onClose={() => setHazHelp(false)}
+        />
+      )}
     </>
   )
 }

@@ -326,7 +326,16 @@ export default function DashboardClient({
               {phase === 'off' ? 'Right now' : 'On plan'}
             </span>
           </span>
-          {day && <span className="text-base font-medium text-tx2">Day {day}{tripDays ? ` of ${tripDays}` : ''}</span>}
+          {/* The trip-level position lives here and nowhere else now: it used
+              to be the header subtitle, this line, AND a second progress bar
+              with the same "stop N of M" caption under it. */}
+          {day && (
+            <span className="text-base font-medium text-tx2">
+              Day {day}{tripDays ? ` of ${tripDays}` : ''}
+              {tripPct ? ` · ${tripPct}%` : ''}
+              {s.meta.endDate ? ` · home ${new Date(s.meta.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+            </span>
+          )}
         </div>
         <div className="mt-2 font-serif text-[30px] font-semibold leading-[1.2] tracking-[-.01em]">
           {phase === 'off' ? `${placeName}` : phase === 'arrive' ? `${current?.city}, arrival day` : current ? `${current.city}, night ${night}` : 'Between stops'}
@@ -393,16 +402,6 @@ export default function DashboardClient({
         </Link>
       )}
       <ComingUp state={s} todayIso={todayIso} />
-
-      <div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-track">
-          <span className="block h-full rounded-full bg-ac" style={{ width: tripPct + '%' }} />
-        </div>
-        <div className="mt-1.5 flex justify-between text-base text-tx2">
-          <span>{current ? `${current.city}, stop ${stopNo} of ${inPlan.length}` : s.meta.tripName}</span>
-          {s.meta.endDate && <span>home {new Date(s.meta.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
-        </div>
-      </div>
 
       {/* Once live, the money card speaks the Money page's language: spent so
           far against the PROJECTED total (your measured pace), not the pre-trip

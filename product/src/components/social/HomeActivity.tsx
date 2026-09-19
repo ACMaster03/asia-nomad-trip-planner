@@ -18,12 +18,17 @@ import { tk } from '@/lib/trips/keys'
 import { SocialRow } from './SocialRow'
 
 // Home's activity: the people strip, then one feed of this trip's own rows
-// and the posts of the people you follow, newest first, 30 at a time.
+// and the posts of the people you follow, newest first, a preview at a time.
 // The two sources never share a query — tk.events is the trip's own
 // authorization, following_feed the follower projection — they only meet in
 // mergeFeeds. Every social query here fails soft: on a database without
 // migrations 33–35 the feed is simply your own rows.
 
+// Home opens on a PREVIEW. The feed used to start at 30 rows, which made
+// recent activity the largest thing on a screen whose job is "where am I
+// today"; expanding is one tap and stays on the page, because there is no
+// separate activity screen to send anyone to.
+const PREVIEW = 5
 const PAGE = 30
 
 // Meet-up lines on screen at once; dismissing one pulls the next from the queue.
@@ -34,7 +39,7 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
   const qc = useQueryClient()
   const [onlyMine, setOnlyMine] = useState(false)
 
-  const [shown, setShown] = useState(PAGE)
+  const [shown, setShown] = useState(PREVIEW)
 
   const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
   const followerCount = useQuery({ queryKey: ['follower-count'], queryFn: () => fetchMyFollowerCount(sb), staleTime: 5 * 60_000, retry: false })
@@ -181,10 +186,11 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
       {items.length < total && (
         <button
           type="button"
-          onClick={() => setShown((n) => n + PAGE)}
+          onClick={() => setShown((n) => (n === PREVIEW ? PAGE : n + PAGE))}
           className="inline-flex min-h-11 items-center justify-center gap-1 rounded-[var(--rCtl)] border-[1.5px] border-ln2 bg-sf text-base font-medium"
         >
-          Show older <ChevronRight className="size-4 rotate-90" aria-hidden />
+          {shown === PREVIEW ? `See all ${total}` : 'Show older'}
+          <ChevronRight className="size-4 rotate-90" aria-hidden />
         </button>
       )}
     </>
