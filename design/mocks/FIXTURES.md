@@ -79,6 +79,33 @@ divergence between mocks is a bug.
   ฿500→5,200 (Transport, Anna). Month-to-date: In +513,500 · Out 55,200 · Net +458,300.
   August: flight 372,000 (Aug 31) + apartment 437,000 (Aug 25) → Out 809,000.
 
+## Subscriptions canon (mock 14 — proposed feature, issue #37)
+
+Five recurring costs from home, all in HUF, all billed to the same card. **Anchor day + cadence
+is declared, never inferred from the ledger.** Deliberately none of the active ones charges
+between Sep 1 and Sep 12, so the September ledger canon above stays untouched.
+
+| Subscription | Amount | Cadence | Anchor | Next (as of Sep 12) | Reminder |
+|---|---|---|---|---|---|
+| iCloud 2 TB | **3,290** | monthly | 14th | **Mon Sep 14** (in 2 days) | off |
+| Spotify Duo | **2,490** | monthly | 17th | Thu Sep 17 | off |
+| Home internet · Budapest flat | **7,990** | monthly | 23rd | Wed Sep 23 | **on, T-3** |
+| Domain + hosting | **18,000** | yearly | Nov 12 | Thu Nov 12 | **on, T-7** |
+| Netflix | 4,490 | monthly | 20th | — **cancelled Sep 6** | — |
+
+- Active monthly run-rate = 3,290 + 2,490 + 7,990 + (18,000 / 12 = 1,500) = **15,270 Ft / month**.
+- Netflix: last charge **Aug 20** (pre-departure), cancelled **Sep 6**, so **0 charges on this trip**.
+  It stays listed, struck through, behind a "Show cancelled (1)" toggle — cancel is a state, never
+  a delete.
+- Across the whole 179-day trip ≈ **90,000 Ft**; across the 166 days remaining on Sep 12 ≈ **84,000 Ft**.
+- **Effect on the projection:** 4,112,000 + 90,000 = **4,202,000 = 93% of the 4,500,000 cap**
+  (still amber), headroom **298,000**, planned net burn **−1,202,000**. The per-day rate is
+  unchanged — subscriptions stay in `NON_DAILY_CATEGORIES`.
+- Monthly cash-out with subscriptions folded in (amortised evenly; Feb is 25 days):
+  Aug 809,000 · Sep **358,000** · Oct **655,000** · Nov **665,000** · Dec **625,000** ·
+  Jan **715,000** · Feb **373,000** → **4,200,000** (2,000 below the 4,202,000 projection: the
+  same rounding drift the Money canon already documents).
+
 ## Canonical check-ins / events (reuse EVERYWHERE: 02, 06, 07, 08, 10)
 
 Same date/time/author/rating and ONE canonical comment string each:
