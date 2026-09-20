@@ -15,6 +15,7 @@ import { countryCurrencies } from '@/lib/catalogue/countryCurrencies'
 import { addDays } from '@/lib/trips/spending'
 import { categoryLabel } from '@/lib/trips/categories'
 import { tripDay } from '@/lib/trips/progress'
+import { useConfirm } from '@/components/Confirm'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -65,6 +66,7 @@ const wide = 'min-[900px]:col-span-2'
 
 export default function MoneyPage() {
   const { fmt, base } = useMoney()
+  const confirm = useConfirm()
   const { trip, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
   const stateMut = useTripMutation()
@@ -149,10 +151,15 @@ export default function MoneyPage() {
     mut.mutate({ kind: 'upsert', entry })
     setSheet(null)
   }
-  function del(entry: LedgerEntry) {
+  async function del(entry: LedgerEntry) {
     if (entry.source) {
       // Without the skip record, reconcile would resurrect the row next visit.
-      if (!confirm('Remove this imported cost? The booking stays on the Trip page, but it won’t be re-imported here.')) return
+      const ok = await confirm({
+        title: 'Remove this imported cost?',
+        body: 'The booking stays on the Trip page, but it won’t be re-imported here.',
+        confirmLabel: 'Remove',
+      })
+      if (!ok) return
       const key = sourceKey(entry.source)
       // Persist the skip BEFORE deleting: a ledger refetch landing between the
       // two writes would otherwise re-import the row.
@@ -161,7 +168,7 @@ export default function MoneyPage() {
         { onSuccess: () => mut.mutate({ kind: 'delete', id: entry.id }) },
       )
     } else {
-      if (!confirm('Delete this entry?')) return
+      if (!(await confirm({ title: 'Delete this entry?' }))) return
       mut.mutate({ kind: 'delete', id: entry.id })
     }
     setSheet(null)
@@ -181,8 +188,12 @@ export default function MoneyPage() {
     })
     setSubSheet(null)
   }
-  function delSub(sub: Subscription) {
-    if (!confirm('Delete this subscription? “Mark cancelled” keeps what it already charged; deleting forgets it.')) return
+  async function delSub(sub: Subscription) {
+    const ok = await confirm({
+      title: 'Delete this subscription?',
+      body: '“Mark cancelled” keeps what it already charged; deleting forgets it.',
+    })
+    if (!ok) return
     stateMut.mutate((cur) => ({ ...cur, subscriptions: (cur.subscriptions ?? []).filter((x) => x.id !== sub.id) }))
     setSubSheet(null)
   }
