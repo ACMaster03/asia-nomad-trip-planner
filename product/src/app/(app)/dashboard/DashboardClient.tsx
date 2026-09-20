@@ -8,6 +8,7 @@ import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
 import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
+import { useCheckIn } from '@/components/checkin/CheckInProvider'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { tripPhase } from '@/lib/trips/recap'
 import { tripRecap } from '@/lib/trips/recap'
@@ -56,6 +57,7 @@ export default function DashboardClient({
   const { fmt } = useMoney()
   const { tripId } = useTripScope()
   const { trip, cityIdx } = useTripScreen()
+  const checkIn = useCheckIn()
   // Clock-dependent → client-only (SSR snapshot renders the pre layout, same
   // hydration rule the old dashboard followed, minus the setState-in-effect).
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
@@ -390,14 +392,14 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Same destination as the raised tab: the sheet, not the screen that
-          holds another copy of this button. */}
-      <Link
-        href="/live?checkin=1"
+      {/* The sheet opens over Home. No navigation, nothing to come back from. */}
+      <button
+        type="button"
+        onClick={checkIn.open}
         className="flex items-center justify-center gap-2 rounded-[var(--r)] bg-ac py-[17px] text-lg font-semibold text-on"
       >
         <MapPin aria-hidden className="size-5" strokeWidth={2.2} /> Check in - where are you?
-      </Link>
+      </button>
       {phase === 'arrive' && (
         <Link href="/live" className="flex items-center justify-center gap-2 rounded-[var(--rCtl)] bg-ac2-soft py-3.5 text-base font-semibold text-ac2-deep">
           <PlaneLanding aria-hidden className="size-5" strokeWidth={2} /> Arrived

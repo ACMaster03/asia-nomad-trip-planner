@@ -5,6 +5,7 @@ import { fetchTripRole, canEditRole } from '@/lib/trips/role'
 import { TripScopeProvider } from '@/lib/trips/TripScope'
 import { MoneyProvider } from '@/lib/trips/Money'
 import { AppNav } from '@/components/AppNav'
+import { CheckInProvider } from '@/components/checkin/CheckInProvider'
 import { OfflineWarmup } from '@/components/OfflineWarmup'
 import { ToastProvider } from '@/components/Toast'
 import { PendingInvites } from '@/components/trips/PendingInvites'
@@ -58,6 +59,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           the right currency instead of flashing a default. */}
       <MoneyProvider initialBase={meta?.baseCurrency ?? 'HUF'}>
         <ToastProvider>
+          {/* The check-in sheet mounts above every screen, so Check in is an
+              action rather than a trip to /live. Inside ToastProvider: posting
+              a check-in toasts. */}
+          <CheckInProvider>
           <OfflineWarmup />
           {/* pb clears the fixed bottom tab bar (52px bar + raised button slack
               + safe area) so no screen's last card hides behind it. */}
@@ -70,6 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {children}
             <AppNav showCheckIn={showLive} />
           </div>
+          </CheckInProvider>
         </ToastProvider>
       </MoneyProvider>
     </TripScopeProvider>

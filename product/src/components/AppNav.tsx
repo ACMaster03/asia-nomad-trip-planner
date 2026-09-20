@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { House, Route, Wallet, Map as MapIcon, MapPin } from 'lucide-react'
+import { useCheckIn } from '@/components/checkin/CheckInProvider'
 
 // Bottom tab bar — the handoff's final nav structure "1g" (design/handoff-v1,
 // Menu Options.dc.html): four icon+label tabs, no More tab. Trip settings sit
@@ -27,6 +28,7 @@ const TABS = [
 
 export function AppNav({ showCheckIn }: { showCheckIn: boolean }) {
   const pathname = usePathname()
+  const checkIn = useCheckIn()
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   // The personalisation flow is a door, not a destination — no tab bar there.
@@ -64,18 +66,19 @@ export function AppNav({ showCheckIn }: { showCheckIn: boolean }) {
                 unlabelled icon in the one position the thumb reaches first is
                 the easiest thing on the bar to press by accident, and the
                 accessible name now matches the words on screen. */}
-            {/* Goes straight to the check-in sheet. Landing on /live and
-                leaving the traveller to press a second Check in button reads
-                as the first press having done nothing. */}
-            <Link
-              href="/live?checkin=1"
+            {/* An ACTION, not a destination. This used to link to /live, a
+                screen that is Home again with its own Check in button on it,
+                so pressing Check in read as nothing having happened. */}
+            <button
+              type="button"
+              onClick={checkIn.open}
               className="absolute left-1/2 top-0 flex -translate-x-1/2 -translate-y-[26px] flex-col items-center whitespace-nowrap"
             >
               <span className="flex size-[58px] items-center justify-center rounded-full bg-ac text-on shadow-lg ring-4 ring-sf">
                 <MapPin aria-hidden className="size-6" strokeWidth={2.2} />
               </span>
               <span className="mt-0.5 text-[12px] font-semibold leading-4 text-ac">Check in</span>
-            </Link>
+            </button>
           </div>
         )}
         {tab(TABS[2])}

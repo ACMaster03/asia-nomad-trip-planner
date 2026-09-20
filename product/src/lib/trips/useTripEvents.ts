@@ -37,7 +37,16 @@ import type { CheckInInput } from '@/app/(app)/live/CheckInModal'
 // shipped is keyed by those constants; rename them and it replays into nothing.
 // They are imported, never retyped.
 
-export function useTripEvents() {
+export function useTripEvents(opts: {
+  /**
+   * Where the "show this trip to your followers?" prompt should live.
+   *
+   * The sheet unmounts the moment a check-in is posted, so a nudge held inside
+   * it would be destroyed before it could be shown. A caller that mounts the
+   * sheet conditionally passes this and keeps the flag itself.
+   */
+  onNudge?: (v: boolean) => void
+} = {}) {
   const sb = createClient()
   const qc = useQueryClient()
   const toast = useToast()
@@ -182,7 +191,7 @@ export function useTripEvents() {
     const firstCheckIn = !(events.data ?? []).some((e) => e.kind === 'checkin')
     addCheckIn.mutate({ ...rest, id, tripId, photos })
     if (firstCheckIn && rest.visibility !== 'trip' && onlineManager.isOnline()) {
-      void maybeNudge(sb, tripId).then(setNudge)
+      void maybeNudge(sb, tripId).then(opts.onNudge ?? setNudge)
     }
     toast(
       onlineManager.isOnline()

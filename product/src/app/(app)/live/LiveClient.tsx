@@ -1,6 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useMemo, useState, useSyncExternalStore } from 'react'
 import {
   Hourglass,
   Image as ImageIcon,
@@ -11,6 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
+import { useCheckIn } from '@/components/checkin/CheckInProvider'
 import { isBookedStatus } from '@/lib/trips/commitment'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { nightsBetween, segNights } from '@/lib/trips/format'
@@ -21,9 +21,7 @@ import { publicMediaUrl } from '@/lib/trips/media'
 import { Modal } from '@/components/trips/Modal'
 import { SaveError } from '@/components/trips/SaveError'
 import { useToast } from '@/components/Toast'
-import { FollowerNudge } from './FollowerNudge'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
-import { CheckInModal, type CheckInInput } from './CheckInModal'
 import { EditEventModal } from './EditEventModal'
 import type { Segment, Stay, TripState } from '@/lib/trips/types'
 
@@ -69,7 +67,8 @@ const bookedStay = (stays: Stay[], segId: string) =>
 
 export default function LiveClient() {
   const toast = useToast()
-  const { trip, cities } = useTripScreen()
+  const { trip } = useTripScreen()
+  const checkIn = useCheckIn()
   const { tripId } = useTripScope()
 
   // Everything on this screen depends on "today" → compute only after mount to
@@ -86,46 +85,13 @@ export default function LiveClient() {
     events,
     online,
     pausedIds,
-    recentPlaces,
-    nudge,
-    setNudge,
-    saveCheckIn: postCheckIn,
     recordArrived,
     saveNote: postNote,
     delEvent,
-    saving,
     hasError,
     mutError,
   } = useTripEvents()
 
-  // ?checkin=1 means "the traveller already pressed Check in" — from the
-  // raised tab, or from Home's own check-in button. Both used to land here on
-  // a screen whose largest element is a THIRD button saying Check in, which
-  // reads as the tap having failed. The sheet opens on arrival instead, and
-  // the parameter is dropped so a reload or a back does not reopen it, and so
-  // the next press is a fresh transition rather than the same URL again.
-  const wantCheckin = useSearchParams().get('checkin') === '1'
-  const [checkinOpen, setCheckinOpen] = useState(wantCheckin)
-  // Adjusting state on a changed input, during render (react.dev pattern, the
-  // same one KnowledgeClient uses for ?city=).
-  const [seenCheckinParam, setSeenCheckinParam] = useState(wantCheckin)
-  if (wantCheckin !== seenCheckinParam) {
-    setSeenCheckinParam(wantCheckin)
-    if (wantCheckin) setCheckinOpen(true)
-  }
-  // The NATIVE history API, not router.replace. router.replace is a real
-  // navigation: on a dynamic route it refetches the RSC payload, which re-runs
-  // LivePage on the server (claims, active trip, role, prefetch) and re-renders
-  // this whole screen underneath the sheet that just opened. Reported from the
-  // road as "the home page refreshed underneath it" — and it would have done
-  // that on every single check-in, on mobile data, for nothing.
-  //
-  // window.history.replaceState changes the URL with no navigation and no
-  // request, and Next syncs useSearchParams to it, so the parameter still
-  // clears and the next press is still a fresh transition.
-  useEffect(() => {
-    if (wantCheckin) window.history.replaceState(null, '', '/live')
-  }, [wantCheckin])
   const [noteOpen, setNoteOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [editEvent, setEditEvent] = useState<TripEvent | null>(null)
@@ -173,10 +139,6 @@ export default function LiveClient() {
 
   const { todayStr, inPlan, curIdx, current, next, previous, phase, dayNum, totalDays, daysToGo } = derived
 
-  // City scope for the check-in place list: the current stop; in a gap you're
-  // most likely still around the previous stop, else early at the next one.
-  const checkinCity = current?.city ?? previous?.city ?? next?.city ?? null
-
   // Plan-vs-actual: latest 'arrived' event vs the planned current stop.
   const lastArrivedCity = (events.data ?? []).find((e) => e.kind === 'arrived')?.payload?.city as
     | string
@@ -193,10 +155,6 @@ export default function LiveClient() {
     setNoteText('')
     setNoteOpen(false)
   }
-  const saveCheckIn = async (v: CheckInInput) => {
-    if (await postCheckIn(v)) setCheckinOpen(false)
-  }
-
   return (
     // Live is phone-first: desktop is the same centered narrow column (mock).
     <main className="mx-auto max-w-xl px-[18px] pb-6 pt-[18px]">
@@ -274,7 +232,7 @@ export default function LiveClient() {
           {phase === 'live' && (
             <div className="mt-3">
               <button
-                onClick={() => setCheckinOpen(true)}
+                onClick={checkIn.open}
                 className="flex w-full items-center justify-center gap-2 rounded-[var(--r)] bg-ac py-[17px] text-lg font-semibold text-on"
               >
                 <MapPin aria-hidden className="size-5" strokeWidth={2} /> Check in - where are you?
@@ -403,20 +361,6 @@ export default function LiveClient() {
 
       {editEvent && tripId && (
         <EditEventModal ev={editEvent} tripId={tripId} onClose={() => setEditEvent(null)} />
-      )}
-
-      {nudge && tripId && <FollowerNudge tripId={tripId} onClose={() => setNudge(false)} />}
-
-      {checkinOpen && (
-        <CheckInModal
-          cityName={checkinCity}
-          cities={cities.data ?? []}
-          recent={recentPlaces}
-          online={online}
-          saving={saving}
-          onClose={() => setCheckinOpen(false)}
-          onSave={saveCheckIn}
-        />
       )}
 
       {noteOpen && (
