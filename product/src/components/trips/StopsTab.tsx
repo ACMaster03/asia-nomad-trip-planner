@@ -1,7 +1,6 @@
 'use client'
 import NewCountryBanner from './NewCountryBanner'
 import { useMemo, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { segNights, nightsBetween, TIER_LABELS } from '@/lib/trips/format'
@@ -11,6 +10,10 @@ import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { useTripRole } from '@/lib/trips/useTripRole'
+import { useConfirm } from '@/components/Confirm'
+import { useTripEvents } from '@/lib/trips/useTripEvents'
+import { stopsAround } from '@/lib/trips/whereAmI'
+import { PlanVsActual } from '@/components/trips/PlanVsActual'
 import type { Segment } from '@/lib/trips/types'
 
 // LIVHOLD list-card idioms (handoff itinerary frames): the whole card taps to
@@ -32,6 +35,8 @@ export function StopsTab() {
   const { trip, cities } = useTripScreen()
   const mut = useTripMutation()
   const { canEdit } = useTripRole()
+  const confirm = useConfirm()
+  const { events } = useTripEvents()
   const [modal, setModal] = useState<{ seg: Segment | null } | null>(null)
   // "＋ stay" shortcut per card — add accommodation without switching tabs
   // (owner request 2026-07-24).
@@ -57,8 +62,12 @@ export function StopsTab() {
     }))
     setModal(null)
   }
-  const del = (seg: Segment) => {
-    if (!confirm(`Delete ${seg.city || 'this stop'}? Its stays and transport stay on the trip.`)) return
+  const del = async (seg: Segment) => {
+    const ok = await confirm({
+      title: `Delete ${seg.city || 'this stop'}?`,
+      body: 'Its stays and transport stay on the trip.',
+    })
+    if (!ok) return
     mut.mutate((s) => ({ ...s, segments: s.segments.filter((x) => x.id !== seg.id) }))
     setModal(null)
   }
@@ -90,6 +99,20 @@ export function StopsTab() {
         transport leg, still counts as money owed until you remove the booking itself.
         {canEdit && <span className="font-medium text-ac2-deep"> Tap a card to edit or delete it.</span>}
       </p>
+      {/* The route at a glance, above the list it summarises. It was briefly on
+          Home, where it was a fifth card competing with the stop card, the
+          check-in button and the money card, and squashed to nothing on a long
+          route. This page IS the route, so it belongs here. */}
+      <PlanVsActual
+        className="mb-3"
+        inPlan={planned}
+        current={stopsAround(state, todayIso).current}
+        stays={state.stays}
+        todayStr={todayIso}
+        lastArrivedCity={
+          (events.data ?? []).find((e) => e.kind === 'arrived')?.payload?.city as string | undefined
+        }
+      />
       {trip.data && <NewCountryBanner state={state} />}
       <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />
@@ -176,7 +199,6 @@ export function StopsTab() {
               {tripNights > 0 ? `${placedNights} of ${tripNights} nights placed` : `${placedNights} nights`}
               {state.meta.endDate ? ` · home ${fmtD(state.meta.endDate)}` : ''}
             </span>
-            <ChevronRight aria-hidden className="size-5 text-ac2" />
           </div>
         )}
       </div>

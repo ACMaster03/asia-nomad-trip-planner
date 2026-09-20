@@ -17,6 +17,7 @@ import { dismissMeetup, dismissedStore } from '@/lib/map/dismissed'
 import { tk } from '@/lib/trips/keys'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
 import { useTripScope } from '@/lib/trips/TripScope'
+import { useConfirm } from '@/components/Confirm'
 import { EditEventModal } from '@/app/(app)/live/EditEventModal'
 import { SocialRow } from './SocialRow'
 
@@ -46,6 +47,7 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
   // here rather than disappearing with the screen.
   const { tripId } = useTripScope()
   const { pausedIds, delEvent } = useTripEvents()
+  const confirm = useConfirm()
   const [editEvent, setEditEvent] = useState<TripEvent | null>(null)
 
   const [shown, setShown] = useState(PREVIEW)
@@ -189,8 +191,11 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
                 }
                 onDelete={
                   mine(it.event, userId)
-                    ? () => {
-                        if (confirm('Delete this entry?')) delEvent.mutate(it.event.id)
+                    ? async () => {
+                        const what = it.event.kind === 'note' ? 'note' : 'check-in'
+                        if (await confirm({ title: `Delete this ${what}?` })) {
+                          delEvent.mutate(it.event.id)
+                        }
                       }
                     : undefined
                 }

@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
+import { useConfirm } from '@/components/Confirm'
 import { toBase } from '@/lib/trips/format'
 import { ExtraForm } from './ExtraForm'
 import { SaveError } from './SaveError'
@@ -25,6 +26,7 @@ export function ExtrasTab() {
   const { fmt } = useMoney()
   const { trip } = useTripScreen()
   const mut = useTripMutation()
+  const confirm = useConfirm()
   const { canEdit } = useTripRole()
   const [modal, setModal] = useState<{ extra: Extra | null } | null>(null)
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
@@ -40,7 +42,11 @@ export function ExtrasTab() {
     }))
     setModal(null)
   }
-  const del = (id: string) => { if (confirm('Delete this cost?')) mut.mutate((st) => ({ ...st, extras: st.extras.filter((x) => x.id !== id) })) }
+  const del = async (id: string) => {
+    if (await confirm({ title: 'Delete this cost?' })) {
+      mut.mutate((st) => ({ ...st, extras: st.extras.filter((x) => x.id !== id) }))
+    }
+  }
   const toggle = (id: string) => mut.mutate((st) => ({ ...st, extras: st.extras.map((x) => (x.id === id ? { ...x, include: !x.include } : x)) }))
 
   return (

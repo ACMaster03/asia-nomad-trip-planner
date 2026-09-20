@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
+import { useConfirm } from '@/components/Confirm'
 import { toBase } from '@/lib/trips/format'
 import { TransportForm } from './TransportForm'
 import { SaveError } from './SaveError'
@@ -30,6 +31,7 @@ export function TransportTab() {
   const { fmt } = useMoney()
   const { trip } = useTripScreen()
   const mut = useTripMutation()
+  const confirm = useConfirm()
   const { canEdit } = useTripRole()
   const [modal, setModal] = useState<{ leg: TransportLeg | null } | null>(null)
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
@@ -44,7 +46,11 @@ export function TransportTab() {
     }))
     setModal(null)
   }
-  const del = (id: string) => { if (confirm('Delete this leg?')) mut.mutate((st) => ({ ...st, transport: st.transport.filter((x) => x.id !== id) })) }
+  const del = async (id: string) => {
+    if (await confirm({ title: 'Delete this leg?' })) {
+      mut.mutate((st) => ({ ...st, transport: st.transport.filter((x) => x.id !== id) }))
+    }
+  }
   const toggle = (id: string) => mut.mutate((st) => ({ ...st, transport: st.transport.map((x) => (x.id === id ? { ...x, include: !x.include } : x)) }))
 
   const included = s.transport.filter((x) => x.include)

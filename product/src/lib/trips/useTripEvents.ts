@@ -19,6 +19,7 @@ import {
 } from '@/lib/trips/outbox'
 import { uploadCheckinPhotos } from '@/lib/trips/media'
 import { useToast } from '@/components/Toast'
+import { useConfirm } from '@/components/Confirm'
 import { maybeNudge } from '@/app/(app)/live/FollowerNudge'
 import type { CheckInInput } from '@/app/(app)/live/CheckInModal'
 
@@ -50,6 +51,7 @@ export function useTripEvents(opts: {
   const sb = createClient()
   const qc = useQueryClient()
   const toast = useToast()
+  const confirm = useConfirm()
   const { tripId } = useTripScope()
 
   // Author of the optimistic row. Read once: the id cannot change without a
@@ -179,9 +181,15 @@ export function useTripEvents(opts: {
         // 2026-07-24): post without photos, or go back and adjust — never post
         // behind their back. The sheet stays open on cancel.
         const detail = (e as Error)?.message ?? String(e)
-        const postAnyway = confirm(
-          `The photos couldn't be uploaded (${detail}).\n\nOK = post the check-in WITHOUT photos.\nCancel = go back to the check-in to adjust.`,
-        )
+        // Two real choices, so they get two real labels. window.confirm could
+        // only offer OK/Cancel and had to explain in the body which was which.
+        const postAnyway = await confirm({
+          title: 'The photos could not be uploaded',
+          body: `${detail}. Post the check-in without them, or go back and adjust it?`,
+          confirmLabel: 'Post without photos',
+          cancelLabel: 'Go back',
+          destructive: false,
+        })
         if (!postAnyway) return false
         photos = undefined
       } finally {
