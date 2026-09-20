@@ -79,6 +79,39 @@ piece of work, not a fix to slip into a review pass. It also decides the
 vocabulary question below, since the Check in / Arrived / Note / Activity split
 is the same duplication seen from the wording side.
 
+### CONFIRMED then FIXED — a navigation under an open sheet unpinned the tab bar
+
+Reported minutes after #42 went live: on long screens (Explore, the ledger) the
+bottom tab bar stopped being fixed and could be scrolled past, "finding its
+place" again on scrolling back. Gone after #44. iOS only; a headless Chromium
+probe rendering the real AppNav inside the real layout kept it pinned at every
+scroll offset and found no transform, filter, contain or will-change anywhere in
+its ancestor chain, so the markup was never the problem.
+
+The path: `lockBodyScroll` holds a sheet open by setting
+`document.body.style.position = 'fixed'` with `top: -scrollY`, which is the only
+lock iOS respects. iOS is also non-compliant about `position: fixed` descendants
+of a fixed body: they can stop resolving against the viewport and resolve
+against the body box instead, which begins at `-scrollY` and runs the full
+content height. A tab bar at `bottom: 0` of THAT box sits at the bottom of the
+document. #42 fired `router.replace` while the sheet was open, i.e. a real
+navigation under a locked body, and #44 removed it.
+
+**The lock itself is unchanged and still sharp.** Nothing triggers it today,
+because the trigger was removed rather than the fragility. Two things to fix
+before the sheet moves anywhere:
+
+- `if (depth++ === 0) savedY = window.scrollY` reads 0 when the body is ALREADY
+  fixed from a leaked lock, so closing the sheet scrolls the reader to the top.
+  Recover the offset from `body.style.top` when the body is already fixed.
+- Nothing releases the lock if a sheet unmounts without its cleanup running.
+  A release keyed to navigation, or an assertion on route change, would stop a
+  leak becoming permanent.
+
+This is a prerequisite for collapsing /live into Home, not a follow-up: that
+work puts the check-in sheet in the layout, where it is mounted across far more
+navigations than it is now.
+
 ### WRONG TURN, kept for the record — the offline page was not the cause
 
 Before the screenshots arrived, "a page with another look" was read as
