@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Settings } from 'lucide-react'
 import { Tabs } from '@/components/trips/Tabs'
 import { StopsTab } from '@/components/trips/StopsTab'
@@ -17,7 +18,19 @@ const TABS = [
 type TabKey = (typeof TABS)[number][0]
 
 export default function ItineraryHub() {
-  const [tab, setTab] = useState<TabKey>('stops')
+  // ?tab=extras opens on that tab — the Money page's One-offs card (#39) links
+  // here by name and should land where it says.
+  const param = useSearchParams().get('tab')
+  const fromUrl = TABS.some(([k]) => k === param) ? (param as TabKey) : null
+  const [tab, setTab] = useState<TabKey>(fromUrl ?? 'stops')
+  // Adjusting state on a prop change, during render (react.dev pattern, as in
+  // KnowledgeClient): a second link followed while this screen is already
+  // mounted still moves the tab.
+  const [seenFromUrl, setSeenFromUrl] = useState(fromUrl)
+  if (fromUrl !== seenFromUrl) {
+    setSeenFromUrl(fromUrl)
+    if (fromUrl) setTab(fromUrl)
+  }
   return (
     <div>
       {/* Trip settings' only door — the gear right of the capsule (nav "1g"). */}

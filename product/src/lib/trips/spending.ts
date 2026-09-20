@@ -297,7 +297,9 @@ export interface Projection {
   /** stays for stops whose stay is not paid yet (booked, drafted or estimated) */
   unpaidStays: number
   transportToPay: number
-  /** spent + scheduled + Σ remaining nights × rate + unpaid stays + transport to pay */
+  /** subscription charges falling between tomorrow and the end of the trip (#37) */
+  subsAhead: number
+  /** spent + scheduled + Σ remaining nights × rate + unpaid stays + transport to pay + subscriptions ahead */
   projected: number
   /** logged spend that no stop or paid booking accounts for: gear, e-SIM, days between stops */
   residual: number
@@ -305,10 +307,16 @@ export interface Projection {
 
 /**
  * The projected total, defined so the Plan card's rows add up to it exactly:
- *   Σ stop projections + transport (paid + to pay) + residual
- * = spent + scheduled + Σ remaining × rate + unpaid stays + transport to pay.
+ *   Σ stop projections + transport (paid + to pay) + residual + subscriptions ahead
+ * = spent + scheduled + Σ remaining × rate + unpaid stays + transport to pay + subsAhead.
  *
  * `todayIso` is what splits spent from scheduled; everything else is timeless.
+ *
+ * `subsAhead` arrives as a number rather than a subscription list: the window
+ * it is counted over (tomorrow → the end of the trip) is decided once, in
+ * moneyModel, so the Plan card and the monthly card cannot disagree about it.
+ * Subscriptions already charged are in the ledger and reach `spent` like any
+ * other row — this term is only the ones still to come.
  */
 export function projectFromPlan(
   plan: StopPlan[],
@@ -316,6 +324,7 @@ export function projectFromPlan(
   ledger: LedgerEntry[],
   rates: Record<string, number>,
   todayIso: string,
+  subsAhead = 0,
 ): Projection {
   const expenses = ledger.filter(isExpense)
   const sum = (rows: LedgerEntry[]) => rows.reduce((a, e) => a + toBase(e.amount, e.currency, rates), 0)
@@ -332,8 +341,129 @@ export function projectFromPlan(
   // paid-booking totals it subtracts are timeless too, so mixing bases here
   // would break "Σ stops + transport + residual = projected".
   return {
-    spent, scheduled, remainingNights, unpaidStays, transportToPay,
-    projected: spent + scheduled + ahead + unpaidStays + transportToPay,
+    spent, scheduled, remainingNights, unpaidStays, transportToPay, subsAhead,
+    projected: spent + scheduled + ahead + unpaidStays + transportToPay + subsAhead,
     residual: spent + scheduled - inStops - paidStays - paidTransport,
   }
+}
+
+export interface BeyondEveryday {
+  /** settled spend that the per-day rate deliberately leaves out */
+  total: number
+  /** the categories it is made of, biggest first */
+  rows: { category: string; amount: number }[]
+}
+
+/**
+ * What the per-day rate is NOT counting (#35). The rate excludes flights,
+ * stays, gear, insurance, subscriptions and fees — correctly, since a 372 000
+ * flight says nothing about what a day in Bangkok costs — but until now that
+ * exclusion happened in silence and nothing on the page admitted to it.
+ *
+ * Measured as `spent − everyday spent` rather than by summing the non-daily
+ * categories, so the figure ties to the rate's own basis by construction: a
+ * category that is neither (an unknown id, an income-kind category typed onto
+ * an expense row) cannot fall between the two and vanish.
+ */
+export function beyondEveryday(ledger: LedgerEntry[], rates: Record<string, number>, todayIso: string): BeyondEveryday {
+  const settled = ledger.filter((e) => isExpense(e) && isSettled(e.date, todayIso))
+  const sum = (rows: LedgerEntry[]) => rows.reduce((a, e) => a + toBase(e.amount, e.currency, rates), 0)
+  const by: Record<string, number> = {}
+  for (const e of settled) {
+    if (isEverydayCategory(e.category)) continue
+    by[e.category] = (by[e.category] ?? 0) + toBase(e.amount, e.currency, rates)
+  }
+  return {
+    total: sum(settled) - sum(everydayOnly(settled)),
+    rows: Object.entries(by)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount),
+  }
+}
+
+export type OutflowBand = 'stays' | 'living' | 'transport' | 'subs'
+export interface MonthOut {
+  /** YYYY-MM */
+  key: string
+  stays: number
+  living: number
+  transport: number
+  subs: number
+  total: number
+}
+
+/**
+ * "To cover the plan" — what has to leave the account each month, built from
+ * the SAME terms as projectFromPlan so the two can never drift:
+ *
+ *   ledger rows (spent + scheduled)  in the month they are dated
+ * + the nights still ahead × pace    spread night by night
+ * + stays nobody has paid yet        on their charge date
+ * + transport booked but unpaid      on its charge date
+ * + subscription charges ahead       on each charge date
+ * = projection.projected
+ *
+ * It replaces the pre-trip version (monthlyBuckets, budget.ts), which spread
+ * catalogue city averages over the nights and summed to a number invented
+ * before departure — the last planning figure left on the page after the
+ * pre-trip estimate came off the overview (owner decision, 2026-09-19).
+ *
+ * `state.extras` are NOT here: planned one-offs are undated, they never
+ * entered projection.projected either, and inventing a month for a visa fee to
+ * land in would be exactly the kind of fiction this rebuild removes. The
+ * One-offs card carries them, and the card footnotes what it is not counting.
+ */
+export function monthlyOutflow(
+  state: TripState,
+  plan: StopPlan[],
+  bookings: ReturnType<typeof bookingsSummary>,
+  ledger: LedgerEntry[],
+  subCharges: { date: string; amount: number }[],
+  todayIso: string,
+): { months: MonthOut[]; total: number } {
+  const rates = state.rates
+  const M: Record<string, MonthOut> = {}
+  const add = (iso: string | undefined, band: OutflowBand, v: number) => {
+    if (!iso || !Number.isFinite(v) || v === 0) return
+    const key = iso.slice(0, 7)
+    const b = (M[key] ??= { key, stays: 0, living: 0, transport: 0, subs: 0, total: 0 })
+    b[band] += v
+    b.total += v
+  }
+
+  // 1) money already on the books, in the month it is dated — settled AND
+  //    scheduled, because both are cash that leaves on a known day.
+  for (const e of ledger) {
+    if (!isExpense(e)) continue
+    const band: OutflowBand =
+      e.category === 'stays' ? 'stays' : e.category === 'transport' ? 'transport' : e.category === 'subscriptions' ? 'subs' : 'living'
+    add(e.date, band, toBase(e.amount, e.currency, rates))
+  }
+  // 2) the nights still ahead, one night at a time so a stop that straddles a
+  //    month split lands in both.
+  for (const p of plan) {
+    for (let i = 0; i < p.remaining; i++) add(addDays(p.seg.arrive, p.nightsIn + i), 'living', p.rate)
+  }
+  // 3) stays still to pay, on the charge date if one is set — the earliest,
+  //    when a stop has several — and otherwise on arrival.
+  for (const p of plan) {
+    if (p.stayLabel === 'booked') continue
+    const dated = state.stays
+      .filter((st) => st.segId === p.seg.id && st.include && st.chargeDate)
+      .map((st) => st.chargeDate!)
+      .sort()
+    add(dated[0] ?? p.seg.arrive, 'stays', p.stay)
+  }
+  // 4) fares booked but not paid. A leg with no date at all has to land
+  //    somewhere to keep the total honest; today is the least wrong month.
+  for (const r of bookings.transport) {
+    if (r.status !== 'unpaid') continue
+    const leg = state.transport.find((t) => t.id === r.id)
+    add(leg?.chargeDate || leg?.date || todayIso, 'transport', r.amount)
+  }
+  // 5) subscriptions still to charge (window fixed by moneyModel)
+  for (const c of subCharges) add(c.date, 'subs', c.amount)
+
+  const months = Object.values(M).sort((a, b) => a.key.localeCompare(b.key))
+  return { months, total: months.reduce((a, m) => a + m.total, 0) }
 }

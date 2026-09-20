@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOCK — Money v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================================
+   LIVHOLD v1 token layer — copied from product/src/app/globals.css.
+   This mock is deliberately on the SHIPPED tokens, not design/mocks/_template
+   (whose teal "Nomad" kit predates the redesign and is stale everywhere).
+   Radius LOCKED at 22px (cards/sheets 22, controls 20, pills/avatars round).
+   =========================================================================== */
+:root {
+  --canvas: #f0eee9; --pg: #e8f7ee; --sf: #ffffff; --in: #f7faf8;
+  --tx: #1f2a24; --tx2: #3f5a3e; --tx3: rgba(31, 42, 36, 0.5);
+  --ac: #3f5a3e; --on: #ffffff;
+  --acSoft: rgba(63, 90, 62, 0.11); --acLine: rgba(63, 90, 62, 0.45);
+  --ac2: #a94c5a; --ac2Deep: #93404c;
+  --ac2Line: rgba(169, 76, 90, 0.45); --ac2Soft: rgba(169, 76, 90, 0.1);
+  --warn: #8a6420; --warnLine: rgba(138, 100, 32, 0.55); --warnSoft: rgba(138, 100, 32, 0.08);
+  --tag: #e4eee6; --tagInk: #2b3a4a; --ph: #dce6dd;
+  --ln: rgba(31, 42, 36, 0.11); --ln2: rgba(31, 42, 36, 0.16); --ln3: rgba(31, 42, 36, 0.24);
+  --tr: rgba(31, 42, 36, 0.13); --fill: rgba(31, 42, 36, 0.08); --fill2: rgba(31, 42, 36, 0.1);
+  --catDaily: #6c8ccf; --catGrocery: #8fa88a; --catActivity: #c98a63;
+  --sage: #c9d4ba; --paleBlue: #aec3d6; --paper: #f5f2ea; --blush: #f7e6e9;
+  --r: 22px; --rCtl: 20px;
+  --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Lora", Georgia, serif;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --canvas: #12161a; --pg: #161a18; --sf: #1f2622; --in: #19201c;
+  --tx: #d8e0e5; --tx2: #a8b5a8; --tx3: rgba(216, 224, 229, 0.5);
+  --ac: #7fa37d; --on: #10160f;
+  --acSoft: rgba(127, 163, 125, 0.16); --acLine: rgba(127, 163, 125, 0.5);
+  --ac2: #d08795; --ac2Deep: #de9ba7;
+  --ac2Line: rgba(208, 135, 149, 0.5); --ac2Soft: rgba(208, 135, 149, 0.14);
+  --warn: #d9a85c; --warnLine: rgba(217, 168, 92, 0.6); --warnSoft: rgba(217, 168, 92, 0.13);
+  --tag: rgba(201, 214, 234, 0.14); --tagInk: #c9d6ea; --ph: #27302b;
+  --ln: rgba(216, 224, 229, 0.1); --ln2: rgba(216, 224, 229, 0.16); --ln3: rgba(216, 224, 229, 0.26);
+  --tr: rgba(216, 224, 229, 0.14); --fill: rgba(216, 224, 229, 0.07); --fill2: rgba(216, 224, 229, 0.1);
+  --catGrocery: #9fb89a; --catActivity: #d9a07c;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--canvas); color: var(--tx);
+  font: 400 16px/1.5 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p { margin: 0; }
+b, strong { font-weight: 600; }
+button { font-family: inherit; }
+
+/* ---- mock chrome (NOT app UI) ---- */
+.mockbar {
+  position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap;
+  align-items: center; gap: 8px; padding: 10px 14px;
+  background: var(--tx); color: var(--canvas); font-size: 12px;
+}
+.mockbar .ttl { font-weight: 700; letter-spacing: .02em; margin-right: 4px; }
+.mockbar .spacer { flex: 1; }
+.pill {
+  border: 1px solid currentColor; background: transparent; color: inherit; opacity: .7;
+  border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.pill.on { background: var(--canvas); color: var(--tx); border-color: var(--canvas); opacity: 1; }
+.tool { border: 1px solid currentColor; background: transparent; color: inherit; opacity: .7;
+  border-radius: 7px; padding: 4px 9px; font-size: 12px; cursor: pointer; }
+.desc { width: 100%; opacity: .7; font-size: 11.5px; line-height: 1.45; }
+
+/* ---- app shell: mirrors MoneyPage.tsx exactly ---- */
+main.screen {
+  margin: 0 auto; display: flex; width: 100%; max-width: 576px; flex-direction: column;
+  gap: 12px; padding: 18px 18px 40px; color: var(--tx);
+}
+.card { border-radius: var(--r); background: var(--sf); padding: 18px; }
+.card.lg { padding: 20px; }
+.eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .11em; color: var(--tx2); }
+.serif { font-family: var(--font-serif); }
+h1.page { font: 600 25px/1.15 var(--font-serif); letter-spacing: -.01em; }
+.sub { margin-top: 2px; font-size: 14px; color: var(--tx2); }
+.muted { color: var(--tx2); } .faint { color: var(--tx3); }
+.s13 { font-size: 13px; } .s14 { font-size: 14px; } .s12 { font-size: 12px; }
+.num { font-variant-numeric: tabular-nums; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row .grow { flex: 1; min-width: 0; }
+.rule { border: 0; border-top: 1px solid var(--ln); margin: 14px 0; }
+.sec { margin-top: 6px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: var(--rCtl);
+  background: var(--fill); color: var(--tx); padding: 9px 16px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn.pri { background: var(--ac); color: var(--on); }
+.btn.soft { background: var(--ac2Soft); color: var(--ac2Deep); border-radius: 999px; padding: 8px 13px; }
+.btn.sm { padding: 6px 13px; font-size: 13px; }
+.btn.ghost { background: transparent; color: var(--tx2); box-shadow: inset 0 0 0 1px var(--ln2); }
+.btn.warnbtn { background: transparent; color: var(--ac2); box-shadow: inset 0 0 0 1px var(--ac2Line); }
+
+.chip { display: inline-block; border-radius: 999px; padding: 3px 11px; font-size: 12px; font-weight: 600;
+  background: var(--fill); color: var(--tx2); }
+.chip.on { background: var(--ac); color: var(--on); }
+.chip.ok { background: var(--acSoft); color: var(--ac); }
+.chip.warn { background: var(--warnSoft); color: var(--warn); box-shadow: inset 0 0 0 1.4px var(--warnLine); }
+.chip.mauve { background: var(--ac2Soft); color: var(--ac2Deep); }
+
+/* segmented control — two pages, one nav slot */
+.seg { display: flex; padding: 4px; gap: 4px; background: var(--fill); border-radius: 999px; }
+.seg button { flex: 1; border: 0; background: transparent; color: var(--tx2);
+  font: 600 14px/1 var(--font-sans); padding: 10px 14px; border-radius: 999px; cursor: pointer; }
+.seg button.on { background: var(--sf); color: var(--tx); box-shadow: 0 1px 4px rgba(31,42,36,.10); }
+
+/* the "beyond the everyday" disclosure */
+.beyond { display: flex; align-items: center; gap: 11px; margin-top: 14px; padding: 12px 14px;
+  border-radius: var(--rCtl); background: var(--warnSoft); box-shadow: inset 0 0 0 1.4px var(--warnLine); }
+.beyond .grow { flex: 1; min-width: 0; }
+.beyond .v { font-size: 15px; font-weight: 600; color: var(--warn); }
+.beyond .w { font-size: 12.5px; line-height: 1.4; color: var(--tx2); margin-top: 1px; }
+.beyond a { flex: none; font-size: 13px; font-weight: 600; color: var(--ac2Deep); text-decoration: none; white-space: nowrap; }
+
+.track { height: 10px; border-radius: 999px; background: var(--tr); overflow: hidden; display: flex; }
+.track i { display: block; height: 100%; }
+
+/* chart */
+.chart { width: 100%; display: block; }
+.chart .bar { fill: var(--ac); }
+.chart .bar.z { fill: var(--tr); }
+.chart .avg { stroke: var(--ac2); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.chart text { font: 400 9px var(--font-sans); fill: var(--tx3); }
+.chart text.al { fill: var(--ac2); font-weight: 700; }
+
+/* category rows */
+.crow { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-top: 1px solid var(--ln); font-size: 14px; }
+.crow .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.crow .grow { flex: 1; min-width: 0; }
+.crow .amt { font-weight: 600; }
+
+/* subscriptions */
+.srow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--ln); }
+.srow .grow { flex: 1; min-width: 0; }
+.srow .nm { font-size: 15px; font-weight: 600; }
+.srow .mt { font-size: 12.5px; color: var(--tx2); margin-top: 2px; }
+.srow .amt { text-align: right; font-weight: 600; white-space: nowrap; }
+.srow .amt em { display: block; font-style: normal; font-weight: 400; font-size: 11.5px; color: var(--tx3); }
+.srow.off .nm, .srow.off .amt b { color: var(--tx3); text-decoration: line-through; }
+.srow.off .mt { color: var(--tx3); }
+.bell { flex: none; width: 38px; height: 38px; border-radius: 999px; border: 0; cursor: pointer;
+  background: var(--fill); color: var(--tx3); font-size: 15px; }
+.bell.on { background: var(--ac2Soft); color: var(--ac2Deep); }
+.soon { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700;
+  background: var(--warnSoft); color: var(--warn); margin-left: 6px; }
+
+/* planned vs paid */
+table.pvp { width: 100%; border-collapse: collapse; font-size: 14px; }
+.pvp th { text-align: right; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--tx2); padding: 0 0 7px; }
+.pvp th:first-child { text-align: left; }
+.pvp td { padding: 10px 0; border-top: 1px solid var(--ln); text-align: right; font-variant-numeric: tabular-nums; }
+.pvp td:first-child { text-align: left; }
+.pvp tfoot td { border-top: 1.5px solid var(--ln3); font-weight: 700; }
+
+/* list rows */
+.lrow { display: flex; align-items: center; gap: 11px; padding: 11px 0; border-top: 1px solid var(--ln); font-size: 14px; }
+.lrow:first-of-type { border-top: 0; }
+.lrow .grow { flex: 1; min-width: 0; }
+.lrow .t { font-weight: 600; }
+.lrow .m { font-size: 12.5px; color: var(--tx2); margin-top: 1px; }
+.lrow .a { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lrow .a em { display: block; font-style: normal; font-weight: 400; font-size: 11.5px; color: var(--tx3); }
+.lrow .a.in { color: var(--ac); }
+.monsep { margin: 16px 0 2px; font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--ac2Deep); }
+.monsep:first-child { margin-top: 0; }
+
+/* monthly bars */
+.mrow { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 8px; }
+.mrow .m { width: 30px; flex: none; color: var(--tx2); }
+.mrow .t { width: 76px; flex: none; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.k-stay { background: var(--ac); } .k-live { background: var(--catDaily); }
+.k-tran { background: var(--ac2); } .k-one { background: var(--warn); }
+.k-subs { background: var(--catActivity); }
+.key { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--tx2); margin-top: 12px; }
+.key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+
+/* sheet */
+.sheet-bg { border-radius: var(--r); padding: 22px 14px; display: flex; justify-content: center;
+  background: repeating-linear-gradient(45deg, transparent 0 11px, var(--fill) 11px 22px); }
+.sheet { width: 100%; max-width: 430px; background: var(--sf); border-radius: var(--r); padding: 20px;
+  box-shadow: 0 12px 40px rgba(31,42,36,.18); }
+.field { display: block; margin-bottom: 14px; }
+.field .lb { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--tx2); margin-bottom: 6px; }
+.inp { width: 100%; background: var(--in); border: 1.5px solid var(--ln2); color: var(--tx);
+  border-radius: var(--rCtl); padding: 11px 13px; font: 400 15px var(--font-sans); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.check { display: flex; gap: 10px; align-items: center; font-size: 15px; margin-bottom: 14px; }
+
+/* notes */
+.note { border-radius: var(--rCtl); background: var(--tag); color: var(--tagInk);
+  padding: 12px 15px; font-size: 13px; line-height: 1.55; }
+.note::before { content: "✎ "; font-weight: 700; }
+.note code { font-size: 12px; background: rgba(0,0,0,.07); padding: 1px 4px; border-radius: 4px; }
+:root[data-theme="dark"] .note code { background: rgba(255,255,255,.1); }
+body.no-notes .note { display: none; }
+
+/* page-order diagram */
+.ord { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: var(--rCtl);
+  background: var(--sf); font-size: 14px; margin-bottom: 6px; }
+.ord .n { width: 18px; flex: none; color: var(--tx3); font-size: 12px; font-weight: 700; }
+.ord .grow { flex: 1; min-width: 0; }
+.ord.new { background: var(--acSoft); box-shadow: inset 0 0 0 1.4px var(--acLine); }
+.ord.moved { box-shadow: inset 0 0 0 1.4px var(--warnLine); }
+.ord.bulk { background: transparent; box-shadow: inset 0 0 0 1.4px var(--ln2); color: var(--tx2); }
+.cols { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 560px) { .cols.two-up { grid-template-columns: 1fr 1fr; } }
+/* ---- ONE page, two columns once there is room ---------------------------
+   Phone: a single 576px column, exactly as MoneyPage.tsx renders today.
+   Tablet and up: the cards pair off, and the hero and the ledger span both.
+   The order of the DOM is the order of the page — the grid never reorders
+   anything, so the phone reading order survives the wide layout. */
+main.screen { max-width: 576px; }
+@media (min-width: 900px) {
+  main.screen { max-width: 980px; display: grid; grid-template-columns: 1fr 1fr;
+    align-items: start; gap: 14px; column-gap: 16px; }
+  main.screen > .full { grid-column: 1 / -1; }
+  main.screen > .sec { grid-column: 1 / -1; }
+}
+.blk { display: flex; flex-direction: column; gap: 12px; }
+</style>
+</head>
+<body>
+
+<header class="mockbar">
+  <span class="ttl">MOCK · Money</span>
+  <span id="pills"></span>
+  <span class="spacer"></span>
+  <button class="tool" onclick="toggleNotes()">✎ notes</button>
+  <button class="tool" onclick="toggleTheme()">◐ theme</button>
+  <span class="desc" id="desc"></span>
+</header>
+
+<main class="screen">
+
+  <!-- ============ header ============ -->
+  <section data-state="money subs" class="full">
+    <div class="row" style="align-items:flex-start;">
+      <div class="grow">
+        <h1 class="page">Money</h1>
+        <p class="sub">Asia 2026–27 · day 13 · Bangkok</p>
+      </div>
+      <button class="btn soft" title="Add an entry" aria-label="Add an entry"
+        style="width:46px;height:46px;padding:0;justify-content:center;font-size:22px;line-height:1;">＋</button>
+    </div>
+  </section>
+
+  <!-- ============ 1 · overview ============ -->
+  <div data-state="money" class="full blk">
+    <div class="card lg">
+      <div class="eyebrow">Spent so far · 13 days</div>
+      <div class="serif num" style="font-size:32px;font-weight:600;line-height:1.1;letter-spacing:-.02em;margin-top:2px;">1 044 200 Ft</div>
+      <div class="two" style="margin-top:16px;border-top:1px solid var(--ln);padding-top:14px;">
+        <div>
+          <div class="eyebrow">Per day</div>
+          <div class="num" style="font-size:22px;font-weight:600;margin-top:2px;">4 600 Ft</div>
+          <div class="s13 muted">everyday costs over 12 days in Bangkok</div>
+        </div>
+        <div>
+          <div class="eyebrow">Projected total</div>
+          <div class="num" style="font-size:22px;font-weight:600;margin-top:2px;">4 132 420 Ft</div>
+          <div class="s13 muted">153 planned nights, at this pace</div>
+        </div>
+      </div>
+      <div class="track" style="margin-top:16px;"><i style="width:23%;background:var(--ac)"></i></div>
+      <div class="row s13" style="margin-top:7px;">
+        <span><b>23% of your budget</b></span><span class="grow"></span>
+        <span class="muted">4 500 000 Ft · <b class="num">3 455 800</b> left</span>
+      </div>
+      <div class="beyond">
+        <span class="grow">
+          <span class="v num">+ 989 000 Ft beyond the everyday</span>
+          <span class="w">flight, Bangkok stay, backpacks — real money, deliberately outside the per-day rate.</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>The bar measures actual spend against the budget, not against a forecast.</b> Today it is
+      <code>spent / projected</code> with "pre-trip estimate 4 120 000" underneath
+      (<code>MoneyPage.tsx:91,177-178</code>) — a bar whose denominator moves every time the pace
+      changes, anchored to a number invented before departure. Now: <b>1 044 200 of 4 500 000 = 23%</b>,
+      against a ceiling you actually set. <b>Projected total keeps its place</b> in the pair above,
+      because it answers a different question and it is the honest one — <code>projection.projected</code>,
+      built from the real pace, not the pre-trip guess.<br><br>
+      Losing the pre-trip estimate has one consequence worth tracking: <code>budget.grand</code> was the
+      only consumer of <code>state.extras</code> on this page (<code>budget.ts:109</code>), so the
+      One-offs card below becomes the sole place they are visible at all. That raises #39, it does not
+      lower it.
+    </div>
+  </div>
+
+  <!-- ============ 2 · daily spend ============ -->
+  <div data-state="money" class="blk">
+    <div class="sec"><span class="eyebrow">Daily spend · last 12 days</span><span class="s12 faint">everyday costs</span></div>
+    <div class="card">
+      <div class="row" style="margin-bottom:10px;">
+        <span class="chip on">7</span><span class="chip">14</span><span class="chip">30</span><span class="chip">90</span>
+        <span class="grow"></span>
+        <span class="s13 muted">avg <b style="color:var(--ac2)">4 600 Ft</b></span>
+      </div>
+      <svg class="chart" viewBox="0 0 354 150" role="img" aria-label="Daily everyday spending, 1 to 12 September">
+        <rect class="bar z" x="10.25" y="118" width="20" height="2" rx="1"/>
+        <rect class="bar" x="38.75" y="96.4" width="20" height="23.6" rx="3"/>
+        <rect class="bar z" x="67.25" y="118" width="20" height="2" rx="1"/>
+        <rect class="bar z" x="95.75" y="118" width="20" height="2" rx="1"/>
+        <rect class="bar" x="124.25" y="63.2" width="20" height="56.8" rx="3"/>
+        <rect class="bar z" x="152.75" y="118" width="20" height="2" rx="1"/>
+        <rect class="bar z" x="181.25" y="118" width="20" height="2" rx="1"/>
+        <rect class="bar" x="209.75" y="90.9" width="20" height="29.1" rx="3"/>
+        <rect class="bar z" x="238.25" y="118" width="20" height="2" rx="1"/>
+        <rect class="bar" x="266.75" y="30" width="20" height="90" rx="3"/>
+        <rect class="bar" x="295.25" y="108.6" width="20" height="11.4" rx="3"/>
+        <rect class="bar" x="323.75" y="80" width="20" height="40" rx="3"/>
+        <line class="avg" x1="6" y1="99.1" x2="348" y2="99.1"/>
+        <text class="al" x="6" y="95">avg 4 600</text>
+        <text x="276.75" y="25" text-anchor="middle" style="fill:var(--tx2);font-weight:600">19 800</text>
+        <text x="20.25" y="134" text-anchor="middle">1</text>
+        <text x="77.25" y="134" text-anchor="middle">3</text>
+        <text x="134.25" y="134" text-anchor="middle">5</text>
+        <text x="191.25" y="134" text-anchor="middle">7</text>
+        <text x="248.25" y="134" text-anchor="middle">9</text>
+        <text x="305.25" y="134" text-anchor="middle">11</text>
+        <text x="348" y="148" text-anchor="end">September</text>
+      </svg>
+      <div class="s13 muted" style="margin-top:2px;">Tap a bar to open that day in the ledger below.</div>
+    </div>
+  </div>
+
+  <!-- ============ 3 · where it goes ============ -->
+  <div data-state="money" class="blk">
+    <div class="sec"><span class="eyebrow">Where it goes · last 12 days</span><span class="s12 faint">everyday costs</span></div>
+    <div class="card">
+      <div class="row" style="gap:16px;">
+        <svg width="120" height="120" viewBox="0 0 120 120" style="flex:none" role="img" aria-label="Share of everyday spending by family">
+          <circle cx="60" cy="60" r="44" fill="none" stroke="var(--tr)" stroke-width="18"/>
+          <g transform="rotate(-90 60 60)">
+            <circle cx="60" cy="60" r="44" fill="none" stroke="var(--ac)" stroke-width="18" stroke-dasharray="99.2 276.5" stroke-dashoffset="0"/>
+            <circle cx="60" cy="60" r="44" fill="none" stroke="var(--ln3)" stroke-width="18" stroke-dasharray="62.6 276.5" stroke-dashoffset="-99.2"/>
+            <circle cx="60" cy="60" r="44" fill="none" stroke="var(--ac2)" stroke-width="18" stroke-dasharray="44.1 276.5" stroke-dashoffset="-161.8"/>
+            <circle cx="60" cy="60" r="44" fill="none" stroke="var(--catDaily)" stroke-width="18" stroke-dasharray="38.6 276.5" stroke-dashoffset="-205.9"/>
+            <circle cx="60" cy="60" r="44" fill="none" stroke="var(--catGrocery)" stroke-width="18" stroke-dasharray="32.1 276.5" stroke-dashoffset="-244.5"/>
+          </g>
+          <text x="60" y="57" text-anchor="middle" font-size="14" font-weight="600" fill="var(--tx)" style="font-family:var(--font-sans)">55 200</text>
+          <text x="60" y="71" text-anchor="middle" font-size="9" fill="var(--tx3)" style="font-family:var(--font-sans)">in 12 days</text>
+        </svg>
+        <p class="grow s13" style="line-height:1.6;color:var(--tx2)">
+          <b style="color:var(--tx)">Food &amp; drinks</b> take 36%. <b style="color:var(--tx)">Other</b> 23%, clothes &amp; accessories 16%.
+        </p>
+      </div>
+      <div style="margin-top:8px;">
+        <div class="crow"><i class="sw" style="background:var(--ac)"></i><span class="grow">Food</span><span class="amt num">19 800 Ft</span></div>
+        <div class="crow"><i class="sw" style="background:var(--ln3)"></i><span class="grow">Phone &amp; internet</span><span class="amt num">12 500 Ft</span></div>
+        <div class="crow"><i class="sw" style="background:var(--ac2)"></i><span class="grow">Souvenirs</span><span class="amt num">8 800 Ft</span></div>
+        <div class="crow"><i class="sw" style="background:var(--catDaily)"></i><span class="grow">Getting around</span><span class="amt num">7 700 Ft</span></div>
+        <div class="crow"><i class="sw" style="background:var(--catGrocery)"></i><span class="grow">Convenience store</span><span class="amt num">6 400 Ft</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4 · bookings ============ -->
+  <div data-state="money" class="blk">
+    <div class="sec"><span class="eyebrow">Bookings</span><span class="s12 faint">committed money</span></div>
+    <a href="#" class="card" style="text-decoration:none;color:inherit;display:block;">
+      <div class="two" style="gap:14px;">
+        <div>
+          <div class="eyebrow">Stays</div>
+          <div class="num" style="font-size:21px;font-weight:600;margin-top:2px;">702 000 Ft</div>
+          <div class="s13 muted">1 paid · 1 draft</div>
+        </div>
+        <div>
+          <div class="eyebrow">Transport</div>
+          <div class="num" style="font-size:21px;font-weight:600;margin-top:2px;">1 006 000 Ft</div>
+          <div class="s13 muted">1 of 9 booked</div>
+        </div>
+      </div>
+      <hr class="rule">
+      <div class="row s14"><span class="muted">Paid</span><span class="grow"></span><b class="num">809 000 Ft</b></div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Scheduled &amp; to pay</span><span class="grow"></span><b class="num">0 Ft</b></div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Not booked yet</span><span class="grow"></span><b class="num" style="color:var(--warn)">899 000 Ft</b></div>
+      <hr class="rule">
+      <div class="row"><b style="font-size:16px">Total</b><span class="grow"></span><b class="num" style="font-size:16px">1 708 000 Ft</b><span class="faint">›</span></div>
+      <div class="s13 muted" style="margin-top:6px;">Edit stays and legs on the Trip page →</div>
+    </a>
+    <div class="note">
+      <b>Five numbers, not fourteen.</b> Today this card lists every stay and leg and then closes with
+      three separate footer lines. The detail already exists on the Trip page and that is where you edit
+      it, so Money shows the two halves, the three states, one total, and a tap through.
+    </div>
+  </div>
+
+  <!-- ============ 5 · subscriptions ============ -->
+  <div data-state="money" class="blk">
+    <div class="sec"><span class="eyebrow">Subscriptions</span><span class="s12 faint">the monthly ones from home</span></div>
+    <div class="card">
+      <div class="srow" style="border-top:0">
+        <button class="bell" title="reminder off">🔕</button>
+        <span class="grow"><span class="nm">iCloud 2 TB</span><span class="mt">monthly · the 14th<span class="soon">in 2 days</span></span></span>
+        <span class="amt num"><b>3 290 Ft</b><em>/month</em></span>
+      </div>
+      <div class="srow">
+        <button class="bell" title="reminder off">🔕</button>
+        <span class="grow"><span class="nm">Spotify Duo</span><span class="mt">monthly · the 17th · next Sep 17</span></span>
+        <span class="amt num"><b>2 490 Ft</b><em>/month</em></span>
+      </div>
+      <div class="srow">
+        <button class="bell on" title="reminds 3 days before">🔔</button>
+        <span class="grow"><span class="nm">Home internet · Budapest</span><span class="mt">monthly · the 23rd · reminds 3 days before</span></span>
+        <span class="amt num"><b>7 990 Ft</b><em>/month</em></span>
+      </div>
+      <div class="srow">
+        <button class="bell on" title="reminds 7 days before">🔔</button>
+        <span class="grow"><span class="nm">Domain + hosting</span><span class="mt">yearly · next Nov 12 · reminds 7 days before</span></span>
+        <span class="amt num"><b>18 000 Ft</b><em>/year · 1 500/mo</em></span>
+      </div>
+      <div class="srow off">
+        <span class="bell" style="display:inline-flex;align-items:center;justify-content:center;">—</span>
+        <span class="grow"><span class="nm">Netflix</span><span class="mt">cancelled 6 Sep · 0 charges on this trip</span></span>
+        <span class="amt num"><b>4 490 Ft</b><em>/month</em></span>
+      </div>
+      <hr class="rule">
+      <div class="row s14"><span class="muted">4 active</span><span class="grow"></span><b class="num">≈ 15 270 Ft / month</b></div>
+      <div class="row s13" style="margin-top:6px;"><span class="muted">across the remaining 166 days</span><span class="grow"></span><b class="num muted">100 620 Ft</b></div>
+      <div class="row" style="margin-top:14px;gap:8px;">
+        <button class="btn sm">＋ Subscription</button>
+        <button class="btn ghost sm" data-go="subs">Edit one</button>
+      </div>
+    </div>
+    <div class="note">
+      Cadence is <b>declared, not inferred</b> (#37). Anchor day + cadence is arithmetic; ledger rows only
+      <i>confirm</i> each occurrence and flag drift. Folding <b>100 620</b> into the projection moves it
+      <b>4 031 800 → 4 132 420</b>, i.e. <b>90% → 92% of cap</b>. Two points, and the way to that number
+      matters: <b>count the charges, do not amortise the run-rate</b>. Spreading 15 270/month over the 166
+      days left (≈84 000, this mock's earlier figure) bills a twelfth of the yearly domain fee per month
+      when the whole 18 000 leaves on 12 Nov — it understates the cash AND it cannot put a charge in a
+      month, which the bars below have to do. Corrected at build, 2026-09-20.
+    </div>
+  </div>
+
+  <!-- ============ 6 · one-offs ============ -->
+  <div data-state="money" class="blk">
+    <div class="sec"><span class="eyebrow">One-offs &amp; extras</span><span class="s12 faint">visas, insurance, gear</span></div>
+    <div class="card">
+      <table class="pvp">
+        <thead><tr><th>&nbsp;</th><th>Planned</th><th>Paid</th></tr></thead>
+        <tbody>
+          <tr><td>Insurance · 2 pax, 6 months</td><td>340 000</td><td class="faint">—</td></tr>
+          <tr><td>Gear · backpacks, adapter, router</td><td>205 000</td><td><b>180 000</b></td></tr>
+          <tr><td>Visas · TH ext, VN e-visa ×2, ID VoA ×2</td><td>84 000</td><td class="faint">—</td></tr>
+        </tbody>
+        <tfoot><tr><td>3 extras</td><td>629 000</td><td>180 000</td></tr></tfoot>
+      </table>
+      <hr class="rule">
+      <a href="#" class="s13" style="color:var(--ac2Deep);font-weight:600;text-decoration:none">Edit on Itinerary → Extras →</a>
+    </div>
+    <div class="note">
+      <b>#39.</b> <code>ExtrasTab.tsx:115</code> says "see 629 000 Ft in Money" and Money has zero
+      references to <code>extras</code>. <b>Two columns, never one total</b> — Planned is a forecast,
+      Paid is a ledger row; sum them and the backpacks count twice.
+    </div>
+  </div>
+
+  <!-- ============ 7 · plan by stop ============ -->
+  <div data-state="money" class="blk">
+    <div class="sec"><span class="eyebrow">Plan · by stop</span><span class="s12 faint">tap a number for the maths</span></div>
+    <div class="card">
+      <div class="lrow"><span class="grow"><span class="t">Bangkok 🇹🇭</span><span class="m">30 nights · 17 300 Ft/night</span></span><span class="a num">519 800</span></div>
+      <div style="border-radius:var(--rCtl);background:var(--in);padding:12px 14px;margin:2px 0 10px;">
+        <div class="s13 muted" style="line-height:1.7;">
+          Stay, paid <b style="color:var(--tx)">437 000</b><br>
+          + 18 nights left × 4 600 Ft <b style="color:var(--tx)">82 800</b><br>
+          <span style="display:inline-block;margin-top:4px;padding-top:4px;border-top:1px solid var(--ln)">= <b style="color:var(--tx)">519 800</b> over 30 nights · <b style="color:var(--tx)">17 300</b>/night</span>
+        </div>
+      </div>
+      <div class="lrow"><span class="grow"><span class="t">Chiang Mai 🇹🇭</span><span class="m">31 nights · 20 600 Ft/night</span></span><span class="a num" style="color:var(--warn)">640 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Hanoi 🇻🇳</span><span class="m">14 nights · 22 900 Ft/night</span></span><span class="a num">320 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Hoi An 🇻🇳</span><span class="m">16 nights · 20 600 Ft/night</span></span><span class="a num">330 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Kuala Lumpur 🇲🇾</span><span class="m">31 nights · 19 700 Ft/night</span></span><span class="a num">610 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Bali 🇮🇩</span><span class="m">31 nights · 22 600 Ft/night</span></span><span class="a num">700 000</span></div>
+      <div class="lrow"><span class="grow"><span class="t">Home leg + buffer</span><span class="m">24 nights · 15 000 Ft/night</span></span><span class="a num">360 000</span></div>
+      <div class="row s14" style="margin-top:12px;padding-top:12px;border-top:1.5px solid var(--ln3);"><b>Stops subtotal</b><span class="grow"></span><b class="num">3 479 800 Ft</b></div>
+      <hr class="rule">
+      <div class="row s14"><span class="muted">Transport</span><span class="grow"></span><b class="num">372 000 Ft</b></div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Gear, e-SIM, insurance</span><span class="grow"></span><b class="num">180 000 Ft</b></div>
+      <div class="s13 faint" style="margin-top:2px;">logged spend that belongs to no stop and no booking</div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Subscriptions ahead</span><span class="grow"></span><b class="num">100 620 Ft</b></div>
+      <hr class="rule">
+      <div class="row"><b style="font-size:16px">Projected total</b><span class="grow"></span><b class="num" style="font-size:16px">4 132 420 Ft</b></div>
+    </div>
+    <div class="note">
+      <b>One figure per stop plus a per-night average</b>, maths on tap. Hanoi at 22 900/night against
+      Kuala Lumpur at 19 700 is the comparison that matters; the totals are not comparable because the
+      nights differ.<br><br>
+      This card now <b>ends on the same 4 132 420 the overview quotes</b> — the live projection, which is
+      what <code>projection.projected</code> actually computes. The earlier draft had the hero on canon's
+      pre-trip planning figure and this card on the live one, with nothing saying which. Fixed by
+      deleting the planning figure, which is the same call you made on the pre-trip estimate.<br><br>
+      <b>Gear, e-SIM, insurance</b> already exists at <code>PlanCard.tsx:106</code>. It is
+      <code>projection.residual</code>, a subtraction rather than a category sum.
+    </div>
+  </div>
+
+  <!-- ============ 8 · to cover the plan ============ -->
+  <div data-state="money" class="blk">
+    <div class="sec"><span class="eyebrow">To cover the plan</span><span class="s12 faint">what has to come in</span></div>
+    <div class="card">
+      <div class="mrow"><span class="m">Aug</span><span class="track grow"><i class="k-stay" style="width:54%"></i><i class="k-tran" style="width:46%"></i></span><span class="t">809 000</span></div>
+      <div class="mrow"><span class="m">Sep</span><span class="track grow"><i class="k-live" style="width:91%"></i><i class="k-subs" style="width:5%"></i></span><span class="t">358 000</span></div>
+      <div class="mrow"><span class="m">Oct</span><span class="track grow"><i class="k-stay" style="width:41%"></i><i class="k-live" style="width:51%"></i><i class="k-subs" style="width:3%"></i></span><span class="t">655 000</span></div>
+      <div class="mrow"><span class="m">Nov</span><span class="track grow"><i class="k-stay" style="width:33%"></i><i class="k-live" style="width:48%"></i><i class="k-tran" style="width:6%"></i><i class="k-one" style="width:10%"></i><i class="k-subs" style="width:3%"></i></span><span class="t">665 000</span></div>
+      <div class="mrow"><span class="m">Dec</span><span class="track grow"><i class="k-stay" style="width:44%"></i><i class="k-live" style="width:49%"></i><i class="k-subs" style="width:3%"></i></span><span class="t">625 000</span></div>
+      <div class="mrow"><span class="m">Jan</span><span class="track grow"><i class="k-stay" style="width:46%"></i><i class="k-live" style="width:49%"></i><i class="k-subs" style="width:2%"></i></span><span class="t">715 000</span></div>
+      <div class="mrow"><span class="m">Feb</span><span class="track grow"><i class="k-live" style="width:96%"></i><i class="k-subs" style="width:4%"></i></span><span class="t">373 000</span></div>
+      <div class="key">
+        <span><i class="k-stay"></i>Stays</span><span><i class="k-live"></i>Daily living</span>
+        <span><i class="k-tran"></i>Transport</span><span><i class="k-one"></i>One-offs</span>
+        <span><i class="k-subs"></i>Subscriptions</span>
+      </div>
+      <hr class="rule">
+      <div class="row s14"><span class="muted">Earn target</span><span class="grow"></span><b class="num">3 000 000 Ft</b></div>
+      <div class="row s14" style="margin-top:6px;"><span class="muted">Planned net burn</span><span class="grow"></span><b class="num" style="color:var(--warn)">−1 202 000 Ft</b></div>
+    </div>
+    <div class="note">
+      <b>Settled at build (2026-09-20): rebuilt on the live projection.</b> These bars ran off the
+      pre-trip per-stop estimates and summed to ≈4 200 000 while everything above spoke in the live
+      projection — Bangkok coming in under estimate was the whole gap. <code>monthlyOutflow()</code> now
+      buckets the projection's own terms by month, so the card ends on <b>4 132 420</b> like the rest of
+      the page. Planned one-offs are NOT in the bars: <code>state.extras</code> carry no date, they were
+      never inside <code>projection.projected</code> either, and inventing a month for a visa fee would
+      put back the fiction this round removed. The card footnotes them and points at the One-offs card.
+    </div>
+  </div>
+
+  <!-- ============ 9 · budget cap ============ -->
+  <div data-state="money" class="blk">
+    <a href="#" class="card row" style="text-decoration:none;color:inherit;">
+      <span class="grow"><b style="font-size:15px">Budget cap</b><span class="s13 muted" style="display:block">4 500 000 Ft · projected uses 92%</span></span>
+      <span class="faint">›</span>
+    </a>
+  </div>
+
+  <!-- ============ 10 · the ledger, full width, last ============ -->
+  <div data-state="money" class="full blk">
+    <div class="sec"><span class="eyebrow">The ledger</span><span class="s12 faint">everything, newest first</span></div>
+    <div class="card">
+      <div class="monsep">September · out 55 200 · in 513 500</div>
+      <div class="lrow"><span class="grow"><span class="t">Chatuchak gifts</span><span class="m">Sep 12 · Souvenirs · Anna</span></span><span class="a num">8 800 Ft<em>฿850</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">Grab to Wat Pho</span><span class="m">Sep 11 · Getting around · Patrik</span></span><span class="a num">2 500 Ft<em>฿240</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">Jay Fai dinner</span><span class="m">Sep 10 · Food · Anna</span></span><span class="a num">19 800 Ft<em>฿1,900</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">Freelance payout</span><span class="m">Sep 9 · Freelance · Patrik</span></span><span class="a in num">+513 500 Ft<em>€1,300</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">7-Eleven</span><span class="m">Sep 8 · Convenience store · Patrik</span></span><span class="a num">6 400 Ft<em>฿620</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">SIM ×2</span><span class="m">Sep 5 · Phone &amp; internet · Patrik</span></span><span class="a num">12 500 Ft<em>฿1,200</em></span></div>
+      <div class="lrow"><span class="grow"><span class="t">BTS top-up</span><span class="m">Sep 2 · Getting around · Anna</span></span><span class="a num">5 200 Ft<em>฿500</em></span></div>
+      <div class="monsep">August · out 809 000</div>
+      <div class="lrow"><span class="grow"><span class="t">BUD → BKK · Qatar Airways</span><span class="m">Aug 31 · Transport · from booking</span></span><span class="a num">372 000 Ft</span></div>
+      <div class="lrow"><span class="grow"><span class="t">The Quartz Residence · 30 n</span><span class="m">Aug 25 · Stays · from booking</span></span><span class="a num">437 000 Ft</span></div>
+      <hr class="rule">
+      <button class="btn ghost sm" style="width:100%;justify-content:center;">Load 20 more · August and earlier</button>
+      <div class="s13 faint" style="margin-top:8px;text-align:center;">showing 9 of 9</div>
+    </div>
+    <div class="note">
+      <b>Last on the page, twenty rows at a time, paging backwards.</b> It saves render cost and scroll
+      length, <b>not bandwidth</b>: the ledger is a <code>jsonb</code> column on the trip row
+      (<code>01-document-sync.sql:7</code>) and <code>TRIP_COLS</code> (<code>queries.ts:8</code>) selects
+      it whole with the state — every byte has arrived before this card renders, and the chart, donut,
+      burn rate and projection all need the full array anyway.<br><br>
+      <b>On wide screens it spans both columns.</b> Everything above pairs off; the ledger is the one card
+      whose rows benefit from the full width, and putting it across the bottom keeps it last in the
+      reading order on every size.
+    </div>
+  </div>
+
+  <!-- ============ STATE: subs ============ -->
+  <div data-state="subs" class="full blk">
+    <div class="sec"><span class="eyebrow">Subscription · edit</span></div>
+    <div class="sheet-bg">
+      <div class="sheet">
+        <h3 class="serif" style="font-size:19px;font-weight:600;margin-bottom:16px;">Home internet · Budapest</h3>
+        <label class="field"><span class="lb">Amount</span><input class="inp" value="7 990 Ft"></label>
+        <div class="two">
+          <label class="field"><span class="lb">Repeats</span>
+            <select class="inp"><option>Monthly</option><option>Every 3 months</option><option>Every 6 months</option><option>Yearly</option></select>
+          </label>
+          <label class="field"><span class="lb">Charged on</span><input class="inp" value="the 23rd"></label>
+        </div>
+        <div style="background:var(--in);border-radius:var(--rCtl);padding:12px 14px;margin-bottom:16px;">
+          <div class="s12 muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.09em;">Next charge</div>
+          <div style="font-weight:600;margin-top:3px;">Wed 23 Sep 2026 <span class="soon">in 11 days</span></div>
+          <div class="s12 faint" style="margin-top:3px;">then 23 Oct · 23 Nov · 23 Dec — derived, never stored</div>
+        </div>
+        <label class="check"><input type="checkbox" checked> Remind me before it charges</label>
+        <label class="field"><span class="lb">Lead time</span>
+          <select class="inp"><option>1 day before</option><option selected>3 days before</option><option>7 days before</option></select>
+        </label>
+        <div class="row" style="margin-top:18px;gap:8px;">
+          <button class="btn pri">Save</button>
+          <button class="btn ghost">Cancel</button>
+          <span class="grow"></span>
+          <button class="btn warnbtn sm">Mark cancelled</button>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <b>"Mark cancelled" is a state, not a delete.</b> Deleting loses what we paid. Cancelling stops the
+      prediction and the reminders and keeps every past charge in history.
+    </div>
+
+    <div class="sec"><span class="eyebrow">Amount drift</span><span class="s12 faint">history confirms, never predicts</span></div>
+    <div class="card">
+      <div style="border-radius:var(--rCtl);background:var(--warnSoft);box-shadow:inset 0 0 0 1.4px var(--warnLine);padding:12px 14px;font-size:14px;line-height:1.5;">
+        Spotify Duo charged <b>2 990 Ft</b> on 17 Sep — 500 Ft more than the last three.
+      </div>
+      <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap;">
+        <button class="btn pri sm">Update to 2 990</button>
+        <button class="btn ghost sm">Keep 2 490</button>
+        <button class="btn ghost sm">Not this subscription</button>
+      </div>
+    </div>
+
+    <div class="sec"><span class="eyebrow">The reminder, as it lands</span></div>
+    <div class="card">
+      <div class="row" style="gap:12px;">
+        <span class="bell on" style="display:inline-flex;align-items:center;justify-content:center;">🔔</span>
+        <span class="grow"><b style="font-size:15px">Home internet charges in 3 days</b><span class="s13 muted" style="display:block;margin-top:2px;">7 990 Ft on Wed 23 Sep · Livhold · Asia 2026–27</span></span>
+      </div>
+      <hr class="rule">
+      <p class="s13 muted">
+        Same pipe as the stay-deadline alerts: daily <code>pg_cron</code> → edge function → Resend + web
+        push, gated on <code>notify_prefs.deadline_push</code>, deduped through <code>alert_log</code>.
+      </p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+var STATES = [
+  { id: 'money', label: 'Money',        desc: 'One page, ledger last. Patrik in Bangkok, Sat 12 Sep 2026 (day 13). Widen the window past 900px for the two-column layout; the ledger spans both. Issues #35, #37, #38, #39.' },
+  { id: 'subs',  label: 'Subscription', desc: 'Editing "Home internet" — declared cadence, derived next charge, reminder lead time, cancel-as-a-state, drift detection. Issue #37.' }
+];
+var cur = STATES[0].id;
+try { var h = (location.hash || '').slice(1); if (h) cur = h; } catch (e) {}
+if (!STATES.some(function (s) { return s.id === cur; })) cur = STATES[0].id;
+
+function render() {
+  document.getElementById('pills').innerHTML = STATES.map(function (s) {
+    return '<button class="pill' + (s.id === cur ? ' on' : '') + '" data-go="' + s.id + '">' + s.label + '</button>';
+  }).join(' ');
+  document.getElementById('desc').textContent = STATES.filter(function (s) { return s.id === cur; })[0].desc;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-state]'), function (el) {
+    el.style.display = el.getAttribute('data-state').split(/\s+/).indexOf(cur) > -1 ? '' : 'none';
+  });
+}
+function setState(id) {
+  cur = id;
+  // Guarded: replaceState throws a SecurityError under file://, blob: and
+  // sandboxed iframes, which is what broke the first cut of this mock.
+  try { if (window.history && history.replaceState) history.replaceState(null, '', '#' + id); } catch (e) {}
+  render();
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+document.addEventListener('click', function (ev) {
+  var el = ev.target;
+  while (el && el !== document.body) {
+    if (el.getAttribute && el.getAttribute('data-go')) { ev.preventDefault(); setState(el.getAttribute('data-go')); return; }
+    el = el.parentNode;
+  }
+});
+function toggleTheme() {
+  var r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleNotes() { document.body.classList.toggle('no-notes'); }
+render();
+</script>
+</body>
+</html>

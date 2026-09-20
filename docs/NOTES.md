@@ -5,6 +5,107 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-20
+
+### BUILT — Money v2: issues #35, #37, #38 and #39, off mock 14
+
+Branch `claude/subscription-category-visibility-qur53t`. The mock's four commits
+are the design record; this is the build. Nothing is deployed.
+
+**The through-line: the page now speaks ONE number.** The overview, the Plan
+card and the monthly card all quote `projection.projected`, and
+`spending.test.ts` holds the invariant that keeps them there — the monthly bars
+are the projection's own terms bucketed by month, so their total *is* the
+projection, to the forint. Everything below follows from that.
+
+- **#38 (ledger last).** `LedgerList` moved under the monthly card and starts at
+  twenty rows, paging backwards. That saves render cost and scroll length, **not
+  bandwidth**: the ledger is a jsonb column selected whole with the state, and
+  the chart, donut, burn rate and projection all need the full array. Every
+  total is still computed over every row. Tapping a bar in the chart pages the
+  ledger down far enough to reach that day before scrolling to it.
+- **#35 (the silent exclusion).** A "+ X beyond the everyday" strip on the
+  overview, measured as `spent − everyday spent` so it ties to the per-day
+  rate's own basis by construction. The old `PlanCard` line that named "Gear,
+  e-SIM, insurance" is `projection.residual`, a subtraction, not a category
+  sum — it is now labelled as the remainder it is.
+- **#39 (one-offs).** A card reading `state.extras`, **planned and paid in two
+  columns that are never summed**: the same visa fee lives in both, and adding
+  them counts it twice. `ONE_OFF_CATEGORIES` is derived from
+  `NON_DAILY_CATEGORIES` rather than re-listed, so a seventh non-daily category
+  gets a home automatically instead of being lost the way `fees` was.
+- **#37 (subscriptions).** `state.subscriptions` — declared anchor + cadence,
+  never inferred from ledger history. Next charge, monthly run-rate and the
+  charges-ahead total are all derived (`lib/trips/subscriptions.ts`), cancelled
+  is a state rather than a delete, and reminders reuse the stay-deadline pipe.
+
+**Two owner decisions, both taken during the build.**
+
+1. **"To cover the plan" was rebuilt on the live projection**, not relabelled.
+   It was the last place a pre-trip number survived after the overview lost the
+   estimate, and it disagreed with everything above it by the amount Bangkok is
+   under its estimate. `monthlyOutflow()` replaces `monthlyBuckets()` for this
+   card. Planned one-offs are deliberately absent from the bars: `state.extras`
+   carry no date, and they were never inside `projection.projected` either. The
+   card footnotes them and points at the One-offs card.
+2. **The alert pipeline ships with the branch** (migration 40 + TESTPLAN,
+   `supabase/functions/subscription-alerts/`). Code only — see the deploy note.
+
+**A correction to canon, found by building it.** The mock totalled the
+subscriptions ahead by amortising the run-rate over the days left (≈84 000).
+Counting the charges on their real dates gives **100 620** — the difference is
+the yearly domain renewal, a twelfth of which was being billed per month when
+the whole 18 000 lands on 12 Nov. Amortising understates the cash *and* cannot
+place a charge in a month, which the monthly bars have to do. FIXTURES and mock
+14 are updated; the projection is 4 132 420 and subscriptions move it
+**90% → 92%** of cap, not 90% → 91%.
+
+### TO DEPLOY — subscription alerts (nothing is live yet)
+
+Order matters: the function first, the cron job second. A job pointing at a
+function that does not exist 404s once a day in silence.
+
+    supabase functions deploy subscription-alerts --project-ref <ref>
+    tools/db.sh sql supabase/migrations/40-subscription-alerts.sql
+    tools/db.sh sql supabase/migrations/40-TESTPLAN.sql   # staging first
+
+Docker must be running for the deploy (see the digest note, 2026-08-28). The
+function needs no new secrets — it reuses `CRON_SECRET`, `RESEND_API_KEY` and
+`ALERTS_FROM`.
+
+**Hit on the first staging deploy, 2026-09-20 — a new function defaults to
+`verify_jwt = true`.** The cron jobs send the signed `x-cron-ts` / `x-cron-sig`
+pair and NO `Authorization` header, so the platform answers
+`401 UNAUTHORIZED_NO_AUTH_HEADER` before `hasCronSecret` runs. Daily, silent,
+and indistinguishable from "nothing was due" — the same shape as the outage 38
+was written to clean up. Probing staging made it obvious:
+
+    stay-deadline-alerts   403 forbidden            ← its own gate, correct
+    fx-refresh             403 {"error":"forbidden"}
+    digest-send            403 forbidden
+    subscription-alerts    401 UNAUTHORIZED_NO_AUTH_HEADER   ← platform gate
+
+So **after every deploy of a cron-invoked function, curl it unsigned and expect
+403**. One line, and it catches the whole class:
+
+    curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+      https://<ref>.supabase.co/functions/v1/subscription-alerts
+
+The fix is `--no-verify-jwt` on the deploy, and
+`[functions.subscription-alerts] verify_jwt = false` now lives in
+`supabase/config.toml` so a later redeploy cannot quietly turn it back on. The
+other three functions are left alone there: their dashboard setting is already
+right, and configuring them from assumption could break a working one.
+
+**The one thing worth knowing** if this ever misfires: `alert_log` is unique on
+(trip, item, kind, recipient) **forever**, which is right for a one-off stay
+deadline and wrong for anything recurring. The function puts the charge date in
+`kind` (`sub:2026-09-23`), so each occurrence is its own alert and October's
+reminder is not swallowed as a duplicate of September's. 40-TESTPLAN proves both
+halves. The trigger is also a window (fires at `leadDays` away *or nearer*)
+rather than an exact day, so a Resend hiccup on the day retries tomorrow instead
+of losing the single ping for that charge.
+---
 ## 2026-09-19
 
 ### DONE — the phone review's findings, minus Money, plus two bugs from the road

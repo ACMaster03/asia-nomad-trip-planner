@@ -1,6 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { dailySpend, spendByCategory, burnRate, stopBurnRate, tripPace, planByStop, bookingsSummary, projectFromPlan } from './spending.ts'
+import {
+  dailySpend, spendByCategory, burnRate, stopBurnRate, tripPace, planByStop, bookingsSummary, projectFromPlan,
+  monthlyOutflow, beyondEveryday, everydayOnly,
+} from './spending.ts'
+import { toBase } from './format.ts'
 import type { LedgerEntry, TripState, Segment } from './types.ts'
 import type { PerSeg } from './budget.ts'
 
@@ -177,4 +181,91 @@ test('expenses dated after today are scheduled, not spent', () => {
   const stops = plan.reduce((a, p) => a + p.projected, 0)
   const transport = bk.transport.filter((r) => r.status !== 'unbooked').reduce((a, r) => a + r.amount, 0)
   assert.equal(stops + transport + pr.residual, pr.projected)
+})
+
+// === the page speaks one number (round three, 2026-09-19) ===================
+// The overview, the Plan card and the monthly bars all quote the LIVE
+// projection now. These two tests are what keeps them from drifting apart
+// again: the bars are the projection's own terms bucketed by month, so their
+// total must be the projection to the last forint.
+
+const mState: TripState = {
+  meta: { version: 1, tripName: 'T', travelers: 2, baseCurrency: 'HUF', budgetCap: 0, startDate: '2026-08-30', endDate: '2026-09-21' },
+  rates,
+  segments: [
+    { id: 'bkk', country: 'TH', city: 'Bangkok', arrive: '2026-09-01', depart: '2026-09-11' },
+    { id: 'han', country: 'VN', city: 'Hanoi', arrive: '2026-09-11', depart: '2026-09-21' },
+  ],
+  stays: [
+    { id: 'st1', segId: 'bkk', name: 'paid', cur: 'USD', ppn: 10, include: true, status: 'chosen', chargeDate: '2026-07-09' },
+    { id: 'st2', segId: 'han', name: 'future', cur: 'USD', ppn: 20, nights: 10, include: true, status: 'chosen' },
+  ],
+  transport: [
+    { id: 't1', type: 'flight', from: 'BUD', to: 'BKK', date: '2026-08-31', cur: 'USD', price: 100, include: true, status: 'booked' },
+    { id: 't3', type: 'train', from: 'HAN', to: 'HUE', date: '2026-10-05', cur: 'USD', price: 20, include: true, status: 'booked' },
+  ],
+  extras: [], notes: {},
+} as TripState
+
+const mLedger: LedgerEntry[] = [
+  e('gear', '2026-08-30', 'gear', 1000, 'HUF'),
+  e('sub1', '2026-09-02', 'subscriptions', 3290, 'HUF'),
+  e('f1', '2026-09-01', 'food', 100),
+  e('f2', '2026-09-05', 'food', 100),
+  e('imp', '2026-07-09', 'stays', 100, 'USD', { source: { kind: 'stay', id: 'st1' } }),
+  e('fly', '2026-08-31', 'transport', 100, 'USD', { source: { kind: 'transport', id: 't1' } }),
+]
+const mPerSeg: PerSeg[] = [
+  { seg: mState.segments[0], nights: 10, tier: 1, accom: 100 * 340, accomSrc: 'included', live: 20_000, total: 0, kb: undefined },
+  { seg: mState.segments[1], nights: 10, tier: 1, accom: 200 * 340, accomSrc: 'included', live: 30_000, total: 0, kb: undefined },
+]
+const mSubs = [{ date: '2026-09-14', amount: 3290 }, { date: '2026-10-14', amount: 3290 }]
+
+test('the monthly bars are the projection, bucketed — the totals tie exactly', () => {
+  const today = '2026-09-05'
+  const plan = planByStop(mState, mLedger, mPerSeg, today, 400)
+  const bk = bookingsSummary(mState, mLedger)
+  const subsAhead = mSubs.reduce((a, c) => a + c.amount, 0)
+  const pr = projectFromPlan(plan, bk, mLedger, rates, today, subsAhead)
+  const { months, total } = monthlyOutflow(mState, plan, bk, mLedger, mSubs, today)
+
+  // THE invariant: nothing is lost and nothing is counted twice
+  assert.ok(Math.abs(total - pr.projected) < 1e-9, `${total} vs ${pr.projected}`)
+  assert.equal(pr.subsAhead, 6580)
+  // and it is still the sum of the Plan card's own rows
+  const stops = plan.reduce((a, p) => a + p.projected, 0)
+  const transport = bk.transport.filter((r) => r.status !== 'unbooked').reduce((a, r) => a + r.amount, 0)
+  assert.ok(Math.abs(stops + transport + pr.residual + pr.subsAhead - pr.projected) < 1e-9)
+
+  assert.deepEqual(months.map((m) => m.key), ['2026-07', '2026-08', '2026-09', '2026-10'])
+  const by = Object.fromEntries(months.map((m) => [m.key, m]))
+  // July: only the stay charged then
+  assert.deepEqual([by['2026-07'].stays, by['2026-07'].total], [34_000, 34_000])
+  // August: the flight, and the pre-trip gear as living (it is no stop's)
+  assert.deepEqual([by['2026-08'].transport, by['2026-08'].living], [34_000, 1000])
+  // October: the unpaid train on its date, and one subscription charge —
+  // a month with no nights in it still has money leaving the account
+  assert.deepEqual([by['2026-10'].transport, by['2026-10'].subs, by['2026-10'].living], [6800, 3290, 0])
+  // September: the Hanoi stay lands on arrival (no charge date of its own)
+  assert.equal(by['2026-09'].stays, 68_000)
+  assert.equal(by['2026-09'].subs, 3290 + 3290) // one logged, one still ahead
+})
+
+test('beyondEveryday says out loud what the per-day rate leaves out', () => {
+  const today = '2026-09-05'
+  const b = beyondEveryday(mLedger, rates, today)
+  // gear 1000 + subscriptions 3290 + stay 34 000 + flight 34 000; the two
+  // food rows are the everyday ones and stay out of it
+  assert.equal(b.total, 72_290)
+  assert.deepEqual(b.rows.map((r) => [r.category, r.amount]), [
+    ['stays', 34_000], ['transport', 34_000], ['subscriptions', 3290], ['gear', 1000],
+  ])
+  // it ties to the rate's own basis by construction
+  const settled = mLedger.filter((x) => x.date <= today)
+  const sum = (rows: LedgerEntry[]) => rows.reduce((a, x) => a + toBase(x.amount, x.currency, rates), 0)
+  const spent = sum(settled)
+  const everyday = sum(everydayOnly(settled))
+  assert.equal(b.total, spent - everyday)
+  // scheduled rows are not "spent so far" and never reach this figure
+  assert.equal(beyondEveryday([...mLedger, e('ahead', '2026-12-01', 'gear', 500, 'HUF')], rates, today).total, 72_290)
 })

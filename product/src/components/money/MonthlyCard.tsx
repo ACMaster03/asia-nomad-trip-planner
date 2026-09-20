@@ -1,48 +1,92 @@
 'use client'
-import { useMemo } from 'react'
-import { monthlyBuckets, type CityCost } from '@/lib/trips/budget'
-import { monthShort, fmtMoney } from '@/lib/trips/format'
-import type { TripState } from '@/lib/trips/types'
+import { monthShort } from '@/lib/trips/format'
+import type { MonthOut } from '@/lib/trips/spending'
 
-// "To cover the plan" — the old Monthly tab in one card: what has to come in
-// each month, rent and daily living spread across nights, flights in the
-// month they happen. Unchanged maths; just the words around it are gone.
+// "To cover the plan" — what has to leave the account each month.
+//
+// Rebuilt on the LIVE projection (owner decision, 2026-09-19). It used to run
+// on monthlyBuckets(): catalogue city averages spread over the nights, summing
+// to the pre-trip plan. Once the pre-trip estimate came off the overview, this
+// card was the last place on the page where a number invented before departure
+// survived — and it disagreed with everything above it by the amount Bangkok
+// was coming in under its estimate, with nothing saying which was which.
+//
+// Now every bar is built from the same terms as projection.projected
+// (monthlyOutflow, spending.ts), so the card ends on the figure the overview
+// and the Plan card both quote. Four families, and the bar length compares
+// months while the segments split each one.
+//
+// Planned one-offs are deliberately absent: `state.extras` carry no date, they
+// were never inside projection.projected either, and choosing a month for a
+// visa fee to land in would put back exactly the kind of fiction this rebuild
+// took out. The footnote says so and points at the card that does carry them.
 
-export function MonthlyCard({ state, cityIdx, fmt }: { state: TripState; cityIdx: Record<string, CityCost>; fmt: (n: number) => string }) {
-  const v = useMemo(() => {
-    const { M, order } = monthlyBuckets(state, cityIdx)
-    let nights = 0, a = 0, l = 0
-    order.forEach((k) => { nights += M[k].nights; a += M[k].accom; l += M[k].live })
-    const perMonth = (nights ? (a + l) / nights : 0) * 365 / 12
-    const max = order.reduce((m, k) => Math.max(m, M[k].accom + M[k].live + M[k].transport), 0)
-    return { M, order, perMonth, max }
-  }, [state, cityIdx])
-  if (!v.order.length) return null
-  const usd = state.meta.baseCurrency !== 'USD' && state.rates?.USD ? fmtMoney(v.perMonth / state.rates.USD, 'USD') : null
+const BANDS = [
+  { key: 'stays', label: 'Stays', cls: 'bg-ac' },
+  { key: 'living', label: 'Daily living', cls: 'bg-cat-daily' },
+  { key: 'transport', label: 'Transport', cls: 'bg-ac2' },
+  { key: 'subs', label: 'Subscriptions', cls: 'bg-cat-activity' },
+] as const
+
+export function MonthlyCard({ months, total, plannedExtras, fmt }: {
+  months: MonthOut[]
+  total: number
+  /** included state.extras — named, not counted (see the note above) */
+  plannedExtras: number
+  fmt: (n: number) => string
+}) {
+  if (!months.length) return null
+  const max = months.reduce((m, b) => Math.max(m, b.total), 0)
+  const peak = months.reduce((m, b) => (b.total > m.total ? b : m), months[0])
+
   return (
     <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
-      <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">To cover the plan</div>
-      <div className="mt-0.5 text-[22px] font-semibold">
-        ≈ {fmt(v.perMonth)} <span className="text-[15px] font-medium text-tx2">per month{state.meta.travelers === 2 ? ', between you' : ''}</span>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">To cover the plan</span>
+        <span className="text-[13px] text-tx3">what has to come in</span>
       </div>
       <div className="mt-1 text-[13px] text-tx2">
-        {usd ? `≈ ${usd} · ` : ''}stays and everyday costs spread over the months you’re away; flights land in the month they happen.
+        Biggest month is <b className="text-tx">{monthShort(peak.key).slice(0, 3)}</b> at {fmt(peak.total)}.
       </div>
       <div className="mt-3 flex flex-col gap-[7px] text-[13px]">
-        {v.order.map((k, i) => {
-          const b = v.M[k]
-          const mt = b.accom + b.live + b.transport
-          return (
-            <div key={k} className="flex items-center gap-2.5">
-              <span className="w-11 flex-none text-tx2">{monthShort(k).slice(0, 3)}</span>
-              <span className="h-2 flex-1 overflow-hidden rounded-full bg-track">
-                <span className="lv-grow block h-full rounded-full bg-ac" style={{ width: Math.round((v.max ? mt / v.max : 0) * 100) + '%', animationDelay: `${i * 0.05}s` }} />
-              </span>
-              <b className="w-[84px] flex-none text-right">{fmt(mt)}</b>
-            </div>
-          )
-        })}
+        {months.map((b, i) => (
+          <div key={b.key} className="flex items-center gap-2.5">
+            <span className="w-11 flex-none text-tx2">{monthShort(b.key).slice(0, 3)}</span>
+            <span className="flex h-2 flex-1 overflow-hidden rounded-full bg-track">
+              {BANDS.map((band) => {
+                const v = b[band.key]
+                if (v <= 0) return null
+                return (
+                  <span
+                    key={band.key}
+                    className={'lv-grow block h-full ' + band.cls}
+                    style={{ width: (max ? (v / max) * 100 : 0) + '%', animationDelay: `${i * 0.05}s` }}
+                  />
+                )
+              })}
+            </span>
+            <b className="w-[84px] flex-none text-right">{fmt(b.total)}</b>
+          </div>
+        ))}
       </div>
+      <div className="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-[12px] text-tx2">
+        {BANDS.map((band) => (
+          <span key={band.key} className="flex items-center gap-1.5">
+            <i aria-hidden className={'size-2.5 rounded-full ' + band.cls} />
+            {band.label}
+          </span>
+        ))}
+      </div>
+      <div className="mt-3 flex items-baseline justify-between gap-3 border-t border-ln pt-3 text-base">
+        <b>Projected total</b>
+        <b>{fmt(total)}</b>
+      </div>
+      {plannedExtras > 0 && (
+        <p className="mt-1.5 text-[13px] text-tx2">
+          Planned one-offs ({fmt(plannedExtras)}) are not in these bars — they carry no date to land on. They are on
+          the One-offs card above, beside what you have actually paid.
+        </p>
+      )}
     </div>
   )
 }

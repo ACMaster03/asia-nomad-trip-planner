@@ -79,6 +79,56 @@ divergence between mocks is a bug.
   ฿500→5,200 (Transport, Anna). Month-to-date: In +513,500 · Out 55,200 · Net +458,300.
   August: flight 372,000 (Aug 31) + apartment 437,000 (Aug 25) → Out 809,000.
 
+## Subscriptions canon (issue #37 — SHIPPED 2026-09-20)
+
+Five recurring costs from home, all in HUF, all billed to the same card. **Anchor day + cadence
+is declared, never inferred from the ledger.** Deliberately none of the active ones charges
+between Sep 1 and Sep 12, so the September ledger canon above stays untouched.
+
+| Subscription | Amount | Cadence | Anchor | Next (as of Sep 12) | Reminder |
+|---|---|---|---|---|---|
+| iCloud 2 TB | **3,290** | monthly | 14th | **Mon Sep 14** (in 2 days) | off |
+| Spotify Duo | **2,490** | monthly | 17th | Thu Sep 17 | off |
+| Home internet · Budapest flat | **7,990** | monthly | 23rd | Wed Sep 23 | **on, T-3** |
+| Domain + hosting | **18,000** | yearly | Nov 12 | Thu Nov 12 | **on, T-7** |
+| Netflix | 4,490 | monthly | 20th | — **cancelled Sep 6** | — |
+
+- Active monthly run-rate = 3,290 + 2,490 + 7,990 + (18,000 / 12 = 1,500) = **15,270 Ft / month**.
+- Netflix: last charge **Aug 20** (pre-departure), cancelled **Sep 6**, so **0 charges on this trip**.
+  It stays listed, struck through, behind a "Show cancelled (1)" toggle — cancel is a state, never
+  a delete.
+- **Counted charge by charge — NOT amortised** (corrected 2026-09-20, when the feature was built).
+  From Sep 13 to the Feb 25 end: iCloud ×6 + Spotify ×6 + internet ×6 + the single Nov 12 domain
+  renewal = 6×3,290 + 6×2,490 + 6×7,990 + 18,000 = **100,620 Ft**. Across the whole trip the same
+  100,620, since nothing charges between Aug 31 and Sep 12 by construction.
+  An earlier draft amortised the run-rate over the days instead (15,270 × 166/30.4 ≈ 84,000) and so
+  billed 1/12 of the yearly domain fee per month when the whole 18,000 actually leaves the account
+  on Nov 12. **Amortising understates the cash by the part of a yearly renewal that falls inside the
+  window, and it cannot place a charge in a month** — which the monthly bars have to do. The
+  15,270/month run-rate is still the right headline for "what do these cost me"; it is just not the
+  right way to total a window.
+- **Effect on the projection (live read).** The Money overview quotes `projection.projected`,
+  built from the observed pace — not the pre-trip plan. Stops subtotal 3,479,800 + transport
+  372,000 + residual 180,000 = **4,031,800**; with subscriptions ahead (100,620) =
+  **4,132,420 = 92% of the 4,500,000 cap**. So subscriptions move it **90% → 92%**, two points.
+  (The first draft claimed two points by measuring against the planning figure, which was wrong
+  reasoning; the second draft corrected it to one point by amortising, which was the wrong total.
+  Two points, counted properly, is the answer.)
+  The per-day rate is unchanged — subscriptions stay in `NON_DAILY_CATEGORIES`.
+- **The overview progress bar measures ACTUAL against the cap**, not spend against a forecast
+  (owner decision, 2026-09-19): **1,044,200 / 4,500,000 = 23%**, 3,455,800 left. The pre-trip
+  estimate line (`budget.grand`) is gone from the page; `projection.projected` keeps its tile.
+- **The planning figure is GONE from the page** (built 2026-09-20). The monthly card was the last
+  thing standing on it — 4,112,000 + 100,620 = 4,212,620, differing from the live 4,132,420 because
+  Bangkok is coming in under its 780,000 pre-trip estimate — and it now runs on the live projection
+  like everything else (`monthlyOutflow`, spending.ts). The figure is kept here only to explain the
+  gap; nothing renders it.
+- Subscriptions per month, on the dates they actually charge: Sep–Feb **13,770** each
+  (3,290 + 2,490 + 7,990), plus **18,000** in Nov for the domain → Nov is **31,770**.
+  Sum 100,620. Amortising them evenly (the earlier draft's ~15,000/month) is what the bullet above
+  rejects — a bar for November that hides an 18,000 renewal is the kind of smoothing this page
+  exists to stop doing.
+
 ## Canonical check-ins / events (reuse EVERYWHERE: 02, 06, 07, 08, 10)
 
 Same date/time/author/rating and ONE canonical comment string each:
