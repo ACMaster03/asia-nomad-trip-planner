@@ -38,10 +38,17 @@ import { get } from "idb-keyval";
 // (cookies included) and store it under the 'pages' cache the navigation
 // handler reads. Redirected responses are skipped — they can't legally answer
 // a navigation, and a login redirect cached here would trap the user.
+// Warming in flight, so a real navigation can call it off (see the plugin on
+// the navigation route below).
+let warmAbort: AbortController | null = null;
+
 self.addEventListener("message", (event) => {
   const data = event.data as { type?: string; urls?: string[] } | null;
   if (data?.type !== "WARM_PAGES" || !Array.isArray(data.urls)) return;
   const urls = data.urls;
+  warmAbort?.abort();
+  const ac = new AbortController();
+  warmAbort = ac;
   event.waitUntil(
     (async () => {
       const cache = await caches.open("pages");
@@ -50,12 +57,24 @@ self.addEventListener("message", (event) => {
       // navigation the user is actually waiting on — which the NetworkFirst
       // handler below then gives up on, showing the offline page while online.
       // Warming is background work; it has no business winning that race.
+      //
+      // Sequential was not enough on its own: ONE warm fetch still shares the
+      // link with the navigation that started during it, and /live is both the
+      // heaviest document (claims + active trip + role + prefetch) and the one
+      // behind the button people press first. So warming now also yields — the
+      // abort below drops the in-flight warm request the moment a navigation
+      // needs the connection — and asks for the low priority it deserves.
       for (const url of urls) {
+        if (ac.signal.aborted) return;
         try {
-          const resp = await fetch(url, { credentials: "same-origin" });
+          const resp = await fetch(url, {
+            credentials: "same-origin",
+            signal: ac.signal,
+            priority: "low",
+          } as RequestInit);
           if (resp.ok && !resp.redirected) await cache.put(url, resp);
         } catch {
-          /* offline while warming — never mind */
+          /* offline, or a navigation called this off — never mind */
         }
       }
     })(),
@@ -133,7 +152,19 @@ const serwist = new Serwist({
         // user is OFFLINE while they are not. The timeout exists so a truly
         // dead network reaches the cache quickly, not to police slow ones.
         networkTimeoutSeconds: 25,
-        plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 30 * 24 * 60 * 60 })],
+        plugins: [
+          new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 30 * 24 * 60 * 60 }),
+          {
+            // Someone is waiting on this one. Anything we are warming in the
+            // background gets out of its way, because losing a warm fetch
+            // costs a future offline launch, and losing THIS one costs the
+            // offline page on a working connection.
+            requestWillFetch: async ({ request }) => {
+              warmAbort?.abort();
+              return request;
+            },
+          },
+        ],
       }),
     },
     // NEVER CACHE RSC PAYLOADS. Serwist's defaultCache keeps them for 24h in

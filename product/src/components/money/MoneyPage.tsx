@@ -10,6 +10,8 @@ import { useTripRole } from '@/lib/trips/useTripRole'
 import { useToday } from '@/lib/useToday'
 import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { moneyModel } from '@/lib/trips/moneyModel'
+import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
+import { countryCurrencies } from '@/lib/catalogue/countryCurrencies'
 import { addDays } from '@/lib/trips/spending'
 import { tripDay } from '@/lib/trips/progress'
 import { SaveError } from '@/components/trips/SaveError'
@@ -91,6 +93,16 @@ export default function MoneyPage() {
   const pct = projection.projected > 0 ? Math.min(100, Math.round((projection.spent / projection.projected) * 100)) : 0
   const cap = s.meta.budgetCap || 0
   const lastCur = ledger.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).find((e) => e.type === 'expense')?.currency ?? base
+  // A new entry opens on the money you are actually holding today. `current` is
+  // the stop that contains today's date, so this is empty before departure and
+  // on the days between stops, and the sheet falls back to what you last typed.
+  const hereCodes = countryCurrencies(current?.country)
+  const entryCur = pickEntryCurrency({
+    hereCodes,
+    watched: Object.keys(s.rates ?? {}),
+    lastUsed: lastCur,
+    base,
+  })
 
   function save(entry: LedgerEntry) {
     mut.mutate({ kind: 'upsert', entry })
@@ -219,7 +231,8 @@ export default function MoneyPage() {
           initial={sheet.entry}
           ledger={ledger}
           rates={s.rates}
-          defaultCur={lastCur}
+          defaultCur={entryCur}
+          defaultCurWhere={hereCodes.includes(entryCur) ? current?.country : null}
           onSave={save}
           onDelete={sheet.entry ? del : undefined}
           onClose={() => setSheet(null)}

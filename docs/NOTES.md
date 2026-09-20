@@ -5,6 +5,131 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-19
+
+### DONE — the phone review's findings, minus Money, plus two bugs from the road
+
+A screen-by-screen review came back with six findings. Money's is deliberately
+untouched: the Money v2 mock on `claude/subscription-category-visibility-qur53t`
+plus issues #35 / #37 / #38 / #39 are that same finding already being redesigned,
+and relabelling the live page now would pre-empt it.
+
+**Add entry (the sheet, not the page).** The currency started on the last one
+typed, which is right until you cross a border: a Bangkok stop kept offering the
+currency of the flight that got you there. It now opens on the currency of the
+country containing today's date, falls back to the last used before departure
+and between stops, and never offers a code the trip does not watch, because an
+unwatched code has no rate and would total as zero. `lib/trips/entryCurrency.ts`
+is pure and tested; the caller does the catalogue lookup, since the alias does
+not resolve under the node test runner. The date was a grey "Today - change"
+link and is a labelled field now.
+
+**Tap safety.** "Add stay" and "Delete" sat 16px apart in the same colour inside
+every stop card. Delete moved into the stop editor, below a rule, in the warning
+colour. The editor had no delete at all before this, although the page copy has
+promised one since it was written. The raised centre tab shows the words
+"Check in" like its four siblings.
+
+**Explanations where the choice is made.** Comfort tier says it picks one of the
+city's three nightly price bands and moves nothing you entered yourself.
+Unticking a stop no longer claims to remove it from the budget full stop (see
+the open bug below). The Hazards count chip opens a panel naming its two
+unrelated sources, the real age of the USGS fetch, and the fact that neither
+source is an advisory or a forecast.
+
+**Home.** The trip position was stated three times: header subtitle, stay card,
+and a second progress bar captioned identically to the header. The second bar is
+gone and its unique facts (percentage, date home) joined the "Day N of M" line.
+Activity opens at five rows instead of thirty, expanding in place.
+
+**Explore.** The city detail was every catalogue field in DB order as a
+two-column list, landmarks worst of all at six labelled values per line. It now
+leads with the four things that actually decide a city (day cost, whether you can
+work, this month's weather, what to watch for), gives each landmark a card, and
+puts the rest behind native `<details>`. The summary reads the same keys
+migration 03 seeds, and `PROMOTED` in `CityCard.tsx` keeps them from appearing
+twice; if a key is ever renamed the cost is a repeat, never a blank screen.
+
+### FIXED (symptom) / OPEN (cause) — Check in went to a page, not to a check-in
+
+Reported 2026-09-19 as "the check in button doesn't work, it loads a page that
+shouldn't be there, with another look". Screenshots of both screens settled it,
+and the first guess below was wrong.
+
+**What it is.** The raised tab linked to `/live`, and `/live` is Home again.
+Side by side they carry the same title ("Bangkok, night 19"), the same stay
+line, the same progress bar, the same "10 nights left", the same "Next: Hanoi ·
+30 Sep", the same activity count, and the same full-width green "Check in -
+where are you?" button. So pressing Check in produced a differently-arranged
+copy of the screen you were on, with an identical Check in button sitting in it.
+Read as "nothing happened", which is the correct reading.
+
+**Fixed:** both entry points (the raised tab and Home's own button) now go to
+`/live?checkin=1`, and LiveClient opens the check-in sheet on arrival, dropping
+the parameter so a reload or a back does not reopen it. One press, one sheet.
+
+**Still open:** `/live` and Home should not be two screens. What `/live`
+genuinely adds over Home is Arrived, Note and PLAN VS ACTUAL; everything above
+those is Home restated. The intended end state is already named in AppNav
+("links to /live until Phase 7 replaces that screen with the check-in sheet"):
+the sheet belongs in the layout, and what remains of /live belongs on Home or
+behind Check-ins. That means lifting the check-in mutation, the photo upload
+and the offline outbox out of an 800-line LiveClient, which is a deliberate
+piece of work, not a fix to slip into a review pass. It also decides the
+vocabulary question below, since the Check in / Arrived / Note / Activity split
+is the same duplication seen from the wording side.
+
+### WRONG TURN, kept for the record — the offline page was not the cause
+
+Before the screenshots arrived, "a page with another look" was read as
+`public/offline.html`, on the grounds that it was the only page in the app not
+on the LIVHOLD tokens. It was not what the traveller saw. The rewrite of that
+page stands on its own merits (it was on the dead teal kit, and it asserted
+"You're offline" when the same page also answers a navigation that merely ran
+out of the worker's 25s budget), as does making the offline warm-up yield to a
+real navigation. Neither was this bug.
+
+### OPEN — an unticked stop still owes money for its bookings (Money, not fixed here)
+
+`computeBudget` drops a stop with `include === false`: its nights, its estimate
+and its daily living leave the forecast. `bookingsSummary` does not: it filters
+stays by `stay.include` alone and never looks at the parent segment, so a booked
+hotel for a dropped stop still counts in `paid` / `toPay`, and `importCosts`
+has already written it into the ledger.
+
+Both behaviours are defensible and the current pair is not. Removing the money
+with the stop is the tidier model but deletes real committed spending from the
+ledger, which is the worse failure. The likelier answer is to keep counting it
+and mark the row as belonging to a stop no longer in the plan. Left for the
+Money round rather than decided in passing; the Stops copy now states the actual
+behaviour instead of the tidy one.
+
+### OPEN — what Map is for (Patrik's call)
+
+The review: "the globe, controls, legend, city card and Explore search compete
+for attention; decide whether Map's main job is route overview or city
+discovery, then make that action dominant." That is a decision, not a fix, so
+only the Hazards half was built. Worth settling alongside issue #21, since
+between-trips is exactly when Map stops being a route and becomes a browser.
+
+### OPEN — one vocabulary for Check in, Arrived, Note, Activity, post
+
+Five words for what a traveller does, from five rounds of building. "Check in"
+is the action and a nav label; "Arrived" is a second action on the same screen;
+"Note" is a field inside a check-in; "Activity" is the feed; "post" is what a
+follower sees and what `/post/[id]` is called. Nothing is wrong on its own and
+the set does not add up.
+
+A shape that would: **check in** stays the only verb; what it produces is a
+**post** everywhere, for traveller and follower alike; **Arrived** becomes a
+kind of check-in rather than a sibling action; the feed is **Posts**, not
+Activity; and the free-text field is what it says on the ledger sheet, a
+**note**, lower case, never a section heading. Renaming touches copy, two nav
+labels, a route name and the follower projection, so it wants doing once,
+deliberately, not on the way past.
+
+---
+
 ## 2026-09-18 (evening)
 
 ### IN REVIEW — the planner globe: #32 MERGED (PR #33), #9 open as PR #34
