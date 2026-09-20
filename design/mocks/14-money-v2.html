@@ -271,7 +271,7 @@ main.screen { max-width: 576px; }
         </div>
         <div>
           <div class="eyebrow">Projected total</div>
-          <div class="num" style="font-size:22px;font-weight:600;margin-top:2px;">4 115 800 Ft</div>
+          <div class="num" style="font-size:22px;font-weight:600;margin-top:2px;">4 132 420 Ft</div>
           <div class="s13 muted">153 planned nights, at this pace</div>
         </div>
       </div>
@@ -433,7 +433,7 @@ main.screen { max-width: 576px; }
       </div>
       <hr class="rule">
       <div class="row s14"><span class="muted">4 active</span><span class="grow"></span><b class="num">≈ 15 270 Ft / month</b></div>
-      <div class="row s13" style="margin-top:6px;"><span class="muted">across the remaining 166 days</span><span class="grow"></span><b class="num muted">≈ 84 000 Ft</b></div>
+      <div class="row s13" style="margin-top:6px;"><span class="muted">across the remaining 166 days</span><span class="grow"></span><b class="num muted">100 620 Ft</b></div>
       <div class="row" style="margin-top:14px;gap:8px;">
         <button class="btn sm">＋ Subscription</button>
         <button class="btn ghost sm" data-go="subs">Edit one</button>
@@ -441,10 +441,12 @@ main.screen { max-width: 576px; }
     </div>
     <div class="note">
       Cadence is <b>declared, not inferred</b> (#37). Anchor day + cadence is arithmetic; ledger rows only
-      <i>confirm</i> each occurrence and flag drift. Folding the ≈84 000 into the projection moves it
-      <b>4 031 800 → 4 115 800</b>, i.e. <b>90% → 91% of cap</b>. One point — smaller than I claimed when
-      I was measuring against the pre-trip planning figure, and still the strongest argument for the
-      feature.
+      <i>confirm</i> each occurrence and flag drift. Folding <b>100 620</b> into the projection moves it
+      <b>4 031 800 → 4 132 420</b>, i.e. <b>90% → 92% of cap</b>. Two points, and the way to that number
+      matters: <b>count the charges, do not amortise the run-rate</b>. Spreading 15 270/month over the 166
+      days left (≈84 000, this mock's earlier figure) bills a twelfth of the yearly domain fee per month
+      when the whole 18 000 leaves on 12 Nov — it understates the cash AND it cannot put a charge in a
+      month, which the bars below have to do. Corrected at build, 2026-09-20.
     </div>
   </div>
 
@@ -494,15 +496,15 @@ main.screen { max-width: 576px; }
       <div class="row s14"><span class="muted">Transport</span><span class="grow"></span><b class="num">372 000 Ft</b></div>
       <div class="row s14" style="margin-top:7px;"><span class="muted">Gear, e-SIM, insurance</span><span class="grow"></span><b class="num">180 000 Ft</b></div>
       <div class="s13 faint" style="margin-top:2px;">logged spend that belongs to no stop and no booking</div>
-      <div class="row s14" style="margin-top:7px;"><span class="muted">Subscriptions ahead</span><span class="grow"></span><b class="num">84 000 Ft</b></div>
+      <div class="row s14" style="margin-top:7px;"><span class="muted">Subscriptions ahead</span><span class="grow"></span><b class="num">100 620 Ft</b></div>
       <hr class="rule">
-      <div class="row"><b style="font-size:16px">Projected total</b><span class="grow"></span><b class="num" style="font-size:16px">4 115 800 Ft</b></div>
+      <div class="row"><b style="font-size:16px">Projected total</b><span class="grow"></span><b class="num" style="font-size:16px">4 132 420 Ft</b></div>
     </div>
     <div class="note">
       <b>One figure per stop plus a per-night average</b>, maths on tap. Hanoi at 22 900/night against
       Kuala Lumpur at 19 700 is the comparison that matters; the totals are not comparable because the
       nights differ.<br><br>
-      This card now <b>ends on the same 4 115 800 the overview quotes</b> — the live projection, which is
+      This card now <b>ends on the same 4 132 420 the overview quotes</b> — the live projection, which is
       what <code>projection.projected</code> actually computes. The earlier draft had the hero on canon's
       pre-trip planning figure and this card on the live one, with nothing saying which. Fixed by
       deleting the planning figure, which is the same call you made on the pre-trip estimate.<br><br>
@@ -532,17 +534,20 @@ main.screen { max-width: 576px; }
       <div class="row s14" style="margin-top:6px;"><span class="muted">Planned net burn</span><span class="grow"></span><b class="num" style="color:var(--warn)">−1 202 000 Ft</b></div>
     </div>
     <div class="note">
-      <b>Open item.</b> These bars still run off the pre-trip per-stop estimates and sum to ≈4 200 000,
-      while everything above now speaks in the live projection (4 115 800). Bangkok coming in under
-      estimate is the whole gap. This card is the last place a planning number survives, and it needs
-      the same treatment before build.
+      <b>Settled at build (2026-09-20): rebuilt on the live projection.</b> These bars ran off the
+      pre-trip per-stop estimates and summed to ≈4 200 000 while everything above spoke in the live
+      projection — Bangkok coming in under estimate was the whole gap. <code>monthlyOutflow()</code> now
+      buckets the projection's own terms by month, so the card ends on <b>4 132 420</b> like the rest of
+      the page. Planned one-offs are NOT in the bars: <code>state.extras</code> carry no date, they were
+      never inside <code>projection.projected</code> either, and inventing a month for a visa fee would
+      put back the fiction this round removed. The card footnotes them and points at the One-offs card.
     </div>
   </div>
 
   <!-- ============ 9 · budget cap ============ -->
   <div data-state="money" class="blk">
     <a href="#" class="card row" style="text-decoration:none;color:inherit;">
-      <span class="grow"><b style="font-size:15px">Budget cap</b><span class="s13 muted" style="display:block">4 500 000 Ft · projected uses 91%</span></span>
+      <span class="grow"><b style="font-size:15px">Budget cap</b><span class="s13 muted" style="display:block">4 500 000 Ft · projected uses 92%</span></span>
       <span class="faint">›</span>
     </a>
   </div>

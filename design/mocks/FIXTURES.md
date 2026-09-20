@@ -79,7 +79,7 @@ divergence between mocks is a bug.
   ฿500→5,200 (Transport, Anna). Month-to-date: In +513,500 · Out 55,200 · Net +458,300.
   August: flight 372,000 (Aug 31) + apartment 437,000 (Aug 25) → Out 809,000.
 
-## Subscriptions canon (mock 14 — proposed feature, issue #37)
+## Subscriptions canon (issue #37 — SHIPPED 2026-09-20)
 
 Five recurring costs from home, all in HUF, all billed to the same card. **Anchor day + cadence
 is declared, never inferred from the ledger.** Deliberately none of the active ones charges
@@ -97,24 +97,37 @@ between Sep 1 and Sep 12, so the September ledger canon above stays untouched.
 - Netflix: last charge **Aug 20** (pre-departure), cancelled **Sep 6**, so **0 charges on this trip**.
   It stays listed, struck through, behind a "Show cancelled (1)" toggle — cancel is a state, never
   a delete.
-- Across the whole 179-day trip ≈ **90,000 Ft**; across the 166 days remaining on Sep 12 ≈ **84,000 Ft**.
-- **Effect on the projection (live read, mock 14).** The Money overview quotes
-  `projection.projected`, built from the observed pace — not the pre-trip plan. Stops subtotal
-  3,479,800 + transport 372,000 + residual 180,000 = **4,031,800**; with subscriptions ahead
-  (84,000) = **4,115,800 = 91% of the 4,500,000 cap**. So subscriptions move it **90% → 91%**,
-  one point, not the two an earlier draft claimed by measuring against the planning figure.
+- **Counted charge by charge — NOT amortised** (corrected 2026-09-20, when the feature was built).
+  From Sep 13 to the Feb 25 end: iCloud ×6 + Spotify ×6 + internet ×6 + the single Nov 12 domain
+  renewal = 6×3,290 + 6×2,490 + 6×7,990 + 18,000 = **100,620 Ft**. Across the whole trip the same
+  100,620, since nothing charges between Aug 31 and Sep 12 by construction.
+  An earlier draft amortised the run-rate over the days instead (15,270 × 166/30.4 ≈ 84,000) and so
+  billed 1/12 of the yearly domain fee per month when the whole 18,000 actually leaves the account
+  on Nov 12. **Amortising understates the cash by the part of a yearly renewal that falls inside the
+  window, and it cannot place a charge in a month** — which the monthly bars have to do. The
+  15,270/month run-rate is still the right headline for "what do these cost me"; it is just not the
+  right way to total a window.
+- **Effect on the projection (live read).** The Money overview quotes `projection.projected`,
+  built from the observed pace — not the pre-trip plan. Stops subtotal 3,479,800 + transport
+  372,000 + residual 180,000 = **4,031,800**; with subscriptions ahead (100,620) =
+  **4,132,420 = 92% of the 4,500,000 cap**. So subscriptions move it **90% → 92%**, two points.
+  (The first draft claimed two points by measuring against the planning figure, which was wrong
+  reasoning; the second draft corrected it to one point by amortising, which was the wrong total.
+  Two points, counted properly, is the answer.)
   The per-day rate is unchanged — subscriptions stay in `NON_DAILY_CATEGORIES`.
 - **The overview progress bar measures ACTUAL against the cap**, not spend against a forecast
   (owner decision, 2026-09-19): **1,044,200 / 4,500,000 = 23%**, 3,455,800 left. The pre-trip
   estimate line (`budget.grand`) is gone from the page; `projection.projected` keeps its tile.
-- **Planning figure, retained only for the monthly card** until that card is reconciled:
-  4,112,000 + 90,000 = 4,202,000. It differs from the live 4,115,800 because Bangkok is coming
-  in under its 780,000 pre-trip estimate. Two correct answers to two different questions — the
-  page must never show both without saying which.
-- Monthly cash-out with subscriptions folded in (amortised evenly; Feb is 25 days):
-  Aug 809,000 · Sep **358,000** · Oct **655,000** · Nov **665,000** · Dec **625,000** ·
-  Jan **715,000** · Feb **373,000** → **4,200,000** (2,000 below the 4,202,000 projection: the
-  same rounding drift the Money canon already documents).
+- **The planning figure is GONE from the page** (built 2026-09-20). The monthly card was the last
+  thing standing on it — 4,112,000 + 100,620 = 4,212,620, differing from the live 4,132,420 because
+  Bangkok is coming in under its 780,000 pre-trip estimate — and it now runs on the live projection
+  like everything else (`monthlyOutflow`, spending.ts). The figure is kept here only to explain the
+  gap; nothing renders it.
+- Subscriptions per month, on the dates they actually charge: Sep–Feb **13,770** each
+  (3,290 + 2,490 + 7,990), plus **18,000** in Nov for the domain → Nov is **31,770**.
+  Sum 100,620. Amortising them evenly (the earlier draft's ~15,000/month) is what the bullet above
+  rejects — a bar for November that hides an 18,000 renewal is the kind of smoothing this page
+  exists to stop doing.
 
 ## Canonical check-ins / events (reuse EVERYWHERE: 02, 06, 07, 08, 10)
 
