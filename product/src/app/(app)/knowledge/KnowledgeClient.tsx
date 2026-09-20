@@ -125,7 +125,7 @@ export default function KnowledgeClient() {
             still there.
           </p>
           <Link
-            href="/live"
+            href="/dashboard"
             className="mt-[18px] inline-block rounded-[var(--rCtl)] bg-ac px-5 py-3.5 text-base font-semibold text-on"
           >
             Go to Today →

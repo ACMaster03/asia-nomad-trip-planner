@@ -1,38 +1,22 @@
-import { dehydrate } from '@tanstack/react-query'
-import { HydrationBoundary } from '@/lib/query/HydrationBoundary'
-import { createClient } from '@/lib/supabase/server'
-import { prefetchTripScreen, getActiveTrip } from '@/lib/trips/prefetch'
-import { fetchTripRole, canEditRole } from '@/lib/trips/role'
-import { NoAccess } from '@/components/trips/NoAccess'
-import LiveClient from './LiveClient'
+import { redirect } from 'next/navigation'
 
-// The event feed itself is fetched client-side (it's clock-dependent and
-// changes constantly); the server prefetch covers the trip document + cities,
-// same as every other trip screen.
-export default async function LivePage() {
-  // VIEWER ON AN OWNER URL. The nav already hides /live from viewers, but a
-  // pasted link bypasses the nav — and every action on this screen is a write,
-  // so a viewer would meet nothing but failures. Refuse it here, on the server,
-  // and say why. (The database refuses the writes regardless; this is about not
-  // showing someone a screen made entirely of buttons they cannot press.)
-  //
-  // Resolved from the verified claims rather than a getUser() round trip:
-  // /live is the screen most likely to be opened on bad hotel wifi.
-  const sb = await createClient()
-  const [{ data: claims }, trip] = await Promise.all([sb.auth.getClaims(), getActiveTrip()])
-  if (trip) {
-    const role = await fetchTripRole(sb, trip.id, claims?.claims?.sub as string | undefined).catch(
-      () => null,
-    )
-    // null → the check itself failed (offline/flaky). Fall through to the screen
-    // rather than locking the traveller out of check-ins over a network blip.
-    if (role !== null && !canEditRole(role)) return <NoAccess />
-  }
-
-  const qc = await prefetchTripScreen()
-  return (
-    <HydrationBoundary state={dehydrate(qc)}>
-      <LiveClient />
-    </HydrationBoundary>
-  )
+// /live is retired. It was Home a second time: same title, same stay line, same
+// progress bar, same "Next" row and the same full-width Check in button, so
+// pressing Check in appeared to do nothing and landed the traveller on a
+// rearranged copy of the screen they started on.
+//
+// Everything it had that Home did not has moved:
+//   check-in sheet  → components/checkin/CheckInProvider (opens over any screen)
+//   Note            → a mode of that sheet
+//   Arrived         → Home, arrival day only, once
+//   Plan vs actual  → components/trips/PlanVsActual, rendered on Home
+//   edit / delete / queued → Home's feed rows (components/social/SocialRow)
+//
+// A REDIRECT, not a deletion, and it should stay one. Installed apps hold
+// their last URL, service-worker shells cache documents by path, and phones
+// carry bookmarks; a 404 would be the reward for having used the app before
+// today. The folder keeps its name because CheckInModal, EditEventModal,
+// FollowerNudge and Sheet still live in it and are imported from elsewhere.
+export default function LivePage() {
+  redirect('/dashboard')
 }

@@ -1,6 +1,5 @@
 'use client'
-import { createContext, useContext, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { createContext, useContext, useState } from 'react'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
@@ -33,19 +32,18 @@ export function CheckInProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const [nudge, setNudge] = useState(false)
 
-  // Compatibility shim. Until this shipped, Check in was a link to
-  // /live?checkin=1, so an installed app can still be holding that URL in a
-  // restored tab or a cached shell. Honour it, then clear it with the native
-  // history API (no navigation, no request) so a reload does not reopen it.
-  const wantCheckin = useSearchParams().get('checkin') === '1'
-  const [seenParam, setSeenParam] = useState(wantCheckin)
-  if (wantCheckin !== seenParam) {
-    setSeenParam(wantCheckin)
-    if (wantCheckin) setOpen(true)
-  }
-  useEffect(() => {
-    if (wantCheckin) window.history.replaceState(null, '', window.location.pathname)
-  }, [wantCheckin])
+  // NO ?checkin=1 SHIM HERE, deliberately. The brief version of this app
+  // opened the sheet from that parameter, and the obvious thing was to keep
+  // honouring it for installed apps holding the old URL. Two reasons not to:
+  //
+  //  - /live redirects to /dashboard and Next drops the query string, so the
+  //    parameter never arrives at the screen that would read it. The shim
+  //    would be dead code for the only case it was written for.
+  //  - useSearchParams in a provider that wraps every screen needs a Suspense
+  //    boundary the moment any page under this layout is statically rendered,
+  //    and the build says so. Carrying that for dead code is a poor trade.
+  //
+  // A stale URL costs one extra tap, once.
 
   return (
     <CheckInCtx.Provider value={{ open: () => setOpen(true) }}>

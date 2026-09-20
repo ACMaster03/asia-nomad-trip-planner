@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
-import { Dot, Image as ImageIcon, MapPin, MessageCircle, NotebookPen, PlaneLanding, RadioTower } from 'lucide-react'
+import { Dot, Hourglass, Image as ImageIcon, MapPin, MessageCircle, NotebookPen, PlaneLanding, RadioTower } from 'lucide-react'
 import { followMediaUrl, type SharedEvent } from '@/lib/follow/api'
 import { REACTION_KINDS, type PostSocial } from '@/lib/follow/social'
 import { timeAgo } from '@/lib/trips/format'
@@ -22,7 +22,7 @@ export function Stars({ n }: { n: number }) {
 }
 
 export function SocialRow({
-  e, href, social, byline, tone = 'mauve', onReact, reacting,
+  e, href, social, byline, tone = 'mauve', onReact, reacting, queued, edited, onEdit, onDelete,
 }: {
   e: SharedEvent
   href: string
@@ -34,6 +34,18 @@ export function SocialRow({
   /** present when the caller may react (signed in); opens the post page otherwise */
   onReact?: (kind: string | null) => void
   reacting?: boolean
+  // ---- traveller-only affordances -----------------------------------------
+  // Only Home and /live pass these; the follow page and the journey page never
+  // do, so a follower can never be shown a delete button for someone else's
+  // post. Ported from /live's own feed rather than reinvented, because that
+  // feed is going away and these are the parts of it worth keeping.
+  /** written while offline and still sitting in the outbox */
+  queued?: boolean
+  /** the author has changed it since posting */
+  edited?: boolean
+  /** own check-ins and notes only: arrived/media rows have no words to change */
+  onEdit?: () => void
+  onDelete?: () => void
 }) {
   const Icon = EVENT_ICON[e.kind] ?? Dot
   const photos = e.payload.photos ?? []
@@ -70,22 +82,42 @@ export function SocialRow({
               )}
             </span>
           )}
-          <span className="block text-base text-tx2">{timeAgo(e.occurred_at)}</span>
+          <span className="block text-base text-tx2">
+            {timeAgo(e.occurred_at)}
+            {edited ? ' · edited' : ''}
+          </span>
         </span>
+        {queued && (
+          <span className="inline-flex flex-none items-center gap-1 self-start rounded-full border-[1.4px] border-warn-line px-2.5 py-0.5 text-base font-semibold text-warn">
+            <Hourglass aria-hidden className="size-3.5" strokeWidth={2} /> queued
+          </span>
+        )}
       </Link>
-      {social && (
+      {(social || onEdit || onDelete) && (
         <div className="-mt-1.5 mb-2.5 ml-[54px] flex flex-wrap items-center gap-2">
-          {onReact ? (
+          {social && onReact ? (
             <ReactChip mine={social.mine ?? null} glyph={mineGlyph ?? null} total={tallyTotal} tally={social.tally} onReact={onReact} busy={!!reacting} />
-          ) : tallyTotal > 0 ? (
+          ) : social && tallyTotal > 0 ? (
             <span className="inline-flex h-8 items-center gap-1 rounded-full bg-fill px-2.5 text-[13px] font-semibold text-tx2">
               {(social.tally ?? []).slice(0, 3).map((t) => REACTION_KINDS.find((k) => k.key === t.kind)?.glyph).join('')} {tallyTotal}
             </span>
           ) : null}
-          <Link href={href} className="inline-flex h-8 items-center gap-1 rounded-full bg-fill px-2.5 text-[13px] font-semibold text-tx2">
-            <MessageCircle className="size-4" aria-hidden />
-            {social.commentCount > 0 ? social.commentCount : 'Comment'}
-          </Link>
+          {social && (
+            <Link href={href} className="inline-flex h-8 items-center gap-1 rounded-full bg-fill px-2.5 text-[13px] font-semibold text-tx2">
+              <MessageCircle className="size-4" aria-hidden />
+              {social.commentCount > 0 ? social.commentCount : 'Comment'}
+            </Link>
+          )}
+          {onEdit && (
+            <button type="button" onClick={onEdit} className="inline-flex h-8 items-center rounded-full bg-fill px-2.5 text-[13px] font-semibold text-tx2">
+              Edit
+            </button>
+          )}
+          {onDelete && (
+            <button type="button" onClick={onDelete} className="inline-flex h-8 items-center rounded-full bg-fill px-2.5 text-[13px] font-semibold text-ac2-deep">
+              Delete
+            </button>
+          )}
         </div>
       )}
     </li>

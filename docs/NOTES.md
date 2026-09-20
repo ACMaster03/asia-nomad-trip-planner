@@ -50,6 +50,48 @@ puts the rest behind native `<details>`. The summary reads the same keys
 migration 03 seeds, and `PROMOTED` in `CityCard.tsx` keeps them from appearing
 twice; if a key is ever renamed the cost is a repeat, never a blank screen.
 
+### DONE — /live is retired; everything it had that Home lacked moved to Home
+
+The duplication behind the "check in does nothing" report is gone. /live was
+Home a second time and is now a redirect to /dashboard. A redirect, not a
+deletion: installed apps hold their last URL, the worker caches documents by
+path, and phones carry bookmarks.
+
+Where each piece went, so nothing was dropped:
+
+| /live had | now |
+|---|---|
+| check-in sheet | `components/checkin/CheckInProvider`, mounted above every screen |
+| Note | a mode of that sheet, placeless on purpose |
+| Arrived | Home, arrival day only, gone once recorded |
+| Plan vs actual | `components/trips/PlanVsActual`, rendered on Home |
+| edit / delete / queued | Home's feed rows via `SocialRow` |
+| pre / post phase screens | Home already had its own, BeforeYouFly included |
+
+Two bugs fell out of the merge rather than being looked for. Home's "Arrived"
+was a LINK to /live, so it recorded nothing and moved you to a screen with
+another Arrived button on it. /live's was a real button shown every day of the
+trip with no already-recorded check, so it wrote duplicate events while its
+toast claimed "the button is done for this stop".
+
+`app/(app)/live/` keeps its name because CheckInModal, EditEventModal,
+FollowerNudge and Sheet still live there and are imported from elsewhere. Worth
+moving under `components/` one day; not worth the import churn in the same
+change that deletes the screen.
+
+### NOTE FOR ANYONE VERIFYING UI HERE — the dev server cannot be driven
+
+Its HMR websocket never connects in the Claude Code sandbox, so React never
+hydrates: `next dev` serves correct HTML in which every control is inert. That
+is why the /dev/*-preview routes looked like they were stuck waiting on
+Supabase earlier in this branch. They were not.
+
+`next build && next start` hydrates fine and can be driven with Playwright. A
+throwaway probe page under `app/dev/` that renders the component with the real
+provider stack, and NO `NODE_ENV` guard so it survives a production build, is
+the way to actually look at a change before shipping it. Everything in this
+round was checked that way.
+
 ### FIXED (symptom) / OPEN (cause) — Check in went to a page, not to a check-in
 
 Reported 2026-09-19 as "the check in button doesn't work, it loads a page that
