@@ -29,6 +29,21 @@
 --     supabase functions deploy subscription-alerts --project-ref <ref>
 --
 -- (Docker must be running; see the digest note in docs/NOTES.md.)
+--
+-- AND CHECK IT ANSWERS 403, NOT 401. A newly deployed function defaults to
+-- verify_jwt = true, and this job sends the signed x-cron-ts / x-cron-sig pair
+-- with no Authorization header — so the platform refuses it with
+-- 401 UNAUTHORIZED_NO_AUTH_HEADER before hasCronSecret ever runs. Silent, daily,
+-- and the same shape as the outage 38 cleaned up. It happened on the first
+-- staging deploy of this function (2026-09-20).
+--
+--     curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+--       https://<ref>.supabase.co/functions/v1/subscription-alerts
+--
+-- 403 = this function's own gate refusing an unsigned call, which is correct.
+-- 401 = the platform's JWT gate; redeploy with --no-verify-jwt. The
+-- [functions.subscription-alerts] block in supabase/config.toml is what stops
+-- that regressing on the next deploy.
 -- ============================================================================
 
 select cron.schedule('subscription-alerts-daily', '30 7 * * *', $cron$

@@ -157,6 +157,28 @@ enable_signup = false
 enable_confirmations = false
 max_frequency = "5s"
 
+# --- Edge Functions ---------------------------------------------------------
+# READ BY `supabase functions deploy`, NOT by `config push`. The wrapper above
+# pushes auth and storage; nothing here is sent by it.
+#
+# WHY IT MATTERS. A freshly deployed function defaults to verify_jwt = TRUE, and
+# the cron jobs present a signed x-cron-ts / x-cron-sig pair with NO
+# Authorization header (migration 30). The platform then answers 401
+# UNAUTHORIZED_NO_AUTH_HEADER before the function's own `hasCronSecret` gate ever
+# runs — a daily failure that looks exactly like silence. That is the same shape
+# as the outage migration 38 was written to clean up, and it bit
+# subscription-alerts on its first staging deploy (2026-09-20): it answered 401
+# where stay-deadline-alerts, fx-refresh and digest-send all answer 403.
+#
+# Declaring it here means the next `functions deploy` cannot quietly re-enable
+# it, which relying on the --no-verify-jwt flag would.
+#
+# The other functions are deliberately NOT listed: their dashboard setting is
+# already correct (verified by probe) and adding them from assumption could
+# change a working one on its next deploy. Add a block when you next touch one.
+[functions.subscription-alerts]
+verify_jwt = false
+
 # --- per-target differences -------------------------------------------------
 # Selected by project ref: `supabase config push --project-ref <ref>` applies the
 # remote whose project_id matches. Everything not repeated here is inherited.

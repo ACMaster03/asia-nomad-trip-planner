@@ -73,6 +73,30 @@ Docker must be running for the deploy (see the digest note, 2026-08-28). The
 function needs no new secrets — it reuses `CRON_SECRET`, `RESEND_API_KEY` and
 `ALERTS_FROM`.
 
+**Hit on the first staging deploy, 2026-09-20 — a new function defaults to
+`verify_jwt = true`.** The cron jobs send the signed `x-cron-ts` / `x-cron-sig`
+pair and NO `Authorization` header, so the platform answers
+`401 UNAUTHORIZED_NO_AUTH_HEADER` before `hasCronSecret` runs. Daily, silent,
+and indistinguishable from "nothing was due" — the same shape as the outage 38
+was written to clean up. Probing staging made it obvious:
+
+    stay-deadline-alerts   403 forbidden            ← its own gate, correct
+    fx-refresh             403 {"error":"forbidden"}
+    digest-send            403 forbidden
+    subscription-alerts    401 UNAUTHORIZED_NO_AUTH_HEADER   ← platform gate
+
+So **after every deploy of a cron-invoked function, curl it unsigned and expect
+403**. One line, and it catches the whole class:
+
+    curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+      https://<ref>.supabase.co/functions/v1/subscription-alerts
+
+The fix is `--no-verify-jwt` on the deploy, and
+`[functions.subscription-alerts] verify_jwt = false` now lives in
+`supabase/config.toml` so a later redeploy cannot quietly turn it back on. The
+other three functions are left alone there: their dashboard setting is already
+right, and configuring them from assumption could break a working one.
+
 **The one thing worth knowing** if this ever misfires: `alert_log` is unique on
 (trip, item, kind, recipient) **forever**, which is right for a one-off stay
 deadline and wrong for anything recurring. The function puts the charge date in
