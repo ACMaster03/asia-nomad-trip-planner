@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MapPin, Send, X } from 'lucide-react'
+import { MapPin, NotebookPen, Send, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { fetchPlaces, insertUserPlace } from '@/lib/catalogue/queries'
 import { qk } from '@/lib/catalogue/keys'
@@ -42,15 +42,26 @@ export function CheckInModal({
   saving,
   onClose,
   onSave,
+  onSaveNote,
 }: {
   cityName: string | null
   cities: CityLite[]
-  // recent check-in place names, newest first (LiveClient derives from feed)
+  // recent check-in place names, newest first (useTripEvents derives from feed)
   recent: string[]
   online: boolean
   saving: boolean
   onClose: () => void
   onSave: (v: CheckInInput) => void
+  /**
+   * Post a placeless note. Given, the sheet grows a second mode; omitted, it
+   * is a check-in sheet exactly as before.
+   *
+   * A note is NOT a check-in with the place left blank: "visa extension
+   * approved" or "lost the charger" belong to the trip, not to a café. They
+   * share a sheet because they are both "record something that happened", and
+   * nothing else.
+   */
+  onSaveNote?: (text: string) => boolean
 }) {
   const sb = createClient()
   const qc = useQueryClient()
@@ -75,6 +86,8 @@ export function CheckInModal({
   })
 
   const cityPin: Sel | null = cityName ? { placeId: null, placeName: cityName } : null
+  const [mode, setMode] = useState<'checkin' | 'note'>('checkin')
+  const [note, setNote] = useState('')
   const [q, setQ] = useState('')
   const [sel, setSel] = useState<Sel | null>(cityPin)
   const [rating, setRating] = useState<number | null>(null)
@@ -142,8 +155,69 @@ export function CheckInModal({
   }
   if (sel && !pinActive && !seen.has(sel.placeName.toLowerCase())) chips.unshift(sel.placeName)
 
+  // BOTH branches return <Sheet> as this component's root, so React reconciles
+  // one Sheet instance across a mode change: the sheet does not remount and the
+  // body scroll lock is never released and retaken mid-switch.
+  const modeSwitch = onSaveNote && (
+    <div
+      className="flex rounded-[14px] border-[1.5px] border-ln2 bg-inp p-[3px]"
+      role="radiogroup"
+      aria-label="What are you recording?"
+    >
+      {(['checkin', 'note'] as const).map((m) => (
+        <button
+          key={m}
+          role="radio"
+          aria-checked={mode === m}
+          onClick={() => setMode(m)}
+          className={
+            'flex-1 rounded-[11px] py-2 text-base font-semibold ' +
+            (mode === m ? 'bg-sf text-tx shadow-sm' : 'text-tx2')
+          }
+        >
+          {m === 'checkin' ? 'Check in' : 'Note'}
+        </button>
+      ))}
+    </div>
+  )
+
+  if (mode === 'note' && onSaveNote) {
+    return (
+      <Sheet label="Add a note" onClose={onClose}>
+        {modeSwitch}
+        <div className="flex items-center gap-2 font-serif text-[21px] font-semibold">
+          <NotebookPen aria-hidden className="size-5 flex-none" strokeWidth={2} /> Note
+        </div>
+        <label className="block text-base font-medium text-tx2">
+          What happened?
+          <textarea
+            rows={4}
+            autoFocus
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Visa extension approved. Left the charger in Chiang Mai."
+            className="mt-1.5 w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base text-tx outline-none transition-colors duration-[180ms] focus:border-ac"
+          />
+          <span className="mt-1 block text-[13px] font-normal text-tx3">
+            Goes on the trip, not on a place. Only the two of you see it.
+          </span>
+        </label>
+        <button
+          onClick={() => {
+            if (onSaveNote(note)) onClose()
+          }}
+          disabled={!note.trim()}
+          className="w-full rounded-[var(--r)] bg-ac py-4 text-[17px] font-semibold text-on transition-colors disabled:opacity-50"
+        >
+          {online ? 'Save note' : 'Save - will queue offline'}
+        </button>
+      </Sheet>
+    )
+  }
+
   return (
     <Sheet label="Check in" onClose={onClose}>
+      {modeSwitch}
       <div className="flex items-center gap-2 font-serif text-[21px] font-semibold">
         <MapPin aria-hidden className="size-5 flex-none" strokeWidth={2} /> Check in
       </div>

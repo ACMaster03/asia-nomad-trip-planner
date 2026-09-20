@@ -58,7 +58,7 @@ export function CheckInProvider({ children }: { children: React.ReactNode }) {
 
 function Sheet({ onClose, onNudge }: { onClose: () => void; onNudge: (v: boolean) => void }) {
   const { trip, cities } = useTripScreen()
-  const { recentPlaces, online, saving, saveCheckIn } = useTripEvents({ onNudge })
+  const { recentPlaces, online, saving, saveCheckIn, saveNote } = useTripEvents({ onNudge })
   const state = trip.data?.state
   // Computed here rather than at provider level: it needs today's date, and
   // this component only ever renders after a tap, long past hydration.
@@ -77,6 +77,7 @@ function Sheet({ onClose, onNudge }: { onClose: () => void; onNudge: (v: boolean
       saving={saving}
       onClose={onClose}
       onSave={onSave}
+      onSaveNote={saveNote}
     />
   )
 }

@@ -9,6 +9,7 @@ import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
 import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
 import { useCheckIn } from '@/components/checkin/CheckInProvider'
+import { useTripEvents } from '@/lib/trips/useTripEvents'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { tripPhase } from '@/lib/trips/recap'
 import { tripRecap } from '@/lib/trips/recap'
@@ -58,6 +59,7 @@ export default function DashboardClient({
   const { tripId } = useTripScope()
   const { trip, cityIdx } = useTripScreen()
   const checkIn = useCheckIn()
+  const { recordArrived } = useTripEvents()
   // Clock-dependent → client-only (SSR snapshot renders the pre layout, same
   // hydration rule the old dashboard followed, minus the setState-in-effect).
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
@@ -104,6 +106,14 @@ export default function DashboardClient({
     !placeName.toLowerCase().includes(current.city.toLowerCase())
 
   const phase = basePhase === 'live' ? (isArrive ? 'arrive' : isOff && !driftDismissed ? 'off' : 'live') : basePhase
+  // Already told us you got here? Then there is nothing left to press.
+  const arrivedHere =
+    !!current &&
+    (events.data ?? []).some(
+      (e) =>
+        e.kind === 'arrived' &&
+        String(e.payload?.city ?? '').toLowerCase() === current.city.toLowerCase(),
+    )
 
   // Phase changes reset scroll (handoff rule).
   useScrollReset(phase)
@@ -400,10 +410,20 @@ export default function DashboardClient({
       >
         <MapPin aria-hidden className="size-5" strokeWidth={2.2} /> Check in - where are you?
       </button>
-      {phase === 'arrive' && (
-        <Link href="/live" className="flex items-center justify-center gap-2 rounded-[var(--rCtl)] bg-ac2-soft py-3.5 text-base font-semibold text-ac2-deep">
-          <PlaneLanding aria-hidden className="size-5" strokeWidth={2} /> Arrived
-        </Link>
+      {/* Arrival day only, and gone once it is recorded.
+          It used to be a LINK to /live, so pressing "Arrived" recorded nothing
+          and dropped you on a screen with another Arrived button. And /live's
+          own button showed on every day of the trip and could be pressed
+          twice, which made its "the button is done for this stop" toast a
+          plain lie. One button, one day, once. */}
+      {phase === 'arrive' && current && !arrivedHere && (
+        <button
+          type="button"
+          onClick={() => recordArrived(current.city)}
+          className="flex items-center justify-center gap-2 rounded-[var(--rCtl)] bg-ac2-soft py-3.5 text-base font-semibold text-ac2-deep"
+        >
+          <PlaneLanding aria-hidden className="size-5" strokeWidth={2} /> Arrived in {current.city}
+        </button>
       )}
       <ComingUp state={s} todayIso={todayIso} />
 
