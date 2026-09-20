@@ -22,8 +22,9 @@ export async function GET(
       start_url: `/follow/${token}`,
       scope: `/follow/${token}`,
       display: 'standalone',
-      background_color: '#0a0a0a',
-      theme_color: '#0d9488',
+      // Same tokens as the app manifest — see src/app/manifest.ts.
+      background_color: '#f0eee9',
+      theme_color: '#f0eee9',
       icons: [
         { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
         { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
