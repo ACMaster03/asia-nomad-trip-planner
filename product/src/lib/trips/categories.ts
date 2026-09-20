@@ -120,6 +120,17 @@ export const categoriesFor = (kind: CategoryKind): readonly CategoryDef[] =>
 // 248 000 Ft flight on 31 Aug says nothing about what a day in Bangkok costs.
 export const NON_DAILY_CATEGORIES: ReadonlySet<string> = new Set(['stays', 'transport', 'gear', 'insurance', 'subscriptions', 'fees'])
 
+// Of those six, two are bookings (the Bookings card counts them from the plan)
+// and one recurs (the Subscriptions card, #37). The rest are the one-offs and
+// fixed costs the One-offs card reports (#35, #39). DERIVED from the set above
+// rather than re-listed, so adding a seventh non-daily category gives it a home
+// on the Money page automatically instead of losing it the way `fees` was lost.
+export const BOOKING_CATEGORIES: ReadonlySet<string> = new Set(['stays', 'transport'])
+export const RECURRING_CATEGORY = 'subscriptions'
+export const ONE_OFF_CATEGORIES: ReadonlySet<string> = new Set(
+  [...NON_DAILY_CATEGORIES].filter((id) => !BOOKING_CATEGORIES.has(id) && id !== RECURRING_CATEGORY),
+)
+
 // ---- groups: the five colour families the charts use ----------------------
 // Twenty categories are too many colours for a phone-width bar; the chart
 // and donut speak in these families and the table underneath spells out the

@@ -69,6 +69,37 @@ export interface TransportLeg {
   // Money page reads a booked-and-paid flight as money still to come.
   chargeDate?: string
 }
+// A recurring cost from home (issue #37). The cadence is DECLARED, never
+// inferred from ledger history: two rows 31 days apart could be monthly or two
+// instalments of a yearly plan, a row logged three days late shifts the whole
+// prediction, and a price change reads as a different subscription. Anchor +
+// everyMonths makes the next charge arithmetic; ledger rows under the
+// `subscriptions` category only CONFIRM an occurrence (and can flag drift).
+//
+// Deliberately NOT a ledger entry: a predicted charge is a forecast, and
+// writing it to the ledger would double-count against projection.spent and
+// pollute the daily chart. This is the recurring sibling of Extra, and it lives
+// beside the plan for the same reason UserReminder does.
+export interface Subscription {
+  id: string
+  label: string
+  cur: CurrencyCode
+  amount: number
+  /** 1 = monthly, 3 / 6 = every N months, 12 = yearly */
+  everyMonths: number
+  /** ISO date of a known charge — the schedule hangs off its day of the month */
+  anchor: string
+  /** remind before it charges — off by default; most of them you never want told about */
+  remind?: boolean
+  /** days before the charge (1 / 3 / 7), mirroring the stay-deadline offsets */
+  leadDays?: number
+  /**
+   * ISO date it was cancelled. A STATE, never a delete: prediction and
+   * reminders stop here, and every charge before it stays in history and in
+   * every total it already fed.
+   */
+  cancelledOn?: string | null
+}
 export interface Extra {
   id: string
   label: string
@@ -106,6 +137,9 @@ export interface TripState {
   importSkip?: string[]
   // User reminders (frames 25–26). Optional — older documents simply lack it.
   reminders?: UserReminder[]
+  // Recurring costs from home (#37). Optional and migration-free, like
+  // reminders: a document written before this feature simply has none.
+  subscriptions?: Subscription[]
 }
 export interface LedgerEntry {
   id: string
