@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation'
 //   check-in sheet  → components/checkin/CheckInProvider (opens over any screen)
 //   Note            → a mode of that sheet
 //   Arrived         → Home, arrival day only, once
-//   Plan vs actual  → components/trips/PlanVsActual, rendered on Home
+//   Plan vs actual  → retired entirely; see docs/NOTES.md 2026-09-20
 //   edit / delete / queued → Home's feed rows (components/social/SocialRow)
 //
 // A REDIRECT, not a deletion, and it should stay one. Installed apps hold
