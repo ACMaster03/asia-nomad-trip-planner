@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Plus } from 'lucide-react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
@@ -11,6 +11,7 @@ import { useToday } from '@/lib/useToday'
 import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { addDays } from '@/lib/trips/spending'
+import { categoryLabel } from '@/lib/trips/categories'
 import { tripDay } from '@/lib/trips/progress'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
@@ -18,17 +19,39 @@ import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { DailySpendChart, type Range } from './DailySpendChart'
 import { WhereItGoes } from './WhereItGoes'
 import { BookingsCard } from './BookingsCard'
+import { SubscriptionsCard } from './SubscriptionsCard'
+import { SubscriptionSheet } from './SubscriptionSheet'
+import { OneOffsCard } from './OneOffsCard'
 import { LedgerList } from './LedgerList'
 import { PlanCard } from './PlanCard'
 import { MonthlyCard } from './MonthlyCard'
 import { EntrySheet } from './EntrySheet'
-import type { LedgerEntry } from '@/lib/trips/types'
+import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
-// Money — one page (round-two design, signed off 2026-09-13). Replaces the
-// Budget / Monthly / Actual tabs: overview → daily spend → where it goes →
-// bookings → ledger → plan by stop → to cover the plan → budget cap. Every
-// figure is derived from the ledger you already keep (lib/trips/spending.ts,
-// moneyModel.ts); nothing new is stored.
+// Money — ONE page (round-two design signed off 2026-09-13; round three
+// 2026-09-19). No tabs and no split: a Spending / Plan segmented control was
+// drafted and dropped, because two tabs drift straight back into the old
+// Budget / Monthly / Ledger problem under different names.
+//
+// Order is tense: what we spent, then what is coming, then the receipts.
+//   overview → daily spend → where it goes → bookings → subscriptions →
+//   one-offs → plan by stop → to cover the plan → budget cap → ledger
+//
+// The ledger goes LAST (#38). It used to sit fourth, always fully expanded,
+// past a hundred rows on the live trip — everything under it was unreachable
+// in practice, which is how #35 came to be filed about a card (PlanCard's
+// residual line) that had existed the whole time.
+//
+// Past 900px the cards pair into two columns, with the overview and the ledger
+// spanning both. DOM order IS page order, so the grid never reorders anything
+// and the phone reading order survives.
+//
+// Every figure is derived from the ledger and the plan you already keep
+// (lib/trips/spending.ts, moneyModel.ts). The one thing this page stores is a
+// subscription's declared cadence (#37) — a schedule cannot be derived from
+// history without guessing at it.
+
+const wide = 'min-[900px]:col-span-2'
 
 export default function MoneyPage() {
   const { fmt, base } = useMoney()
@@ -39,8 +62,10 @@ export default function MoneyPage() {
   const today = useToday()
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
+  const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
   const [range, setRange] = useState<Range>(14)
   const [end, setEnd] = useState<string | null>(null)
+  const [reveal, setReveal] = useState<{ date: string; n: number } | null>(null)
 
   // Plan → ledger sync (importCosts.ts). Converges: every upsert is
   // deterministic, so once the refetched document matches the plan this
@@ -70,7 +95,7 @@ export default function MoneyPage() {
   if (!trip.data || !model) return <CreateTripEmptyState />
   const s = trip.data.state
   const ledger = trip.data.ledger
-  const { budget, current, pace, plan, bookings, projection } = model
+  const { budget, current, pace, plan, bookings, projection, subs, monthly, beyond, tripEnd } = model
   const tripStart = s.meta.startDate || undefined
   const day = tripDay(s.meta, today)
 
@@ -85,12 +110,20 @@ export default function MoneyPage() {
     setEnd(next >= today ? null : next)
   }
   const rangeLabel = `${range} days`
-  const scrollToDay = (date: string) => document.getElementById(`day-${date}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  // The ledger is paged now, so a tapped bar has to page it far enough down
+  // before it can scroll — LedgerList owns both halves of that.
+  const scrollToDay = (date: string) => setReveal((r) => ({ date, n: (r?.n ?? 0) + 1 }))
 
   const plannedNights = plan.reduce((a, p) => a + p.nights, 0)
-  const pct = projection.projected > 0 ? Math.min(100, Math.round((projection.spent / projection.projected) * 100)) : 0
   const cap = s.meta.budgetCap || 0
+  // The bar measures ACTUAL SPEND against the budget cap (owner decision,
+  // 2026-09-19). It used to be spent / projected with "pre-trip estimate"
+  // underneath: a denominator that moved every time the pace changed, sitting
+  // over a figure invented before departure. This one is a ceiling you set.
+  const capPct = cap > 0 ? Math.round((projection.spent / cap) * 100) : 0
+  const overCap = cap > 0 && projection.spent > cap
   const lastCur = ledger.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).find((e) => e.type === 'expense')?.currency ?? base
+  const beyondNames = beyond.rows.slice(0, 3).map((r) => categoryLabel(r.category).toLowerCase()).join(', ')
 
   function save(entry: LedgerEntry) {
     mut.mutate({ kind: 'upsert', entry })
@@ -118,10 +151,33 @@ export default function MoneyPage() {
     imp.candidates.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
     stateMut.mutate((cur) => ({ ...cur, autoImport: true }))
   }
+  function saveSub(sub: Subscription) {
+    stateMut.mutate((cur) => {
+      const list = cur.subscriptions ?? []
+      return {
+        ...cur,
+        subscriptions: list.some((x) => x.id === sub.id) ? list.map((x) => (x.id === sub.id ? sub : x)) : [...list, sub],
+      }
+    })
+    setSubSheet(null)
+  }
+  function delSub(sub: Subscription) {
+    if (!confirm('Delete this subscription? “Mark cancelled” keeps what it already charged; deleting forgets it.')) return
+    stateMut.mutate((cur) => ({ ...cur, subscriptions: (cur.subscriptions ?? []).filter((x) => x.id !== sub.id) }))
+    setSubSheet(null)
+  }
+  function toggleRemind(sub: Subscription) {
+    stateMut.mutate((cur) => ({
+      ...cur,
+      subscriptions: (cur.subscriptions ?? []).map((x) =>
+        x.id === sub.id ? { ...x, remind: !x.remind, leadDays: x.leadDays ?? 3 } : x,
+      ),
+    }))
+  }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px] text-tx">
-      <div className="flex items-start justify-between gap-3">
+    <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-[18px] pb-6 pt-[18px] text-tx min-[900px]:max-w-4xl min-[900px]:grid-cols-2">
+      <div className={'flex items-start justify-between gap-3 ' + wide}>
         <div>
           <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">Money</h1>
           <p className="mt-0.5 text-[14px] text-tx2">
@@ -129,17 +185,24 @@ export default function MoneyPage() {
           </p>
         </div>
         {canEdit && (
-          <button onClick={() => setSheet({ entry: null })} className="flex-none rounded-full bg-ac2-soft px-[13px] py-2 text-base font-semibold text-ac2-deep">
-            ＋ Entry
+          <button
+            onClick={() => setSheet({ entry: null })}
+            aria-label="Add an entry"
+            title="Add an entry"
+            className="flex size-[46px] flex-none items-center justify-center rounded-full bg-ac2-soft text-ac2-deep"
+          >
+            <Plus aria-hidden className="size-6" />
           </button>
         )}
       </div>
-      <ViewerNotice />
-      <SaveError show={mut.isError} error={mut.error} />
-      <SaveError show={stateMut.isError} error={stateMut.error} />
+      <div className={wide}><ViewerNotice /></div>
+      <div className={wide}>
+        <SaveError show={mut.isError} error={mut.error} />
+        <SaveError show={stateMut.isError} error={stateMut.error} />
+      </div>
 
       {/* overview */}
-      <div className="lv-enter rounded-[var(--r)] bg-sf p-5">
+      <div className={'lv-enter rounded-[var(--r)] bg-sf p-5 ' + wide}>
         <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">
           Spent so far{day ? ` · ${day} ${day === 1 ? 'day' : 'days'}` : tripStart ? ' · before departure' : ''}
         </div>
@@ -170,17 +233,42 @@ export default function MoneyPage() {
             <div className="text-[13px] text-tx2">{plannedNights} planned nights, {pace.perDay !== null ? 'at this pace' : 'city averages'}</div>
           </div>
         </div>
-        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-track">
-          <span className="lv-grow block h-full rounded-full bg-ac" style={{ width: pct + '%' }} />
-        </div>
-        <div className="mt-1.5 flex justify-between gap-3 text-[13px] text-tx2">
-          <span className="flex-none">{pct}% of projected</span>
-          <span className="text-right">pre-trip estimate <b className="text-warn">{fmt(budget.grand)}</b></span>
-        </div>
+        {cap > 0 && (
+          <>
+            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-track">
+              <span
+                className={'lv-grow block h-full rounded-full ' + (overCap ? 'bg-warn' : 'bg-ac')}
+                style={{ width: Math.min(100, capPct) + '%' }}
+              />
+            </div>
+            <div className="mt-1.5 flex justify-between gap-3 text-[13px] text-tx2">
+              <span className="flex-none"><b className="text-tx">{capPct}% of your budget</b></span>
+              <span className="text-right">
+                {fmt(cap)} ·{' '}
+                {overCap
+                  ? <b className="text-warn">{fmt(projection.spent - cap)} over</b>
+                  : <><b className="text-tx">{fmt(cap - projection.spent)}</b> left</>}
+              </span>
+            </div>
+          </>
+        )}
+        {/* #35: the per-day rate leaves out flights, stays, gear, fees and the
+            subscriptions — correctly. Until now it did it in silence, and
+            nothing on the page admitted that 989 000 of a million spent was
+            simply not in that number. */}
+        {beyond.total > 0 && (
+          <div className="mt-3.5 rounded-[var(--rCtl)] bg-inp px-3.5 py-3">
+            <div className="text-base font-semibold">+ {fmt(beyond.total)} beyond the everyday</div>
+            <div className="mt-0.5 text-[13px] text-tx2">
+              {beyondNames ? `${beyondNames} — ` : ''}real money, deliberately outside the per-day rate. It is counted
+              in the cards below.
+            </div>
+          </div>
+        )}
       </div>
 
       {canEdit && imp && imp.candidates.length > 0 && autoImport === false && (
-        <div className="lv-enter rounded-[var(--r)] bg-sf p-4">
+        <div className={'lv-enter rounded-[var(--r)] bg-sf p-4 ' + wide}>
           <div className="text-base font-semibold">Import your {imp.candidates.length} booked cost{imp.candidates.length > 1 ? 's' : ''}?</div>
           <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date can sit in the ledger as “from booking” rows, kept in sync with the Trip page.</p>
           <button onClick={importNow} disabled={mut.isPending} className="mt-3 rounded-[var(--rCtl)] bg-ac px-[18px] py-2.5 text-base font-semibold text-on disabled:opacity-50">
@@ -201,9 +289,16 @@ export default function MoneyPage() {
         draftedStays={bookings.draftedStays} draftStays={bookings.draftStays}
         fmt={fmt} todayIso={today}
       />
-      <LedgerList entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} />
+      <SubscriptionsCard
+        subs={subs} rates={s.rates} fmt={fmt} todayIso={today} tripEnd={tripEnd}
+        subsAhead={projection.subsAhead} canEdit={canEdit}
+        onAdd={() => setSubSheet({ sub: null })}
+        onEdit={(sub) => setSubSheet({ sub })}
+        onToggleRemind={toggleRemind}
+      />
+      <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} />
       <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} />
-      <MonthlyCard state={s} cityIdx={cityIdx} fmt={fmt} />
+      <MonthlyCard months={monthly.months} total={monthly.total} plannedExtras={budget.extras} fmt={fmt} />
       <Link href="/settings" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
         <span>
           <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>
@@ -213,6 +308,12 @@ export default function MoneyPage() {
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
+      <div className={wide}>
+        <LedgerList
+          entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
+          canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal}
+        />
+      </div>
 
       {sheet && (
         <EntrySheet
@@ -223,6 +324,16 @@ export default function MoneyPage() {
           onSave={save}
           onDelete={sheet.entry ? del : undefined}
           onClose={() => setSheet(null)}
+        />
+      )}
+      {subSheet && (
+        <SubscriptionSheet
+          initial={subSheet.sub}
+          rates={s.rates}
+          todayIso={today}
+          onSave={saveSub}
+          onDelete={subSheet.sub ? delSub : undefined}
+          onClose={() => setSubSheet(null)}
         />
       )}
     </main>

@@ -26,7 +26,24 @@ export function fixtureTrip(today: string): Trip {
       { id: 't1', type: 'flight', from: 'Budapest', to: 'Bangkok', date: '2026-08-31', cur: 'HUF', price: 248_000, status: 'booked', include: true },
       { id: 't2', type: 'flight', from: 'Bangkok', to: 'Hanoi', date: '2026-09-30', cur: 'USD', price: 0, status: 'idea', include: true },
     ],
-    extras: [],
+    // One-offs (#39) and the recurring costs from home (#37) — the two cards
+    // that had no data to render before this round.
+    extras: [
+      { id: 'x1', label: 'Insurance · 2 pax, 6 months', cur: 'HUF', amount: 340_000, category: 'insurance', include: true },
+      { id: 'x2', label: 'Gear · backpacks, adapter, router', cur: 'HUF', amount: 205_000, category: 'gear', include: true },
+      { id: 'x3', label: 'Visas · TH ext, VN e-visa ×2', cur: 'HUF', amount: 84_000, category: 'fees', include: true },
+      // switched off: listed as not counted, in neither total
+      { id: 'x4', label: 'Anna’s phone', cur: 'HUF', amount: 250_000, category: 'gear', include: false },
+    ],
+    subscriptions: [
+      { id: 'sub-icloud', label: 'iCloud 2 TB', cur: 'HUF', amount: 3290, everyMonths: 1, anchor: '2026-08-14' },
+      { id: 'sub-spotify', label: 'Spotify Duo', cur: 'HUF', amount: 2490, everyMonths: 1, anchor: '2026-08-17' },
+      { id: 'sub-net', label: 'Home internet · Budapest flat', cur: 'HUF', amount: 7990, everyMonths: 1, anchor: '2026-08-23', remind: true, leadDays: 3 },
+      { id: 'sub-domain', label: 'Domain + hosting', cur: 'HUF', amount: 18_000, everyMonths: 12, anchor: '2025-11-12', remind: true, leadDays: 7 },
+      // cancelled is a STATE: listed behind the toggle, struck through, and it
+      // predicts nothing — the August charge stays in history.
+      { id: 'sub-netflix', label: 'Netflix', cur: 'HUF', amount: 4490, everyMonths: 1, anchor: '2026-08-20', cancelledOn: '2026-09-06' },
+    ],
     notes: {},
     autoImport: true,
   }
@@ -68,6 +85,7 @@ export function fixtureTrip(today: string): Trip {
     e('s10b', '2026-09-10', 'local-transport', 170, 'THB', 'Tuk-tuk to the palace'),
     e('s11a', '2026-09-11', 'drinks', 170, 'THB', 'Iced coffees'),
     e('s12a', '2026-09-12', 'food', 410, 'THB', 'Dinner by the river'),
+    e('sub-1', '2026-09-14', 'subscriptions', 3290, 'HUF', 'iCloud 2 TB'),
     e('s13a', today, 'convenience', 95, 'THB', '7-Eleven breakfast'),
     // dated ahead of `today` — the ledger shows it, the overview does not count it
     e('imp-st2', '2026-09-29', 'stays', 1276, 'USD', 'Văn Giang (Mai Kenny)', { source: { kind: 'stay', id: 'st2' } }),
