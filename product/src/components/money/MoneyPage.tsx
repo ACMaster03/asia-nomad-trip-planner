@@ -97,7 +97,7 @@ export default function MoneyPage() {
   if (!trip.data || !model) return <CreateTripEmptyState />
   const s = trip.data.state
   const ledger = trip.data.ledger
-  const { current, pace, plan, bookings, projection, subs, actuals, beyond, tripEnd } = model
+  const { budget, current, pace, plan, bookings, projection, subs, toEarn, beyond, tripEnd } = model
   const tripStart = s.meta.startDate || undefined
   const day = tripDay(s.meta, today)
 
@@ -310,7 +310,7 @@ export default function MoneyPage() {
       />
       <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} />
       <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} />
-      <MonthlyCard months={actuals.months} spent={actuals.spent} earned={actuals.earned} net={actuals.net} base={base} />
+      <MonthlyCard months={toEarn.months} average={toEarn.average} total={toEarn.total} plannedExtras={budget.extras} base={base} />
       <Link href="/settings" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
         <span>
           <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>

@@ -535,3 +535,54 @@ export function monthlyActuals(
   const earned = months.reduce((a, b) => a + b.earned, 0)
   return { months, spent, earned, net: earned - spent }
 }
+
+// ---------------------------------------------------------------------------
+// What is still to pay for, month by month.
+// ---------------------------------------------------------------------------
+
+export interface MonthToEarn {
+  /** YYYY-MM */
+  key: string
+  /** what this month still needs, in base */
+  amount: number
+}
+
+/**
+ * The months still ahead and what each one still costs, plus the average.
+ *
+ * Built from monthlyOutflow, so it quotes the same terms as projection.projected
+ * and cannot drift from the rest of the page. Two rules that are the whole
+ * point of it:
+ *
+ *  - MONTHS ALREADY BEHIND YOU ARE NOT LISTED. This answers "what do we still
+ *    have to earn", and September is not money anyone can still go and earn.
+ *  - THE CURRENT MONTH IS NET OF WHAT HAS ALREADY LEFT IT. monthlyOutflow puts
+ *    settled expenses in the month they are dated, so the current month's total
+ *    includes spending that is already paid for. Quoting that as "still to
+ *    earn" would overstate it by however far into the month you are. The
+ *    subtraction floors at zero: a month you have already overspent still needs
+ *    nothing further, it does not owe you money back.
+ *
+ * Planned one-offs are not in here, for the same reason they were never in
+ * monthlyOutflow: state.extras carry no date, so there is no month to put them
+ * in. The card says so.
+ */
+export function monthlyToEarn(
+  outflow: MonthOut[],
+  actuals: MonthActual[],
+  todayIso: string,
+): { months: MonthToEarn[]; average: number; total: number } {
+  const cur = todayIso.slice(0, 7)
+  const spentThisMonth = actuals.find((m) => m.key === cur)?.spent ?? 0
+
+  const months = outflow
+    .filter((m) => m.key >= cur)
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .map((m) => ({
+      key: m.key,
+      amount: m.key === cur ? Math.max(0, m.total - spentThisMonth) : m.total,
+    }))
+
+  const total = months.reduce((a, m) => a + m.amount, 0)
+  return { months, total, average: months.length ? total / months.length : 0 }
+}
