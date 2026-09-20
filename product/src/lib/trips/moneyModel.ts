@@ -1,7 +1,7 @@
 import type { LedgerEntry, Segment, TripState } from './types'
 import { computeBudget, type CityCost } from './budget'
 import {
-  addDays, beyondEveryday, bookingsSummary, monthlyActuals, monthlyOutflow, planByStop, projectFromPlan, tripPace,
+  addDays, beyondEveryday, bookingsSummary, monthlyActuals, monthlyOutflow, monthlyToEarn, planByStop, projectFromPlan, tripPace,
 } from './spending'
 import { subsCharges } from './subscriptions'
 
@@ -30,11 +30,12 @@ export function moneyModel(state: TripState, ledger: LedgerEntry[], cityIdx: Rec
 
   const projection = projectFromPlan(plan, bookings, ledger, state.rates, todayIso, subsAhead)
   const monthly = monthlyOutflow(state, plan, bookings, ledger, subCharges, todayIso)
-  // What actually happened, month by month. Kept beside monthlyOutflow rather
-  // than replacing it: one is the forecast, the other the record, and the Money
-  // page now shows the record.
+  // What actually happened, month by month. Not shown on its own any more; it
+  // is here because toEarn needs it to net the current month against spending
+  // that has already left it.
   const actuals = monthlyActuals(ledger, state.rates, todayIso)
+  const toEarn = monthlyToEarn(monthly.months, actuals.months, todayIso)
   const beyond = beyondEveryday(ledger, state.rates, todayIso)
-  return { budget, inPlan, current, pace, plan, bookings, projection, subs, subCharges, monthly, actuals, beyond, tripEnd }
+  return { budget, inPlan, current, pace, plan, bookings, projection, subs, subCharges, monthly, actuals, toEarn, beyond, tripEnd }
 }
 export type MoneyModel = ReturnType<typeof moneyModel>

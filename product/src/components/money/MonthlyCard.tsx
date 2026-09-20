@@ -1,105 +1,83 @@
 'use client'
 import { fmtAmount, monthShort } from '@/lib/trips/format'
-import type { MonthActual } from '@/lib/trips/spending'
+import type { MonthToEarn } from '@/lib/trips/spending'
 
-// "Month by month" — what went out, what came in, and whether the month ended
-// up or down.
+// "What you need to earn" — the months still ahead, and the average across
+// them.
 //
-// This card used to be "To cover the plan": projected outflow per month, split
-// into Stays / Daily living / Transport / Subscriptions, captioned "what has to
-// come in". Two problems, both reported by a traveller rather than found here
-// (2026-09-20). The caption reversed the direction of every number under it —
-// the file's own comment said "what has to leave the account" — and the
-// forecast it showed was already told better by Plan by stop, which breaks the
-// same money down per stop with the arithmetic spelled out.
+// Third shape in a day, and the previous two are why this one is so plain.
+// It began as projected outflow in stacked category bars captioned "what has to
+// come in", which reversed the direction of every number under it. It then
+// became a spent/earned/net table of what had actually happened, which was
+// accurate and still not the question being asked. The question is: how much do
+// we have to bring in, from here?
 //
-// So it stops forecasting and starts reporting. ACTUALS ONLY: nothing dated
-// after today (see monthlyActuals). It also gives the ledger's income rows
-// their first appearance anywhere in the app; the Add-entry sheet has offered
-// an Income toggle since it was written and nothing ever read those rows back.
+// So: one headline, one line per remaining month, no bars, no legend, no
+// categories. The split into Stays and Transport is answered by Plan by stop
+// and by Where it goes; repeating it here only ever made the card harder to
+// read.
 //
-// WHAT WENT WITH IT: this was the only per-month view of FUTURE money, so
-// nothing now says which month the big costs land in. Plan by stop is per stop,
-// not per month. Called out rather than lost quietly, in case it is missed.
+// The arithmetic is monthlyToEarn(), which excludes months already gone and
+// nets the current month against what has already left it.
 
 export function MonthlyCard({
   months,
-  spent,
-  earned,
-  net,
+  average,
+  total,
+  plannedExtras,
   base,
 }: {
-  months: MonthActual[]
-  spent: number
-  earned: number
-  net: number
-  /** the trip's base currency; named once in the header, not in every cell */
+  months: MonthToEarn[]
+  average: number
+  total: number
+  /** planned one-offs: named, not counted, because they carry no date */
+  plannedExtras: number
+  /** the trip's base currency; named once, not in every row */
   base: string
 }) {
-  // One month is not a table. Below that the overview already says what was
-  // spent, and a single row would only repeat it with more furniture.
-  if (months.length < 2) return null
-
-  // Bare numbers, currency named once above. With "Ft" in all twelve cells the
-  // totals row ran into itself at 390px: three columns of seven digits plus a
-  // suffix do not fit a phone.
-  const money = (n: number) => (n === 0 ? '—' : fmtAmount(n, base))
-  const signed = (n: number) => (n > 0 ? `+${fmtAmount(n, base)}` : fmtAmount(n, base))
-  const netTone = (n: number) => (n === 0 ? 'text-tx3' : n > 0 ? 'text-ac' : 'text-warn')
+  if (!months.length) return null
+  const amt = (n: number) => fmtAmount(n, base)
+  const first = monthShort(months[0].key).slice(0, 3)
 
   return (
     <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
       <div className="flex items-baseline justify-between gap-3">
         <span className="whitespace-nowrap text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">
-          Month by month
+          What you need to earn
         </span>
-        <span className="text-right text-[13px] text-tx3">what you spent and earned, in {base}</span>
+        <span className="whitespace-nowrap text-[13px] text-tx3">still ahead</span>
       </div>
 
-      <div className="mt-3 overflow-x-auto">
-        <table className="w-full text-[13px] tabular-nums">
-          <thead>
-            <tr className="text-tx3">
-              <th scope="col" className="w-11 pb-1.5 text-left font-medium">
-                <span className="sr-only">Month</span>
-              </th>
-              <th scope="col" className="pb-1.5 text-right font-medium">Spent</th>
-              <th scope="col" className="pb-1.5 text-right font-medium">Earned</th>
-              <th scope="col" className="pb-1.5 text-right font-medium">Net</th>
-            </tr>
-          </thead>
-          <tbody>
-            {months.map((m) => (
-              <tr key={m.key} className="border-t border-ln">
-                <th scope="row" className="py-[7px] text-left font-medium text-tx2">
-                  {monthShort(m.key).slice(0, 3)}
-                </th>
-                <td className="py-[7px] text-right">{money(m.spent)}</td>
-                <td className="py-[7px] text-right">{money(m.earned)}</td>
-                <td className={'py-[7px] text-right font-semibold ' + netTone(m.net)}>
-                  {m.spent === 0 && m.earned === 0 ? '—' : signed(m.net)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t border-ln3">
-              <th scope="row" className="pt-2.5 text-left font-semibold">All</th>
-              <td className="pt-2.5 text-right font-semibold">{money(spent)}</td>
-              <td className="pt-2.5 text-right font-semibold">{money(earned)}</td>
-              <td className={'pt-2.5 text-right font-semibold ' + netTone(net)}>{signed(net)}</td>
-            </tr>
-          </tfoot>
-        </table>
+      <div className="mt-0.5 text-[22px] font-semibold">
+        ≈ {amt(average)} {base}
+        <span className="text-[15px] font-medium text-tx2"> a month</span>
       </div>
+      <div className="mt-1 text-[13px] text-tx2">
+        {amt(total)} {base} over {months.length} {months.length === 1 ? 'month' : 'months'}, from{' '}
+        {first}.
+      </div>
+
+      {/* One month and the rows would just repeat the headline. */}
+      {months.length > 1 && (
+        <div className="mt-3 flex flex-col">
+          {months.map((m) => (
+            <div
+              key={m.key}
+              className="flex items-baseline justify-between gap-3 border-t border-ln py-[7px] text-[13px] tabular-nums"
+            >
+              <span className="text-tx2">{monthShort(m.key).slice(0, 3)}</span>
+              <span className="font-semibold">{amt(m.amount)}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <p className="mt-2.5 text-[13px] leading-normal text-tx2">
-        {earned === 0
-          ? 'No income logged yet. Add one with the Income tab when you add an entry, and it will show up here.'
-          : net >= 0
-            ? 'You have brought in more than you have spent so far.'
-            : 'You have spent more than you have brought in so far.'}{' '}
-        Anything dated later than today is not counted: a scheduled charge has not left yet.
+        This month counts only what is still to come, not what has already gone out.
+        {plannedExtras > 0 && (
+          <> Planned one-offs ({amt(plannedExtras)} {base}) are not in here, because they carry no
+          date to land on; they are on the One-offs card above.</>
+        )}
       </p>
     </div>
   )
