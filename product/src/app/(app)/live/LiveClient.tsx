@@ -2,13 +2,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
-  onlineManager,
-  useMutation,
-  useMutationState,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
-import {
   Hourglass,
   Image as ImageIcon,
   MapPin,
@@ -17,30 +10,18 @@ import {
   SatelliteDish,
   type LucideIcon,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { isBookedStatus } from '@/lib/trips/commitment'
 import { useTripScope } from '@/lib/trips/TripScope'
-import { tk } from '@/lib/trips/keys'
 import { nightsBetween, segNights } from '@/lib/trips/format'
 import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
-import {
-  deleteTripEvent,
-  fetchTripEvents,
-  type TripEvent,
-  type TripEventKind,
-} from '@/lib/trips/events'
-import {
-  CHECKIN_MUTATION_KEY,
-  EVENT_MUTATION_KEY,
-  type CheckInVars,
-  type EventVars,
-} from '@/lib/trips/outbox'
-import { publicMediaUrl, uploadCheckinPhotos } from '@/lib/trips/media'
+import { type TripEvent, type TripEventKind } from '@/lib/trips/events'
+import { useTripEvents } from '@/lib/trips/useTripEvents'
+import { publicMediaUrl } from '@/lib/trips/media'
 import { Modal } from '@/components/trips/Modal'
 import { SaveError } from '@/components/trips/SaveError'
 import { useToast } from '@/components/Toast'
-import { FollowerNudge, maybeNudge } from './FollowerNudge'
+import { FollowerNudge } from './FollowerNudge'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { CheckInModal, type CheckInInput } from './CheckInModal'
 import { EditEventModal } from './EditEventModal'
@@ -87,8 +68,6 @@ const bookedStay = (stays: Stay[], segId: string) =>
   stays.find((st) => st.segId === segId && st.include !== false && isBookedStatus(st.status))
 
 export default function LiveClient() {
-  const sb = createClient()
-  const qc = useQueryClient()
   const toast = useToast()
   const { trip, cities } = useTripScreen()
   const { tripId } = useTripScope()
@@ -96,102 +75,28 @@ export default function LiveClient() {
   // Everything on this screen depends on "today" → compute only after mount to
   // avoid an SSR/hydration mismatch (same pattern as DashboardClient).
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
-  const [uid, setUid] = useState<string | null>(null)
-  useEffect(() => {
-    sb.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
-  const eventsKey = tk.events(tripId ?? 'none')
-  const events = useQuery({
-    queryKey: eventsKey,
-    queryFn: () => (tripId ? fetchTripEvents(sb, tripId) : Promise.resolve([] as TripEvent[])),
-  })
-
-  // ---- mutations: append-only rows → simple optimistic prepend/remove -------
-  const optimisticPrepend = async (ev: TripEvent) => {
-    await qc.cancelQueries({ queryKey: eventsKey })
-    const prevList = qc.getQueryData<TripEvent[]>(eventsKey)
-    qc.setQueryData<TripEvent[]>(eventsKey, (list) => [ev, ...(list ?? [])])
-    return { prevList }
-  }
-  const rollback = (_e: unknown, _v: unknown, ctx?: { prevList?: TripEvent[] }) => {
-    if (ctx?.prevList) qc.setQueryData(eventsKey, ctx.prevList)
-  }
-  const settle = () => qc.invalidateQueries({ queryKey: eventsKey }) // delete-mutation only; inserts settle via outbox defaults
-  const stamp = () => new Date().toISOString()
-
-  // Insert mutations run through the OUTBOX defaults (lib/trips/outbox.ts):
-  // no local mutationFn, so offline calls pause + persist to IndexedDB and
-  // replay on reconnect/reload. Optimistic UI callbacks stay local — they only
-  // matter in the live session; replays after reload just refetch the feed.
-  const addCheckIn = useMutation<void, Error, CheckInVars, { prevList?: TripEvent[] }>({
-    mutationKey: CHECKIN_MUTATION_KEY,
-    onMutate: (v) =>
-      optimisticPrepend({
-        id: v.id,
-        trip_id: v.tripId,
-        author: uid ?? '',
-        kind: 'checkin',
-        payload: { placeName: v.placeName, ...(v.photos?.length ? { photos: v.photos } : {}) },
-        visibility: v.visibility,
-        occurred_at: stamp(),
-        created_at: stamp(),
-        check_in: { place_id: v.placeId, rating: v.rating, comment: v.comment.trim() || null },
-      }),
-    onError: rollback,
-  })
-
-  const addEvent = useMutation<void, Error, EventVars, { prevList?: TripEvent[] }>({
-    mutationKey: EVENT_MUTATION_KEY,
-    onMutate: (v) =>
-      optimisticPrepend({
-        id: v.id,
-        trip_id: v.tripId,
-        author: uid ?? '',
-        kind: v.kind,
-        payload: v.payload,
-        visibility: v.visibility ?? 'trip',
-        occurred_at: stamp(),
-        created_at: stamp(),
-        check_in: null,
-      }),
-    onError: rollback,
-  })
-
-  // Offline awareness: TanStack's onlineManager is the same signal that pauses
-  // the outbox mutations — subscribing to it keeps banner and behavior in sync
-  // (useSyncExternalStore, DashboardClient pattern; onlineManager tracks
-  // navigator.onLine).
-  const online = useSyncExternalStore(
-    (cb) => onlineManager.subscribe(cb),
-    () => onlineManager.isOnline(),
-    () => true,
-  )
-
-  // Ids of queued (paused) outbox rows → the feed marks them "queued".
-  const pausedIds = new Set(
-    useMutationState({
-      filters: {
-        predicate: (m) =>
-          m.state.isPaused &&
-          ['outbox'].includes((m.options.mutationKey?.[0] as string) ?? ''),
-      },
-      select: (m) => (m.state.variables as { id?: string })?.id ?? '',
-    }),
-  )
-
-  const delEvent = useMutation({
-    mutationFn: (id: string) => deleteTripEvent(sb, id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: eventsKey })
-      const prevList = qc.getQueryData<TripEvent[]>(eventsKey)
-      qc.setQueryData<TripEvent[]>(eventsKey, (list) => (list ?? []).filter((e) => e.id !== id))
-      return { prevList }
-    },
-    onError: rollback,
-    onSettled: settle,
-  })
+  // The feed and everything that writes to it now live in a hook, so the
+  // check-in sheet can be opened from anywhere under the (app) layout rather
+  // than only from this screen. Behaviour is unchanged; the outbox mutation
+  // keys are the same constants, so anything already queued on a phone still
+  // replays (lib/trips/useTripEvents.ts).
+  const {
+    uid,
+    events,
+    online,
+    pausedIds,
+    recentPlaces,
+    nudge,
+    setNudge,
+    saveCheckIn: postCheckIn,
+    recordArrived,
+    saveNote: postNote,
+    delEvent,
+    saving,
+    hasError,
+    mutError,
+  } = useTripEvents()
 
   // ?checkin=1 means "the traveller already pressed Check in" — from the
   // raised tab, or from Home's own check-in button. Both used to land here on
@@ -223,11 +128,7 @@ export default function LiveClient() {
   }, [wantCheckin])
   const [noteOpen, setNoteOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
-  const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [editEvent, setEditEvent] = useState<TripEvent | null>(null)
-  // "Show this trip to your followers?" — once, after the first check-in of a
-  // trip that is still hidden from the people who follow you.
-  const [nudge, setNudge] = useState(false)
 
   // ---- derive today's picture from the plan ---------------------------------
   const s = trip.data?.state
@@ -276,17 +177,6 @@ export default function LiveClient() {
   // most likely still around the previous stop, else early at the next one.
   const checkinCity = current?.city ?? previous?.city ?? next?.city ?? null
 
-  // Recency chips for the check-in sheet: distinct recent check-in place
-  // names, newest first (the sheet caps them at 2 after exclusions).
-  const recentPlaces = Array.from(
-    new Set(
-      (events.data ?? [])
-        .filter((e) => e.kind === 'checkin')
-        .map((e) => e.payload.placeName)
-        .filter((x): x is string => typeof x === 'string' && x.trim() !== ''),
-    ),
-  ).slice(0, 6)
-
   // Plan-vs-actual: latest 'arrived' event vs the planned current stop.
   const lastArrivedCity = (events.data ?? []).find((e) => e.kind === 'arrived')?.payload?.city as
     | string
@@ -297,65 +187,15 @@ export default function LiveClient() {
     !!lastArrivedCity &&
     lastArrivedCity.toLowerCase() !== current.city.toLowerCase()
 
-  // Rig behavior (frame 08): tap → recorded → toast. No blocking confirm; the
-  // row is deletable from the feed if it was a mis-tap.
-  const doArrived = () => {
-    const city = current?.city ?? next?.city ?? previous?.city ?? ''
-    if (!city || !tripId) return
-    addEvent.mutate({ id: crypto.randomUUID(), tripId, kind: 'arrived', payload: { city } })
-    toast('Arrival recorded - the button is done for this stop')
-  }
+  const doArrived = () => recordArrived(current?.city ?? next?.city ?? previous?.city ?? '')
   const saveNote = () => {
-    const text = noteText.trim()
-    if (!text || !tripId) return
-    addEvent.mutate({ id: crypto.randomUUID(), tripId, kind: 'note', payload: { text } })
+    if (!postNote(noteText)) return // empty note: the modal stays open, as before
     setNoteText('')
     setNoteOpen(false)
   }
   const saveCheckIn = async (v: CheckInInput) => {
-    if (!tripId) return
-    const id = crypto.randomUUID()
-    const { files, ...rest } = v
-    // Photos upload BEFORE the (outbox-able) insert: paths are plain strings
-    // that survive IndexedDB; blobs would not. Offline → skip photos, the
-    // check-in itself still queues.
-    let photos: string[] | undefined
-    if (files.length && onlineManager.isOnline()) {
-      setUploadingPhotos(true)
-      try {
-        photos = await uploadCheckinPhotos(sb, tripId, id, files)
-      } catch (e) {
-        // The USER decides what happens to a failed upload (owner decision
-        // 2026-07-24): post without photos, or go back and adjust — never
-        // post behind their back. The modal stays open on cancel.
-        const detail = (e as Error)?.message ?? String(e)
-        const postAnyway = confirm(
-          `The photos couldn't be uploaded (${detail}).\n\nOK = post the check-in WITHOUT photos.\nCancel = go back to the check-in to adjust.`,
-        )
-        if (!postAnyway) return
-        photos = undefined
-      } finally {
-        setUploadingPhotos(false)
-      }
-    }
-    const firstCheckIn = !(events.data ?? []).some((e) => e.kind === 'checkin')
-    addCheckIn.mutate({ ...rest, id, tripId, photos })
-    setCheckinOpen(false)
-    if (firstCheckIn && rest.visibility !== 'trip' && onlineManager.isOnline()) void maybeNudge(sb, tripId).then(setNudge)
-    toast(
-      onlineManager.isOnline()
-        ? rest.visibility === 'trip'
-          ? 'Check-in posted - just for the two of you'
-          : 'Check-in posted · followers notified'
-        : 'Queued on this phone - syncs when you reconnect',
-    )
+    if (await postCheckIn(v)) setCheckinOpen(false)
   }
-
-  const mutErr = addCheckIn.isError
-    ? addCheckIn.error
-    : addEvent.isError
-      ? addEvent.error
-      : delEvent.error
 
   return (
     // Live is phone-first: desktop is the same centered narrow column (mock).
@@ -387,7 +227,7 @@ export default function LiveClient() {
           </p>
         </div>
       )}
-      <SaveError show={addCheckIn.isError || addEvent.isError || delEvent.isError} error={mutErr} />
+      <SaveError show={hasError} error={mutError} />
 
       {phase === 'pre' ? (
         <PreTrip s={s} daysToGo={daysToGo} firstStop={inPlan[0] ?? null} />
@@ -573,7 +413,7 @@ export default function LiveClient() {
           cities={cities.data ?? []}
           recent={recentPlaces}
           online={online}
-          saving={uploadingPhotos || addCheckIn.isPending}
+          saving={saving}
           onClose={() => setCheckinOpen(false)}
           onSave={saveCheckIn}
         />
