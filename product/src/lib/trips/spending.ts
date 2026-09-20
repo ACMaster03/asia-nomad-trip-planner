@@ -467,3 +467,71 @@ export function monthlyOutflow(
   const months = Object.values(M).sort((a, b) => a.key.localeCompare(b.key))
   return { months, total: months.reduce((a, m) => a + m.total, 0) }
 }
+
+// ---------------------------------------------------------------------------
+// Month by month: what actually happened.
+// ---------------------------------------------------------------------------
+
+export interface MonthActual {
+  /** YYYY-MM */
+  key: string
+  spent: number
+  earned: number
+  /** earned - spent. Negative means the month cost more than it brought in. */
+  net: number
+}
+
+/**
+ * Every month of the trip so far, with what went out, what came in, and
+ * whether it ended up or down.
+ *
+ * ACTUALS, not a forecast, which is the whole point of it: monthlyOutflow above
+ * answers "what will this cost", and this answers "how did we do". Two
+ * consequences that are deliberate rather than oversights:
+ *
+ *  - Nothing dated after today is counted. A scheduled charge is money that
+ *    WILL leave, and putting it in a column headed "spent" would mean the
+ *    current month always looked worse than it had actually been.
+ *  - Months are taken from the ledger, not from the trip dates, and every
+ *    month between the first and the last is present even if it is empty. A
+ *    gap month is information; a missing row is a reader counting backwards.
+ *
+ * Income finally has somewhere to go. The Add-entry sheet has offered an
+ * Income toggle since it was written and nothing in the app has ever read
+ * those rows back.
+ */
+export function monthlyActuals(
+  ledger: LedgerEntry[],
+  rates: Record<string, number>,
+  todayIso: string,
+): { months: MonthActual[]; spent: number; earned: number; net: number } {
+  const M: Record<string, MonthActual> = {}
+  const touch = (key: string) => (M[key] ??= { key, spent: 0, earned: 0, net: 0 })
+
+  for (const e of ledger) {
+    if (!e.date || e.date > todayIso) continue // not yet happened
+    const v = toBase(e.amount, e.currency, rates)
+    if (!Number.isFinite(v) || v === 0) continue
+    const b = touch(e.date.slice(0, 7))
+    if (e.type === 'income') b.earned += v
+    else b.spent += v
+  }
+
+  const keys = Object.keys(M).sort()
+  if (!keys.length) return { months: [], spent: 0, earned: 0, net: 0 }
+
+  // Fill the gaps so the column reads as a calendar rather than a list.
+  const [fy, fm] = keys[0].split('-').map(Number)
+  const [ly, lm] = keys[keys.length - 1].split('-').map(Number)
+  const months: MonthActual[] = []
+  for (let y = fy, m = fm; y < ly || (y === ly && m <= lm); m === 12 ? ((y += 1), (m = 1)) : (m += 1)) {
+    const key = `${y}-${String(m).padStart(2, '0')}`
+    const b = touch(key)
+    b.net = b.earned - b.spent
+    months.push(b)
+  }
+
+  const spent = months.reduce((a, b) => a + b.spent, 0)
+  const earned = months.reduce((a, b) => a + b.earned, 0)
+  return { months, spent, earned, net: earned - spent }
+}

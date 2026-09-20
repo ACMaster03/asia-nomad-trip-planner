@@ -1,92 +1,106 @@
 'use client'
-import { monthShort } from '@/lib/trips/format'
-import type { MonthOut } from '@/lib/trips/spending'
+import { fmtAmount, monthShort } from '@/lib/trips/format'
+import type { MonthActual } from '@/lib/trips/spending'
 
-// "To cover the plan" — what has to leave the account each month.
+// "Month by month" — what went out, what came in, and whether the month ended
+// up or down.
 //
-// Rebuilt on the LIVE projection (owner decision, 2026-09-19). It used to run
-// on monthlyBuckets(): catalogue city averages spread over the nights, summing
-// to the pre-trip plan. Once the pre-trip estimate came off the overview, this
-// card was the last place on the page where a number invented before departure
-// survived — and it disagreed with everything above it by the amount Bangkok
-// was coming in under its estimate, with nothing saying which was which.
+// This card used to be "To cover the plan": projected outflow per month, split
+// into Stays / Daily living / Transport / Subscriptions, captioned "what has to
+// come in". Two problems, both reported by a traveller rather than found here
+// (2026-09-20). The caption reversed the direction of every number under it —
+// the file's own comment said "what has to leave the account" — and the
+// forecast it showed was already told better by Plan by stop, which breaks the
+// same money down per stop with the arithmetic spelled out.
 //
-// Now every bar is built from the same terms as projection.projected
-// (monthlyOutflow, spending.ts), so the card ends on the figure the overview
-// and the Plan card both quote. Four families, and the bar length compares
-// months while the segments split each one.
+// So it stops forecasting and starts reporting. ACTUALS ONLY: nothing dated
+// after today (see monthlyActuals). It also gives the ledger's income rows
+// their first appearance anywhere in the app; the Add-entry sheet has offered
+// an Income toggle since it was written and nothing ever read those rows back.
 //
-// Planned one-offs are deliberately absent: `state.extras` carry no date, they
-// were never inside projection.projected either, and choosing a month for a
-// visa fee to land in would put back exactly the kind of fiction this rebuild
-// took out. The footnote says so and points at the card that does carry them.
+// WHAT WENT WITH IT: this was the only per-month view of FUTURE money, so
+// nothing now says which month the big costs land in. Plan by stop is per stop,
+// not per month. Called out rather than lost quietly, in case it is missed.
 
-const BANDS = [
-  { key: 'stays', label: 'Stays', cls: 'bg-ac' },
-  { key: 'living', label: 'Daily living', cls: 'bg-cat-daily' },
-  { key: 'transport', label: 'Transport', cls: 'bg-ac2' },
-  { key: 'subs', label: 'Subscriptions', cls: 'bg-cat-activity' },
-] as const
-
-export function MonthlyCard({ months, total, plannedExtras, fmt }: {
-  months: MonthOut[]
-  total: number
-  /** included state.extras — named, not counted (see the note above) */
-  plannedExtras: number
-  fmt: (n: number) => string
+export function MonthlyCard({
+  months,
+  spent,
+  earned,
+  net,
+  base,
+}: {
+  months: MonthActual[]
+  spent: number
+  earned: number
+  net: number
+  /** the trip's base currency; named once in the header, not in every cell */
+  base: string
 }) {
-  if (!months.length) return null
-  const max = months.reduce((m, b) => Math.max(m, b.total), 0)
-  const peak = months.reduce((m, b) => (b.total > m.total ? b : m), months[0])
+  // One month is not a table. Below that the overview already says what was
+  // spent, and a single row would only repeat it with more furniture.
+  if (months.length < 2) return null
+
+  // Bare numbers, currency named once above. With "Ft" in all twelve cells the
+  // totals row ran into itself at 390px: three columns of seven digits plus a
+  // suffix do not fit a phone.
+  const money = (n: number) => (n === 0 ? '—' : fmtAmount(n, base))
+  const signed = (n: number) => (n > 0 ? `+${fmtAmount(n, base)}` : fmtAmount(n, base))
+  const netTone = (n: number) => (n === 0 ? 'text-tx3' : n > 0 ? 'text-ac' : 'text-warn')
 
   return (
     <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">To cover the plan</span>
-        <span className="text-[13px] text-tx3">what has to come in</span>
+        <span className="whitespace-nowrap text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">
+          Month by month
+        </span>
+        <span className="text-right text-[13px] text-tx3">what you spent and earned, in {base}</span>
       </div>
-      <div className="mt-1 text-[13px] text-tx2">
-        Biggest month is <b className="text-tx">{monthShort(peak.key).slice(0, 3)}</b> at {fmt(peak.total)}.
+
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full text-[13px] tabular-nums">
+          <thead>
+            <tr className="text-tx3">
+              <th scope="col" className="w-11 pb-1.5 text-left font-medium">
+                <span className="sr-only">Month</span>
+              </th>
+              <th scope="col" className="pb-1.5 text-right font-medium">Spent</th>
+              <th scope="col" className="pb-1.5 text-right font-medium">Earned</th>
+              <th scope="col" className="pb-1.5 text-right font-medium">Net</th>
+            </tr>
+          </thead>
+          <tbody>
+            {months.map((m) => (
+              <tr key={m.key} className="border-t border-ln">
+                <th scope="row" className="py-[7px] text-left font-medium text-tx2">
+                  {monthShort(m.key).slice(0, 3)}
+                </th>
+                <td className="py-[7px] text-right">{money(m.spent)}</td>
+                <td className="py-[7px] text-right">{money(m.earned)}</td>
+                <td className={'py-[7px] text-right font-semibold ' + netTone(m.net)}>
+                  {m.spent === 0 && m.earned === 0 ? '—' : signed(m.net)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="border-t border-ln3">
+              <th scope="row" className="pt-2.5 text-left font-semibold">All</th>
+              <td className="pt-2.5 text-right font-semibold">{money(spent)}</td>
+              <td className="pt-2.5 text-right font-semibold">{money(earned)}</td>
+              <td className={'pt-2.5 text-right font-semibold ' + netTone(net)}>{signed(net)}</td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
-      <div className="mt-3 flex flex-col gap-[7px] text-[13px]">
-        {months.map((b, i) => (
-          <div key={b.key} className="flex items-center gap-2.5">
-            <span className="w-11 flex-none text-tx2">{monthShort(b.key).slice(0, 3)}</span>
-            <span className="flex h-2 flex-1 overflow-hidden rounded-full bg-track">
-              {BANDS.map((band) => {
-                const v = b[band.key]
-                if (v <= 0) return null
-                return (
-                  <span
-                    key={band.key}
-                    className={'lv-grow block h-full ' + band.cls}
-                    style={{ width: (max ? (v / max) * 100 : 0) + '%', animationDelay: `${i * 0.05}s` }}
-                  />
-                )
-              })}
-            </span>
-            <b className="w-[84px] flex-none text-right">{fmt(b.total)}</b>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-[12px] text-tx2">
-        {BANDS.map((band) => (
-          <span key={band.key} className="flex items-center gap-1.5">
-            <i aria-hidden className={'size-2.5 rounded-full ' + band.cls} />
-            {band.label}
-          </span>
-        ))}
-      </div>
-      <div className="mt-3 flex items-baseline justify-between gap-3 border-t border-ln pt-3 text-base">
-        <b>Projected total</b>
-        <b>{fmt(total)}</b>
-      </div>
-      {plannedExtras > 0 && (
-        <p className="mt-1.5 text-[13px] text-tx2">
-          Planned one-offs ({fmt(plannedExtras)}) are not in these bars — they carry no date to land on. They are on
-          the One-offs card above, beside what you have actually paid.
-        </p>
-      )}
+
+      <p className="mt-2.5 text-[13px] leading-normal text-tx2">
+        {earned === 0
+          ? 'No income logged yet. Add one with the Income tab when you add an entry, and it will show up here.'
+          : net >= 0
+            ? 'You have brought in more than you have spent so far.'
+            : 'You have spent more than you have brought in so far.'}{' '}
+        Anything dated later than today is not counted: a scheduled charge has not left yet.
+      </p>
     </div>
   )
 }

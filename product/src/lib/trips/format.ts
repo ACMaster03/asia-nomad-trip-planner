@@ -10,6 +10,19 @@ import type { Segment, Stay } from './types'
 // else falls back to en-US narrow symbols ($, €, ฿, ₫, ៛, ₭).
 const MONEY_LOCALE: Record<string, string> = { HUF: 'hu-HU' }
 
+/**
+ * The number without its currency, grouped the way that currency's readers
+ * expect. For tables that state the currency once in the header: three money
+ * columns of "1 181 207 Ft" do not fit a 390px phone, and three columns of
+ * "1 181 207" do.
+ */
+export function fmtAmount(n: number, currency: string): string {
+  const v = Math.round(Number(n) || 0)
+  return new Intl.NumberFormat(MONEY_LOCALE[currency] ?? 'en-US', {
+    maximumFractionDigits: 0,
+  }).format(v)
+}
+
 export function fmtMoney(n: number, currency: string): string {
   const v = Math.round(Number(n) || 0)
   const locale = MONEY_LOCALE[currency] ?? 'en-US'
