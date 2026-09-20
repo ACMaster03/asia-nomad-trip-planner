@@ -545,6 +545,29 @@ export interface MonthToEarn {
   key: string
   /** what this month still needs, in base */
   amount: number
+  /** where the month is spent, most nights first — why the number is the size it is */
+  where: { city: string; nights: number }[]
+}
+
+/**
+ * Nights per city per calendar month, from the stops in the plan.
+ *
+ * A night belongs to the date you go to sleep on, so a stop runs [arrive,
+ * depart) and a stop that straddles a month split its nights between the two.
+ * That is the whole reason this exists: a month is expensive because of how
+ * many nights it holds and where, and without that beside it the figure is
+ * just a number to take on trust.
+ */
+export function nightsByMonth(segments: Segment[]): Record<string, Record<string, number>> {
+  const out: Record<string, Record<string, number>> = {}
+  for (const seg of segments) {
+    if (!seg.arrive || !seg.depart || seg.depart <= seg.arrive) continue
+    for (let d = seg.arrive; d < seg.depart; d = addDays(d, 1)) {
+      const m = (out[d.slice(0, 7)] ??= {})
+      m[seg.city] = (m[seg.city] ?? 0) + 1
+    }
+  }
+  return out
 }
 
 /**
@@ -570,10 +593,12 @@ export interface MonthToEarn {
 export function monthlyToEarn(
   outflow: MonthOut[],
   actuals: MonthActual[],
+  segments: Segment[],
   todayIso: string,
 ): { months: MonthToEarn[]; average: number; total: number } {
   const cur = todayIso.slice(0, 7)
   const spentThisMonth = actuals.find((m) => m.key === cur)?.spent ?? 0
+  const nights = nightsByMonth(segments)
 
   const months = outflow
     .filter((m) => m.key >= cur)
@@ -581,6 +606,9 @@ export function monthlyToEarn(
     .map((m) => ({
       key: m.key,
       amount: m.key === cur ? Math.max(0, m.total - spentThisMonth) : m.total,
+      where: Object.entries(nights[m.key] ?? {})
+        .map(([city, n]) => ({ city, nights: n }))
+        .sort((a, b) => b.nights - a.nights || a.city.localeCompare(b.city)),
     }))
 
   const total = months.reduce((a, m) => a + m.amount, 0)
