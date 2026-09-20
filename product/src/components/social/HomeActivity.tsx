@@ -15,6 +15,9 @@ import { useFollowedRoutes } from '@/lib/follow/useFollowedRoutes'
 import { allOverlaps, formatOverlap, meetupKey, meetupQueue, overlappingNow } from '@/lib/map/people'
 import { dismissMeetup, dismissedStore } from '@/lib/map/dismissed'
 import { tk } from '@/lib/trips/keys'
+import { useTripEvents } from '@/lib/trips/useTripEvents'
+import { useTripScope } from '@/lib/trips/TripScope'
+import { EditEventModal } from '@/app/(app)/live/EditEventModal'
 import { SocialRow } from './SocialRow'
 
 // Home's activity: the people strip, then one feed of this trip's own rows
@@ -38,6 +41,12 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
   const sb = createClient()
   const qc = useQueryClient()
   const [onlyMine, setOnlyMine] = useState(false)
+  // Editing, deleting and the queued marker came off /live's feed, which is the
+  // only place they existed. Home's feed is the one that survives, so they move
+  // here rather than disappearing with the screen.
+  const { tripId } = useTripScope()
+  const { pausedIds, delEvent } = useTripEvents()
+  const [editEvent, setEditEvent] = useState<TripEvent | null>(null)
 
   const [shown, setShown] = useState(PREVIEW)
 
@@ -145,7 +154,8 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
               Only mine
             </button>
           )}
-          <Link href="/live" className="-my-2.5 inline-flex min-h-11 items-center whitespace-nowrap text-base font-semibold text-ac2">Check-ins ›</Link>
+          {/* "Check-ins ›" used to point at /live. This IS the check-ins list
+              now, so the link pointed at a rearranged copy of its own page. */}
         </div>
       </div>
 
@@ -168,6 +178,22 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
                 social={socialById.get(it.event.id) ?? { commentCount: 0 }}
                 onReact={(kind) => reactMut.mutate({ id: it.event.id, kind })}
                 reacting={reactMut.isPending && reactMut.variables?.id === it.event.id}
+                queued={pausedIds.has(it.event.id)}
+                edited={!!it.event.edited_at}
+                // "Only your words change" (/live's rule): arrived, media and
+                // location rows carry nothing but a place and a time.
+                onEdit={
+                  mine(it.event, userId) && (it.event.kind === 'checkin' || it.event.kind === 'note')
+                    ? () => setEditEvent(it.event)
+                    : undefined
+                }
+                onDelete={
+                  mine(it.event, userId)
+                    ? () => {
+                        if (confirm('Delete this entry?')) delEvent.mutate(it.event.id)
+                      }
+                    : undefined
+                }
               />
             ) : (
               <SocialRow
@@ -183,6 +209,9 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
           )}
         </ul>
       )}
+      {editEvent && tripId && (
+        <EditEventModal ev={editEvent} tripId={tripId} onClose={() => setEditEvent(null)} />
+      )}
       {items.length < total && (
         <button
           type="button"
@@ -196,6 +225,8 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
     </>
   )
 }
+
+const mine = (e: TripEvent, userId?: string) => !!userId && e.author === userId
 
 // A trip's own row (tk.events shape) in the follower-projection shape the
 // shared row renders — rating and comment flat, photos under payload.

@@ -50,6 +50,48 @@ puts the rest behind native `<details>`. The summary reads the same keys
 migration 03 seeds, and `PROMOTED` in `CityCard.tsx` keeps them from appearing
 twice; if a key is ever renamed the cost is a repeat, never a blank screen.
 
+### DONE — /live is retired; everything it had that Home lacked moved to Home
+
+The duplication behind the "check in does nothing" report is gone. /live was
+Home a second time and is now a redirect to /dashboard. A redirect, not a
+deletion: installed apps hold their last URL, the worker caches documents by
+path, and phones carry bookmarks.
+
+Where each piece went, so nothing was dropped:
+
+| /live had | now |
+|---|---|
+| check-in sheet | `components/checkin/CheckInProvider`, mounted above every screen |
+| Note | a mode of that sheet, placeless on purpose |
+| Arrived | Home, arrival day only, gone once recorded |
+| Plan vs actual | `components/trips/PlanVsActual`, rendered on Home |
+| edit / delete / queued | Home's feed rows via `SocialRow` |
+| pre / post phase screens | Home already had its own, BeforeYouFly included |
+
+Two bugs fell out of the merge rather than being looked for. Home's "Arrived"
+was a LINK to /live, so it recorded nothing and moved you to a screen with
+another Arrived button on it. /live's was a real button shown every day of the
+trip with no already-recorded check, so it wrote duplicate events while its
+toast claimed "the button is done for this stop".
+
+`app/(app)/live/` keeps its name because CheckInModal, EditEventModal,
+FollowerNudge and Sheet still live there and are imported from elsewhere. Worth
+moving under `components/` one day; not worth the import churn in the same
+change that deletes the screen.
+
+### NOTE FOR ANYONE VERIFYING UI HERE — the dev server cannot be driven
+
+Its HMR websocket never connects in the Claude Code sandbox, so React never
+hydrates: `next dev` serves correct HTML in which every control is inert. That
+is why the /dev/*-preview routes looked like they were stuck waiting on
+Supabase earlier in this branch. They were not.
+
+`next build && next start` hydrates fine and can be driven with Playwright. A
+throwaway probe page under `app/dev/` that renders the component with the real
+provider stack, and NO `NODE_ENV` guard so it survives a production build, is
+the way to actually look at a change before shipping it. Everything in this
+round was checked that way.
+
 ### FIXED (symptom) / OPEN (cause) — Check in went to a page, not to a check-in
 
 Reported 2026-09-19 as "the check in button doesn't work, it loads a page that
@@ -78,6 +120,39 @@ and the offline outbox out of an 800-line LiveClient, which is a deliberate
 piece of work, not a fix to slip into a review pass. It also decides the
 vocabulary question below, since the Check in / Arrived / Note / Activity split
 is the same duplication seen from the wording side.
+
+### CONFIRMED then FIXED — a navigation under an open sheet unpinned the tab bar
+
+Reported minutes after #42 went live: on long screens (Explore, the ledger) the
+bottom tab bar stopped being fixed and could be scrolled past, "finding its
+place" again on scrolling back. Gone after #44. iOS only; a headless Chromium
+probe rendering the real AppNav inside the real layout kept it pinned at every
+scroll offset and found no transform, filter, contain or will-change anywhere in
+its ancestor chain, so the markup was never the problem.
+
+The path: `lockBodyScroll` holds a sheet open by setting
+`document.body.style.position = 'fixed'` with `top: -scrollY`, which is the only
+lock iOS respects. iOS is also non-compliant about `position: fixed` descendants
+of a fixed body: they can stop resolving against the viewport and resolve
+against the body box instead, which begins at `-scrollY` and runs the full
+content height. A tab bar at `bottom: 0` of THAT box sits at the bottom of the
+document. #42 fired `router.replace` while the sheet was open, i.e. a real
+navigation under a locked body, and #44 removed it.
+
+**The lock itself is unchanged and still sharp.** Nothing triggers it today,
+because the trigger was removed rather than the fragility. Two things to fix
+before the sheet moves anywhere:
+
+- `if (depth++ === 0) savedY = window.scrollY` reads 0 when the body is ALREADY
+  fixed from a leaked lock, so closing the sheet scrolls the reader to the top.
+  Recover the offset from `body.style.top` when the body is already fixed.
+- Nothing releases the lock if a sheet unmounts without its cleanup running.
+  A release keyed to navigation, or an assertion on route change, would stop a
+  leak becoming permanent.
+
+This is a prerequisite for collapsing /live into Home, not a follow-up: that
+work puts the check-in sheet in the layout, where it is mounted across far more
+navigations than it is now.
 
 ### WRONG TURN, kept for the record — the offline page was not the cause
 

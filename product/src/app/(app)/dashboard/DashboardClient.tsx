@@ -8,6 +8,9 @@ import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
 import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
+import { useCheckIn } from '@/components/checkin/CheckInProvider'
+import { useTripEvents } from '@/lib/trips/useTripEvents'
+import { PlanVsActual } from '@/components/trips/PlanVsActual'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { tripPhase } from '@/lib/trips/recap'
 import { tripRecap } from '@/lib/trips/recap'
@@ -56,6 +59,8 @@ export default function DashboardClient({
   const { fmt } = useMoney()
   const { tripId } = useTripScope()
   const { trip, cityIdx } = useTripScreen()
+  const checkIn = useCheckIn()
+  const { recordArrived } = useTripEvents()
   // Clock-dependent → client-only (SSR snapshot renders the pre layout, same
   // hydration rule the old dashboard followed, minus the setState-in-effect).
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
@@ -102,6 +107,19 @@ export default function DashboardClient({
     !placeName.toLowerCase().includes(current.city.toLowerCase())
 
   const phase = basePhase === 'live' ? (isArrive ? 'arrive' : isOff && !driftDismissed ? 'off' : 'live') : basePhase
+  // Already told us you got here? Then there is nothing left to press.
+  // Latest recorded arrival: the plan-vs-actual strip compares it with the
+  // stop the plan says you are on.
+  const lastArrivedCity = (events.data ?? []).find((e) => e.kind === 'arrived')?.payload?.city as
+    | string
+    | undefined
+  const arrivedHere =
+    !!current &&
+    (events.data ?? []).some(
+      (e) =>
+        e.kind === 'arrived' &&
+        String(e.payload?.city ?? '').toLowerCase() === current.city.toLowerCase(),
+    )
 
   // Phase changes reset scroll (handoff rule).
   useScrollReset(phase)
@@ -172,7 +190,7 @@ export default function DashboardClient({
           Nothing is archived - Trip, Money and the feed stay as they were. Follow links keep working until they expire.
         </div>
         <div className={kicker}>The feed keeps the memories</div>
-        <Link href="/live" className={card + ' flex items-center justify-between'}>
+        <Link href="/dashboard" className={card + ' flex items-center justify-between'}>
           <span>
             <span className="block text-base font-semibold">All check-ins · {recap.checkIns} so far</span>
             <span className="block text-base text-tx2">every place, photo and note, day by day</span>
@@ -285,7 +303,6 @@ export default function DashboardClient({
   const stay = current ? s.stays.find((st) => st.segId === current.id && st.include !== false) : undefined
   const recapMid = tripRecap(s, trip.data.ledger ?? [])
   const money = moneyModel(s, trip.data.ledger ?? [], cityIdx, todayIso)
-  const tripPct = day && tripDays ? Math.min(100, Math.round((day / tripDays) * 100)) : 0
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-3">
@@ -322,18 +339,18 @@ export default function DashboardClient({
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             {phase !== 'off' && <span aria-hidden className="h-2 w-2 rounded-full bg-ac" />}
-            <span className={'text-base font-semibold uppercase tracking-[.11em] ' + (phase === 'off' ? 'text-tx2' : 'text-ac')}>
+            <span className={'whitespace-nowrap text-base font-semibold uppercase tracking-[.11em] ' + (phase === 'off' ? 'text-tx2' : 'text-ac')}>
               {phase === 'off' ? 'Right now' : 'On plan'}
             </span>
           </span>
-          {/* The trip-level position lives here and nowhere else now: it used
-              to be the header subtitle, this line, AND a second progress bar
-              with the same "stop N of M" caption under it. */}
+          {/* Just the day. It briefly carried the percentage and the date home
+              as well, which pushed "ON PLAN" onto two lines on a 390px phone;
+              the date moved down to the empty half of the nights row, and the
+              percentage went altogether because Plan vs actual below now shows
+              trip progress far better than a number could. */}
           {day && (
-            <span className="text-base font-medium text-tx2">
+            <span className="flex-none text-base font-medium text-tx2">
               Day {day}{tripDays ? ` of ${tripDays}` : ''}
-              {tripPct ? ` · ${tripPct}%` : ''}
-              {s.meta.endDate ? ` · home ${new Date(s.meta.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
             </span>
           )}
         </div>
@@ -352,7 +369,14 @@ export default function DashboardClient({
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-track">
               <span className="block h-full rounded-full bg-ac" style={{ width: Math.min(100, Math.round((night / nightsHere) * 100)) + '%' }} />
             </div>
-            <div className="mt-1.5 text-right text-base font-semibold text-ac2">{Math.max(0, nightsHere - night)} nights left</div>
+            <div className="mt-1.5 flex items-baseline justify-between gap-3 text-base">
+              <span className="text-tx2">
+                {s.meta.endDate
+                  ? `home ${new Date(s.meta.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                  : ''}
+              </span>
+              <span className="font-semibold text-ac2">{Math.max(0, nightsHere - night)} nights left</span>
+            </div>
           </>
         )}
         {nextStop && (
@@ -390,20 +414,40 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Same destination as the raised tab: the sheet, not the screen that
-          holds another copy of this button. */}
-      <Link
-        href="/live?checkin=1"
+      {/* The sheet opens over Home. No navigation, nothing to come back from. */}
+      <button
+        type="button"
+        onClick={checkIn.open}
         className="flex items-center justify-center gap-2 rounded-[var(--r)] bg-ac py-[17px] text-lg font-semibold text-on"
       >
         <MapPin aria-hidden className="size-5" strokeWidth={2.2} /> Check in - where are you?
-      </Link>
-      {phase === 'arrive' && (
-        <Link href="/live" className="flex items-center justify-center gap-2 rounded-[var(--rCtl)] bg-ac2-soft py-3.5 text-base font-semibold text-ac2-deep">
-          <PlaneLanding aria-hidden className="size-5" strokeWidth={2} /> Arrived
-        </Link>
+      </button>
+      {/* Arrival day only, and gone once it is recorded.
+          It used to be a LINK to /live, so pressing "Arrived" recorded nothing
+          and dropped you on a screen with another Arrived button. And /live's
+          own button showed on every day of the trip and could be pressed
+          twice, which made its "the button is done for this stop" toast a
+          plain lie. One button, one day, once. */}
+      {phase === 'arrive' && current && !arrivedHere && (
+        <button
+          type="button"
+          onClick={() => recordArrived(current.city)}
+          className="flex items-center justify-center gap-2 rounded-[var(--rCtl)] bg-ac2-soft py-3.5 text-base font-semibold text-ac2-deep"
+        >
+          <PlaneLanding aria-hidden className="size-5" strokeWidth={2} /> Arrived in {current.city}
+        </button>
       )}
       <ComingUp state={s} todayIso={todayIso} />
+
+      {/* Came off /live, which is going away. It is the only view that puts the
+          route you drew next to the one you actually walked. */}
+      <PlanVsActual
+        inPlan={inPlan}
+        current={current ?? null}
+        stays={s.stays}
+        todayStr={todayIso}
+        lastArrivedCity={lastArrivedCity}
+      />
 
       {/* Once live, the money card speaks the Money page's language: spent so
           far against the PROJECTED total (your measured pace), not the pre-trip
