@@ -42,15 +42,18 @@ export function PlanVsActual({
   return (
     <div className={'rounded-[var(--r)] bg-sf p-4 text-tx ' + className}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-base font-semibold uppercase tracking-[.11em] text-tx2">
+        <span className="whitespace-nowrap text-base font-semibold uppercase tracking-[.11em] text-tx2">
           Plan vs actual
         </span>
+        {/* Two words, never more. "off plan · last arrived Hanoi" wrapped
+            inside the pill at 390px and took the heading onto a second line
+            with it; the city belongs in the sentence below, which has room. */}
         {offPlan ? (
-          <span className={pill + ' border-warn-line text-warn'}>
-            off plan · last arrived {lastArrivedCity}
+          <span className={pill + ' flex-none whitespace-nowrap border-warn-line text-warn'}>
+            off plan
           </span>
         ) : (
-          <span className={pill + ' border-ac-line text-ac'}>on plan</span>
+          <span className={pill + ' flex-none whitespace-nowrap border-ac-line text-ac'}>on plan</span>
         )}
       </div>
       <div className="mt-2.5 flex gap-1">
@@ -63,7 +66,10 @@ export function PlanVsActual({
             ? Math.min(100, Math.round((nightsBetween(seg.arrive, todayStr) / n) * 100))
             : 0
           return (
-            <div key={seg.id} className="min-w-0" style={{ flexGrow: n, flexBasis: 0 }}>
+            // minWidth over flex-basis: widths are proportional to nights, so
+            // on a nine-stop route a three-night stop became a sliver with an
+            // unreadable label. Proportional until it would stop being legible.
+            <div key={seg.id} className="min-w-0" style={{ flexGrow: n, flexBasis: 0, minWidth: 30 }}>
               <div className="mb-1 truncate text-center text-[13px] uppercase tracking-wide text-tx3">
                 {seg.city.slice(0, 3)}
               </div>
@@ -92,8 +98,18 @@ export function PlanVsActual({
           )
         })}
       </div>
-      <div className="mt-2 text-[13px] text-tx3">
-        ● you are here · solid = booked · dashed = planned, unbooked · widths ∝ stop length
+      {/* Was "● you are here · solid = booked · dashed = planned, unbooked ·
+          widths ∝ stop length", which is four rules and a maths symbol in one
+          line. Same information, read aloud. */}
+      <div className="mt-2 text-[13px] leading-normal text-tx3">
+        {offPlan && (
+          <span className="block font-medium text-warn">
+            You last checked in as arrived in {lastArrivedCity}, which is not the stop the plan has
+            you on today.
+          </span>
+        )}
+        The dot is where you are today. Filled bars are booked, dashed ones are still to book,
+        and a wider bar means a longer stay.
       </div>
     </div>
   )

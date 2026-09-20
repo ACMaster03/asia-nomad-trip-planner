@@ -6,6 +6,7 @@ import { TripScopeProvider } from '@/lib/trips/TripScope'
 import { MoneyProvider } from '@/lib/trips/Money'
 import { AppNav } from '@/components/AppNav'
 import { CheckInProvider } from '@/components/checkin/CheckInProvider'
+import { ConfirmProvider } from '@/components/Confirm'
 import { OfflineWarmup } from '@/components/OfflineWarmup'
 import { ToastProvider } from '@/components/Toast'
 import { PendingInvites } from '@/components/trips/PendingInvites'
@@ -62,6 +63,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {/* The check-in sheet mounts above every screen, so Check in is an
               action rather than a trip to /live. Inside ToastProvider: posting
               a check-in toasts. */}
+          <ConfirmProvider>
           <CheckInProvider>
           <OfflineWarmup />
           {/* pb clears the fixed bottom tab bar (52px bar + raised button slack
@@ -76,6 +78,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <AppNav showCheckIn={showLive} />
           </div>
           </CheckInProvider>
+          </ConfirmProvider>
         </ToastProvider>
       </MoneyProvider>
     </TripScopeProvider>

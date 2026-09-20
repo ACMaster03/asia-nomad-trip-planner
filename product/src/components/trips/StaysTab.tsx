@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { ChevronRight } from 'lucide-react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
+import { useConfirm } from '@/components/Confirm'
 import { toBase, stayNights, stayTotal } from '@/lib/trips/format'
 import { computeBudget } from '@/lib/trips/budget'
 import { StayForm } from './StayForm'
@@ -30,6 +30,7 @@ export function StaysTab() {
   const { fmt } = useMoney()
   const { trip, cities, cityIdx } = useTripScreen()
   const mut = useTripMutation()
+  const confirm = useConfirm()
   const { canEdit } = useTripRole()
   const [modal, setModal] = useState<{ stay: Stay | null } | null>(null)
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
@@ -45,8 +46,8 @@ export function StaysTab() {
     }))
     setModal(null)
   }
-  const del = (id: string) => {
-    if (!confirm('Delete this stay?')) return
+  const del = async (id: string) => {
+    if (!(await confirm({ title: 'Delete this stay?' }))) return
     mut.mutate((st) => ({ ...st, stays: st.stays.filter((x) => x.id !== id) }))
     setModal(null)
   }
@@ -146,7 +147,6 @@ export function StaysTab() {
             <span className="text-base font-medium text-tx2">
               {fmt(b.accom)} · {realStops} {realStops === 1 ? 'stop' : 'stops'} booked, {b.missingAccomStops.length} estimated
             </span>
-            <ChevronRight aria-hidden className="size-5 text-ac2" />
           </div>
         )}
       </div>

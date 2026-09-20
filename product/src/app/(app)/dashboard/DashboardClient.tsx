@@ -10,7 +10,6 @@ import { computeBudget } from '@/lib/trips/budget'
 import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
 import { useCheckIn } from '@/components/checkin/CheckInProvider'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
-import { PlanVsActual } from '@/components/trips/PlanVsActual'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { tripPhase } from '@/lib/trips/recap'
 import { tripRecap } from '@/lib/trips/recap'
@@ -108,11 +107,6 @@ export default function DashboardClient({
 
   const phase = basePhase === 'live' ? (isArrive ? 'arrive' : isOff && !driftDismissed ? 'off' : 'live') : basePhase
   // Already told us you got here? Then there is nothing left to press.
-  // Latest recorded arrival: the plan-vs-actual strip compares it with the
-  // stop the plan says you are on.
-  const lastArrivedCity = (events.data ?? []).find((e) => e.kind === 'arrived')?.payload?.city as
-    | string
-    | undefined
   const arrivedHere =
     !!current &&
     (events.data ?? []).some(
@@ -369,13 +363,12 @@ export default function DashboardClient({
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-track">
               <span className="block h-full rounded-full bg-ac" style={{ width: Math.min(100, Math.round((night / nightsHere) * 100)) + '%' }} />
             </div>
-            <div className="mt-1.5 flex items-baseline justify-between gap-3 text-base">
-              <span className="text-tx2">
-                {s.meta.endDate
-                  ? `home ${new Date(s.meta.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-                  : ''}
-              </span>
-              <span className="font-semibold text-ac2">{Math.max(0, nightsHere - night)} nights left</span>
+            {/* The date home was briefly here. On a 243-day trip it reads as a
+                stray fact next to "9 nights left", which is about THIS stop:
+                two different horizons a line apart. It is still on the Stops
+                summary, where the whole route is the subject. */}
+            <div className="mt-1.5 text-right text-base font-semibold text-ac2">
+              {Math.max(0, nightsHere - night)} nights left
             </div>
           </>
         )}
@@ -438,16 +431,6 @@ export default function DashboardClient({
         </button>
       )}
       <ComingUp state={s} todayIso={todayIso} />
-
-      {/* Came off /live, which is going away. It is the only view that puts the
-          route you drew next to the one you actually walked. */}
-      <PlanVsActual
-        inPlan={inPlan}
-        current={current ?? null}
-        stays={s.stays}
-        todayStr={todayIso}
-        lastArrivedCity={lastArrivedCity}
-      />
 
       {/* Once live, the money card speaks the Money page's language: spent so
           far against the PROJECTED total (your measured pace), not the pre-trip
