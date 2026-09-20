@@ -149,7 +149,7 @@ export default function KnowledgeClient() {
           <h1 className="font-serif text-[25px] font-semibold">Explore</h1>
         </div>
         <p className="mt-[5px] text-base leading-normal text-tx2">
-          {`Country & city knowledge base - ${fields.length} fields, rendered from the catalogue.`}
+          {`Cities we have notes on: what a day costs, whether you can work there, what the weather does, and what to see. ${fields.length} facts per city where we have them.`}
         </p>
       </div>
 

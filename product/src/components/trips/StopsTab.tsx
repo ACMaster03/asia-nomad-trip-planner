@@ -57,9 +57,10 @@ export function StopsTab() {
     }))
     setModal(null)
   }
-  const del = (id: string) => {
-    if (!confirm('Delete this stop?')) return
-    mut.mutate((s) => ({ ...s, segments: s.segments.filter((x) => x.id !== id) }))
+  const del = (seg: Segment) => {
+    if (!confirm(`Delete ${seg.city || 'this stop'}? Its stays and transport stay on the trip.`)) return
+    mut.mutate((s) => ({ ...s, segments: s.segments.filter((x) => x.id !== seg.id) }))
+    setModal(null)
   }
   const toggle = (id: string) => {
     mut.mutate((s) => ({
@@ -84,7 +85,9 @@ export function StopsTab() {
         )}
       </div>
       <p className="mb-4 mt-1 text-base text-tx2">
-        Your stops in date order. Untick one and it leaves the plan and the budget.
+        Your stops in date order. Unticking one takes its nights, its cost estimate and its
+        daily spending out of the budget. Anything already booked for it, a stay or a
+        transport leg, still counts as money owed until you remove the booking itself.
         {canEdit && <span className="font-medium text-ac2-deep"> Tap a card to edit or delete it.</span>}
       </p>
       {trip.data && <NewCountryBanner state={state} />}
@@ -142,24 +145,20 @@ export function StopsTab() {
                 ) : (
                   <span className="text-base font-medium text-warn">No stay yet</span>
                 )}
+                {/* Delete used to sit here, 16px from "Add stay" and in the same
+                    colour: two 44px targets side by side, one of them
+                    destructive, on the card you are already trying to tap. It
+                    lives in the editor now, which is where the copy above has
+                    always said it was. */}
                 {canEdit && (
-                  <span className="flex flex-none gap-4">
-                    <button
-                      type="button"
-                      title="Add accommodation for this stop"
-                      onClick={(e) => { e.stopPropagation(); setStayFor(s.id) }}
-                      className="-my-2.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2"
-                    >
-                      ＋ Add stay
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); del(s.id) }}
-                      className="-my-2.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2"
-                    >
-                      Delete
-                    </button>
-                  </span>
+                  <button
+                    type="button"
+                    title="Add accommodation for this stop"
+                    onClick={(e) => { e.stopPropagation(); setStayFor(s.id) }}
+                    className="-my-2.5 inline-flex min-h-11 flex-none items-center text-base font-semibold text-ac2"
+                  >
+                    ＋ Add stay
+                  </button>
                 )}
               </div>
             </div>
@@ -189,6 +188,7 @@ export function StopsTab() {
           defaultArrive={state.meta.startDate || ''}
           onCancel={() => setModal(null)}
           onSave={upsert}
+          onDelete={modal.seg ? () => del(modal.seg!) : undefined}
         />
       )}
       {stayFor && (

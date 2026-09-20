@@ -1,29 +1,91 @@
 <!DOCTYPE html>
+<!--
+  The service worker's fallback for a document navigation it cannot answer
+  (sw.ts `fallbacks`). Two things were wrong with the old version.
+
+  It was built on the pre-LIVHOLD kit: teal #0d9488, the Nomad compass, a
+  system font stack, 14px type and 8px radii. So the one page a traveller
+  meets when something has already gone wrong was also the one page that
+  looked like a different product.
+
+  And it asserted "You're offline", which is frequently false. This page is
+  served whenever the navigation did not complete in time, and sw.ts says so
+  in as many words: a cold lambda plus mobile data can exhaust the 25s budget
+  while the phone has perfectly good signal. It asks the browser now instead
+  of guessing, and words the uncertain case honestly.
+
+  Tokens are inlined because a static file cannot import the Tailwind build,
+  and are copied from src/app/globals.css. The theme bootstrap is the same one
+  layout.tsx runs, including the larger-text preference, so this page follows
+  the choices made in Settings rather than only the OS.
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0d9488">
-<title>Offline · Livhold</title>
+<meta name="theme-color" content="#3f5a3e">
+<title>Couldn't load that screen · Livhold</title>
+<script>(function(){try{var t=localStorage.getItem('lv-theme');var d=t==='dark'||((!t||t==='system')&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');if(localStorage.getItem('lv-larger'))document.documentElement.setAttribute('data-large','')}catch(e){}})()</script>
 <style>
-  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0a0a0a; color: #e5e5e5; text-align: center; }
-  @media (prefers-color-scheme: light) { body { background: #fafafa; color: #171717; } }
-  .card { padding: 2rem; max-width: 22rem; }
-  .compass { font-size: 3rem; }
-  h1 { font-size: 1.25rem; margin: .75rem 0 .25rem; }
-  p { font-size: .9rem; color: #8a8a8a; line-height: 1.5; }
-  button { margin-top: 1.25rem; padding: .6rem 1.4rem; font-size: .9rem; font-weight: 500;
-    color: #fff; background: #0d9488; border: 0; border-radius: .5rem; }
+  :root {
+    --canvas: #f0eee9; --sf: #ffffff; --tx: #1f2a24; --tx2: #3f5a3e;
+    --tx3: rgba(31, 42, 36, .5); --ac: #3f5a3e; --on: #ffffff;
+    --ln2: rgba(31, 42, 36, .16); --r: 22px; --rCtl: 20px;
+  }
+  :root[data-theme="dark"] {
+    --canvas: #12161a; --sf: #1f2622; --tx: #d8e0e5; --tx2: #a8b5a8;
+    --tx3: rgba(216, 224, 229, .5); --ac: #7fa37d; --on: #10160f;
+    --ln2: rgba(216, 224, 229, .18);
+  }
+  /* 16px floor across the kit (handoff github.md): never text-xs/text-sm. */
+  :root { font-size: 16px }
+  :root[data-large] { font-size: 18px }
+  * { box-sizing: border-box }
+  body {
+    margin: 0; min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+    padding: 18px;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--canvas); color: var(--tx);
+  }
+  .card {
+    width: 100%; max-width: 22rem; padding: 26px 22px; text-align: center;
+    background: var(--sf); border-radius: var(--r);
+  }
+  h1 { font-family: ui-serif, Georgia, "Times New Roman", serif;
+       font-size: 1.375rem; font-weight: 600; line-height: 1.3; margin: 0 0 .5rem }
+  p { font-size: 1rem; line-height: 1.55; color: var(--tx2); margin: 0 }
+  .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 22px }
+  /* 44px minimum tap target (README). */
+  a, button {
+    display: flex; align-items: center; justify-content: center; min-height: 44px;
+    padding: 0 18px; border: 0; border-radius: var(--rCtl);
+    font: inherit; font-size: 1rem; font-weight: 600; text-decoration: none; cursor: pointer;
+  }
+  .primary { background: var(--ac); color: var(--on) }
+  .secondary { background: transparent; color: var(--tx2); border: 1.5px solid var(--ln2) }
 </style>
 </head>
 <body>
 <div class="card">
-  <div class="compass">🧭</div>
-  <h1>You’re offline</h1>
-  <p>This screen hasn’t been cached yet. Screens you visited while online stay readable offline, and Live check-ins queue up and sync when you’re back.</p>
-  <button onclick="location.reload()">Try again</button>
+  <h1 id="title">That screen didn't load</h1>
+  <p id="body">The app couldn't reach the server in time. Nothing you have entered is lost, and check-ins you make offline queue up and sync when you are back.</p>
+  <div class="actions">
+    <button class="primary" onclick="location.reload()">Try again</button>
+    <a class="secondary" href="/dashboard">Go to Home</a>
+  </div>
 </div>
+<script>
+  // Only claim the traveller is offline when the browser actually says so.
+  // The same page is served when a slow network simply ran out the service
+  // worker's budget, and telling someone with four bars that they have no
+  // signal sends them looking for the wrong problem.
+  if (navigator.onLine === false) {
+    document.getElementById('title').textContent = "You're offline";
+    document.getElementById('body').textContent =
+      "This screen hasn't been cached yet. Screens you visited while online stay readable offline, and check-ins queue up and sync when you are back.";
+  }
+  // Retry by itself the moment the connection returns.
+  addEventListener('online', function () { location.reload() });
+</script>
 </body>
 </html>

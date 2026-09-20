@@ -20,12 +20,15 @@ export function SegmentForm({
   defaultArrive,
   onCancel,
   onSave,
+  onDelete,
 }: {
   initial: Segment | null
   cities: CityLite[]
   defaultArrive: string
   onCancel: () => void
   onSave: (s: Segment) => void
+  /** only for an existing stop; absent when adding one */
+  onDelete?: () => void
 }) {
   const [city, setCity] = useState(initial?.city ?? '')
   const [country, setCountry] = useState(initial?.country ?? '')
@@ -162,6 +165,14 @@ export function SegmentForm({
             </select>
           </label>
         </div>
+        {/* "Mid" means nothing on its own. Say what the choice DOES, next to
+            where it is made: it selects which of the catalogue's three price
+            bands this city is costed at. */}
+        <p className="-mt-1 text-[13px] text-tx2">
+          The comfort tier picks which of this city&rsquo;s three nightly price bands the budget
+          estimates with. It changes the forecast only, never a stay or fare you have entered
+          yourself.
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <label className={label}>
             Arrive
@@ -180,6 +191,18 @@ export function SegmentForm({
           <button onClick={submit} className="flex-1 rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-base font-semibold text-on">Save</button>
           <button onClick={onCancel} className="rounded-[calc(var(--r)-2px)] border-[1.5px] border-ln3 px-5 py-3.5 text-base font-semibold text-tx2">Cancel</button>
         </div>
+        {/* Below the rule, in the warning colour, and nowhere near Save: this
+            is the only place a stop can be deleted now. */}
+        {onDelete && (
+          <div className="mt-1 border-t border-ln pt-3">
+            <button
+              onClick={onDelete}
+              className="min-h-11 w-full rounded-[calc(var(--r)-2px)] border-[1.5px] border-warn-line py-2.5 text-base font-semibold text-warn"
+            >
+              Delete this stop
+            </button>
+          </div>
+        )}
       </div>
     </Modal>
   )

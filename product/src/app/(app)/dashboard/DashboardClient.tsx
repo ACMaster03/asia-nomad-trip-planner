@@ -326,7 +326,16 @@ export default function DashboardClient({
               {phase === 'off' ? 'Right now' : 'On plan'}
             </span>
           </span>
-          {day && <span className="text-base font-medium text-tx2">Day {day}{tripDays ? ` of ${tripDays}` : ''}</span>}
+          {/* The trip-level position lives here and nowhere else now: it used
+              to be the header subtitle, this line, AND a second progress bar
+              with the same "stop N of M" caption under it. */}
+          {day && (
+            <span className="text-base font-medium text-tx2">
+              Day {day}{tripDays ? ` of ${tripDays}` : ''}
+              {tripPct ? ` · ${tripPct}%` : ''}
+              {s.meta.endDate ? ` · home ${new Date(s.meta.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+            </span>
+          )}
         </div>
         <div className="mt-2 font-serif text-[30px] font-semibold leading-[1.2] tracking-[-.01em]">
           {phase === 'off' ? `${placeName}` : phase === 'arrive' ? `${current?.city}, arrival day` : current ? `${current.city}, night ${night}` : 'Between stops'}
@@ -381,8 +390,10 @@ export default function DashboardClient({
         </div>
       )}
 
+      {/* Same destination as the raised tab: the sheet, not the screen that
+          holds another copy of this button. */}
       <Link
-        href="/live"
+        href="/live?checkin=1"
         className="flex items-center justify-center gap-2 rounded-[var(--r)] bg-ac py-[17px] text-lg font-semibold text-on"
       >
         <MapPin aria-hidden className="size-5" strokeWidth={2.2} /> Check in - where are you?
@@ -393,16 +404,6 @@ export default function DashboardClient({
         </Link>
       )}
       <ComingUp state={s} todayIso={todayIso} />
-
-      <div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-track">
-          <span className="block h-full rounded-full bg-ac" style={{ width: tripPct + '%' }} />
-        </div>
-        <div className="mt-1.5 flex justify-between text-base text-tx2">
-          <span>{current ? `${current.city}, stop ${stopNo} of ${inPlan.length}` : s.meta.tripName}</span>
-          {s.meta.endDate && <span>home {new Date(s.meta.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
-        </div>
-      </div>
 
       {/* Once live, the money card speaks the Money page's language: spent so
           far against the PROJECTED total (your measured pace), not the pre-trip
@@ -427,7 +428,7 @@ export default function DashboardClient({
       {/* Activity: this trip's own rows merged with the posts of the people
           you follow (docs/SOCIAL-SCOPE.md §2). Keeps working — own rows only —
           when the social RPCs are not there yet. */}
-      <HomeActivity own={events.data ?? []} ownPending={events.isPending} userId={userId} />
+      <HomeActivity own={events.data ?? []} ownPending={events.isPending} userId={userId} segments={s.segments} />
     </main>
   )
 }

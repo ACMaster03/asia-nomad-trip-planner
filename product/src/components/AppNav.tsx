@@ -60,12 +60,21 @@ export function AppNav({ showCheckIn }: { showCheckIn: boolean }) {
         {tab(TABS[1])}
         {showCheckIn && (
           <div className="relative">
+            {/* The circle carries a VISIBLE label like its four siblings. An
+                unlabelled icon in the one position the thumb reaches first is
+                the easiest thing on the bar to press by accident, and the
+                accessible name now matches the words on screen. */}
+            {/* Goes straight to the check-in sheet. Landing on /live and
+                leaving the traveller to press a second Check in button reads
+                as the first press having done nothing. */}
             <Link
-              href="/live"
-              aria-label="Check in"
-              className="absolute left-1/2 top-0 flex h-[58px] w-[58px] -translate-x-1/2 -translate-y-[26px] items-center justify-center rounded-full bg-ac text-on shadow-lg ring-4 ring-sf"
+              href="/live?checkin=1"
+              className="absolute left-1/2 top-0 flex -translate-x-1/2 -translate-y-[26px] flex-col items-center whitespace-nowrap"
             >
-              <MapPin aria-hidden className="size-6" strokeWidth={2.2} />
+              <span className="flex size-[58px] items-center justify-center rounded-full bg-ac text-on shadow-lg ring-4 ring-sf">
+                <MapPin aria-hidden className="size-6" strokeWidth={2.2} />
+              </span>
+              <span className="mt-0.5 text-[12px] font-semibold leading-4 text-ac">Check in</span>
             </Link>
           </div>
         )}
