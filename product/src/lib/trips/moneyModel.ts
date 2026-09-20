@@ -1,7 +1,7 @@
 import type { LedgerEntry, Segment, TripState } from './types'
 import { computeBudget, type CityCost } from './budget'
 import {
-  addDays, beyondEveryday, bookingsSummary, monthlyActuals, monthlyOutflow, monthlyToEarn, planByStop, projectFromPlan, tripPace,
+  addDays, beyondEveryday, bookingsSummary, planByStop, projectFromPlan, tripPace,
 } from './spending'
 import { subsCharges } from './subscriptions'
 
@@ -29,13 +29,12 @@ export function moneyModel(state: TripState, ledger: LedgerEntry[], cityIdx: Rec
   const subsAhead = subCharges.reduce((a, c) => a + c.amount, 0)
 
   const projection = projectFromPlan(plan, bookings, ledger, state.rates, todayIso, subsAhead)
-  const monthly = monthlyOutflow(state, plan, bookings, ledger, subCharges, todayIso)
-  // What actually happened, month by month. Not shown on its own any more; it
-  // is here because toEarn needs it to net the current month against spending
-  // that has already left it.
-  const actuals = monthlyActuals(ledger, state.rates, todayIso)
-  const toEarn = monthlyToEarn(monthly.months, actuals.months, todayIso)
+  // No monthly breakdown here any more. The card that read one was cut
+  // (2026-09-20) and monthlyOutflow went unwired with it — it is still
+  // exported and still tested, because its test is the tie-out proving
+  // projection.projected decomposes without losing or double-counting a
+  // forint, and that figure is very much still on screen.
   const beyond = beyondEveryday(ledger, state.rates, todayIso)
-  return { budget, inPlan, current, pace, plan, bookings, projection, subs, subCharges, monthly, actuals, toEarn, beyond, tripEnd }
+  return { budget, inPlan, current, pace, plan, bookings, projection, subs, subCharges, beyond, tripEnd }
 }
 export type MoneyModel = ReturnType<typeof moneyModel>

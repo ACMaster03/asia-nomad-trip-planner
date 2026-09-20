@@ -26,7 +26,6 @@ import { SubscriptionSheet } from './SubscriptionSheet'
 import { OneOffsCard } from './OneOffsCard'
 import { LedgerList } from './LedgerList'
 import { PlanCard } from './PlanCard'
-import { MonthlyCard } from './MonthlyCard'
 import { EntrySheet } from './EntrySheet'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
@@ -37,7 +36,16 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 //
 // Order is tense: what we spent, then what is coming, then the receipts.
 //   overview → daily spend → where it goes → bookings → subscriptions →
-//   one-offs → plan by stop → to cover the plan → budget cap → ledger
+//   one-offs → plan by stop → budget cap → ledger
+//
+// A ninth card sat between the plan and the cap and is gone (2026-09-20). It
+// answered "what do we need to earn a month", first as projected outflow in
+// category bars, then as a spent/earned/net table, then as an average with a
+// row per month, then as the average alone. Cut at that point: "too much info
+// in a small place, and honestly we are not sure we need a table like this."
+// The forward-looking figure it rested on did not go with it - PlanCard still
+// ends in "Projected total", itemised. What the page no longer does is divide
+// that total by the months left to say what a month has to bring in.
 //
 // The ledger goes LAST (#38). It used to sit fourth, always fully expanded,
 // past a hundred rows on the live trip — everything under it was unreachable
@@ -97,7 +105,7 @@ export default function MoneyPage() {
   if (!trip.data || !model) return <CreateTripEmptyState />
   const s = trip.data.state
   const ledger = trip.data.ledger
-  const { budget, current, pace, plan, bookings, projection, subs, toEarn, beyond, tripEnd } = model
+  const { current, pace, plan, bookings, projection, subs, beyond, tripEnd } = model
   const tripStart = s.meta.startDate || undefined
   const day = tripDay(s.meta, today)
 
@@ -310,7 +318,6 @@ export default function MoneyPage() {
       />
       <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} />
       <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} />
-      <MonthlyCard months={toEarn.months} average={toEarn.average} total={toEarn.total} plannedExtras={budget.extras} base={base} />
       <Link href="/settings" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
         <span>
           <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>

@@ -413,6 +413,11 @@ export interface MonthOut {
  * land in would be exactly the kind of fiction this rebuild removes. The
  * One-offs card carries them, and the card footnotes what it is not counting.
  */
+// NOT ON ANY SCREEN since 2026-09-20, when the card that read it was cut, and
+// deliberately kept anyway: the test over this function is the tie-out that
+// proves projection.projected decomposes into stops, transport, residual and
+// subscriptions without losing or double-counting anything, and that total is
+// still the headline of the Plan card. Delete the test with it if it ever goes.
 export function monthlyOutflow(
   state: TripState,
   plan: StopPlan[],
@@ -466,123 +471,4 @@ export function monthlyOutflow(
 
   const months = Object.values(M).sort((a, b) => a.key.localeCompare(b.key))
   return { months, total: months.reduce((a, m) => a + m.total, 0) }
-}
-
-// ---------------------------------------------------------------------------
-// Month by month: what actually happened.
-// ---------------------------------------------------------------------------
-
-export interface MonthActual {
-  /** YYYY-MM */
-  key: string
-  spent: number
-  earned: number
-  /** earned - spent. Negative means the month cost more than it brought in. */
-  net: number
-}
-
-/**
- * Every month of the trip so far, with what went out, what came in, and
- * whether it ended up or down.
- *
- * ACTUALS, not a forecast, which is the whole point of it: monthlyOutflow above
- * answers "what will this cost", and this answers "how did we do". Two
- * consequences that are deliberate rather than oversights:
- *
- *  - Nothing dated after today is counted. A scheduled charge is money that
- *    WILL leave, and putting it in a column headed "spent" would mean the
- *    current month always looked worse than it had actually been.
- *  - Months are taken from the ledger, not from the trip dates, and every
- *    month between the first and the last is present even if it is empty. A
- *    gap month is information; a missing row is a reader counting backwards.
- *
- * Income finally has somewhere to go. The Add-entry sheet has offered an
- * Income toggle since it was written and nothing in the app has ever read
- * those rows back.
- */
-export function monthlyActuals(
-  ledger: LedgerEntry[],
-  rates: Record<string, number>,
-  todayIso: string,
-): { months: MonthActual[]; spent: number; earned: number; net: number } {
-  const M: Record<string, MonthActual> = {}
-  const touch = (key: string) => (M[key] ??= { key, spent: 0, earned: 0, net: 0 })
-
-  for (const e of ledger) {
-    if (!e.date || e.date > todayIso) continue // not yet happened
-    const v = toBase(e.amount, e.currency, rates)
-    if (!Number.isFinite(v) || v === 0) continue
-    const b = touch(e.date.slice(0, 7))
-    if (e.type === 'income') b.earned += v
-    else b.spent += v
-  }
-
-  const keys = Object.keys(M).sort()
-  if (!keys.length) return { months: [], spent: 0, earned: 0, net: 0 }
-
-  // Fill the gaps so the column reads as a calendar rather than a list.
-  const [fy, fm] = keys[0].split('-').map(Number)
-  const [ly, lm] = keys[keys.length - 1].split('-').map(Number)
-  const months: MonthActual[] = []
-  for (let y = fy, m = fm; y < ly || (y === ly && m <= lm); m === 12 ? ((y += 1), (m = 1)) : (m += 1)) {
-    const key = `${y}-${String(m).padStart(2, '0')}`
-    const b = touch(key)
-    b.net = b.earned - b.spent
-    months.push(b)
-  }
-
-  const spent = months.reduce((a, b) => a + b.spent, 0)
-  const earned = months.reduce((a, b) => a + b.earned, 0)
-  return { months, spent, earned, net: earned - spent }
-}
-
-// ---------------------------------------------------------------------------
-// What is still to pay for, month by month.
-// ---------------------------------------------------------------------------
-
-export interface MonthToEarn {
-  /** YYYY-MM */
-  key: string
-  /** what this month still needs, in base */
-  amount: number
-}
-
-/**
- * The months still ahead and what each one still costs, plus the average.
- *
- * Built from monthlyOutflow, so it quotes the same terms as projection.projected
- * and cannot drift from the rest of the page. Two rules that are the whole
- * point of it:
- *
- *  - MONTHS ALREADY BEHIND YOU ARE NOT LISTED. This answers "what do we still
- *    have to earn", and September is not money anyone can still go and earn.
- *  - THE CURRENT MONTH IS NET OF WHAT HAS ALREADY LEFT IT. monthlyOutflow puts
- *    settled expenses in the month they are dated, so the current month's total
- *    includes spending that is already paid for. Quoting that as "still to
- *    earn" would overstate it by however far into the month you are. The
- *    subtraction floors at zero: a month you have already overspent still needs
- *    nothing further, it does not owe you money back.
- *
- * Planned one-offs are not in here, for the same reason they were never in
- * monthlyOutflow: state.extras carry no date, so there is no month to put them
- * in. The card says so.
- */
-export function monthlyToEarn(
-  outflow: MonthOut[],
-  actuals: MonthActual[],
-  todayIso: string,
-): { months: MonthToEarn[]; average: number; total: number } {
-  const cur = todayIso.slice(0, 7)
-  const spentThisMonth = actuals.find((m) => m.key === cur)?.spent ?? 0
-
-  const months = outflow
-    .filter((m) => m.key >= cur)
-    .sort((a, b) => a.key.localeCompare(b.key))
-    .map((m) => ({
-      key: m.key,
-      amount: m.key === cur ? Math.max(0, m.total - spentThisMonth) : m.total,
-    }))
-
-  const total = months.reduce((a, m) => a + m.amount, 0)
-  return { months, total, average: months.length ? total / months.length : 0 }
 }
