@@ -1,35 +1,34 @@
 'use client'
-import { fmtAmount, monthShort, whereLine } from '@/lib/trips/format'
+import { fmtAmount, monthShort } from '@/lib/trips/format'
 import type { MonthToEarn } from '@/lib/trips/spending'
 
-// "What you need to earn" — the months still ahead, and the average across
-// them.
+// "What you need to earn" — one number: the average month still ahead.
 //
-// Third shape in a day, and the previous two are why this one is so plain.
-// It began as projected outflow in stacked category bars captioned "what has to
-// come in", which reversed the direction of every number under it. It then
-// became a spent/earned/net table of what had actually happened, which was
-// accurate and still not the question being asked. The question is: how much do
-// we have to bring in, from here?
+// Fourth shape, and the first three are why this one is a single figure.
+// Projected outflow in stacked category bars captioned "what has to come in",
+// which reversed the direction of every number under it. Then a spent/earned/
+// net table of what had actually happened, accurate and not the question being
+// asked. Then the average with a row per month under it, each row naming the
+// nights behind its number.
 //
-// So: a headline average, and the months under a line that says what they are.
+// The rows were cut on 2026-09-20: "too much info in a small place, and
+// honestly we are not sure we need a table like this". Cut on that ground and
+// not on accuracy, which matters if it is ever reopened - the argument against
+// them had been "those numbers could be wrong because we cannot know how much
+// we spend", and that is only a quarter true. FOUR of the five terms in a
+// month are facts: ledger rows already dated into it, stays on their charge
+// date, booked fares, subscriptions due. Only the nights still ahead are
+// projected. The average is those same five terms summed and divided, so it
+// carries identical uncertainty - the rows were never the uncertain part.
 //
-// The rows were nearly cut. An unlabelled number beside "Oct" could have been
-// anything, and the objection raised was "those numbers could be wrong because
-// we cannot know for sure how much money we spend". Half right, and the half
-// that is wrong is worth writing down because it will come round again: FOUR of
-// the five terms in a month are facts rather than guesses - ledger rows already
-// dated into it, stays on their charge date, booked fares, and subscriptions
-// due. Only the nights still ahead are projected, at the rate actually being
-// spent. And the average is those same five terms summed and divided, so it
-// carries identical uncertainty; cutting the rows would have removed
-// visibility, not error.
-//
-// It would also have removed the only warning that the months are nothing like
-// each other. On this trip October needs 1 405 636 against December's 133 254,
-// ten to one, and nobody earns an average. So the rows stay, the caption says
-// they are uneven before you read them, and a line at the foot answers where
-// any of it comes from.
+// WHAT THE CUT COSTS, so nobody rediscovers it as a bug. The average is the
+// only figure left, and no month looks like it: on this trip October needs
+// 1 405 636 against December's 133 254, ten to one. Earning the average every
+// month would leave you 600k short in October and well over in December. The
+// card no longer says so anywhere. If that ever bites, the cheap fix is one
+// line naming the range rather than the table coming back - monthlyToEarn()
+// still returns every month and its amount, and only this component stopped
+// reading them.
 //
 // The arithmetic is monthlyToEarn(), which excludes months already gone and
 // nets the current month against what has already left it.
@@ -46,7 +45,7 @@ export function MonthlyCard({
   total: number
   /** planned one-offs: named, not counted, because they carry no date */
   plannedExtras: number
-  /** the trip's base currency; named once, not in every row */
+  /** the trip's base currency; named once, beside the figure */
   base: string
 }) {
   if (!months.length) return null
@@ -70,31 +69,6 @@ export function MonthlyCard({
         {amt(total)} {base} over {months.length} {months.length === 1 ? 'month' : 'months'}, from{' '}
         {first}.
       </div>
-
-      {/* One month and the rows would only repeat the headline. */}
-      {months.length > 1 && (
-        <div className="mt-3">
-          <div className="text-[13px] text-tx3">
-            Not evenly spread &mdash; what each month needs on its own
-          </div>
-          <div className="mt-1 flex flex-col">
-            {months.map((m) => (
-              <div key={m.key} className="border-t border-ln py-[7px] text-[13px]">
-                <div className="flex items-baseline justify-between gap-3 tabular-nums">
-                  <span className="text-tx2">{monthShort(m.key).slice(0, 3)}</span>
-                  <span className="font-semibold">{amt(m.amount)}</span>
-                </div>
-                {/* Where the month goes, on its own line. October is expensive
-                    because of the nights in it, and the number means nothing
-                    without them. */}
-                {m.where.length > 0 && (
-                  <div className="text-[13px] leading-snug text-tx3">{whereLine(m.where)}</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <p className="mt-3 border-t border-ln pt-3 text-[13px] leading-normal text-tx2">
         Your booked stays, fares and subscriptions, plus the nights still ahead at the rate you

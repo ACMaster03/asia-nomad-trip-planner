@@ -96,34 +96,3 @@ export function localISODate(d = new Date()): string {
   const p = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
-
-/**
- * "12 nights in Hanoi, 5 in Da Nang". The unit is said once and then implied,
- * and it pluralises, because a handover day leaves exactly one night in the
- * month you arrive in: the real trip's September reads "29 nights in Bangkok,
- * 1 in Hanoi" and August, before it, was a single night.
- * because repeating "nights" for every city is what makes these lines too long
- * to read on a phone. Three cities at most: beyond that the month is a blur of
- * moving and the exact split stops being the point.
- *
- * WHICH THREE AND IN WHAT ORDER ARE TWO SEPARATE QUESTIONS, and answering them
- * with one sort was the bug. `where` arrives in travel order. Ranking it by
- * nights to pick the three that matter also reordered them, so December read
- * "13 nights in Da Nang, 4 in Hong Kong, 1 in Hanoi" when the month is
- * actually Hanoi, then Da Nang, then Hong Kong. So: choose by size, print in
- * travel order. Dropping the three longest stays to keep a one-night handover
- * would be the opposite mistake, and the chronological slice would have made
- * it.
- */
-export function whereLine(where: { city: string; nights: number }[]): string {
-  const keep = where
-    .map((w, i) => ({ ...w, i }))
-    .sort((a, b) => b.nights - a.nights || a.i - b.i)
-    .slice(0, 3)
-    .sort((a, b) => a.i - b.i)
-  const rest = where.length - keep.length
-  const parts = keep.map((w, i) =>
-    i === 0 ? `${w.nights} night${w.nights === 1 ? '' : 's'} in ${w.city}` : `${w.nights} in ${w.city}`,
-  )
-  return parts.join(', ') + (rest > 0 ? `, +${rest} more` : '')
-}

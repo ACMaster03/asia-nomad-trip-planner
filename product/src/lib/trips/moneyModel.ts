@@ -34,7 +34,7 @@ export function moneyModel(state: TripState, ledger: LedgerEntry[], cityIdx: Rec
   // is here because toEarn needs it to net the current month against spending
   // that has already left it.
   const actuals = monthlyActuals(ledger, state.rates, todayIso)
-  const toEarn = monthlyToEarn(monthly.months, actuals.months, inPlan, todayIso)
+  const toEarn = monthlyToEarn(monthly.months, actuals.months, todayIso)
   const beyond = beyondEveryday(ledger, state.rates, todayIso)
   return { budget, inPlan, current, pace, plan, bookings, projection, subs, subCharges, monthly, actuals, toEarn, beyond, tripEnd }
 }
