@@ -151,6 +151,27 @@ puts the rest behind native `<details>`. The summary reads the same keys
 migration 03 seeds, and `PROMOTED` in `CityCard.tsx` keeps them from appearing
 twice; if a key is ever renamed the cost is a repeat, never a blank screen.
 
+### RETIRED — Plan vs actual, after two rounds of testing
+
+Gone, at the owners' decision (2026-09-20). Worth writing down because it is the
+one thing rescued from /live that did not survive, so /live now leaves nothing
+behind at all.
+
+It moved twice before it went. Onto Home when /live was retired, because the
+instruction was that nothing be dropped in the merge. Then to Trip > Stops when
+the first tester reported it cramped on a nine-stop route: proportional widths
+made a three-night stop a sliver with an unreadable label, and the caption was
+four rules and a maths symbol on one line. Both were fixed (minimum widths, a
+plain-English caption, and an "off plan" pill that stopped wrapping the
+heading). She still did not want it, and on reflection neither did Patrik: it
+answered a question neither of them was actually asking day to day.
+
+If it comes back, it is whole in the history: `components/trips/PlanVsActual.tsx`
+as of f7d0d7f, rendered from StopsTab. What it did that nothing else does is put
+the planned route and the recorded arrivals side by side; the drift banner on
+Home is a different and narrower test (latest CHECK-IN place name, within 48
+hours), not a replacement.
+
 ### DONE — /live is retired; everything it had that Home lacked moved to Home
 
 The duplication behind the "check in does nothing" report is gone. /live was
@@ -165,7 +186,7 @@ Where each piece went, so nothing was dropped:
 | check-in sheet | `components/checkin/CheckInProvider`, mounted above every screen |
 | Note | a mode of that sheet, placeless on purpose |
 | Arrived | Home, arrival day only, gone once recorded |
-| Plan vs actual | `components/trips/PlanVsActual`, rendered on Home |
+| Plan vs actual | retired; see the entry below |
 | edit / delete / queued | Home's feed rows via `SocialRow` |
 | pre / post phase screens | Home already had its own, BeforeYouFly included |
 

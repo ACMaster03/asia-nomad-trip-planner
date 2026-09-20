@@ -11,9 +11,6 @@ import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useConfirm } from '@/components/Confirm'
-import { useTripEvents } from '@/lib/trips/useTripEvents'
-import { stopsAround } from '@/lib/trips/whereAmI'
-import { PlanVsActual } from '@/components/trips/PlanVsActual'
 import type { Segment } from '@/lib/trips/types'
 
 // LIVHOLD list-card idioms (handoff itinerary frames): the whole card taps to
@@ -36,7 +33,6 @@ export function StopsTab() {
   const mut = useTripMutation()
   const { canEdit } = useTripRole()
   const confirm = useConfirm()
-  const { events } = useTripEvents()
   const [modal, setModal] = useState<{ seg: Segment | null } | null>(null)
   // "＋ stay" shortcut per card — add accommodation without switching tabs
   // (owner request 2026-07-24).
@@ -99,20 +95,6 @@ export function StopsTab() {
         transport leg, still counts as money owed until you remove the booking itself.
         {canEdit && <span className="font-medium text-ac2-deep"> Tap a card to edit or delete it.</span>}
       </p>
-      {/* The route at a glance, above the list it summarises. It was briefly on
-          Home, where it was a fifth card competing with the stop card, the
-          check-in button and the money card, and squashed to nothing on a long
-          route. This page IS the route, so it belongs here. */}
-      <PlanVsActual
-        className="mb-3"
-        inPlan={planned}
-        current={stopsAround(state, todayIso).current}
-        stays={state.stays}
-        todayStr={todayIso}
-        lastArrivedCity={
-          (events.data ?? []).find((e) => e.kind === 'arrived')?.payload?.city as string | undefined
-        }
-      />
       {trip.data && <NewCountryBanner state={state} />}
       <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />
