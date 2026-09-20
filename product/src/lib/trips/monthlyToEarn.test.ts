@@ -71,3 +71,17 @@ test('a stop with no depart, or departing before it arrives, is skipped rather t
   assert.deepEqual(nightsByMonth([seg('Bad', '2026-10-05', '2026-10-05')]), {})
   assert.deepEqual(nightsByMonth([seg('Worse', '2026-10-09', '2026-10-02')]), {})
 })
+
+test('a long stay spans its months whole, and a handover leaves one night behind', () => {
+  // The real trip's shape: Bangkok, then two months in Hanoi, then on.
+  const n = nightsByMonth([
+    seg('Bangkok', '2026-08-31', '2026-09-30'),
+    seg('Hanoi', '2026-09-30', '2026-11-30'),
+    seg('Da Nang', '2026-11-30', '2026-12-14'),
+  ])
+  assert.deepEqual(n['2026-09'], { Bangkok: 29, Hanoi: 1 })
+  assert.deepEqual(n['2026-10'], { Hanoi: 31 }) // a whole month in one place
+  assert.deepEqual(n['2026-11'], { Hanoi: 29, 'Da Nang': 1 })
+  // The arrival night is one night, singular — the card says "1 night in X".
+  assert.equal(n['2026-08'].Bangkok, 1)
+})

@@ -36,6 +36,9 @@ import type { MonthToEarn } from '@/lib/trips/spending'
 
 /**
  * "12 nights in Hanoi, 5 in Da Nang". The unit is said once and then implied,
+ * and it pluralises, because a handover day leaves exactly one night in the
+ * month you arrive in: the real trip's September reads "29 nights in Bangkok,
+ * 1 in Hanoi" and August, before it, was a single night.
  * because repeating "nights" for every city is what makes these lines too long
  * to read on a phone. Three cities at most: beyond that the month is a blur of
  * moving and the exact split stops being the point.
@@ -43,7 +46,9 @@ import type { MonthToEarn } from '@/lib/trips/spending'
 function whereLine(where: { city: string; nights: number }[]): string {
   const shown = where.slice(0, 3)
   const rest = where.length - shown.length
-  const parts = shown.map((w, i) => (i === 0 ? `${w.nights} nights in ${w.city}` : `${w.nights} in ${w.city}`))
+  const parts = shown.map((w, i) =>
+    i === 0 ? `${w.nights} night${w.nights === 1 ? '' : 's'} in ${w.city}` : `${w.nights} in ${w.city}`,
+  )
   return parts.join(', ') + (rest > 0 ? `, +${rest} more` : '')
 }
 
