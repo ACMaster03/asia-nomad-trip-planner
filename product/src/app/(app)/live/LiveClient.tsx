@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import {
   onlineManager,
   useMutation,
@@ -200,7 +200,6 @@ export default function LiveClient() {
   // the parameter is dropped so a reload or a back does not reopen it, and so
   // the next press is a fresh transition rather than the same URL again.
   const wantCheckin = useSearchParams().get('checkin') === '1'
-  const router = useRouter()
   const [checkinOpen, setCheckinOpen] = useState(wantCheckin)
   // Adjusting state on a changed input, during render (react.dev pattern, the
   // same one KnowledgeClient uses for ?city=).
@@ -209,9 +208,19 @@ export default function LiveClient() {
     setSeenCheckinParam(wantCheckin)
     if (wantCheckin) setCheckinOpen(true)
   }
+  // The NATIVE history API, not router.replace. router.replace is a real
+  // navigation: on a dynamic route it refetches the RSC payload, which re-runs
+  // LivePage on the server (claims, active trip, role, prefetch) and re-renders
+  // this whole screen underneath the sheet that just opened. Reported from the
+  // road as "the home page refreshed underneath it" — and it would have done
+  // that on every single check-in, on mobile data, for nothing.
+  //
+  // window.history.replaceState changes the URL with no navigation and no
+  // request, and Next syncs useSearchParams to it, so the parameter still
+  // clears and the next press is still a fresh transition.
   useEffect(() => {
-    if (wantCheckin) router.replace('/live', { scroll: false })
-  }, [wantCheckin, router])
+    if (wantCheckin) window.history.replaceState(null, '', '/live')
+  }, [wantCheckin])
   const [noteOpen, setNoteOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
