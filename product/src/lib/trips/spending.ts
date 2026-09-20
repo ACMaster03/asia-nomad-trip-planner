@@ -557,10 +557,17 @@ export interface MonthToEarn {
  * That is the whole reason this exists: a month is expensive because of how
  * many nights it holds and where, and without that beside it the figure is
  * just a number to take on trust.
+ *
+ * EACH MONTH'S CITIES COME BACK IN THE ORDER YOU REACH THEM. The stops are
+ * sorted by arrival here rather than trusted to arrive sorted, so the first
+ * night in a city is what inserts its key and Object.entries then replays a
+ * month in travel order. The card leans on that: a month reads as a journey,
+ * so "1 night in Hanoi, 13 in Da Nang, 4 in Hong Kong" is the true shape of
+ * December and ranking it by size would scramble it.
  */
 export function nightsByMonth(segments: Segment[]): Record<string, Record<string, number>> {
   const out: Record<string, Record<string, number>> = {}
-  for (const seg of segments) {
+  for (const seg of [...segments].sort((a, b) => (a.arrive ?? '').localeCompare(b.arrive ?? ''))) {
     if (!seg.arrive || !seg.depart || seg.depart <= seg.arrive) continue
     for (let d = seg.arrive; d < seg.depart; d = addDays(d, 1)) {
       const m = (out[d.slice(0, 7)] ??= {})
@@ -606,9 +613,8 @@ export function monthlyToEarn(
     .map((m) => ({
       key: m.key,
       amount: m.key === cur ? Math.max(0, m.total - spentThisMonth) : m.total,
-      where: Object.entries(nights[m.key] ?? {})
-        .map(([city, n]) => ({ city, nights: n }))
-        .sort((a, b) => b.nights - a.nights || a.city.localeCompare(b.city)),
+      // Travel order, not size order — see nightsByMonth.
+      where: Object.entries(nights[m.key] ?? {}).map(([city, n]) => ({ city, nights: n })),
     }))
 
   const total = months.reduce((a, m) => a + m.amount, 0)
