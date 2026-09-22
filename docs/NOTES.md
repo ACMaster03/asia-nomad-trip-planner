@@ -37,7 +37,8 @@ question on the entry sheet; the one-time offer for entries already in the categ
   emptied: two stops always have a leg between them.
 - Projected total, Plan by stop and the cap row unlock after **7 days** of pace; per day and
   the daily chart stay at 3 (as shipped); Where it goes at 3 colour families; the chart's range
-  switch at 14 days. A card never disappears again once it has appeared on a journey.
+  switch at 14 days. A card never disappears again once it has appeared on a journey. The
+  7 days: yes, Patrik, 22 Sep.
 - A journey longer than a month shows Subscriptions as a one-line door from day 1, not an empty
   card.
 - "Doesn't repeat" is the third answer to the inline question; a later charge with the same
@@ -72,11 +73,17 @@ months); "suggested from the name" goes behind an ⓘ; the one-time offer and ev
 subscription are visible to both travellers on a shared journey, both get the reminder, and
 whoever answers the offer first settles it, ownership mattering only for the next journey;
 every early page ends with "More appears as you log: a chart after 3 days, a projection after a
-week". Seven days for the projection: Petra agrees, Patrik to confirm.
+week". Seven days for the projection: Petra agrees, Patrik confirmed on 22 Sep.
 
 **Decided on a phone, not here:** sheet or two pages (#63). What to time is in mock 15 §8: a
 cold open of Trip on mobile data, how warm the phone is after five minutes of editing with the
-globe behind the sheet, and how often a drag meant for the list spins the globe.
+globe behind the sheet, and how often a drag meant for the list spins the globe. Patrik handed
+the test to Petra (22 Sep). Until the sheet exists it runs on the shipped Map page at
+livhold.com, whose globe.gl globe is the one the sheet would sit on: the cold open and the
+warmth can be measured there, the drag question cannot. The Vercel preview of this branch is
+the same app behind a Vercel login (Vercel Authentication is on for every URL but the custom
+domains), so it adds nothing to the test. Petra's steps are on the summary page,
+https://claude.ai/artifact/U3adVKLbKRp7Dxr9UTDUYe.
 
 ---
 ## 2026-09-20
