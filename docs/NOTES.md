@@ -85,12 +85,12 @@ the same app behind a Vercel login (Vercel Authentication is on for every URL bu
 domains), so it adds nothing to the test. Petra's steps are on the summary page,
 https://claude.ai/artifact/U3adVKLbKRp7Dxr9UTDUYe.
 
-**Measured (Petra, 22 Sep, one phone, mobile data, private tab, the shipped Map page):** cold
+**Measured (Petra, 22 Sep, an iPhone 13, mobile data, private tab, the shipped Map page):** cold
 open to the route drawn, 2 s; Home after Map, 3 s (Home has no globe: that is the teardown plus
 Home's own load); Map again from Home, 4 s, slower than the cold open because the globe is
 rebuilt on every visit; five minutes with the globe alive, battery 83 % → 80 % and the phone
-warm to slightly hot. Spin was on (the shipped default; #63 turns it off), but the cost is the
-render loop itself: `Globe.tsx` never pauses drawing while the page is open. Read against §8's
+warm to slightly hot; an iPhone 13 is a strong phone, a mid-range Android does worse. Spin
+was on (the shipped default; #63 turns it off), but the cost is the render loop itself: `Globe.tsx` never pauses drawing while the page is open. Read against §8's
 three: the cold open passes, the heat and the battery do not for a screen opened many times a
 day, the drag question is untested. Patrik's call. What the numbers argue for: build the
 timeline as its own page first (§8's fallback), keep the globe on Map, and make "the globe
