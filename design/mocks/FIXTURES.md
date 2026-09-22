@@ -235,7 +235,7 @@ the six-stop plan above. Viewed **Mon 22 Sep 2026 = day 23, Bangkok night 22**.
   backpack 64 900 + e-SIM ≈ 3 400 + airport food 35 100) · day 4 **730 500** · day 9 **765 400** ·
   everyday 31 Aug – 3 Sep **108 400** (food & drinks 54 800, health & care 23 900, clothes
   14 400, groceries & shops 12 300, getting around 3 000) · per day **24 400** over 3 days, then
-  **15 100** over 7 · projected total on day 9 **≈ 3 496 000** (stops ≈ 2 684 000 + transport
+  **15 100** over 7 · projected total on day 9 **≈ 3 480 000** (stops ≈ 2 668 000, Bangkok ≈ 729 000 = 106 000 spent + 21 × 15 100 + stay 305 788, + transport
   248 000 + one-offs still to pay ≈ 564 000) · cap 4 500 000.
 - Subscriptions offer (mock 16 §8): the five from the #37 canon above, all prefilled monthly, the
   domain switched to yearly by hand.
