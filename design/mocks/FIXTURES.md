@@ -211,3 +211,31 @@ Same date/time/author/rating and ONE canonical comment string each:
   zero trips, mid-onboarding, or freshly-revoked access. Trip-scoped settings stay on Trip settings (09).
 - Delete-account consequences (confirm state): **1 owned trip (Asia 2026–27) · 34 ledger entries ·
   every photo**; seats on joined trips are freed; owners keep their trips.
+
+## Mocks 15 and 16 canon (2026-09-22 — issues #58, #59, #60, #62, #63)
+
+The two mocks filed from the 2026-09-22 product review (`15-trip-timeline.html`,
+`16-money-quiet.html`) are drawn on the **live-shaped fixture**
+(`product/src/app/dev/money-preview/fixture.ts`), the same data mock 14 moved to, not on
+the six-stop plan above. Viewed **Mon 22 Sep 2026 = day 23, Bangkok night 22**.
+
+- Journey **Asia** · departs Mon 31 Aug 2026 · ends 30 Apr 2027 (242 nights) · home Budapest.
+- Stops: **Bangkok** 1 → 30 Sep (29 n) · **Hanoi** 30 Sep → 13 Nov (44 n) · **Da Nang** 13 Nov →
+  13 Dec (30 n). 103 of 242 nights placed.
+- Legs: Budapest → Bangkok, flight, Mon 31 Aug, **via Shanghai · 14 h 35**, booked,
+  **248 000 Ft**, paid · Bangkok → Hanoi, Wed 30 Sep, nothing booked · Hanoi → Da Nang, Fri 13
+  Nov, train, idea · Da Nang → Budapest, not planned.
+- Stays: Bangkok **Home in Khet Huai Khwang** (Booking.com, 33.71 USD/n, 29 n, paid 9 Jul,
+  **305 788 Ft**) · Hanoi **Văn Giang (Mai Kenny)** (Airbnb, 29 USD/n, 44 n, card 29 Sep,
+  ≈ 433 800 Ft) · Da Nang **An Bang beach house** (Airbnb, 41 USD/n, 13 → 30 Nov, 17 n,
+  shortlist, ≈ 237 000 Ft) → **no bed 30 Nov → 13 Dec, 13 nights**.
+- FX for these two mocks: **1 USD = 312.8 Ft** (so 33.71 → 10 545 and 977.59 → 305 788, as in
+  mock 14) · **1 THB = 10 Ft**. A 35 USD/night stay ≈ 10 950 Ft/n, ≈ 142 000 Ft for 13 nights.
+- Money replay (mock 16): day 1 spent so far **657 200 Ft** (stay 305 788 + flight 248 000 +
+  backpack 64 900 + e-SIM ≈ 3 400 + airport food 35 100) · day 4 **730 500** · day 9 **765 400** ·
+  everyday 31 Aug – 3 Sep **108 400** (food & drinks 54 800, health & care 23 900, clothes
+  14 400, groceries & shops 12 300, getting around 3 000) · per day **24 400** over 3 days, then
+  **15 100** over 7 · projected total on day 9 **≈ 3 480 000** (stops ≈ 2 668 000, Bangkok ≈ 729 000 = 106 000 spent + 21 × 15 100 + stay 305 788, + transport
+  248 000 + one-offs still to pay ≈ 564 000) · cap 4 500 000.
+- Subscriptions offer (mock 16 §8): the five from the #37 canon above, all prefilled monthly, the
+  domain switched to yearly by hand.
