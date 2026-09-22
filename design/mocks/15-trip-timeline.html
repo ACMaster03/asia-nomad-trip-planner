@@ -149,11 +149,22 @@
   .onglobe{display:none;font-weight:600;color:var(--tx2);font-size:13px;align-items:center;gap:5px}
   .onglobe svg{width:15px;height:15px}
   .varB .onglobe{display:inline-flex}
-  .lcard{display:flex;align-items:flex-start;gap:10px;background:var(--sf);border-radius:16px;padding:10px 12px}
-  .leg.open .lcard,.leg.idea .lcard{background:transparent;border:1.5px dashed var(--ln3)}
-  .lcard .ico{width:28px;height:28px;border-radius:10px;background:var(--tag);color:var(--tagInk);display:flex;align-items:center;justify-content:center;flex:none;font-size:15px;margin-top:1px}
+  .lcard{display:flex;align-items:flex-start;gap:10px;background:var(--ac2Soft);border-radius:14px;padding:9px 12px}
+  .leg.open .lcard,.leg.idea .lcard{background:transparent;border:1.5px dashed var(--ac2Line)}
+  .lcard .ico{width:28px;height:28px;border-radius:10px;background:var(--sf);color:var(--ac2Deep);display:flex;align-items:center;justify-content:center;flex:none;font-size:15px;margin-top:1px}
   .lcard .ico svg{width:16px;height:16px}
-  .leg.open .lcard .ico{background:transparent;border:1.5px dashed var(--ln3);color:var(--tx3)}
+  .leg.open .lcard .ico{background:transparent;border:1.5px dashed var(--ac2Line);color:var(--ac2Deep)}
+  .tick{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--ln3);flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:transparent;margin-top:2px}
+  .tick.on{background:var(--ac);border-color:var(--ac);color:var(--on)}
+  .nh .nm{display:flex;gap:10px;align-items:flex-start;min-width:0}
+  .info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;border:1.5px solid var(--ac2Line);color:var(--ac2Deep);font-size:11px;font-weight:700;font-family:Lora,Georgia,serif;font-style:italic;flex:none}
+  .orrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-top:5px}
+  .orrow .inp{margin-top:0}
+  .orrow .chip{white-space:nowrap}
+  .or{font-size:13px;color:var(--tx3)}
+  .lcard .r2 .s:first-child{min-width:0}
+  .lcard .r2 .okTx,.lcard .r2 .faint{flex:none}
+  .tblwrap{overflow-x:auto}
   .lcard .b{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px}
   .lcard .r1,.lcard .r2{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
   .lcard .t{font-size:15px;font-weight:600;line-height:1.25}
@@ -161,7 +172,7 @@
   .lcard .amt{white-space:nowrap;font-weight:600;font-size:14px}
   .lcard .add{font-size:13px;min-height:0;white-space:nowrap}
   .leg.open::before,.leg.idea::before{content:"";position:absolute;left:-23px;top:-8px;bottom:-8px;width:6px;background:var(--canvas)}
-  .leg.open::after,.leg.idea::after{content:"";position:absolute;left:-21px;top:-8px;bottom:-8px;border-left:2px dashed var(--ln3)}
+  .leg.open::after,.leg.idea::after{content:"";position:absolute;left:-21px;top:-8px;bottom:-8px;border-left:2px dashed var(--ac2Line)}
   .insert{display:flex;justify-content:center}
   .insert .pill{background:var(--sf);border-color:var(--ac2Line);color:var(--ac2Deep);font-weight:600}
   .sum{font-size:14px;color:var(--tx2);font-weight:500;background:var(--sf);border-radius:var(--r);padding:12px 16px}
@@ -231,7 +242,7 @@
   <symbol id="settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.2a2 2 0 0 1 1 1.7V20a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.2a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
-  <symbol id="plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M3.77 10.77 2 9l2-4.5 1.1.55c.55.28.9.84.9 1.45v.86l.3.15 4.8-2.4 2-4.5 1.1.55a2 2 0 0 1 1 2.53L14.14 8l1.88.94 3.5-3.5c.6-.6 1.5-.6 2.1 0 .5.5.6 1.2.2 1.7L16 13.5l-2.1 4.2a2 2 0 0 1-2.8.9l-1-.6-.2-.4.9-4-3.6-1.8-1.2 1.2a2 2 0 0 1-2.1.4Z"/></symbol>
+  <symbol id="plane" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></symbol>
   <symbol id="train" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h.01"/><path d="M16 15h.01"/></symbol>
 
   <!-- the globe art: drawn once, used by every dark frame -->
@@ -276,41 +287,42 @@
 <template id="tpl-tl">
   <div class="tl">
     <div class="node home"><span class="dot">⌂</span><span class="callout" style="top:-8px;right:-8px">1</span><div class="ncard soft"><span class="t">Budapest</span><span class="s">Home · every journey starts and ends here</span></div></div>
-    <div class="leg booked"><span class="callout" style="top:-8px;right:-8px">2</span><div class="lcard"><span class="ico"><svg><use href="#plane"/></svg></span><span class="b"><span class="r1"><span class="t">Budapest → Bangkok</span><span class="amt">248 000 Ft</span></span><span class="r2"><span class="s">Mon 31 Aug · via Shanghai · 14 h 35</span><span class="s okTx">paid</span></span></span></div></div>
+    <div class="leg booked"><span class="callout" style="top:-8px;right:-8px">2</span><div class="lcard"><span class="ico"><svg><use href="#plane"/></svg></span><span class="b"><span class="r1"><span class="t">Budapest → Bangkok</span><span class="amt">248 000 Ft</span></span><span class="r2"><span class="s">Mon 31 Aug · via Shanghai · 14&nbsp;h&nbsp;35</span><span class="s okTx">paid</span></span></span></div></div>
     <div class="node stop current"><span class="dot">1</span><span class="callout" style="top:-8px;right:-8px">3</span>
       <div class="ncard">
-        <div class="nh"><span><span class="t">Bangkok 🇹🇭</span><span class="s">1 → 30 Sep · Mid</span></span><span class="num"><b>29</b><small>nights</small></span></div>
+        <div class="nh"><span class="nm"><span class="tick on">✓</span><span><span class="t">Bangkok 🇹🇭</span><span class="s">1 → 30 Sep</span></span></span><span class="num"><b>29</b><small>nights</small></span></div>
         <div class="bar"><span style="width:76%"></span></div><div class="right">night 22 · 7 left</div>
         <div class="stays">
-          <div class="stay"><span class="r1"><span class="t">Home in Khet Huai Khwang</span><span class="amt">305 788 Ft</span></span><span class="s">Booking.com · 29 nights · paid 9 Jul</span></div>
-          <div class="foot"><span class="add">＋ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
+          <div class="stay"><span class="r1"><span class="t">Home in Khet Huai Khwang</span><span class="amt">305 788 Ft</span></span><span class="s">Booking.com · 29 nights · <span class="okTx">paid 9 Jul</span></span></div>
+          <div class="foot"><span class="add">+ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
         </div>
       </div>
     </div>
-    <div class="leg open"><span class="callout" style="top:-8px;right:-8px">4</span><div class="lcard"><span class="ico">→</span><span class="b"><span class="r1"><span class="t">Bangkok → Hanoi</span></span><span class="r2"><span class="s">Wed 30 Sep · nothing booked</span><span class="add">＋ Add transport</span></span></span></div></div>
+    <div class="leg open"><span class="callout" style="top:-8px;right:-8px">4</span><div class="lcard"><span class="ico">→</span><span class="b"><span class="r1"><span class="t">Bangkok → Hanoi</span></span><span class="r2"><span class="s">Wed 30 Sep · nothing booked</span><span class="add">+ Add transport</span></span></span></div></div>
     <div class="node stop"><span class="dot">2</span>
       <div class="ncard">
-        <div class="nh"><span><span class="t">Hanoi 🇻🇳</span><span class="s">30 Sep → 13 Nov · Mid</span></span><span class="num"><b>44</b><small>nights</small></span></div>
+        <div class="nh"><span class="nm"><span class="tick on">✓</span><span><span class="t">Hanoi 🇻🇳</span><span class="s">30 Sep → 13 Nov</span></span></span><span class="num"><b>44</b><small>nights</small></span></div>
         <div class="stays">
-          <div class="stay"><span class="r1"><span class="t">Văn Giang (Mai Kenny)</span><span class="amt">≈ 433 800 Ft</span></span><span class="s">Airbnb · 44 nights · card 29 Sep</span></div>
-          <div class="foot"><span class="add">＋ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
+          <div class="stay"><span class="r1"><span class="t">Văn Giang (Mai Kenny)</span><span class="amt">≈ 433 800 Ft</span></span><span class="s">Airbnb · 44 nights · <span class="warnTx">card charged on 29 Sep</span></span></div>
+          <div class="foot"><span class="add">+ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
         </div>
       </div>
     </div>
     <div class="leg idea"><div class="lcard"><span class="ico"><svg><use href="#train"/></svg></span><span class="b"><span class="r1"><span class="t">Hanoi → Da Nang</span></span><span class="r2"><span class="s">Fri 13 Nov · train · idea</span><span class="s faint">not booked</span></span></span></div></div>
     <div class="node stop"><span class="dot">3</span><span class="callout" style="top:-8px;right:-8px">5</span>
       <div class="ncard">
-        <div class="nh"><span><span class="t">Da Nang 🇻🇳</span><span class="s">13 Nov → 13 Dec · Mid</span></span><span class="num"><b>30</b><small>nights</small></span></div>
+        <div class="nh"><span class="nm"><span class="tick on">✓</span><span><span class="t">Da Nang 🇻🇳</span><span class="s">13 Nov → 13 Dec</span></span></span><span class="num"><b>30</b><small>nights</small></span></div>
         <div class="stays">
-          <div class="stay"><span class="r1"><span class="t">An Bang beach house</span><span class="amt">≈ 237 000 Ft</span></span><span class="s">Airbnb · 13 → 30 Nov · 17 nights · shortlist</span></div>
+          <div class="stay"><span class="r1"><span class="t">An Bang beach house</span><span class="amt">≈ 237 000 Ft</span></span><span class="s">Airbnb · 13 → 30 Nov · 17 nights · idea</span></div>
           <div class="stay gap"><span class="r1"><span class="t">No bed 30 Nov → 13 Dec</span><span class="amt">›</span></span><span class="s">13 nights · tap to add a stay</span></div>
-          <div class="foot"><span class="add">＋ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
+          <div class="foot"><span class="add">+ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
         </div>
       </div>
     </div>
-    <div class="insert"><span class="callout" style="top:-10px;right:60px">6</span><span class="pill">＋ Add stop</span></div>
-    <div class="leg open"><div class="lcard"><span class="ico">⌂</span><span class="b"><span class="r1"><span class="t">Da Nang → Budapest</span></span><span class="r2"><span class="s">not planned · the journey ends 30 Apr</span><span class="add">＋ Add transport</span></span></span></div></div>
-    <div class="sum">3 stops · 103 of 242 nights placed · home 30 Apr</div>
+    <div class="insert"><span class="callout" style="top:-10px;right:60px">6</span><span class="pill">+ Add stop</span></div>
+    <div class="leg open"><div class="lcard"><span class="ico">→</span><span class="b"><span class="r1"><span class="t">→ Home</span></span><span class="r2"><span class="s">not planned yet</span></span></span></div></div>
+    <div class="node home"><span class="dot">⌂</span><div class="ncard soft"><span class="t">Budapest</span><span class="s">Home again · 30 Apr</span></div></div>
+    <div class="sum">103 of 242 nights placed</div>
   </div>
 </template>
 
@@ -320,7 +332,7 @@
     <div class="srow on"><span class="sdot">1</span><span class="b"><span class="t">Bangkok</span><span class="s">1 – 30 Sep · night 22 of 29</span></span><span class="faint">›</span></div>
     <div class="srow"><span class="sdot">2</span><span class="b"><span class="t">Hanoi</span><span class="s">30 Sep – 13 Nov · stay booked · leg not booked</span></span><span class="faint">›</span></div>
     <div class="srow"><span class="sdot">3</span><span class="b"><span class="t">Da Nang</span><span class="s">13 Nov – 13 Dec · <span class="warnTx">no bed for 13 nights</span></span></span><span class="faint">›</span></div>
-    <div class="srow add">＋ Add stop</div>
+    <div class="srow add">+ Add stop</div>
   </div>
 </template>
 
@@ -339,9 +351,9 @@
 </template>
 
 <div class="page">
-  <div class="eyebrow">Livhold · Trip · design review · round 1 · issues #58 and #63</div>
+  <div class="eyebrow">Livhold · Trip · design review · round 2 · issues #58 and #63 · Petra's comments folded in</div>
   <h1>One timeline, and the globe underneath it</h1>
-  <p class="lede">Two things to look at on a phone. First, Trip becomes one timeline: home, leg, stop, leg, stop, home. Stays live inside the stop, transport lives on the leg between two stops, and a place you only pass through is a via on the leg. Second, whether Trip and Map are one screen, the globe as the canvas with the timeline as a sheet over it, or two pages with strong cross-links. Sample data is the Asia journey on Monday 22 September: day 23, Bangkok night 22, the Hanoi leg not booked, Da Nang half covered.</p>
+  <p class="lede">Round 2 applies Petra's seventeen comments from round 1: transport as pale-mauve strips so a full list reads at a glance, the budget tick back on the city card, two states instead of three (Idea, Booked), the comfort level behind an ⓘ, an "or" between each deadline date and its chip, the reminder only when there is a free-cancellation date, and the way home no longer naming the last city. Version A and version B now carry labels and a side-by-side table, because the pictures share the same parts and the difference is whether Trip and Map are one screen or two. Sample data is unchanged: the Asia journey on Monday 22 September, day 23, Bangkok night 22.</p>
   <div class="model">
     <b>Decided in #58, not up for review here</b>
     <ul>
@@ -351,11 +363,17 @@
       <li>Extras has left for Money as One-offs (#39). The tabs Stops / Stays / Transport / Extras go.</li>
       <li>Nights math, "Bangkok, night 22", booked / not booked, cancel-by reminders and the plan → ledger import keep working unchanged.</li>
     </ul>
+    <b style="display:block;margin-top:12px">Decided in round 1, from Petra's comments</b>
+    <ul>
+      <li>The budget tick stays on the city card: fastest, reversible, and a faded card shows a maybe-stop at a glance.</li>
+      <li>Two states everywhere, Idea and Booked. A price typed on an Idea counts as the estimate. Shortlist is gone.</li>
+      <li>The comfort level leaves the card and sits in the editor behind an ⓘ. The summary line is just the nights.</li>
+      <li>The way home is a dashed "not planned yet" leg into the home node; no card names the last city as the last stop.</li>
+    </ul>
     <b style="display:block;margin-top:12px">Open, and decided on a phone</b>
     <ul>
-      <li>Sheet over the globe (section 2) or two pages with cross-links (section 3). Tap the sheets in section 2: they cycle through their three heights.</li>
-      <li>The tick that takes a stop out of the budget: on the card, as today, or inside the stop editor (section 4).</li>
-      <li>Whether an empty leg card is tappable. Drawn here as yes: it opens the leg editor (section 6).</li>
+      <li>Version A, one screen (section 2), or version B, two screens (section 3). Petra's vote: A, because People gets its own tab. The phone test in section 8 still has to pass.</li>
+      <li>Whether the optional connection on a flight (section 6) earns its place. Drawn small; dropped if nobody uses it.</li>
     </ul>
   </div>
   <div class="toc">
@@ -381,15 +399,15 @@
       <div class="issue">#58 · one page in date order, no tabs; the rail on the left is the journey</div>
       <ul>
         <li><span class="n">1</span><b>Home is the first and the last node</b>, drawn hollow, with no nights and no card to edit. Where you live is set once under your avatar (Account) and reused by every journey. The globe's ⌂ marker already exists.</li>
-        <li><span class="n">2</span><b>A leg is the card between two stops</b> and the only place transport is entered. Its from, to and date come from the stops on either side, so the flight is never typed as "transport or extra". A booked leg is solid and shows its price and paid state; <b>via Shanghai · 14 h 35</b> is the connection, a place you pass through, drawn on the globe as a dogleg with the hours on it.</li>
-        <li><span class="n">3</span><b>A stop card is what the Stops card is today</b>, plus its stays underneath. Nights, dates and comfort tier on the first line, the progress bar for the stop you are in, then one row per stay with its nights, paid state and total. "＋ Add stay" lives on the stop, not on a separate page.</li>
-        <li><span class="n">4</span><b>An unbooked leg is dashed</b> and says so; "＋ Add transport" opens the leg editor (section 6). The rail itself goes dashed there too, so the gap in the plan is visible from across the room.</li>
+        <li><span class="n">2</span><b>A leg is the strip between two stops</b> and the only place transport is entered. Legs are pale mauve, the app's transport colour, and stops are white cards, so a full list still reads at a glance (Petra, round 1). Its from, to and date come from the stops on either side, so the flight is never typed as "transport or extra". A booked leg is solid and shows its price and paid state; <b>via Shanghai · 14 h 35</b> is the connection, a place you pass through, drawn on the globe as a dogleg with the hours on it.</li>
+        <li><span class="n">3</span><b>A stop card is what the Stops card is today</b>, plus its stays underneath: the tick, the name, the dates, the progress bar for the stop you are in, then one row per stay with its nights, its money state and its total. The comfort level is gone from the card, it meant nothing next to a paid stay, and lives in the editor. An upcoming charge reads "card charged on 29 Sep" in amber; a paid stay reads "paid 9 Jul" in green. "+ Add stay" lives on the stop, not on a separate page.</li>
+        <li><span class="n">4</span><b>An unbooked leg is dashed</b> and says so; "+ Add transport" opens the leg editor (section 6). The rail itself goes dashed there too, so the gap in the plan is visible from across the room.</li>
         <li><span class="n">5</span><b>Two stays in Da Nang would be two rows; here there is one and a gap.</b> "No bed 30 Nov → 13 Dec" is the amber row, a warning, and tapping it opens Add stay with those dates already in (section 5). The overlap warning stays per stop: two stays in Da Nang may not overlap each other.</li>
-        <li><span class="n">6</span><b>A stop is inserted at the rail</b>, between any two nodes; the last "＋ Add stop" is always there, above the leg home. The leg home reads "not planned · the journey ends 30 Apr", which is the old "24 nights unassigned" without a table.</li>
+        <li><span class="n">6</span><b>A stop is inserted at the rail</b>, between any two nodes; the last "+ Add stop" is always there, above the way home. The way home is a dashed "not planned yet" leg into the home node, which says "Home again · 30 Apr". The last city you added is not necessarily the last one of the journey (Petra, round 1), so no card names it as such.</li>
         <li><span class="n">7</span><b>The journey picker is the title</b> (#21: "current journey", chosen from your journeys in the Trip header, not in Settings). Behind the gear: dates, currency, cap, travel partners, sharing, delete or leave.</li>
-        <li>The summary line at the bottom is the Stops tab's footer, unchanged. Extras is gone: visas, insurance and gear are One-offs on Money.</li>
+        <li>The summary line is just the nights: the stops and the date home are already on the page. Stays and legs have two states, Idea and Booked; a price typed on an Idea counts as the estimate. Extras is gone: visas, insurance and gear are One-offs on Money.</li>
       </ul>
-      <div class="q"><b>Question:</b> the tick that takes a stop out of the budget is not on these cards. Keep it on the card (today's behaviour, one more control per stop), or move it into the stop editor as a switch (section 4)? Drawn here as the editor.</div>
+      <div class="ok"><b>Decided in round 1 (Petra):</b> the tick stays on the city card. It is the fastest way to take a stop out of the budget, it is reversible, and a faded card shows a maybe-stop at a glance.</div>
       <div class="ok"><b>Copy diet applied (#65):</b> the four paragraphs that opened Stops, Stays, Transport and Extras are gone. Nothing on this screen explains itself; the one sentence left is on the home node.</div>
     </div>
   </section>
@@ -397,9 +415,17 @@
   <!-- ─────────────── 2 · VARIANT A: GLOBE + SHEET ─────────────── -->
   <section class="mock wide" id="s2">
     <div>
-      <div class="eyebrow">Screens 2a–2c · variant A</div>
-      <h2 style="font-size:24px;font-weight:600;margin-top:4px">The globe is the canvas, the timeline is a sheet over it</h2>
-      <p class="muted" style="max-width:64ch;margin:8px 0 22px">Three heights, one sheet. <b>Tap any sheet below and it moves to the next height</b>, so you can feel the sizes on your own phone. Collapsed is a one-line strip; half is the stop list; full is the editor from screen 1.</p>
+      <div class="eyebrow">Screens 2a–2c · version A · one screen</div>
+      <h2 style="font-size:24px;font-weight:600;margin-top:4px">Version A: Trip and Map are one screen</h2>
+      <p class="muted" style="max-width:64ch;margin:8px 0 14px">The globe is always behind the list, and the list is a drawer you pull up. You never leave this screen to see the map. <b>Tap any drawer below and it moves to the next height</b>: closed is a one-line strip, half open is the stop list, fully open is the editor from screen 1. Choosing version A means these three screens, and the bottom bar Home · Trip · Check in · Money · People.</p>
+      <div class="tblwrap" style="margin-bottom:14px"><table style="max-width:none">
+        <tr><th></th><th>Version A · one screen (2a–2c)</th><th>Version B · two screens (3a–3b)</th></tr>
+        <tr><td>Where the globe is</td><td>always behind the list</td><td>on its own Map screen</td></tr>
+        <tr><td>How you get to a stop's editor</td><td>pull the drawer up</td><td>on the Trip screen, or from the Map's bottom card</td></tr>
+        <tr><td>Bottom bar</td><td>Home · Trip · Check in · Money · People</td><td>Home · Trip · Check in · Money · Map, with People behind your avatar</td></tr>
+        <tr><td>What it costs</td><td>the globe loads every time you open Trip</td><td>the globe loads only when you open Map</td></tr>
+      </table></div>
+      <div class="ok" style="margin:0 0 22px"><b>Petra's vote after round 1:</b> version A, because People gets its own tab. The phone test in section 8 still has to pass.</div>
       <div class="frames">
         <div class="frame">
           <div class="phone">
@@ -415,7 +441,7 @@
             </div>
             <div data-tpl="tpl-nav-merged"></div>
           </div>
-          <div class="cap">2a · collapsed: the strip. What Home's hero says, in one line, over the whole route.</div>
+          <div class="cap">2a · closed drawer: one line over the whole route, what Home's hero says.</div>
         </div>
         <div class="frame">
           <div class="phone">
@@ -431,7 +457,7 @@
             </div>
             <div data-tpl="tpl-nav-merged"></div>
           </div>
-          <div class="cap">2b · half: the stop list. The globe still shows the current stop and the next leg above it.</div>
+          <div class="cap">2b · half open: the stop list. The globe still shows the current stop and the next leg above it.</div>
         </div>
         <div class="frame">
           <div class="phone">
@@ -446,7 +472,7 @@
             </div>
             <div data-tpl="tpl-nav-merged"></div>
           </div>
-          <div class="cap">2c · full: the editor. Screen 1 inside the sheet; a band of globe stays visible at the top to pull it back down.</div>
+          <div class="cap">2c · fully open: the editor. Screen 1 inside the drawer; a band of globe stays visible at the top to pull it back down.</div>
         </div>
       </div>
       <div class="frames" style="margin-top:28px">
@@ -500,9 +526,9 @@
   <!-- ─────────────── 3 · VARIANT B: TWO PAGES ─────────────── -->
   <section class="mock wide" id="s3">
     <div>
-      <div class="eyebrow">Screens 3a–3b · variant B, the fallback</div>
-      <h2 style="font-size:24px;font-weight:600;margin-top:4px">Two pages with strong cross-links</h2>
-      <p class="muted" style="max-width:64ch;margin:8px 0 22px">If the sheet fails on a phone: Trip stays a page, Map stays a page, and each knows about the other. A stop tapped on Trip can fly the globe there; a stop tapped on the globe opens its editor.</p>
+      <div class="eyebrow">Screens 3a–3b · version B · two screens</div>
+      <h2 style="font-size:24px;font-weight:600;margin-top:4px">Version B: Trip is a list, Map is the globe, with a jump between them</h2>
+      <p class="muted" style="max-width:64ch;margin:8px 0 22px">The fallback if the drawer fails on a phone. Trip stays a plain screen, Map stays a screen, and each has a button to the other: "On the globe" on a city card flies the globe there; "Edit stop" on the Map's bottom card opens the editor. Same parts as version A, arranged as two screens instead of one.</p>
       <div class="frames">
         <div class="frame">
           <div class="phone">
@@ -559,14 +585,13 @@
           <label class="field">Leave<div class="inp">30 Sep<span class="faint">▾</span></div></label>
         </div>
         <div class="line" style="margin-top:-4px">29 nights. Moving Leave moves the Hanoi leg with it.</div>
-        <div><div class="field">Comfort</div><div class="chips" style="margin-top:6px"><span class="chip">Budget</span><span class="chip on">Mid</span><span class="chip">Comfort</span></div><div class="line">Sets the nightly estimate until a stay is booked.</div></div>
-        <div class="trow" style="position:relative"><span class="callout" style="top:-8px;right:-8px">15</span><span><span class="t">Counted in the budget</span><span class="line" style="margin:0">Off drops its nights from the plan.</span></span><span class="toggle"></span></div>
+        <div style="position:relative"><span class="callout" style="top:-8px;right:-8px">15</span><div class="field" style="display:flex;align-items:center;gap:6px">Comfort <span class="info">i</span></div><div class="chips" style="margin-top:6px"><span class="chip">Budget</span><span class="chip on">Mid</span><span class="chip">Comfort</span></div></div>
         <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">16</span>
           <div class="kicker">Stays</div>
           <div class="stay" style="padding:8px 0 4px"><span class="r1"><span class="t">Home in Khet Huai Khwang</span><span class="faint">›</span></span><span class="s">1 – 30 Sep · paid</span></div>
-          <span class="add">＋ Add stay</span>
+          <span class="add">+ Add stay</span>
         </div>
-        <span class="add" style="color:var(--tx2)">＋ Note</span>
+        <span class="add" style="color:var(--tx2)">+ Note</span>
         <div class="btn">Save</div>
         <div style="border-top:1px solid var(--ln);padding-top:10px;position:relative"><span class="callout" style="top:0;right:-8px">17</span><div class="btn warnB">Delete this stop</div></div>
       </div>
@@ -577,10 +602,9 @@
       <div class="issue">Tap a stop card, in either variant · replaces the centred Modal with a bottom sheet (RIG-PARITY §1)</div>
       <ul>
         <li><span class="n">14</span><b>Arrive and Leave are the stop</b>; city and country were picked when the stop was added and are not re-asked here. The line under the dates says the one non-obvious consequence: the leg after this stop moves with Leave.</li>
-        <li><span class="n">15</span><b>The budget switch lives here</b> (the question in section 1). Same rule as today, one line: off drops the nights from the plan; bookings already made keep counting as money owed.</li>
+        <li><span class="n">15</span><b>The ⓘ next to Comfort</b> (Petra, round 1) opens a small sheet: what Budget, Mid and Comfort mean, and this city's three nightly price bands. The sentence that used to sit under the chips is gone; #65 puts anything longer than a line behind an info tap. The budget tick is on the card, not in here.</li>
         <li><span class="n">16</span><b>The stop's stays are listed inside it</b>, each opening its own sheet (section 5). This is what makes "a stop holds one or more stays" true in the editor as well as on the card.</li>
         <li><span class="n">17</span><b>Delete stays below a rule</b>, in the warning colour, as it was moved on 2026-09-19. Its stays and legs are not deleted with it; the legs on either side merge into one unbooked leg.</li>
-        <li>The comfort line is twelve words. The old explanation ran to thirty and lives behind ⓘ if anyone asks.</li>
       </ul>
     </div>
   </section>
@@ -600,20 +624,19 @@
           <label class="field">Check-in<div class="inp">30 Nov<span class="faint">▾</span></div></label>
           <label class="field">Check-out<div class="inp">13 Dec<span class="faint">▾</span></div></label>
         </div>
-        <div class="line" style="margin-top:-4px">13 nights · the nights with no bed.</div>
+        <div class="line" style="margin-top:-4px">13 nights</div>
         <div style="display:grid;grid-template-columns:1fr 96px;gap:10px">
           <label class="field">Per night<div class="inp"><span style="font-size:22px;font-weight:600">35</span></div></label>
           <label class="field">Currency<div class="inp">USD<span class="faint">▾</span></div></label>
         </div>
         <div class="line" style="margin-top:-4px">≈ 10 950 Ft a night · ≈ 142 000 Ft for 13.</div>
-        <div class="chips"><span class="chip">Idea</span><span class="chip">Shortlist</span><span class="chip on">Booked</span></div>
+        <div class="chips"><span class="chip">Idea</span><span class="chip on">Booked</span></div>
         <div style="border-top:1px solid var(--ln);padding-top:8px;position:relative"><span class="callout" style="top:2px;right:-8px">19</span>
           <div class="kicker">Deadlines</div>
-          <div class="two" style="margin-top:6px">
-            <label class="field">Free cancellation until<div class="inp">24 Nov<span class="faint">▾</span></div></label>
-            <label class="field">Card charged<div class="inp">24 Nov<span class="faint">▾</span></div></label>
-          </div>
-          <div class="chips" style="margin-top:8px"><span class="chip">No free cancellation</span><span class="chip">Charged at check-in</span></div>
+          <div class="field" style="margin-top:6px">Free cancellation until</div>
+          <div class="orrow"><div class="inp">24 Nov<span class="faint">▾</span></div><span class="or">or</span><span class="chip">No free cancellation</span></div>
+          <div class="field" style="margin-top:10px">Card charged on</div>
+          <div class="orrow"><div class="inp">24 Nov<span class="faint">▾</span></div><span class="or">or</span><span class="chip">At check-in</span></div>
           <div class="trow" style="margin-top:4px;position:relative"><span class="callout" style="top:-6px;right:-8px">20</span><span><span class="t">Remind me before it's non-refundable</span><span class="line" style="margin:0">3 days before, 21 Nov, as a card on Home.</span></span><span class="toggle"></span></div>
         </div>
         <div class="btn">Add stay</div>
@@ -624,13 +647,13 @@
       <h2>Add stay: the deadlines are asked when the stay is added</h2>
       <div class="issue">#60 · on the live trip no deadline reminder ever fired, because no stay had a cancel-by date</div>
       <ul>
-        <li><span class="n">18</span><b>Opened from the amber gap row</b>, so the stop and the dates are already in. Opened from "＋ Add stay" the dates default to the stop's dates, or to the nights still uncovered if there is a stay already.</li>
-        <li><span class="n">19</span><b>The two dates the reminders need, with an explicit no.</b> "No free cancellation" and "Charged at check-in" are chips, not blanks: a stay that was never asked and a stay with no cancellation window used to look the same, and both produced no reminder. Now a blank means "still to enter" and shows as "deadlines not set" on the stop card. The dates live in the booking email; the sheet says so nowhere, because the person adding the stay has that email open.</li>
-        <li><span class="n">20</span><b>The reminder is on by default and names its date.</b> It is the derived deadline reminder that already exists, born here instead of on a Reminders page. Off is one tap. The manual reminders list goes to Labs (#64).</li>
-        <li>The Booked chip is what makes Money import the stay on its charge date, as today. Idea and Shortlist stays keep the deadline fields hidden; they appear the moment Booked is chosen.</li>
+        <li><span class="n">18</span><b>Opened from the amber gap row</b>, so the stop and the dates are already in. Opened from "+ Add stay" the dates default to the stop's dates, or to the nights still uncovered if there is a stay already.</li>
+        <li><span class="n">19</span><b>The two dates the reminders need, each with an "or" and an explicit no</b> (Petra, round 1): you either type until when it is free to cancel, or you say there is no free cancellation; you either type the charge date, or you say the card is charged at check-in. A stay that was never asked and a stay with no cancellation window used to look the same, and both produced no reminder. Now a blank means "still to enter" and shows as "deadlines not set" on the stop card.</li>
+        <li><span class="n">20</span><b>The reminder switch appears only once a free-cancellation date is filled in</b> (Petra, round 1); with no free cancellation there is nothing to remind. It is on by default and names its date, 3 days before, as a card on Home. It is the derived deadline reminder that already exists, born here instead of on a Reminders page. The manual reminders list goes to Labs (#64).</li>
+        <li>The Booked chip is what makes Money import the stay on its charge date, as today. Idea stays keep the deadline fields hidden; they appear the moment Booked is chosen.</li>
         <li><b>The second door (#60):</b> Trip settings gets a Deadlines row listing every cancel-by and charge date on the journey, whether or not any is due. A feature that only appears once it has content needs a door that does not.</li>
       </ul>
-      <div class="q"><b>Question:</b> should Booked ask for a confirmation email address to forward to later (the premium "the stay fills itself" candidate), or leave that for when the feature exists? Drawn here as: leave it.</div>
+      <div class="ok"><b>Decided in round 1 (Petra):</b> nothing about forwarding booking emails until that feature exists.</div>
     </div>
   </section>
 
@@ -648,13 +671,13 @@
           <label class="field">Departs<div class="inp">30 Sep<span class="faint">▾</span></div></label>
           <label class="field">Time<div class="inp"><span class="ph">—</span><span class="faint">▾</span></div></label>
         </div>
-        <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">22</span><span class="chip dash">＋ Add a connection</span><div class="line">A place you pass through, not a stop.</div></div>
+        <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">22</span><span class="add" style="color:var(--tx2);font-size:14px">+ Connection <span class="faint" style="font-weight:400">· optional</span></span></div>
         <div style="display:grid;grid-template-columns:1fr 96px;gap:10px">
           <label class="field">Price<div class="inp"><span class="ph">for everyone</span></div></label>
           <label class="field">Currency<div class="inp">USD<span class="faint">▾</span></div></label>
         </div>
-        <span class="add" style="color:var(--tx2)">＋ Link</span>
-        <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">23</span><div class="chips"><span class="chip on">Idea</span><span class="chip">Shortlist</span><span class="chip">Booked</span></div><div class="line">Booked adds the charge date and draws the leg solid.</div></div>
+        <span class="add" style="color:var(--tx2)">+ Link</span>
+        <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">23</span><div class="chips"><span class="chip on">Idea</span><span class="chip">Booked</span></div><div class="line">Booked adds the charge date and draws the leg solid.</div></div>
         <div class="btn">Save</div>
       </div>
     </div>
@@ -664,11 +687,11 @@
       <div class="issue">#58 · "Add transport" lives on the leg, between the two stop cards</div>
       <ul>
         <li><span class="n">21</span><b>From, to and date are the leg's</b>, taken from the stops on either side, and are not fields. The only date typed is a departure time. Change the stop's Leave date and this leg moves with it (section 4).</li>
-        <li><span class="n">22</span><b>The connection appears only for a flight</b> (progressive, #64) and is one chip: tap it and a city field with hours appears, "Shanghai · 14 h 35" on leg 1. A via is a place you pass through: no nights, no budget, no check-in expected, a dogleg on the globe with the hours on it. It is never promoted to a stop by the app; if you sleep there, add a stop.</li>
-        <li><span class="n">23</span><b>Booked reveals the charge date</b> and the leg draws solid on the rail and on the globe; Money imports it on that date as today ("from booking"). Idea and Shortlist legs draw dashed and forecast with a price if one is typed, nothing if not.</li>
+        <li><span class="n">22</span><b>The connection is optional and small</b>: one link under the flight fields, shown for flights only, no explanation. Petra's question in round 1, is it needed at all: not for the money. It exists so the globe can draw the plane via Shanghai for the family, and so nobody adds Shanghai as a city and breaks the night count. A via has no nights, no budget, no check-in expected. If nobody uses it, it goes.</li>
+        <li><span class="n">23</span><b>Booked reveals the charge date</b> and the leg draws solid on the rail and on the globe; Money imports it on that date as today ("from booking"). An Idea leg draws dashed and forecasts with a price if one is typed, nothing if not.</li>
         <li>Delete is gone from this sheet on purpose: a leg cannot be deleted, only emptied, because two stops always have a leg between them. "Remove transport" sits under a rule once something is booked.</li>
       </ul>
-      <div class="ok"><b>Kept:</b> the transport tick that holds a leg's money in the budget is the Idea / Shortlist / Booked chip now. Idea forecasts nothing, Shortlist forecasts the typed price, Booked is money owed. Three states instead of a tick beside a state.</div>
+      <div class="ok"><b>Decided in round 1 (Petra):</b> two states, Idea and Booked, for legs and stays alike. Idea with no price forecasts nothing, Idea with a price forecasts that price, Booked is money owed. Shortlist was a third state between them and confused more than it helped.</div>
     </div>
   </section>
 
@@ -689,6 +712,7 @@
           <li><b>Left to right:</b> a brand-new account; a journey planned, nobody followed; live journey with people, Trip and Map merged (variant A); live journey with people, two pages (variant B, People behind the avatar).</li>
           <li>The raised Check in appears only while the journey is live, as today. Money appears with the journey even before the opt-in in #62: the quiet page with the bookings is still a page.</li>
           <li>People appears when you follow someone or someone follows you. For a follower with no journey, the bar is Home · People.</li>
+          <li><b>Petra's vote after round 1:</b> the third bar, version A. People gets its own tab; in version B it would sit behind the avatar.</li>
         </ul>
       </div>
     </div>

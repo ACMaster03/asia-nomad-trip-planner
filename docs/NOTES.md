@@ -46,6 +46,18 @@ question on the entry sheet; the one-time offer for entries already in the categ
   and charge date, content or not.
 - The one-time subscriptions offer shows only to whoever categorised the entries.
 
+**Round 2 of mock 15 (2026-09-22, Petra's seventeen comments on the review page).**
+Decided from them: the budget tick stays on the city card; two states everywhere, Idea and
+Booked, a typed price on an Idea counts as the estimate (Shortlist is gone); the comfort level
+leaves the card and sits in the editor behind an ⓘ; legs are pale-mauve strips, stops white
+cards; an upcoming charge reads "card charged on 29 Sep" in amber; each deadline date has an
+"or" and its explicit-no chip; the reminder switch appears only once a free-cancellation date is
+filled in; the way home is a dashed "not planned yet" leg into the home node ("Home again ·
+30 Apr"), no card names the last city as the last stop; the summary line is just the nights;
+nothing about forwarding booking emails until the feature exists; the flight connection stays,
+demoted to a small optional link. Version A and B carry labels and a side-by-side table now.
+Petra's vote: version A, because People gets its own tab; the phone test still decides.
+
 **Decided on a phone, not here:** sheet or two pages (#63). What to time is in mock 15 §8: a
 cold open of Trip on mobile data, how warm the phone is after five minutes of editing with the
 globe behind the sheet, and how often a drag meant for the list spins the globe.
