@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livhold Money Quiet Start</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap">
+<style>
+  /* LIVHOLD v1 token layer — copied from product/src/app/globals.css (light + dark). */
+  :root{
+    --canvas:#f0eee9;--pg:#e8f7ee;--sf:#ffffff;--in:#f7faf8;--tx:#1f2a24;--tx2:#3f5a3e;--tx3:rgba(31,42,36,.5);
+    --ac:#3f5a3e;--on:#ffffff;--acSoft:rgba(63,90,62,.11);--acLine:rgba(63,90,62,.45);
+    --ac2:#a94c5a;--ac2Deep:#93404c;--ac2Soft:rgba(169,76,90,.1);--ac2Line:rgba(169,76,90,.45);
+    --warn:#8a6420;--warnLine:rgba(138,100,32,.55);--warnSoft:rgba(138,100,32,.08);--tag:#e4eee6;--tagInk:#2b3a4a;
+    --ln:rgba(31,42,36,.11);--ln2:rgba(31,42,36,.16);--ln3:rgba(31,42,36,.24);--tr:rgba(31,42,36,.13);
+    --catDaily:#6c8ccf;--catGrocery:#8fa88a;--catActivity:#c98a63;
+    --r:22px;--rCtl:20px;--phoneEdge:#1f2a24;
+  }
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+    --canvas:#12161a;--pg:#161a18;--sf:#1f2622;--in:#19201c;--tx:#d8e0e5;--tx2:#a8b5a8;--tx3:rgba(216,224,229,.5);
+    --ac:#7fa37d;--on:#10160f;--acSoft:rgba(127,163,125,.16);--acLine:rgba(127,163,125,.5);
+    --ac2:#d08795;--ac2Deep:#de9ba7;--ac2Soft:rgba(208,135,149,.14);--ac2Line:rgba(208,135,149,.5);
+    --warn:#d9a85c;--warnLine:rgba(217,168,92,.6);--warnSoft:rgba(217,168,92,.13);--tag:rgba(201,214,234,.14);--tagInk:#c9d6ea;
+    --ln:rgba(216,224,229,.1);--ln2:rgba(216,224,229,.16);--ln3:rgba(216,224,229,.26);--tr:rgba(216,224,229,.14);
+    --catDaily:#8aa6dc;--catGrocery:#9fb89a;--catActivity:#d9a07c;--phoneEdge:#3a4540;
+  }}
+  :root[data-theme="dark"]{
+    --canvas:#12161a;--pg:#161a18;--sf:#1f2622;--in:#19201c;--tx:#d8e0e5;--tx2:#a8b5a8;--tx3:rgba(216,224,229,.5);
+    --ac:#7fa37d;--on:#10160f;--acSoft:rgba(127,163,125,.16);--acLine:rgba(127,163,125,.5);
+    --ac2:#d08795;--ac2Deep:#de9ba7;--ac2Soft:rgba(208,135,149,.14);--ac2Line:rgba(208,135,149,.5);
+    --warn:#d9a85c;--warnLine:rgba(217,168,92,.6);--warnSoft:rgba(217,168,92,.13);--tag:rgba(201,214,234,.14);--tagInk:#c9d6ea;
+    --ln:rgba(216,224,229,.1);--ln2:rgba(216,224,229,.16);--ln3:rgba(216,224,229,.26);--tr:rgba(216,224,229,.14);
+    --catDaily:#8aa6dc;--catGrocery:#9fb89a;--catActivity:#d9a07c;--phoneEdge:#3a4540;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--canvas);color:var(--tx);font-family:"Work Sans",ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:Lora,Georgia,serif;text-wrap:balance;margin:0}
+  a{color:var(--ac2Deep)}
+  .page{max-width:1140px;margin:0 auto;padding-block:40px 80px;padding-inline:24px}
+  @media (max-width:480px){.page{padding-inline:16px}}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ac2Deep)}
+  .lede{max-width:64ch;color:var(--tx2);margin-top:10px}
+  h1{font-size:34px;font-weight:600;letter-spacing:-.01em;margin-top:6px}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .toc a{text-decoration:none;font-size:13px;font-weight:600;color:var(--tx2);background:var(--sf);border:1px solid var(--ln2);border-radius:999px;padding:6px 12px}
+  .model{margin-top:26px;padding:16px 18px;border-radius:18px;background:var(--sf);border:1px solid var(--ln);max-width:72ch}
+  .model b{color:var(--tx)}
+  .model ul{margin:8px 0 0;padding-left:18px;color:var(--tx2)}
+  .model li{margin:4px 0}
+  section.mock{display:grid;grid-template-columns:390px 1fr;gap:40px;align-items:start;margin-top:64px;padding-top:40px;border-top:1px solid var(--ln)}
+  section.mock.wide{grid-template-columns:1fr}
+  @media (max-width:840px){section.mock{grid-template-columns:1fr}}
+  .frames{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+  .frame{width:390px;max-width:100%}
+  .cap{font-size:13px;color:var(--tx3);margin:10px 0 0 6px}
+  .notes h2{font-size:24px;font-weight:600;letter-spacing:-.01em}
+  .notes .issue{margin-top:6px;font-size:13px;color:var(--tx3)}
+  .notes p{color:var(--tx2);max-width:62ch}
+  .notes ul{padding-left:18px;color:var(--tx2);max-width:62ch}
+  .notes li{margin:6px 0}
+  .notes b{color:var(--tx)}
+  .q{margin-top:18px;padding:12px 14px;border-radius:14px;background:var(--tag);color:var(--tagInk);font-size:14px;max-width:62ch}
+  .q b{color:inherit}
+  .ok{margin-top:18px;padding:10px 14px;border-radius:14px;background:var(--acSoft);color:var(--tx2);font-size:14px;max-width:62ch}
+  .n{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;background:var(--ac2);color:#fff;font-size:11px;font-weight:700;margin-right:6px;vertical-align:1px}
+  .callout{position:absolute;background:var(--ac2);color:#fff;font-size:11px;font-weight:700;width:20px;height:20px;border-radius:999px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:3}
+  .tbl{width:100%;border-collapse:collapse;font-size:14px;max-width:72ch}
+  .tbl th{text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);padding:6px 8px 6px 0;border-bottom:1px solid var(--ln2);font-weight:600}
+  .tbl td{padding:8px 8px 8px 0;border-bottom:1px solid var(--ln);vertical-align:top;color:var(--tx2)}
+  .tbl td:first-child{color:var(--tx);font-weight:600;white-space:nowrap}
+  .tblwrap{overflow-x:auto}
+
+  /* phone */
+  .phone{width:390px;max-width:100%;border-radius:44px;border:8px solid var(--phoneEdge);background:var(--canvas);padding:22px 0 0;box-shadow:0 20px 50px rgba(0,0,0,.18);position:relative;overflow:hidden}
+  .phone.cont{border-top-color:transparent;border-top-width:2px;border-radius:0 0 44px 44px;padding-top:0}
+  .phone.cont::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;border-top:2px dashed var(--ln3)}
+  .phone .status{display:flex;justify-content:space-between;padding:0 28px 6px;font-size:14px;font-weight:600}
+  .screen{padding:14px 18px 20px;display:flex;flex-direction:column;gap:12px;min-height:640px}
+  .dim .screen{opacity:.35;filter:saturate(.6)}
+  .card{background:var(--sf);border-radius:var(--r);padding:18px;color:var(--tx);position:relative}
+  .card.slim{padding:6px 18px 8px}
+  .kicker{font-size:12px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--tx2)}
+  .kicker.m{color:var(--ac2Deep);letter-spacing:.12em}
+  .hero{font-size:32px;font-weight:600;letter-spacing:-.02em;line-height:1.1;margin-top:2px}
+  .muted{color:var(--tx2)}.faint{color:var(--tx3)}.warnTx{color:var(--warn)}.okTx{color:var(--ac)}
+  .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .hd h2{font-size:25px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
+  .plus{width:46px;height:46px;border-radius:999px;background:var(--ac2Soft);color:var(--ac2Deep);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:500;flex:none}
+  .row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--ln)}
+  .row .t{font-weight:600}.row .s{color:var(--tx2);font-size:14px}
+  .amt{font-weight:600;text-align:right;white-space:nowrap}.amt .s{font-size:13px;font-weight:400;color:var(--tx2);display:block}
+  .day{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0 2px;font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--tx3)}
+  .day b{color:var(--tx2);letter-spacing:0;text-transform:none;font-size:14px}
+  .row.tot{margin:6px -18px 0;padding:12px 18px;background:var(--ac2Soft);border-top:0;border-radius:12px}.row.tot .t,.row.tot .amt{color:var(--ac2Deep)}
+  .row.tot.last{margin-bottom:-8px;border-radius:12px 12px 22px 22px}
+  .band{margin:8px -18px -8px;padding:10px 18px;background:var(--ac2Soft);color:var(--ac2Deep);font-size:13px;font-weight:600;text-align:center;border-radius:0 0 22px 22px}
+  .band span{font-weight:500;color:var(--tx2)}
+  .btn{display:flex;align-items:center;justify-content:center;border-radius:var(--rCtl);background:var(--ac);color:var(--on);font-weight:600;padding:13px;font-size:15px}
+  .btn.ghost{background:transparent;border:1.5px solid var(--ln3);color:var(--tx2)}
+  .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;border:1.4px solid var(--ln3);color:var(--tx2);white-space:nowrap}
+  .pill.tag{border:0;background:var(--tag);color:var(--tagInk);font-weight:500}
+  .pill.labs{border:0;background:var(--ac2Soft);color:var(--ac2Deep);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px}
+  .seg{display:flex;background:var(--in);border:1.5px solid var(--ln2);border-radius:14px;padding:3px}
+  .seg span{flex:1;text-align:center;padding:8px;border-radius:11px;font-weight:600;color:var(--tx2);font-size:14px}
+  .seg span.on{background:var(--sf);color:var(--tx);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .field{font-size:14px;font-weight:500;color:var(--tx2);display:block}
+  .inp{margin-top:6px;border:1.5px solid var(--ln2);background:var(--in);border-radius:19px;padding:0 12px;min-height:52px;font-size:16px;color:var(--tx);display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .inp .big{font-size:24px;font-weight:600;line-height:1}
+  .inp.focus{border-color:var(--ac)}.inp .ph{color:var(--tx3)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+  .chip{border:1.5px solid var(--ln2);border-radius:999px;padding:7px 12px;font-size:14px;font-weight:500;color:var(--tx);background:var(--sf)}
+  .chip.on{background:var(--ac);border-color:var(--ac);color:var(--on)}
+  .chip.more{color:var(--tx2);background:var(--in)}
+  .chip.sel{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:none}
+  .line{font-size:13px;color:var(--tx2);margin-top:5px}
+  .toggle{width:44px;height:26px;border-radius:999px;background:var(--ac);position:relative;flex:none}
+  .toggle::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:999px;background:#fff}
+  .toggle.off{background:var(--ln3)}.toggle.off::after{right:auto;left:3px}
+  .trow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0}
+  .trow .t{font-weight:600;display:block}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--sf);border-radius:var(--r) var(--r) 0 0;padding:14px 18px 22px;box-shadow:0 -12px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px;z-index:2}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--ln3);margin:0 auto 2px}
+  .scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:1}
+  .ico{width:42px;height:42px;border-radius:20px;background:var(--acSoft);color:var(--ac);display:flex;align-items:center;justify-content:center;flex:none}
+  .ico svg{width:20px;height:20px}
+  .nav{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--ln);background:var(--sf);padding:10px 0 14px;font-size:12px;text-align:center;color:var(--tx3);position:relative}
+  .nav.four{grid-template-columns:repeat(4,1fr)}
+  .nav span{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .nav svg{width:22px;height:22px}
+  .nav b{color:var(--ac);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .nav .ci{position:relative;color:var(--ac);font-weight:600}
+  .nav .ci i{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:999px;background:var(--ac);color:var(--on);box-shadow:0 0 0 4px var(--sf),0 6px 14px rgba(0,0,0,.2);margin-top:-30px}
+  .nav .ci i svg{width:22px;height:22px}
+  .honey{background:var(--tag);color:var(--tagInk);border-radius:14px;padding:10px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .honey b{color:var(--ac2Deep);white-space:nowrap}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--ln)}
+  .twocol .v{font-size:20px;font-weight:600;margin-top:2px;white-space:nowrap;letter-spacing:-.01em}
+  .bar{margin-top:12px;height:10px;border-radius:999px;background:var(--tr);overflow:hidden}
+  .bar span{display:block;height:100%;background:var(--ac);border-radius:999px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12px;color:var(--tx2);margin-top:8px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  table.cat{width:100%;border-collapse:collapse;font-size:14px}
+  table.cat td{padding:8px 0;border-top:1px solid var(--ln)}table.cat td:last-child{text-align:right;font-weight:600;white-space:nowrap;padding-left:8px}
+  table.cat td i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+  .oneliner{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--sf);border-radius:var(--r);padding:12px 18px}
+  .oneliner .t{font-weight:600;display:block}.oneliner .s{font-size:13px;color:var(--tx2);display:block}
+  .new{position:relative}
+  .new::before{content:"new";position:absolute;top:-9px;left:16px;background:var(--ac);color:var(--on);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:999px;z-index:2}
+  .sub{font-size:13px;color:var(--tx2);padding:0 0 10px;margin-top:-6px}
+  .ask{background:var(--tag);border-radius:16px;padding:12px 12px 10px;color:var(--tagInk);position:relative}
+  .ask .field{color:var(--tagInk)}
+  .ask .chip:not(.on){background:var(--sf)}
+  .ask .toggle{background:var(--ac)}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+  <symbol id="wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+  <symbol id="users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 6.2 9.9 4.1a1 1 0 0 0-.8 0L3.6 6.3A1 1 0 0 0 3 7.2v12.2a1 1 0 0 0 1.4.9l4.5-2.1a1 1 0 0 1 .8 0l4.2 2.1a1 1 0 0 0 .8 0l5.5-2.2a1 1 0 0 0 .6-.9V5.1a1 1 0 0 0-1.4-.9l-4.5 2.1a1 1 0 0 1-.8 0"/><path d="M15 5.8v14.4"/><path d="M9.5 4v14.4"/></symbol>
+  <symbol id="repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+</svg>
+
+<template id="tpl-nav">
+  <div class="nav"><span><svg><use href="#house"/></svg>Home</span><span><svg><use href="#route"/></svg>Trip</span><span class="ci"><i><svg><use href="#pin"/></svg></i>Check in</span><b><svg><use href="#wallet"/></svg>Money</b><span><svg><use href="#map"/></svg>Map</span></div>
+</template>
+<template id="tpl-nav-pre">
+  <div class="nav four"><span><svg><use href="#house"/></svg>Home</span><span><svg><use href="#route"/></svg>Trip</span><b><svg><use href="#wallet"/></svg>Money</b><span><svg><use href="#map"/></svg>Map</span></div>
+</template>
+<template id="tpl-bookings">
+  <div class="card slim">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">Bookings</span><span class="faint" style="font-size:13px">edit on Trip ›</span></div>
+    <div class="row"><span><span class="t">Paid</span><br><span class="s">Bangkok stay · flight Budapest → Bangkok</span></span><span class="amt">553 788 Ft</span></div>
+    <div class="row"><span><span class="t">Booked, to pay</span><br><span class="s">Hanoi stay · card 29 Sep</span></span><span class="amt">≈ 433 800 Ft</span></div>
+    <div class="row"><span><span class="t">Not booked</span><br><span class="s">Bangkok → Hanoi · Hanoi → Da Nang</span></span><span class="amt faint">2 legs</span></div>
+    <div class="row tot last"><span class="t">Committed</span><span class="amt">≈ 987 600 Ft</span></div>
+  </div>
+</template>
+
+<div class="page">
+  <div class="eyebrow">Livhold · Money · design review · round 1 · issues #62 and #59</div>
+  <h1>Money starts quiet and earns its cards</h1>
+  <p class="lede">Two changes. First, Money asks once per account whether you want to track what you spend, and a journey's cards appear one at a time as entries arrive instead of all nine on day one. Second, an entry categorised as Subscriptions asks one inline question and becomes a subscription, so the charge is the subscription. The frames replay the Asia journey with the fixture ledger, so every unlock has a date; figures are illustrative and ≈ marks a rounded one.</p>
+  <div class="model">
+    <b>Decided in #62 and #59, not up for review here</b>
+    <ul>
+      <li>The question is asked once per account, because the answer is about the person. Yes opens the full page; No leaves a quiet page with the bookings and an add button. Nothing is deleted either way.</li>
+      <li>Cards unlock per journey as entries arrive. A new journey starts quiet again.</li>
+      <li>Money is per journey. Subscriptions belong to the person; each charge lands in whichever journey is live on the charge date. Yearly is a cadence.</li>
+      <li>Cadence is declared, never inferred. The declaration moves to the moment of categorising: repeat, cadence with monthly prefilled, remind before the charge.</li>
+    </ul>
+    <b style="display:block;margin-top:12px">Open, and answered on this page</b>
+    <ul>
+      <li>The exact unlock thresholds: proposed in section 6 as a table with the date each one fired on Asia.</li>
+      <li>What a journey longer than a month shows for Subscriptions before any is declared: a one-line door (section 3), not an empty card.</li>
+      <li>Where No is undone: under your avatar, one switch (section 2).</li>
+    </ul>
+  </div>
+  <div class="toc">
+    <a href="#s1">1 · The question</a><a href="#s2">2 · Quiet page</a><a href="#s3">3 · Day 1</a><a href="#s4">4 · Day 4</a><a href="#s5">5 · Day 9</a><a href="#s6">6 · The unlock table</a><a href="#s7">7 · Subscriptions, inline</a><a href="#s8">8 · The one-time offer</a>
+  </div>
+
+  <!-- ─────────────── 1 · THE QUESTION ─────────────── -->
+  <section class="mock" id="s1">
+    <div class="phone">
+      <div class="status"><span>10:51</span><span>livhold.com/money</span></div>
+      <div class="screen dim">
+        <div class="hd"><div><h2>Money</h2><div class="muted" style="font-size:14px">Asia · 11 days to departure</div></div><span class="plus">＋</span></div>
+        <div data-tpl="tpl-bookings"></div>
+      </div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div style="display:flex;gap:12px;align-items:flex-start;position:relative"><span class="callout" style="top:-22px;right:-8px">1</span>
+          <span class="ico"><svg><use href="#wallet"/></svg></span>
+          <span style="flex:1;min-width:0"><h3 style="font-size:20px;font-weight:600">Track what you spend on this journey?</h3><span class="line" style="display:block;font-size:14px;margin-top:4px">Log a coffee, see what a day here costs.</span></span>
+        </div>
+        <div class="btn">Yes, track it</div>
+        <div class="btn ghost">Not now</div>
+        <div class="line" style="margin-top:-2px;position:relative"><span class="callout" style="top:-4px;right:-8px">2</span>Asked once. Your bookings are here either way.</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 1</div>
+      <h2>The question, on the first visit to Money</h2>
+      <div class="issue">#62 · asked once per account, in a sheet over the quiet page, never as a page of its own</div>
+      <ul>
+        <li><span class="n">1</span><b>One question, two answers.</b> The heading is the exact sentence from #62. The line under it is eleven words and is the whole pitch: the app only asks for a coffee. No mention of projections, cap, or pace; those are what the page grows into.</li>
+        <li><span class="n">2</span><b>The bookings are visible behind the sheet</b> on purpose: the plan already put money here through the plan → ledger import, so the page is not empty before the answer, and "Not now" is not a dead end.</li>
+        <li>Asked on the first visit to Money once a journey exists, before or after departure. Not asked in onboarding: the globe should have something to show before the app talks about money (#21, onboarding note).</li>
+        <li>A travel partner who joins an existing journey is asked on their own first visit; the answer is theirs, not the journey's.</li>
+      </ul>
+      <div class="ok"><b>Settled by #62:</b> once per account. A second journey does not ask again; it starts quiet (section 6) and grows the same way.</div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 2 · QUIET PAGE (NO) ─────────────── -->
+  <section class="mock" id="s2">
+    <div class="phone">
+      <div class="status"><span>10:51</span><span>livhold.com/money</span></div>
+      <div class="screen">
+        <div class="hd"><div><h2>Money</h2><div class="muted" style="font-size:14px">Asia · day 23 · Bangkok</div></div><span class="plus" style="position:relative">＋<span class="callout" style="top:-8px;right:-8px">4</span></span></div>
+        <div style="position:relative"><span class="callout" style="top:-8px;right:-8px">3</span><div data-tpl="tpl-bookings"></div></div>
+        <div class="honey" style="position:relative"><span class="callout" style="top:-8px;right:-8px">5</span><span>Spending isn't tracked on this journey.</span><b>Track it ›</b></div>
+      </div>
+      <div data-tpl="tpl-nav"></div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 2</div>
+      <h2>Not now: the quiet page</h2>
+      <div class="issue">#62 · bookings paid and to pay, an add button, nothing else</div>
+      <ul>
+        <li><span class="n">3</span><b>Bookings is the whole page.</b> The same card as on the full page (round three, five figures): paid, booked and still to pay, not booked, one total. It answers the one money question a non-tracker has: what have we committed to.</li>
+        <li><span class="n">4</span><b>The add button stays.</b> An entry added here lands in a ledger under the bookings, and only that: no chart, no pace, no projection. Logging one visa fee does not turn the page into accounting; it does not flip the answer either.</li>
+        <li><span class="n">5</span><b>One line is the way back</b>, and the same switch lives under your avatar as "Track spending", because the answer belongs to the person (two-owners rule, #21).</li>
+        <li>Vocabulary: the page never says "opt-in", "analytics" or "ledger" to someone who said no. It says bookings and spending.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─────────────── 3 · DAY 1 ─────────────── -->
+  <section class="mock" id="s3">
+    <div class="phone">
+      <div class="status"><span>21:40</span><span>livhold.com/money</span></div>
+      <div class="screen">
+        <div class="hd"><div><h2>Money</h2><div class="muted" style="font-size:14px">Asia · day 1</div></div><span class="plus">＋</span></div>
+        <div class="card new" style="padding:20px"><span class="callout" style="top:-8px;right:-8px">6</span>
+          <div class="kicker">Spent so far · day 1</div>
+          <div class="hero">657 200 Ft</div>
+          <div class="twocol" style="grid-template-columns:1fr">
+            <div><div class="kicker">Per day</div><div class="v faint">measuring…</div><div class="line" style="margin:0">1 of 3 days in Bangkok</div></div>
+          </div>
+          <div class="bar"><span style="width:15%"></span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>15% of your budget</b></span><span class="muted">4 500 000 Ft · <b style="color:var(--tx)">3 842 800 Ft</b> left</span></div>
+          <div style="margin-top:14px;border-radius:var(--rCtl);background:var(--in);padding:10px 14px"><div style="font-weight:600">+ 618 700 Ft beyond the everyday</div><div class="line" style="margin:0">Stays, flight, gear. Counted below, not in the per-day rate.</div></div>
+        </div>
+        <div data-tpl="tpl-bookings"></div>
+        <div class="card slim new"><span class="callout" style="top:-8px;right:-8px">7</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">One-offs</span><span class="faint" style="font-size:13px">planned · paid</span></div>
+          <div class="row"><span><span class="t">Gear</span><br><span class="s">backpack bought 20 Aug</span></span><span class="amt">205 000<span class="s">64 900 paid</span></span></div>
+          <div class="row"><span><span class="t">Insurance &amp; visas</span><br><span class="s">planned, nothing paid yet</span></span><span class="amt">424 000<span class="s">—</span></span></div>
+          <div class="row tot last"><span class="t">Planned 629 000 · paid 64 900</span><span class="amt"></span></div>
+        </div>
+        <div class="oneliner new" style="position:relative"><span class="callout" style="top:-8px;right:-8px">8</span><span><span class="t">Subscriptions</span><span class="s">The monthly ones from home, as entries.</span></span><span class="pill" style="color:var(--ac2Deep);border-color:var(--ac2Line)">＋</span></div>
+        <div class="card slim">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">Ledger</span><span class="faint" style="font-size:13px">tap a row to edit</span></div>
+          <div class="day" style="color:var(--tx2)"><span>Mon 31 Aug · day 1</span><b>283 100 Ft</b></div>
+          <div class="row"><span><span class="t">Flight Budapest → Bangkok</span><br><span class="s">Transport · from booking</span></span><span class="amt">248 000 Ft</span></div>
+          <div class="row"><span><span class="t">Airport (food, drinks)</span><br><span class="s">Food</span></span><span class="amt">35 100 Ft</span></div>
+          <div class="band">▲ Journey starts 31 Aug <span>· 3 entries before it, 374 100 Ft</span></div>
+        </div>
+      </div>
+      <div data-tpl="tpl-nav"></div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 3</div>
+      <h2>Day 1, Monday 31 August: yes, and two entries</h2>
+      <div class="issue">#62 · the cards a first evening earns · "new" marks what appeared since the quiet page</div>
+      <ul>
+        <li><span class="n">6</span><b>The overview appears with the first entry</b>, imports included, so on Asia it was there since the Bangkok stay was charged on 9 July. It shows the one number it can stand behind, spent so far, and the cap bar. Per day says "measuring…" with its count, as shipped. <b>Projected total is not there yet</b>: the tile appears after a week of pace (section 5), because a projection from a first-day shop is noise with a currency sign.</li>
+        <li><span class="n">7</span><b>One-offs appears because a one-off exists</b>: the backpack was bought on 20 August and there are planned extras. On a journey with none, the card waits for the first visa fee.</li>
+        <li><span class="n">8</span><b>Subscriptions on a journey longer than a month is a one-line door</b>, not a card: the name, eleven words, and ＋, which opens the entry sheet with Subscriptions preselected (section 7). It becomes the full card with the first declared subscription. On a journey of a month or less the line is not shown until then.</li>
+        <li>Bookings is unchanged and always present. The ledger is present from the first entry, twenty rows, newest first, the "journey starts" band as before.</li>
+        <li>Not on this screen: Daily spend, Where it goes, Plan by stop, the budget cap row. Four cards and a line instead of nine cards.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─────────────── 4 · DAY 4 ─────────────── -->
+  <section class="mock" id="s4">
+    <div class="phone">
+      <div class="status"><span>19:12</span><span>livhold.com/money</span></div>
+      <div class="screen">
+        <div class="hd"><div><h2>Money</h2><div class="muted" style="font-size:14px">Asia · day 4 · Bangkok</div></div><span class="plus">＋</span></div>
+        <div class="card" style="padding:20px">
+          <div class="kicker">Spent so far · day 4</div>
+          <div class="hero">730 500 Ft</div>
+          <div class="twocol" style="grid-template-columns:1fr;position:relative"><span class="callout" style="top:6px;right:-8px">9</span>
+            <div><div class="kicker">Per day</div><div class="v">24 400 Ft</div><div class="line" style="margin:0">everyday costs over 3 days in Bangkok</div></div>
+          </div>
+          <div class="bar"><span style="width:16%"></span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>16% of your budget</b></span><span class="muted">4 500 000 Ft · <b style="color:var(--tx)">3 769 500 Ft</b> left</span></div>
+        </div>
+        <div class="card new"><span class="callout" style="top:-8px;right:-8px">10</span>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="kicker">Daily spend</span><span class="faint" style="font-size:12px">31 Aug – 3 Sep</span></div>
+          <svg viewBox="0 0 354 150" width="100%" style="margin-top:8px;display:block" role="img" aria-label="Four daily bars, 31 August to 3 September, with the three-day average at 24 400">
+            <line x1="0" x2="354" y1="72" y2="72" stroke="var(--ln2)" stroke-dasharray="3 3"/><text x="352" y="68" font-size="10" fill="var(--tx3)" text-anchor="end">avg 24 400 · 3 days</text>
+            <rect x="30" y="47" width="52" height="81" fill="var(--ac)"/>
+            <rect x="112" y="114" width="52" height="14" fill="var(--catGrocery)"/><rect x="112" y="107" width="52" height="7" fill="var(--catDaily)"/>
+            <rect x="194" y="76" width="52" height="52" fill="var(--ac)"/><rect x="194" y="52" width="52" height="24" fill="var(--ac2)"/><rect x="194" y="28" width="52" height="24" fill="var(--warn)"/><rect x="194" y="14" width="52" height="14" fill="var(--catGrocery)"/>
+            <rect x="276" y="106" width="52" height="22" fill="var(--ac)"/><rect x="276" y="98" width="52" height="8" fill="var(--ac2)"/><rect x="276" y="76" width="52" height="22" fill="var(--warn)"/>
+            <line x1="0" x2="354" y1="128.5" y2="128.5" stroke="var(--ln2)"/>
+            <text x="56" y="143" font-size="10" fill="var(--tx3)" text-anchor="middle">Mon 31 · day 1</text><text x="138" y="143" font-size="10" fill="var(--tx3)" text-anchor="middle">Tue 1</text><text x="220" y="143" font-size="10" fill="var(--tx3)" text-anchor="middle">Wed 2</text><text x="302" y="143" font-size="10" fill="var(--ac2)" font-weight="600" text-anchor="middle">today</text>
+          </svg>
+          <div class="legend"><span><i style="background:var(--ac)"></i>Food &amp; drinks</span><span><i style="background:var(--catGrocery)"></i>Groceries &amp; shops</span><span><i style="background:var(--catDaily)"></i>Getting around</span><span><i style="background:var(--ac2)"></i>Clothes &amp; accessories</span><span><i style="background:var(--warn)"></i>Health &amp; care</span></div>
+        </div>
+        <div class="card new"><span class="callout" style="top:-8px;right:-8px">11</span>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="kicker">Where it goes · 4 days</span><span class="faint" style="font-size:12px">everyday costs</span></div>
+          <div style="display:flex;gap:16px;align-items:center;margin-top:10px">
+            <svg viewBox="0 0 120 120" width="100" height="100" style="flex:none" role="img" aria-label="Share of everyday spending by family over four days">
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--tr)" stroke-width="18"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--ac)" stroke-width="18" stroke-dasharray="140 276" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--warn)" stroke-width="18" stroke-dasharray="61 276" stroke-dashoffset="-140" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--ac2)" stroke-width="18" stroke-dasharray="37 276" stroke-dashoffset="-201" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--catGrocery)" stroke-width="18" stroke-dasharray="31 276" stroke-dashoffset="-238" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--catDaily)" stroke-width="18" stroke-dasharray="7 276" stroke-dashoffset="-269" transform="rotate(-90 60 60)"/>
+              <text x="60" y="57" text-anchor="middle" font-size="15" font-weight="600" fill="var(--tx)">108 400</text><text x="60" y="71" text-anchor="middle" font-size="9" fill="var(--tx3)">Ft in 4 days</text>
+            </svg>
+            <table class="cat" style="flex:1">
+              <tr><td><i style="background:var(--ac)"></i>Food &amp; drinks</td><td>54 800</td></tr>
+              <tr><td><i style="background:var(--warn)"></i>Health &amp; care</td><td>23 900</td></tr>
+              <tr><td><i style="background:var(--ac2)"></i>Clothes</td><td>14 400</td></tr>
+              <tr><td><i style="background:var(--catGrocery)"></i>Groceries &amp; shops</td><td>12 300</td></tr>
+              <tr><td><i style="background:var(--catDaily)"></i>Getting around</td><td>3 000</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="faint" style="text-align:center;font-size:13px">bookings · one-offs · subscriptions · ledger, as on day 1</div>
+      </div>
+      <div data-tpl="tpl-nav"></div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 4</div>
+      <h2>Day 4, Thursday 3 September: the chart and the categories arrive</h2>
+      <div class="issue">#62 · "the daily chart once there is a run of days, where it goes once there are categories"</div>
+      <ul>
+        <li><span class="n">9</span><b>Per day becomes a number at three days in the stop</b>, exactly as shipped, measured over 1–3 September. The line names the basis. Still no projection: the tile is absent, not greyed. An absent tile asks no question; a greyed one asks "why not".</li>
+        <li><span class="n">10</span><b>Daily spend appears with three logged days.</b> The 7 / 14 / 30 / 90 switch and the paging arrows are not shown until there are fourteen days to switch between; with four bars they are controls for a window that does not exist. The average line uses the same three days as the per-day tile, so the two never disagree.</li>
+        <li><span class="n">11</span><b>Where it goes appears once everyday entries span three colour families.</b> On Asia that was 2 September (a restaurant, a drugstore, a pair of pants) and it shows the four-day picture here. The table lists families until there are more than six categories; then the round-two version with the individual categories and "3 more…" takes over.</li>
+        <li>The airport meal on day 1 is the tallest bar and belongs: it is in the journey. The pre-trip backpack is not a bar: gear is outside the everyday.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─────────────── 5 · DAY 9 ─────────────── -->
+  <section class="mock" id="s5">
+    <div class="phone">
+      <div class="status"><span>20:05</span><span>livhold.com/money</span></div>
+      <div class="screen">
+        <div class="hd"><div><h2>Money</h2><div class="muted" style="font-size:14px">Asia · day 9 · Bangkok</div></div><span class="plus">＋</span></div>
+        <div class="card" style="padding:20px">
+          <div class="kicker">Spent so far · day 9</div>
+          <div class="hero">765 400 Ft</div>
+          <div class="twocol">
+            <div><div class="kicker">Per day</div><div class="v">15 100 Ft</div><div class="line" style="margin:0">everyday costs over 7 days in Bangkok</div></div>
+            <div style="position:relative"><span class="callout" style="bottom:-4px;right:-8px">12</span><div class="kicker">Projected total</div><div class="v">≈ 3 496 000 Ft</div><div class="line" style="margin:0">103 planned nights, at this pace</div></div>
+          </div>
+          <div class="bar"><span style="width:17%"></span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>17% of your budget</b></span><span class="muted">4 500 000 Ft · <b style="color:var(--tx)">3 734 600 Ft</b> left</span></div>
+        </div>
+        <div class="faint" style="text-align:center;font-size:13px">daily spend · where it goes · bookings · one-offs · subscriptions, as on day 4</div>
+        <div class="card slim new"><span class="callout" style="top:-8px;right:-8px">13</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">Plan · by stop</span><span class="faint" style="font-size:13px">stays + everyday</span></div>
+          <div class="row"><span><span class="t">Bangkok</span><br><span class="s">29 nights · 8 in · stay paid</span></span><span class="amt">≈ 745 000 Ft</span></div>
+          <div class="sub">106 000 spent + 21 nights × 15 100 + stay 305 788</div>
+          <div class="row"><span><span class="t">Hanoi</span><br><span class="s">44 nights · stay booked</span></span><span class="amt">≈ 1 100 000 Ft</span></div>
+          <div class="row"><span><span class="t">Da Nang</span><br><span class="s">30 nights · stay shortlisted</span></span><span class="amt">≈ 839 000 Ft</span></div>
+          <div class="row"><span><span class="t">Add the next stop</span><br><span class="s">the plan ends 13 Dec; the journey ends 30 Apr</span></span><span class="amt" style="color:var(--ac2)">›</span></div>
+          <div class="row tot"><span class="t">Stops subtotal</span><span class="amt">≈ 2 684 000 Ft</span></div>
+          <div class="row"><span><span class="t">Transport</span><br><span class="s">1 booked · 2 legs to book</span></span><span class="amt">248 000 Ft</span></div>
+          <div class="row"><span><span class="t">One-offs still to pay</span><br><span class="s">insurance, visas, the rest of the gear</span></span><span class="amt">≈ 564 000 Ft</span></div>
+          <div class="row tot last"><span class="t">Projected total</span><span class="amt">≈ 3 496 000 Ft</span></div>
+        </div>
+        <div class="card new" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px"><span class="callout" style="top:-8px;right:-8px">14</span><span><span style="font-weight:600">Budget cap</span><br><span class="muted" style="font-size:13px">4 500 000 Ft · projected uses 78%</span></span><span style="color:var(--ac2)">›</span></div>
+      </div>
+      <div data-tpl="tpl-nav"></div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 5</div>
+      <h2>Day 9, Tuesday 8 September: a week of pace, so a projection</h2>
+      <div class="issue">#62 · the last cards to unlock are the forward-looking ones</div>
+      <ul>
+        <li><span class="n">12</span><b>Projected total appears after seven days of pace in a stop.</b> It is the shipped number (stops at your pace, plus bookings, plus one-offs) and, from here on, the one number the page speaks everywhere. Seven days is the proposal: a first week in a city absorbs the arrival shopping; three days does not.</li>
+        <li><span class="n">13</span><b>Plan by stop unlocks with the projection</b>, since every line in it is the projection itemised. The Add-the-next-stop row is the one forward nudge on the page and points at Trip.</li>
+        <li><span class="n">14</span><b>The budget cap row appears with the projection too</b>: "projected uses 78 %" has nothing to say before there is a projection. The bar in the overview measures actual spend against the cap and was there from day 1, because that only needs the cap.</li>
+        <li>From day 9 to today the page adds nothing new; today it is the round-three page as shipped. The subscriptions line became the card on 14 September, when iCloud charged and was declared (section 7).</li>
+      </ul>
+      <div class="ok"><b>A rule proposed with the table below:</b> a card that has appeared on a journey never disappears again on that journey. Thresholds gate the first appearance only, so the page never breathes in and out as entries are edited.</div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 6 · THE UNLOCK TABLE ─────────────── -->
+  <section class="mock wide" id="s6">
+    <div class="notes" style="max-width:none">
+      <div class="eyebrow">Section 6</div>
+      <h2>The unlock table: every card, its trigger, and the day it fired on Asia</h2>
+      <p>The thresholds #62 left to the mock. Each is the smallest amount of data the card can be honest about, and each is per journey.</p>
+      <div class="tblwrap"><table class="tbl">
+        <tr><th>Card</th><th>Appears when</th><th>On Asia</th><th>Why that trigger</th></tr>
+        <tr><td>Bookings</td><td>always, once a journey exists</td><td>before departure</td><td>the plan already put money here; it is the quiet page's only card</td></tr>
+        <tr><td>Spent so far + cap bar</td><td>the first entry, imports included</td><td>9 Jul, the Bangkok stay charged</td><td>one number, no inference</td></tr>
+        <tr><td>Ledger</td><td>the first entry</td><td>9 Jul</td><td>receipts need nothing else</td></tr>
+        <tr><td>Beyond-the-everyday strip</td><td>a non-daily entry dated on or after departure</td><td>31 Aug, the flight</td><td>the per-day rate leaves it out; saying so is the point (#35)</td></tr>
+        <tr><td>One-offs</td><td>a planned extra or a paid one-off exists</td><td>20 Aug, the backpack</td><td>two columns need at least one row</td></tr>
+        <tr><td>Subscriptions, the line</td><td>the journey runs longer than a month, or one is declared</td><td>day 1, the line; 14 Sep, the card</td><td>a long journey will have them; the door exists before the content (#60's lesson)</td></tr>
+        <tr><td>Subscriptions, the card</td><td>one declared subscription</td><td>14 Sep, iCloud</td><td>the card predicts charges; it needs one to predict</td></tr>
+        <tr><td>Per day</td><td>3 days with everyday entries in the stop (as shipped)</td><td>3 Sep, day 4</td><td>the shipped threshold; below it the tile says measuring…</td></tr>
+        <tr><td>Daily spend</td><td>3 days with everyday entries</td><td>3 Sep, day 4</td><td>three bars is a chart; one is a number</td></tr>
+        <tr><td>Daily spend: range switch</td><td>14 days with entries</td><td>14 Sep</td><td>a window switch needs two windows</td></tr>
+        <tr><td>Where it goes</td><td>everyday entries in 3 colour families</td><td>2 Sep, day 3</td><td>a donut with one slice is a circle</td></tr>
+        <tr><td>Projected total</td><td>7 days of pace in a stop</td><td>7 Sep, day 8</td><td>a week absorbs the arrival shopping</td></tr>
+        <tr><td>Plan by stop</td><td>with the projection</td><td>7 Sep</td><td>it is the projection itemised</td></tr>
+        <tr><td>Budget cap row</td><td>with the projection</td><td>7 Sep</td><td>"projected uses N %" needs a projection</td></tr>
+        <tr><td>FX panel (Trip settings)</td><td>a second currency in the ledger or the plan</td><td>1 Sep, first THB</td><td>from #64's progressive list; invisible unless stale</td></tr>
+      </table></div>
+      <div class="q" style="max-width:none"><b>Still to say:</b> too early or too late anywhere? The two proposals that are new, not merely dated: seven days for the projection instead of three, and the one-line Subscriptions door on a long journey. A new journey starts at the top of this table again; subscriptions carried over from the person count as declared from day 1, which is the Labs experiment in #64.</div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 7 · SUBSCRIPTIONS, INLINE (#59) ─────────────── -->
+  <section class="mock" id="s7">
+    <div class="phone">
+      <div class="status"><span>10:51</span><span>livhold.com/money</span></div>
+      <div class="screen" style="opacity:.35;min-height:600px"><div class="card" style="height:160px"></div><div class="card" style="height:300px"></div></div>
+      <div class="scrim"></div>
+      <div class="sheet" style="gap:10px">
+        <div class="grab"></div>
+        <div class="seg"><span class="on">Expense</span><span>Income</span></div>
+        <label class="field">What was it?<div class="inp focus"><span>Netflix</span></div></label>
+        <div style="display:grid;grid-template-columns:1fr 92px;gap:10px">
+          <label class="field">Amount<div class="inp"><span class="big">4 490</span></div></label>
+          <label class="field">Currency<div class="inp"><span>HUF</span><span class="faint">▾</span></div></label>
+        </div>
+        <div style="position:relative"><span class="callout" style="top:-12px;right:-8px">15</span>
+          <div class="field" style="display:flex;justify-content:space-between"><span>Category</span><span class="faint" style="font-weight:400;font-size:13px">suggested from the name</span></div>
+          <div class="chips"><span class="chip on">Subscriptions ✓</span><span class="chip">Food</span><span class="chip">Drinks</span><span class="chip">Convenience</span><span class="chip">Getting around</span><span class="chip more">All 20…</span></div>
+        </div>
+        <div class="ask"><span class="callout" style="top:-8px;right:-8px">16</span>
+          <div class="field" style="display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#repeat"/></svg> Repeats</div>
+          <div class="chips" style="margin-top:6px"><span class="chip on">Every month</span><span class="chip">Every year</span><span class="chip">Doesn't repeat</span></div>
+          <div class="line">Next charge 22 Oct. Lands in whichever journey is live.</div>
+          <div class="trow" style="padding-bottom:0;position:relative"><span class="callout" style="top:-4px;right:52px">17</span><span><span class="t">Remind me before each charge</span><span class="line" style="margin:0">3 days before.</span></span><span class="toggle"></span></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--tx2);padding:2px 4px"><span>Today, 22 Sep <span class="faint">· change</span></span></div>
+        <div class="btn">Add expense</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 7</div>
+      <h2>Categorise as Subscriptions, answer one question</h2>
+      <div class="issue">#59 · the charge is the subscription; cadence is still declared, just here instead of in a second form</div>
+      <ul>
+        <li><span class="n">15</span><b>The category comes from the name.</b> "Netflix", "Spotify" and "iCloud" are already aliases in the registry, so the chip is preselected. Picking Subscriptions by hand does the same thing.</li>
+        <li><span class="n">16</span><b>The inline block appears the moment Subscriptions is the category</b> and nowhere else: repeat, with monthly prefilled, and a yearly for the domain and the annual insurance. "Doesn't repeat" keeps the entry in the category without declaring anything, for the one-off app purchase. The line names the next charge date, derived from this entry's date, and says where charges go.</li>
+        <li><span class="n">17</span><b>Remind me is on by default</b>, three days before, the shipped lead. It reuses the stay-deadline pipe (#37, migration 40). Off is one tap and is remembered per subscription.</li>
+        <li>Add expense does both things: the row lands in the ledger, dated today, and Netflix is a declared subscription on the card with its next charge on 22 October. No second form, ever. Editing the entry later shows the same block, so a cadence can be corrected where the charge is.</li>
+        <li>A second charge with the same name on a later date is matched to the subscription and offered as "the 22 Oct charge of Netflix?" with one tap to confirm, instead of creating a second subscription. Declined, it is a plain entry.</li>
+      </ul>
+      <div class="ok"><b>Model, from #59:</b> the subscription belongs to the person; the row belongs to the journey live on its date. This is what makes the next journey inherit Netflix without inheriting September's charge.</div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 8 · THE ONE-TIME OFFER ─────────────── -->
+  <section class="mock" id="s8">
+    <div class="phone">
+      <div class="status"><span>10:52</span><span>livhold.com/money</span></div>
+      <div class="screen">
+        <div class="hd"><div><h2>Money</h2><div class="muted" style="font-size:14px">Asia · day 23 · Bangkok</div></div><span class="plus">＋</span></div>
+        <div class="card" style="padding:14px 18px;opacity:.5"><div class="kicker">Spent so far · 23 days</div><div class="hero" style="font-size:26px">1 044 200 Ft</div></div>
+        <div class="card slim" style="border:1.5px solid var(--acLine)"><span class="callout" style="top:-8px;right:-8px">18</span>
+          <div style="padding:12px 0 8px;border-bottom:1px solid var(--ln)"><span class="kicker m">Subscriptions</span><div style="font-size:18px;font-weight:600;margin-top:2px;font-family:Lora,Georgia,serif">5 entries look like subscriptions</div><div class="line" style="margin-top:2px">Say how often, and the card predicts each charge.</div></div>
+          <div class="row" style="align-items:center"><span><span class="t">iCloud 2 TB</span><br><span class="s">3 290 Ft · 14 Sep</span></span><span class="chip sel">Every month <span class="faint">▾</span></span></div>
+          <div class="row" style="align-items:center"><span><span class="t">Spotify Duo</span><br><span class="s">2 490 Ft · 17 Sep</span></span><span class="chip sel">Every month <span class="faint">▾</span></span></div>
+          <div class="row" style="align-items:center"><span><span class="t">Home internet · Budapest flat</span><br><span class="s">7 990 Ft · 23 Aug</span></span><span class="chip sel">Every month <span class="faint">▾</span></span></div>
+          <div class="row" style="align-items:center;position:relative"><span class="callout" style="top:-10px;right:-8px">19</span><span><span class="t">Domain + hosting</span><br><span class="s">18 000 Ft · 12 Nov 2025</span></span><span class="chip sel on">Every year <span style="opacity:.7">▾</span></span></div>
+          <div class="row" style="align-items:center"><span><span class="t">Netflix</span><br><span class="s">4 490 Ft · 20 Aug</span></span><span class="chip sel">Every month <span class="faint">▾</span></span></div>
+          <div style="display:flex;gap:10px;padding:12px 0 10px;position:relative"><span class="callout" style="top:14px;right:-8px">20</span><span class="btn" style="flex:1">Add 5 subscriptions</span><span class="btn ghost" style="padding:13px 16px">Not now</span></div>
+          <div class="line" style="padding-bottom:8px;margin-top:-6px">Reminders on, 3 days before. Change any on the card.</div>
+        </div>
+        <div class="faint" style="text-align:center;font-size:13px">the rest of the page, as shipped</div>
+      </div>
+      <div data-tpl="tpl-nav"></div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 8</div>
+      <h2>The offer for entries already in the category, once</h2>
+      <div class="issue">#59 · "existing entries in the category get the offer once, so the eight to ten on the live trip surface without retyping"</div>
+      <ul>
+        <li><span class="n">18</span><b>One card, once, at the top of the page</b>, for every entry already categorised as Subscriptions that is not a declared subscription. Entries with the same name and amount are one row: iCloud has charged twice on Asia and is listed once, with its latest date.</li>
+        <li><span class="n">19</span><b>Every row is prefilled monthly and every row can be changed</b> before the button is pressed; cadence is declared, so the app guesses nothing from the dates, not even the domain's. Here the domain has been switched to yearly by hand.</li>
+        <li><span class="n">20</span><b>Add takes them all; Not now dismisses the card for good.</b> Each entry still gets the inline question whenever it is opened (section 7), so a dismissed offer costs nothing but the shortcut. Netflix, cancelled on 6 September, is added like the others and then marked cancelled on the card, which keeps the August charge (cancel is a state).</li>
+        <li>The reminders default to on with the shipped three-day lead, said in one line under the buttons, and each bell is on the card afterwards, as built in #37.</li>
+      </ul>
+      <div class="q"><b>Question:</b> should the offer also appear for a travel partner, who sees the same ledger? Drawn here as: no, only for whoever categorised the entries, since the subscriptions become theirs.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+  document.querySelectorAll('[data-tpl]').forEach(function (slot) {
+    var tpl = document.getElementById(slot.getAttribute('data-tpl'));
+    if (tpl) slot.replaceWith(tpl.content.cloneNode(true));
+  });
+</script>
+
+</html>

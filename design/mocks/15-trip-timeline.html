@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livhold Trip Timeline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap">
+<style>
+  /* LIVHOLD v1 token layer — copied from product/src/app/globals.css (light + dark). */
+  :root{
+    --canvas:#f0eee9;--pg:#e8f7ee;--sf:#ffffff;--in:#f7faf8;--tx:#1f2a24;--tx2:#3f5a3e;--tx3:rgba(31,42,36,.5);
+    --ac:#3f5a3e;--on:#ffffff;--acSoft:rgba(63,90,62,.11);--acLine:rgba(63,90,62,.45);
+    --ac2:#a94c5a;--ac2Deep:#93404c;--ac2Soft:rgba(169,76,90,.1);--ac2Line:rgba(169,76,90,.45);
+    --warn:#8a6420;--warnLine:rgba(138,100,32,.55);--warnSoft:rgba(138,100,32,.08);--tag:#e4eee6;--tagInk:#2b3a4a;
+    --ln:rgba(31,42,36,.11);--ln2:rgba(31,42,36,.16);--ln3:rgba(31,42,36,.24);--tr:rgba(31,42,36,.13);
+    --r:22px;--rCtl:20px;--phoneEdge:#1f2a24;
+    /* the globe stays dark in both themes (handoff frame 19) */
+    --gInk:#d8e0e5;--gBg:#0b0f14;--gChrome:rgba(11,15,20,.86);--gLine:rgba(216,224,229,.16);--gMauve:#d08795;--gHunter:#7fa37d;--gSky:#8cb8dc;--gAmber:#d9a85c;
+  }
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+    --canvas:#12161a;--pg:#161a18;--sf:#1f2622;--in:#19201c;--tx:#d8e0e5;--tx2:#a8b5a8;--tx3:rgba(216,224,229,.5);
+    --ac:#7fa37d;--on:#10160f;--acSoft:rgba(127,163,125,.16);--acLine:rgba(127,163,125,.5);
+    --ac2:#d08795;--ac2Deep:#de9ba7;--ac2Soft:rgba(208,135,149,.14);--ac2Line:rgba(208,135,149,.5);
+    --warn:#d9a85c;--warnLine:rgba(217,168,92,.6);--warnSoft:rgba(217,168,92,.13);--tag:rgba(201,214,234,.14);--tagInk:#c9d6ea;
+    --ln:rgba(216,224,229,.1);--ln2:rgba(216,224,229,.16);--ln3:rgba(216,224,229,.26);--tr:rgba(216,224,229,.14);--phoneEdge:#3a4540;
+  }}
+  :root[data-theme="dark"]{
+    --canvas:#12161a;--pg:#161a18;--sf:#1f2622;--in:#19201c;--tx:#d8e0e5;--tx2:#a8b5a8;--tx3:rgba(216,224,229,.5);
+    --ac:#7fa37d;--on:#10160f;--acSoft:rgba(127,163,125,.16);--acLine:rgba(127,163,125,.5);
+    --ac2:#d08795;--ac2Deep:#de9ba7;--ac2Soft:rgba(208,135,149,.14);--ac2Line:rgba(208,135,149,.5);
+    --warn:#d9a85c;--warnLine:rgba(217,168,92,.6);--warnSoft:rgba(217,168,92,.13);--tag:rgba(201,214,234,.14);--tagInk:#c9d6ea;
+    --ln:rgba(216,224,229,.1);--ln2:rgba(216,224,229,.16);--ln3:rgba(216,224,229,.26);--tr:rgba(216,224,229,.14);--phoneEdge:#3a4540;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--canvas);color:var(--tx);font-family:"Work Sans",ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:Lora,Georgia,serif;text-wrap:balance;margin:0}
+  a{color:var(--ac2Deep)}
+  .page{max-width:1140px;margin:0 auto;padding-block:40px 80px;padding-inline:24px}
+  @media (max-width:480px){.page{padding-inline:16px}}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ac2Deep)}
+  .lede{max-width:64ch;color:var(--tx2);margin-top:10px}
+  h1{font-size:34px;font-weight:600;letter-spacing:-.01em;margin-top:6px}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .toc a{text-decoration:none;font-size:13px;font-weight:600;color:var(--tx2);background:var(--sf);border:1px solid var(--ln2);border-radius:999px;padding:6px 12px}
+  .model{margin-top:26px;padding:16px 18px;border-radius:18px;background:var(--sf);border:1px solid var(--ln);max-width:72ch}
+  .model b{color:var(--tx)}
+  .model ul{margin:8px 0 0;padding-left:18px;color:var(--tx2)}
+  .model li{margin:4px 0}
+  section.mock{display:grid;grid-template-columns:390px 1fr;gap:40px;align-items:start;margin-top:64px;padding-top:40px;border-top:1px solid var(--ln)}
+  section.mock.wide{grid-template-columns:1fr}
+  @media (max-width:840px){section.mock{grid-template-columns:1fr}}
+  .frames{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+  .frame{width:390px;max-width:100%}
+  .cap{font-size:13px;color:var(--tx3);margin:10px 0 0 6px}
+  .notes h2{font-size:24px;font-weight:600;letter-spacing:-.01em}
+  .notes .issue{margin-top:6px;font-size:13px;color:var(--tx3)}
+  .notes p{color:var(--tx2);max-width:62ch}
+  .notes ul{padding-left:18px;color:var(--tx2);max-width:62ch}
+  .notes li{margin:6px 0}
+  .notes b{color:var(--tx)}
+  .q{margin-top:18px;padding:12px 14px;border-radius:14px;background:var(--tag);color:var(--tagInk);font-size:14px;max-width:62ch}
+  .q b{color:inherit}
+  .ok{margin-top:18px;padding:10px 14px;border-radius:14px;background:var(--acSoft);color:var(--tx2);font-size:14px;max-width:62ch}
+  .cost{margin-top:18px;padding:12px 14px;border-radius:14px;background:var(--warnSoft);color:var(--warn);font-size:14px;max-width:62ch}
+  .n{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;background:var(--ac2);color:#fff;font-size:11px;font-weight:700;margin-right:6px;vertical-align:1px}
+  .callout{position:absolute;background:var(--ac2);color:#fff;font-size:11px;font-weight:700;width:20px;height:20px;border-radius:999px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:3}
+  .nocall .callout{display:none}
+  table{width:100%;border-collapse:collapse;font-size:14px;max-width:62ch}
+  th{text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);padding:6px 0;border-bottom:1px solid var(--ln2)}
+  td{padding:8px 8px 8px 0;border-bottom:1px solid var(--ln);vertical-align:top;color:var(--tx2)}
+  td:first-child{color:var(--tx);font-weight:600}
+
+  /* phone */
+  .phone{width:390px;max-width:100%;border-radius:44px;border:8px solid var(--phoneEdge);background:var(--canvas);padding:22px 0 0;box-shadow:0 20px 50px rgba(0,0,0,.18);position:relative;overflow:hidden}
+  .phone .status{display:flex;justify-content:space-between;padding:0 28px 6px;font-size:14px;font-weight:600}
+  .screen{padding:14px 18px 20px;display:flex;flex-direction:column;gap:12px;min-height:640px}
+  .dim .screen{opacity:.35;filter:saturate(.6)}
+  .card{background:var(--sf);border-radius:var(--r);padding:16px;color:var(--tx);position:relative}
+  .kicker{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--tx2)}
+  .kicker.m{color:var(--ac2Deep);letter-spacing:.14em;font-weight:500}
+  .muted{color:var(--tx2)}.faint{color:var(--tx3)}.warnTx{color:var(--warn)}.okTx{color:var(--ac)}
+  .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .hd h2{font-size:25px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
+  .picker{display:inline-flex;align-items:center;gap:6px}
+  .picker svg{width:18px;height:18px;color:var(--ac2)}
+  .gear{width:44px;height:44px;border-radius:999px;background:var(--sf);display:flex;align-items:center;justify-content:center;color:var(--tx2);flex:none;border:1px solid var(--ln2)}
+  .gear svg{width:20px;height:20px}
+  .btn{display:flex;align-items:center;justify-content:center;border-radius:calc(var(--r) - 3px);background:var(--ac);color:var(--on);font-weight:600;padding:12px 16px;font-size:15px}
+  .btn.ghost{background:transparent;border:1.5px solid var(--ln3);color:var(--tx2)}
+  .btn.warnB{background:transparent;border:1.5px solid var(--warnLine);color:var(--warn);padding:10px 16px}
+  .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:500;border:1.4px solid var(--ln3);color:var(--tx2);white-space:nowrap}
+  .pill.tag{border:0;background:var(--tag);color:var(--tagInk)}
+  .pill.labs{border:0;background:var(--ac2Soft);color:var(--ac2Deep);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--ln2);border-radius:999px;padding:7px 12px;font-size:14px;font-weight:500;color:var(--tx);background:var(--sf)}
+  .chip.on{background:var(--ac);border-color:var(--ac);color:var(--on)}
+  .chip.dash{border-style:dashed;color:var(--ac2Deep);border-color:var(--ac2Line)}
+  .field{font-size:14px;font-weight:500;color:var(--tx2);display:block}
+  .inp{margin-top:5px;border:1.5px solid var(--ln2);background:var(--in);border-radius:19px;padding:0 12px;min-height:50px;font-size:16px;color:var(--tx);display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .inp .ph{color:var(--tx3)}
+  .line{font-size:13px;color:var(--tx2);margin-top:5px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .toggle{width:44px;height:26px;border-radius:999px;background:var(--ac);position:relative;flex:none}
+  .toggle::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:999px;background:#fff}
+  .toggle.off{background:var(--ln3)}.toggle.off::after{right:auto;left:3px}
+  .trow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0}
+  .trow .t{font-weight:600;display:block}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--sf);border-radius:var(--r) var(--r) 0 0;padding:12px 18px 22px;box-shadow:0 -12px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:11px;z-index:2}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--ln3);margin:0 auto 2px;flex:none}
+  .scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:1}
+  .nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ln);background:var(--sf);padding:10px 0 14px;font-size:12px;text-align:center;color:var(--tx3);position:relative}
+  .nav.five{grid-template-columns:repeat(5,1fr)}
+  .nav.three{grid-template-columns:repeat(3,1fr)}
+  .nav span{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .nav svg{width:22px;height:22px}
+  .nav b{color:var(--ac);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .nav .ci{position:relative;color:var(--ac);font-weight:600}
+  .nav .ci i{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:999px;background:var(--ac);color:var(--on);box-shadow:0 0 0 4px var(--sf),0 6px 14px rgba(0,0,0,.2);margin-top:-30px}
+  .nav .ci i svg{width:22px;height:22px}
+
+  /* the timeline */
+  .tl{position:relative;padding-left:34px;display:flex;flex-direction:column;gap:10px}
+  .tl::before{content:"";position:absolute;left:13px;top:16px;bottom:24px;border-left:2px solid var(--ln3)}
+  .tl .node,.tl .leg,.tl .insert{position:relative}
+  .tl .dot{position:absolute;left:-33px;top:14px;width:24px;height:24px;border-radius:999px;background:var(--ac2);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--canvas)}
+  .tl .home .dot{background:var(--sf);border:2px solid var(--ln3);color:var(--tx2);font-size:14px}
+  .tl .current .dot{background:var(--ac)}
+  .ncard{background:var(--sf);border-radius:var(--r);padding:14px 16px}
+  .ncard.soft{background:transparent;border:1.5px dashed var(--ln3);padding:10px 14px}
+  .ncard .t{font-size:18px;font-weight:600;display:block;line-height:1.2}
+  .ncard.soft .t{font-size:16px}
+  .ncard .s{display:block;font-size:14px;color:var(--tx2)}
+  .ncard .nh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .ncard .num{text-align:right;flex:none}
+  .ncard .num b{display:block;font-size:19px;font-weight:600;line-height:1.1}
+  .ncard .num small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2)}
+  .bar{margin-top:10px;height:8px;border-radius:999px;background:var(--tr);overflow:hidden}
+  .bar span{display:block;height:100%;background:var(--ac);border-radius:999px}
+  .right{text-align:right;font-weight:600;color:var(--ac2);font-size:13px;margin-top:4px}
+  .stays{margin-top:10px;border-top:1px solid var(--ln);padding-top:6px}
+  .stay{display:flex;flex-direction:column;gap:1px;padding:7px 0}
+  .stay .r1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .stay .t{font-size:15px;font-weight:600;line-height:1.25}
+  .stay .s{font-size:13px;color:var(--tx2);display:block}
+  .stay .amt{font-weight:600;white-space:nowrap;font-size:14px}
+  .stay.gap{background:var(--warnSoft);border-radius:12px;padding:8px 10px;margin-top:4px}
+  .stay.gap .t,.stay.gap .s{color:var(--warn)}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px}
+  .add{font-weight:600;color:var(--ac2);font-size:14px;display:inline-flex;align-items:center;min-height:32px}
+  .onglobe{display:none;font-weight:600;color:var(--tx2);font-size:13px;align-items:center;gap:5px}
+  .onglobe svg{width:15px;height:15px}
+  .varB .onglobe{display:inline-flex}
+  .lcard{display:flex;align-items:flex-start;gap:10px;background:var(--sf);border-radius:16px;padding:10px 12px}
+  .leg.open .lcard,.leg.idea .lcard{background:transparent;border:1.5px dashed var(--ln3)}
+  .lcard .ico{width:28px;height:28px;border-radius:10px;background:var(--tag);color:var(--tagInk);display:flex;align-items:center;justify-content:center;flex:none;font-size:15px;margin-top:1px}
+  .lcard .ico svg{width:16px;height:16px}
+  .leg.open .lcard .ico{background:transparent;border:1.5px dashed var(--ln3);color:var(--tx3)}
+  .lcard .b{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px}
+  .lcard .r1,.lcard .r2{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .lcard .t{font-size:15px;font-weight:600;line-height:1.25}
+  .lcard .s{font-size:13px;color:var(--tx2)}
+  .lcard .amt{white-space:nowrap;font-weight:600;font-size:14px}
+  .lcard .add{font-size:13px;min-height:0;white-space:nowrap}
+  .leg.open::before,.leg.idea::before{content:"";position:absolute;left:-23px;top:-8px;bottom:-8px;width:6px;background:var(--canvas)}
+  .leg.open::after,.leg.idea::after{content:"";position:absolute;left:-21px;top:-8px;bottom:-8px;border-left:2px dashed var(--ln3)}
+  .insert{display:flex;justify-content:center}
+  .insert .pill{background:var(--sf);border-color:var(--ac2Line);color:var(--ac2Deep);font-weight:600}
+  .sum{font-size:14px;color:var(--tx2);font-weight:500;background:var(--sf);border-radius:var(--r);padding:12px 16px}
+
+  /* the compact list (the sheet at half height) */
+  .slist{display:flex;flex-direction:column}
+  .srow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--ln)}
+  .srow:first-child{border-top:0}
+  .sdot{width:26px;height:26px;border-radius:999px;background:var(--ac2);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+  .srow.home .sdot{background:transparent;border:2px solid var(--ln3);color:var(--tx2);font-size:14px}
+  .srow.on .sdot{background:var(--ac)}
+  .srow .b{flex:1;min-width:0}
+  .srow .t{font-weight:600;display:block}
+  .srow .s{font-size:13px;color:var(--tx2);display:block}
+  .srow.on{background:var(--acSoft);margin:0 -10px;padding-inline:10px;border-radius:14px;border-top:0}
+  .srow.add{color:var(--ac2);font-weight:600;justify-content:center}
+
+  /* the globe */
+  .gl{position:relative;height:640px;background:var(--gBg);overflow:hidden}
+  .gl .art{position:absolute;inset:0;width:100%;height:100%}
+  .gl .chrome{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:2}
+  .gl .chrome span{width:44px;height:44px;border-radius:999px;background:var(--gChrome);border:1px solid var(--gLine);color:var(--gInk);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+  .gl .chrome svg{width:20px;height:20px}
+  .gl .flyhint{position:absolute;left:14px;top:16px;z-index:2;font-size:12px;color:var(--gInk);background:var(--gChrome);border:1px solid var(--gLine);border-radius:999px;padding:5px 11px}
+  .gsheet{position:absolute;left:0;right:0;bottom:0;background:var(--sf);border-radius:var(--r) var(--r) 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden;transition:height .3s cubic-bezier(.2,.7,.2,1);cursor:pointer;z-index:2;outline:none}
+  .gsheet:focus-visible{box-shadow:0 0 0 3px var(--ac2),0 -12px 40px rgba(0,0,0,.35)}
+  .gsheet[data-h="0"]{height:78px}
+  .gsheet[data-h="1"]{height:56%}
+  .gsheet[data-h="2"]{height:91%}
+  .gsheet .strip{padding:10px 18px 12px;flex:none}
+  .gsheet .strip .grab{margin-bottom:8px}
+  .gsheet .strip .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .gsheet .strip .t{font-weight:600;font-size:16px}
+  .gsheet .strip .s{font-size:13px;color:var(--tx2)}
+  .gsheet .strip .chev{color:var(--ac2);font-weight:600}
+  .gsheet .list,.gsheet .editor{padding:0 18px 20px;overflow:hidden}
+  .gsheet .editor{background:var(--canvas);padding-top:12px;flex:1}
+  .gsheet[data-h="0"] .list,.gsheet[data-h="0"] .editor,.gsheet[data-h="1"] .editor,.gsheet[data-h="2"] .list{display:none}
+  .gsheet .hint{font-size:12px;color:var(--tx3);text-align:center;padding:4px 0 0}
+  @media (prefers-reduced-motion:reduce){.gsheet{transition:none}.pulse{animation:none}}
+  .pulse{transform-origin:center;transform-box:fill-box;animation:pulse 2.2s ease-out infinite}
+  @keyframes pulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+  /* map page bottom card (variant B) */
+  .mapcard{position:absolute;left:14px;right:14px;bottom:14px;background:var(--sf);border-radius:var(--r);padding:14px 16px;z-index:2}
+  /* desktop frame */
+  .desk{width:100%;max-width:760px;border-radius:18px;overflow:hidden;border:1px solid var(--ln2);display:grid;grid-template-columns:58% 42%;height:420px;background:var(--sf)}
+  .desk .gl{height:100%}
+  .desk .side{padding:16px 18px;overflow:hidden;border-left:1px solid var(--ln)}
+  @media (max-width:640px){.desk{grid-template-columns:1fr;height:auto}.desk .gl{height:260px}}
+  /* tab bar section */
+  .bars{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end}
+  .barframe{width:300px;max-width:100%;border:1.5px solid var(--ln2);border-radius:18px;overflow:hidden;background:var(--canvas);padding-top:40px}
+  .barframe .nav{padding-bottom:12px}
+  .barframe .nav .ci i{width:44px;height:44px;margin-top:-26px}
+  .barframe .none{padding:14px;text-align:center;color:var(--tx3);font-size:13px;border-top:1px dashed var(--ln3)}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+  <symbol id="wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+  <symbol id="map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 6.2 9.9 4.1a1 1 0 0 0-.8 0L3.6 6.3A1 1 0 0 0 3 7.2v12.2a1 1 0 0 0 1.4.9l4.5-2.1a1 1 0 0 1 .8 0l4.2 2.1a1 1 0 0 0 .8 0l5.5-2.2a1 1 0 0 0 .6-.9V5.1a1 1 0 0 0-1.4-.9l-4.5 2.1a1 1 0 0 1-.8 0"/><path d="M15 5.8v14.4"/><path d="M9.5 4v14.4"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></symbol>
+  <symbol id="max" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.2a2 2 0 0 1 1 1.7V20a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.2a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+  <symbol id="plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M3.77 10.77 2 9l2-4.5 1.1.55c.55.28.9.84.9 1.45v.86l.3.15 4.8-2.4 2-4.5 1.1.55a2 2 0 0 1 1 2.53L14.14 8l1.88.94 3.5-3.5c.6-.6 1.5-.6 2.1 0 .5.5.6 1.2.2 1.7L16 13.5l-2.1 4.2a2 2 0 0 1-2.8.9l-1-.6-.2-.4.9-4-3.6-1.8-1.2 1.2a2 2 0 0 1-2.1.4Z"/></symbol>
+  <symbol id="train" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h.01"/><path d="M16 15h.01"/></symbol>
+
+  <!-- the globe art: drawn once, used by every dark frame -->
+  <symbol id="globeArt" viewBox="0 0 390 640" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="earth" cx="42%" cy="35%" r="70%"><stop offset="0" stop-color="#1c2f38"/><stop offset=".6" stop-color="#132029"/><stop offset="1" stop-color="#0d151b"/></radialGradient>
+    </defs>
+    <rect width="390" height="640" fill="#0b0f14"/>
+    <circle cx="240" cy="330" r="330" fill="url(#earth)" stroke="rgba(216,224,229,.14)" stroke-width="1.5"/>
+    <g fill="none" stroke="rgba(216,224,229,.07)" stroke-width="1">
+      <ellipse cx="240" cy="330" rx="330" ry="110"/><ellipse cx="240" cy="330" rx="330" ry="230"/><ellipse cx="240" cy="330" rx="110" ry="330"/><ellipse cx="240" cy="330" rx="230" ry="330"/>
+      <path d="M-90 330H570"/><path d="M240 0V660"/>
+    </g>
+    <!-- leg 1, booked: Budapest → via Shanghai → Bangkok, solid -->
+    <path d="M60 46 Q 210 -30 335 75" fill="none" stroke="#d08795" stroke-width="2.6"/>
+    <path d="M335 75 Q 300 200 200 240" fill="none" stroke="#d08795" stroke-width="2.6"/>
+    <!-- legs 2 and 3, not booked: dashed -->
+    <path d="M200 240 Q 215 185 245 175" fill="none" stroke="#d08795" stroke-width="2" stroke-dasharray="5 5"/>
+    <path d="M245 175 Q 270 180 275 205" fill="none" stroke="#d08795" stroke-width="2" stroke-dasharray="5 5"/>
+    <!-- the leg home, not planned: dotted and faint -->
+    <path d="M275 205 Q 120 330 60 46" fill="none" stroke="rgba(208,135,149,.35)" stroke-width="1.5" stroke-dasharray="2 7"/>
+    <!-- home -->
+    <rect x="46" y="32" width="28" height="28" rx="9" fill="#0b0f14" stroke="#d8e0e5" stroke-width="1.5"/>
+    <text x="60" y="52" text-anchor="middle" font-size="15" fill="#d8e0e5" font-family="Work Sans, sans-serif">⌂</text>
+    <!-- via: hollow, no number; the hours sit below and to the left, clear of the arcs -->
+    <circle cx="335" cy="75" r="5" fill="#0b0f14" stroke="#d08795" stroke-width="2"/>
+    <text x="318" y="98" text-anchor="end" font-size="10" font-weight="600" fill="#d08795" font-family="Work Sans, sans-serif">via Shanghai · 14 h 35</text>
+    <!-- stops -->
+    <circle class="pulse" cx="200" cy="240" r="16" fill="none" stroke="#7fa37d" stroke-width="2"/>
+    <circle cx="200" cy="240" r="11" fill="#7fa37d"/><text x="200" y="244" text-anchor="middle" font-size="11" font-weight="700" fill="#10160f" font-family="Work Sans, sans-serif">1</text>
+    <circle cx="245" cy="175" r="11" fill="#d08795"/><text x="245" y="179" text-anchor="middle" font-size="11" font-weight="700" fill="#1b0f12" font-family="Work Sans, sans-serif">2</text>
+    <circle cx="275" cy="205" r="11" fill="#d08795"/><text x="275" y="209" text-anchor="middle" font-size="11" font-weight="700" fill="#1b0f12" font-family="Work Sans, sans-serif">3</text>
+    <!-- people you follow: sky marks -->
+    <circle cx="160" cy="218" r="10" fill="#8cb8dc" stroke="rgba(11,15,20,.55)" stroke-width="2"/>
+    <g fill="#0b0f14"><circle cx="156" cy="215" r="2.2"/><path d="M152 222a4 4 0 0 1 8 0z"/><circle cx="164" cy="215" r="2.2"/><path d="M160 222a4 4 0 0 1 8 0z"/></g>
+    <circle cx="335" cy="140" r="10" fill="#8cb8dc" stroke="rgba(11,15,20,.55)" stroke-width="2"/>
+    <g fill="#0b0f14"><circle cx="335" cy="137" r="2.6"/><path d="M330 145a5 5 0 0 1 10 0z"/></g>
+  </symbol>
+</svg>
+
+<!-- Templates cloned into the frames below (one source, several frames). -->
+<template id="tpl-tl">
+  <div class="tl">
+    <div class="node home"><span class="dot">⌂</span><span class="callout" style="top:-8px;right:-8px">1</span><div class="ncard soft"><span class="t">Budapest</span><span class="s">Home · every journey starts and ends here</span></div></div>
+    <div class="leg booked"><span class="callout" style="top:-8px;right:-8px">2</span><div class="lcard"><span class="ico"><svg><use href="#plane"/></svg></span><span class="b"><span class="r1"><span class="t">Budapest → Bangkok</span><span class="amt">248 000 Ft</span></span><span class="r2"><span class="s">Mon 31 Aug · via Shanghai · 14 h 35</span><span class="s okTx">paid</span></span></span></div></div>
+    <div class="node stop current"><span class="dot">1</span><span class="callout" style="top:-8px;right:-8px">3</span>
+      <div class="ncard">
+        <div class="nh"><span><span class="t">Bangkok 🇹🇭</span><span class="s">1 → 30 Sep · Mid</span></span><span class="num"><b>29</b><small>nights</small></span></div>
+        <div class="bar"><span style="width:76%"></span></div><div class="right">night 22 · 7 left</div>
+        <div class="stays">
+          <div class="stay"><span class="r1"><span class="t">Home in Khet Huai Khwang</span><span class="amt">305 788 Ft</span></span><span class="s">Booking.com · 29 nights · paid 9 Jul</span></div>
+          <div class="foot"><span class="add">＋ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="leg open"><span class="callout" style="top:-8px;right:-8px">4</span><div class="lcard"><span class="ico">→</span><span class="b"><span class="r1"><span class="t">Bangkok → Hanoi</span></span><span class="r2"><span class="s">Wed 30 Sep · nothing booked</span><span class="add">＋ Add transport</span></span></span></div></div>
+    <div class="node stop"><span class="dot">2</span>
+      <div class="ncard">
+        <div class="nh"><span><span class="t">Hanoi 🇻🇳</span><span class="s">30 Sep → 13 Nov · Mid</span></span><span class="num"><b>44</b><small>nights</small></span></div>
+        <div class="stays">
+          <div class="stay"><span class="r1"><span class="t">Văn Giang (Mai Kenny)</span><span class="amt">≈ 433 800 Ft</span></span><span class="s">Airbnb · 44 nights · card 29 Sep</span></div>
+          <div class="foot"><span class="add">＋ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="leg idea"><div class="lcard"><span class="ico"><svg><use href="#train"/></svg></span><span class="b"><span class="r1"><span class="t">Hanoi → Da Nang</span></span><span class="r2"><span class="s">Fri 13 Nov · train · idea</span><span class="s faint">not booked</span></span></span></div></div>
+    <div class="node stop"><span class="dot">3</span><span class="callout" style="top:-8px;right:-8px">5</span>
+      <div class="ncard">
+        <div class="nh"><span><span class="t">Da Nang 🇻🇳</span><span class="s">13 Nov → 13 Dec · Mid</span></span><span class="num"><b>30</b><small>nights</small></span></div>
+        <div class="stays">
+          <div class="stay"><span class="r1"><span class="t">An Bang beach house</span><span class="amt">≈ 237 000 Ft</span></span><span class="s">Airbnb · 13 → 30 Nov · 17 nights · shortlist</span></div>
+          <div class="stay gap"><span class="r1"><span class="t">No bed 30 Nov → 13 Dec</span><span class="amt">›</span></span><span class="s">13 nights · tap to add a stay</span></div>
+          <div class="foot"><span class="add">＋ Add stay</span><span class="onglobe"><svg><use href="#globe"/></svg> On the globe ›</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="insert"><span class="callout" style="top:-10px;right:60px">6</span><span class="pill">＋ Add stop</span></div>
+    <div class="leg open"><div class="lcard"><span class="ico">⌂</span><span class="b"><span class="r1"><span class="t">Da Nang → Budapest</span></span><span class="r2"><span class="s">not planned · the journey ends 30 Apr</span><span class="add">＋ Add transport</span></span></span></div></div>
+    <div class="sum">3 stops · 103 of 242 nights placed · home 30 Apr</div>
+  </div>
+</template>
+
+<template id="tpl-sl">
+  <div class="slist">
+    <div class="srow home"><span class="sdot">⌂</span><span class="b"><span class="t">Budapest</span><span class="s">home</span></span></div>
+    <div class="srow on"><span class="sdot">1</span><span class="b"><span class="t">Bangkok</span><span class="s">1 – 30 Sep · night 22 of 29</span></span><span class="faint">›</span></div>
+    <div class="srow"><span class="sdot">2</span><span class="b"><span class="t">Hanoi</span><span class="s">30 Sep – 13 Nov · stay booked · leg not booked</span></span><span class="faint">›</span></div>
+    <div class="srow"><span class="sdot">3</span><span class="b"><span class="t">Da Nang</span><span class="s">13 Nov – 13 Dec · <span class="warnTx">no bed for 13 nights</span></span></span><span class="faint">›</span></div>
+    <div class="srow add">＋ Add stop</div>
+  </div>
+</template>
+
+<template id="tpl-nav-merged">
+  <div class="nav five"><span><svg><use href="#house"/></svg>Home</span><b><svg><use href="#route"/></svg>Trip</b><span class="ci"><i><svg><use href="#pin"/></svg></i>Check in</span><span><svg><use href="#wallet"/></svg>Money</span><span><svg><use href="#users"/></svg>People</span></div>
+</template>
+<template id="tpl-nav-map">
+  <div class="nav five"><span><svg><use href="#house"/></svg>Home</span><b><svg><use href="#route"/></svg>Trip</b><span class="ci"><i><svg><use href="#pin"/></svg></i>Check in</span><span><svg><use href="#wallet"/></svg>Money</span><span><svg><use href="#map"/></svg>Map</span></div>
+</template>
+<template id="tpl-nav-mapon">
+  <div class="nav five"><span><svg><use href="#house"/></svg>Home</span><span><svg><use href="#route"/></svg>Trip</span><span class="ci"><i><svg><use href="#pin"/></svg></i>Check in</span><span><svg><use href="#wallet"/></svg>Money</span><b><svg><use href="#map"/></svg>Map</b></div>
+</template>
+<template id="tpl-globe">
+  <svg class="art" aria-label="The globe: home in Budapest, a booked flight via Shanghai to Bangkok, dashed legs on to Hanoi and Da Nang, two marks for people you follow"><use href="#globeArt"/></svg>
+  <div class="chrome"><span title="Layers"><svg><use href="#sliders"/></svg></span><span title="Full screen"><svg><use href="#max"/></svg></span></div>
+</template>
+
+<div class="page">
+  <div class="eyebrow">Livhold · Trip · design review · round 1 · issues #58 and #63</div>
+  <h1>One timeline, and the globe underneath it</h1>
+  <p class="lede">Two things to look at on a phone. First, Trip becomes one timeline: home, leg, stop, leg, stop, home. Stays live inside the stop, transport lives on the leg between two stops, and a place you only pass through is a via on the leg. Second, whether Trip and Map are one screen, the globe as the canvas with the timeline as a sheet over it, or two pages with strong cross-links. Sample data is the Asia journey on Monday 22 September: day 23, Bangkok night 22, the Hanoi leg not booked, Da Nang half covered.</p>
+  <div class="model">
+    <b>Decided in #58, not up for review here</b>
+    <ul>
+      <li>A place you sleep is a stop; a place you pass through is a via on a leg. A via has no nights, no budget and no check-in expected.</li>
+      <li>Home is a fact about the person, not the journey. Every journey starts and ends there without being asked.</li>
+      <li>A stop holds one or more stays; a gap between them is a warning, not an error. Two stays in one stop may not overlap each other.</li>
+      <li>Extras has left for Money as One-offs (#39). The tabs Stops / Stays / Transport / Extras go.</li>
+      <li>Nights math, "Bangkok, night 22", booked / not booked, cancel-by reminders and the plan → ledger import keep working unchanged.</li>
+    </ul>
+    <b style="display:block;margin-top:12px">Open, and decided on a phone</b>
+    <ul>
+      <li>Sheet over the globe (section 2) or two pages with cross-links (section 3). Tap the sheets in section 2: they cycle through their three heights.</li>
+      <li>The tick that takes a stop out of the budget: on the card, as today, or inside the stop editor (section 4).</li>
+      <li>Whether an empty leg card is tappable. Drawn here as yes: it opens the leg editor (section 6).</li>
+    </ul>
+  </div>
+  <div class="toc">
+    <a href="#s1">1 · The timeline</a><a href="#s2">2 · A · Globe + sheet</a><a href="#s3">3 · B · Two pages</a><a href="#s4">4 · Stop editor</a><a href="#s5">5 · Add stay</a><a href="#s6">6 · Transport on a leg</a><a href="#s7">7 · The tab bar</a><a href="#s8">8 · Decide on a phone</a>
+  </div>
+
+  <!-- ─────────────── 1 · THE TIMELINE ─────────────── -->
+  <section class="mock" id="s1">
+    <div class="phone">
+      <div class="status"><span>09:41</span><span>livhold.com/trip</span></div>
+      <div class="screen">
+        <div class="hd">
+          <div><div class="kicker m">Day 23 · Bangkok, night 22</div><h2 class="picker" style="position:relative">Asia <svg><use href="#chev"/></svg><span class="callout" style="top:4px;right:-30px">7</span></h2></div>
+          <span class="gear"><svg><use href="#settings"/></svg></span>
+        </div>
+        <div data-tpl="tpl-tl"></div>
+      </div>
+      <div data-tpl="tpl-nav-map"></div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 1</div>
+      <h2>The timeline: home, leg, stop, leg, stop, home</h2>
+      <div class="issue">#58 · one page in date order, no tabs; the rail on the left is the journey</div>
+      <ul>
+        <li><span class="n">1</span><b>Home is the first and the last node</b>, drawn hollow, with no nights and no card to edit. Where you live is set once under your avatar (Account) and reused by every journey. The globe's ⌂ marker already exists.</li>
+        <li><span class="n">2</span><b>A leg is the card between two stops</b> and the only place transport is entered. Its from, to and date come from the stops on either side, so the flight is never typed as "transport or extra". A booked leg is solid and shows its price and paid state; <b>via Shanghai · 14 h 35</b> is the connection, a place you pass through, drawn on the globe as a dogleg with the hours on it.</li>
+        <li><span class="n">3</span><b>A stop card is what the Stops card is today</b>, plus its stays underneath. Nights, dates and comfort tier on the first line, the progress bar for the stop you are in, then one row per stay with its nights, paid state and total. "＋ Add stay" lives on the stop, not on a separate page.</li>
+        <li><span class="n">4</span><b>An unbooked leg is dashed</b> and says so; "＋ Add transport" opens the leg editor (section 6). The rail itself goes dashed there too, so the gap in the plan is visible from across the room.</li>
+        <li><span class="n">5</span><b>Two stays in Da Nang would be two rows; here there is one and a gap.</b> "No bed 30 Nov → 13 Dec" is the amber row, a warning, and tapping it opens Add stay with those dates already in (section 5). The overlap warning stays per stop: two stays in Da Nang may not overlap each other.</li>
+        <li><span class="n">6</span><b>A stop is inserted at the rail</b>, between any two nodes; the last "＋ Add stop" is always there, above the leg home. The leg home reads "not planned · the journey ends 30 Apr", which is the old "24 nights unassigned" without a table.</li>
+        <li><span class="n">7</span><b>The journey picker is the title</b> (#21: "current journey", chosen from your journeys in the Trip header, not in Settings). Behind the gear: dates, currency, cap, travel partners, sharing, delete or leave.</li>
+        <li>The summary line at the bottom is the Stops tab's footer, unchanged. Extras is gone: visas, insurance and gear are One-offs on Money.</li>
+      </ul>
+      <div class="q"><b>Question:</b> the tick that takes a stop out of the budget is not on these cards. Keep it on the card (today's behaviour, one more control per stop), or move it into the stop editor as a switch (section 4)? Drawn here as the editor.</div>
+      <div class="ok"><b>Copy diet applied (#65):</b> the four paragraphs that opened Stops, Stays, Transport and Extras are gone. Nothing on this screen explains itself; the one sentence left is on the home node.</div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 2 · VARIANT A: GLOBE + SHEET ─────────────── -->
+  <section class="mock wide" id="s2">
+    <div>
+      <div class="eyebrow">Screens 2a–2c · variant A</div>
+      <h2 style="font-size:24px;font-weight:600;margin-top:4px">The globe is the canvas, the timeline is a sheet over it</h2>
+      <p class="muted" style="max-width:64ch;margin:8px 0 22px">Three heights, one sheet. <b>Tap any sheet below and it moves to the next height</b>, so you can feel the sizes on your own phone. Collapsed is a one-line strip; half is the stop list; full is the editor from screen 1.</p>
+      <div class="frames">
+        <div class="frame">
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>livhold.com/trip</span></div>
+            <div class="gl merged">
+              <div data-tpl="tpl-globe"></div>
+              <span class="callout" style="top:14px;right:112px">8</span>
+              <div class="gsheet" data-h="0" tabindex="0" role="button" aria-label="Timeline sheet, tap to change height">
+                <div class="strip"><div class="grab"></div><div class="row"><span><span class="t">Bangkok · night 22</span><span class="s"> · next Hanoi 30 Sep</span></span><span class="chev">›</span></div></div>
+                <div class="list"><div data-tpl="tpl-sl"></div><div class="hint">tap a stop and the globe flies there</div></div>
+                <div class="editor nocall"><div data-tpl="tpl-tl"></div></div>
+              </div>
+            </div>
+            <div data-tpl="tpl-nav-merged"></div>
+          </div>
+          <div class="cap">2a · collapsed: the strip. What Home's hero says, in one line, over the whole route.</div>
+        </div>
+        <div class="frame">
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>livhold.com/trip</span></div>
+            <div class="gl merged">
+              <div data-tpl="tpl-globe"></div>
+              <span class="flyhint">Bangkok · centred</span>
+              <div class="gsheet" data-h="1" tabindex="0" role="button" aria-label="Timeline sheet, tap to change height">
+                <div class="strip"><div class="grab"></div><div class="row"><span><span class="t">Bangkok · night 22</span><span class="s"> · next Hanoi 30 Sep</span></span><span class="chev">›</span></div></div>
+                <div class="list"><span class="callout" style="top:8px;right:8px">9</span><div data-tpl="tpl-sl"></div><div class="hint">tap a stop and the globe flies there</div></div>
+                <div class="editor nocall"><div data-tpl="tpl-tl"></div></div>
+              </div>
+            </div>
+            <div data-tpl="tpl-nav-merged"></div>
+          </div>
+          <div class="cap">2b · half: the stop list. The globe still shows the current stop and the next leg above it.</div>
+        </div>
+        <div class="frame">
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>livhold.com/trip</span></div>
+            <div class="gl merged">
+              <div data-tpl="tpl-globe"></div>
+              <div class="gsheet" data-h="2" tabindex="0" role="button" aria-label="Timeline sheet, tap to change height">
+                <div class="strip"><div class="grab"></div><div class="row"><span><span class="t">Asia</span><span class="s"> · 3 stops · 103 of 242 nights placed</span></span><span class="chev">‹</span></div></div>
+                <div class="list"><div data-tpl="tpl-sl"></div></div>
+                <div class="editor nocall"><span class="callout" style="top:6px;right:8px">10</span><div data-tpl="tpl-tl"></div></div>
+              </div>
+            </div>
+            <div data-tpl="tpl-nav-merged"></div>
+          </div>
+          <div class="cap">2c · full: the editor. Screen 1 inside the sheet; a band of globe stays visible at the top to pull it back down.</div>
+        </div>
+      </div>
+      <div class="frames" style="margin-top:28px">
+        <div class="frame">
+          <div class="phone">
+            <div class="status"><span>09:42</span><span>livhold.com/trip</span></div>
+            <div class="gl merged">
+              <div data-tpl="tpl-globe"></div>
+              <div class="scrim"></div>
+              <div class="sheet" style="position:absolute">
+                <div class="grab"></div>
+                <div class="hd"><h3 style="font-size:20px;font-weight:600">Layers</h3><span class="faint">✕</span></div>
+                <div class="trow"><span><span class="t">Route and stops</span><span class="line" style="margin:0">Always on</span></span><span class="toggle" style="opacity:.45"></span></div>
+                <div class="trow"><span><span class="t">People you follow</span><span class="line" style="margin:0">Where the people you follow are today</span></span><span class="toggle"></span></div>
+                <div class="trow"><span class="t">Borders</span><span class="toggle off"></span></div>
+                <div class="trow"><span class="t">Day and night</span><span class="toggle off"></span></div>
+                <div class="trow"><span class="t">Spin</span><span class="toggle off"></span></div>
+                <div class="trow" style="position:relative"><span class="callout" style="top:8px;right:56px">11</span><span><span class="t">Hazards <span class="pill labs">Labs</span></span><span class="line" style="margin:0">Earthquakes and monsoon season, from USGS and the catalogue</span></span><span class="toggle off"></span></div>
+                <div class="line" style="margin-top:2px">Remembered on this phone.</div>
+              </div>
+            </div>
+            <div data-tpl="tpl-nav-merged"></div>
+          </div>
+          <div class="cap">2d · Layers, whichever variant wins. Route plus people by default; everything else off.</div>
+        </div>
+        <div class="frame" style="width:100%;max-width:760px">
+          <div class="desk">
+            <div class="gl"><div data-tpl="tpl-globe"></div></div>
+            <div class="side">
+              <div class="hd" style="margin-bottom:8px"><div><div class="kicker m">Day 23 · Bangkok, night 22</div><h2 class="picker" style="font-size:22px">Asia <svg><use href="#chev"/></svg></h2></div><span class="gear" style="width:36px;height:36px"><svg style="width:17px;height:17px"><use href="#settings"/></svg></span></div>
+              <div data-tpl="tpl-sl"></div>
+            </div>
+          </div>
+          <div class="cap">2e · desktop: the sheet becomes a side panel. Nothing else changes.</div>
+        </div>
+      </div>
+      <div class="notes" style="margin-top:28px">
+        <ul>
+          <li><span class="n">8</span><b>Two buttons on the globe</b>, top right: Layers (2d) and full screen for the pretty version. The search button is gone with Explore (Labs). The legend is gone: with route and people as the only default layers there is nothing left to explain.</li>
+          <li><span class="n">9</span><b>Tap a stop in the list and the globe flies there</b>; the strip and the "centred" label follow. Tap the same stop again and it opens its editor (section 4) over the sheet. Drag the globe and the sheet drops to the strip.</li>
+          <li><span class="n">10</span><b>Full height is the editor</b>, screen 1 verbatim, with 9 % of globe left visible at the top so there is always something to pull the sheet back down by. The heights are the proposal to test: 78 px, 56 %, 91 %.</li>
+          <li><span class="n">11</span><b>Hazards go to Labs.</b> The panel stays as built (#32), off for everyone but the creators and testers. Earthquake markers on a family-facing globe look alarming.</li>
+          <li><b>The people marks stay a default, not a layer.</b> Choosing whose route to draw beside yours (the sheet per trip from #9) moves to People, since it is about people, not about this journey. On this globe the marks just show where they are today.</li>
+          <li><b>The tab bar loses Map and gains People</b>: Home · Trip · Check in · Money · People (section 7).</li>
+        </ul>
+        <div class="cost"><b>Honest cost, to be measured, not argued:</b> the globe loads every time Trip is opened, and Trip is opened many times a day on the road. On the phone, time these three: a cold open of Trip on mobile data; how warm the phone is after five minutes of editing stays with the globe behind the sheet; and how often a finger meant for the list drags the globe. The fallback is section 3.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 3 · VARIANT B: TWO PAGES ─────────────── -->
+  <section class="mock wide" id="s3">
+    <div>
+      <div class="eyebrow">Screens 3a–3b · variant B, the fallback</div>
+      <h2 style="font-size:24px;font-weight:600;margin-top:4px">Two pages with strong cross-links</h2>
+      <p class="muted" style="max-width:64ch;margin:8px 0 22px">If the sheet fails on a phone: Trip stays a page, Map stays a page, and each knows about the other. A stop tapped on Trip can fly the globe there; a stop tapped on the globe opens its editor.</p>
+      <div class="frames">
+        <div class="frame">
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>livhold.com/trip</span></div>
+            <div class="screen varB">
+              <div class="hd">
+                <div><div class="kicker m">Day 23 · Bangkok, night 22</div><h2 class="picker">Asia <svg><use href="#chev"/></svg></h2></div>
+                <span class="gear"><svg><use href="#settings"/></svg></span>
+              </div>
+              <div class="gl" style="height:96px;border-radius:var(--r);position:relative"><svg class="art" style="height:96px" aria-hidden="true"><use href="#globeArt"/></svg><span class="callout" style="top:-8px;right:-8px">12</span><span class="flyhint" style="top:auto;bottom:12px;left:12px">Route on the globe ›</span></div>
+              <div class="nocall"><div data-tpl="tpl-tl"></div></div>
+            </div>
+            <div data-tpl="tpl-nav-map"></div>
+          </div>
+          <div class="cap">3a · Trip: the timeline, a route band that opens Map, and "On the globe ›" on every stop.</div>
+        </div>
+        <div class="frame">
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>livhold.com/map</span></div>
+            <div class="gl">
+              <div data-tpl="tpl-globe"></div>
+              <div class="mapcard"><span class="callout" style="top:-8px;right:-8px">13</span>
+                <div class="hd" style="align-items:center"><div><div style="font-family:Lora,Georgia,serif;font-size:19px;font-weight:600">1 · Bangkok</div><div class="muted" style="font-size:14px">night 22 of 29 · Home in Khet Huai Khwang</div></div></div>
+                <div style="display:flex;gap:8px;margin-top:12px"><span class="btn" style="flex:1;padding:10px 12px;font-size:14px">Edit stop</span><span class="btn ghost" style="padding:10px 14px;font-size:14px">Timeline ›</span></div>
+              </div>
+            </div>
+            <div data-tpl="tpl-nav-mapon"></div>
+          </div>
+          <div class="cap">3b · Map: the same globe and Layers; the bottom card is the stop, with the editor one tap away.</div>
+        </div>
+      </div>
+      <div class="notes" style="margin-top:28px">
+        <ul>
+          <li><span class="n">12</span><b>Trip carries a band of the route</b> at the top and an "On the globe ›" link on each stop card, which opens Map flown to that stop. The band is a picture with a link, never a second globe instance.</li>
+          <li><span class="n">13</span><b>Map's bottom card is the stop</b>, current or next, as today, with two buttons: Edit stop opens the section 4 editor as a sheet over the globe; Timeline goes to Trip scrolled to that stop. Tapping any stop pin swaps the card to that stop.</li>
+          <li><b>What this costs:</b> the tab bar keeps Map, so People has no slot of its own and lives behind the avatar and on Home's people strip. And a stop is edited from two places, which is the duplication the merge removes.</li>
+          <li><b>What it saves:</b> the globe loads only when someone asks for it. On a slow day on the road, Trip is a list and opens instantly.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 4 · STOP EDITOR ─────────────── -->
+  <section class="mock" id="s4">
+    <div class="phone">
+      <div class="status"><span>09:43</span><span>livhold.com/trip</span></div>
+      <div class="screen dim" style="min-height:700px"><div class="hd"><div><div class="kicker m">Day 23 · Bangkok, night 22</div><h2>Asia</h2></div><span class="gear"></span></div><div class="nocall"><div data-tpl="tpl-tl"></div></div></div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="hd" style="align-items:center"><h3 style="font-size:22px;font-weight:600">Bangkok</h3><span class="pill tag">🇹🇭 Thailand</span></div>
+        <div class="two" style="position:relative"><span class="callout" style="top:-8px;right:-8px">14</span>
+          <label class="field">Arrive<div class="inp">1 Sep<span class="faint">▾</span></div></label>
+          <label class="field">Leave<div class="inp">30 Sep<span class="faint">▾</span></div></label>
+        </div>
+        <div class="line" style="margin-top:-4px">29 nights. Moving Leave moves the Hanoi leg with it.</div>
+        <div><div class="field">Comfort</div><div class="chips" style="margin-top:6px"><span class="chip">Budget</span><span class="chip on">Mid</span><span class="chip">Comfort</span></div><div class="line">Sets the nightly estimate until a stay is booked.</div></div>
+        <div class="trow" style="position:relative"><span class="callout" style="top:-8px;right:-8px">15</span><span><span class="t">Counted in the budget</span><span class="line" style="margin:0">Off drops its nights from the plan.</span></span><span class="toggle"></span></div>
+        <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">16</span>
+          <div class="kicker">Stays</div>
+          <div class="stay" style="padding:8px 0 4px"><span class="r1"><span class="t">Home in Khet Huai Khwang</span><span class="faint">›</span></span><span class="s">1 – 30 Sep · paid</span></div>
+          <span class="add">＋ Add stay</span>
+        </div>
+        <span class="add" style="color:var(--tx2)">＋ Note</span>
+        <div class="btn">Save</div>
+        <div style="border-top:1px solid var(--ln);padding-top:10px;position:relative"><span class="callout" style="top:0;right:-8px">17</span><div class="btn warnB">Delete this stop</div></div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 4</div>
+      <h2>The stop editor: dates, comfort, and its stays</h2>
+      <div class="issue">Tap a stop card, in either variant · replaces the centred Modal with a bottom sheet (RIG-PARITY §1)</div>
+      <ul>
+        <li><span class="n">14</span><b>Arrive and Leave are the stop</b>; city and country were picked when the stop was added and are not re-asked here. The line under the dates says the one non-obvious consequence: the leg after this stop moves with Leave.</li>
+        <li><span class="n">15</span><b>The budget switch lives here</b> (the question in section 1). Same rule as today, one line: off drops the nights from the plan; bookings already made keep counting as money owed.</li>
+        <li><span class="n">16</span><b>The stop's stays are listed inside it</b>, each opening its own sheet (section 5). This is what makes "a stop holds one or more stays" true in the editor as well as on the card.</li>
+        <li><span class="n">17</span><b>Delete stays below a rule</b>, in the warning colour, as it was moved on 2026-09-19. Its stays and legs are not deleted with it; the legs on either side merge into one unbooked leg.</li>
+        <li>The comfort line is twelve words. The old explanation ran to thirty and lives behind ⓘ if anyone asks.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─────────────── 5 · ADD STAY (#60) ─────────────── -->
+  <section class="mock" id="s5">
+    <div class="phone">
+      <div class="status"><span>09:44</span><span>livhold.com/trip</span></div>
+      <div class="screen dim" style="min-height:760px"><div class="nocall"><div data-tpl="tpl-tl"></div></div></div>
+      <div class="scrim"></div>
+      <div class="sheet" style="gap:10px">
+        <div class="grab"></div>
+        <div class="hd" style="align-items:center"><h3 style="font-size:22px;font-weight:600">Add stay</h3><span class="pill tag" style="position:relative">Da Nang · 30 Nov – 13 Dec<span class="callout" style="top:-12px;right:-10px">18</span></span></div>
+        <label class="field">Name<div class="inp"><span class="ph">Where you sleep</span></div></label>
+        <div class="chips"><span class="chip on">Booking.com</span><span class="chip">Airbnb</span><span class="chip">Other</span></div>
+        <div class="two">
+          <label class="field">Check-in<div class="inp">30 Nov<span class="faint">▾</span></div></label>
+          <label class="field">Check-out<div class="inp">13 Dec<span class="faint">▾</span></div></label>
+        </div>
+        <div class="line" style="margin-top:-4px">13 nights · the nights with no bed.</div>
+        <div style="display:grid;grid-template-columns:1fr 96px;gap:10px">
+          <label class="field">Per night<div class="inp"><span style="font-size:22px;font-weight:600">35</span></div></label>
+          <label class="field">Currency<div class="inp">USD<span class="faint">▾</span></div></label>
+        </div>
+        <div class="line" style="margin-top:-4px">≈ 10 950 Ft a night · ≈ 142 000 Ft for 13.</div>
+        <div class="chips"><span class="chip">Idea</span><span class="chip">Shortlist</span><span class="chip on">Booked</span></div>
+        <div style="border-top:1px solid var(--ln);padding-top:8px;position:relative"><span class="callout" style="top:2px;right:-8px">19</span>
+          <div class="kicker">Deadlines</div>
+          <div class="two" style="margin-top:6px">
+            <label class="field">Free cancellation until<div class="inp">24 Nov<span class="faint">▾</span></div></label>
+            <label class="field">Card charged<div class="inp">24 Nov<span class="faint">▾</span></div></label>
+          </div>
+          <div class="chips" style="margin-top:8px"><span class="chip">No free cancellation</span><span class="chip">Charged at check-in</span></div>
+          <div class="trow" style="margin-top:4px;position:relative"><span class="callout" style="top:-6px;right:-8px">20</span><span><span class="t">Remind me before it's non-refundable</span><span class="line" style="margin:0">3 days before, 21 Nov, as a card on Home.</span></span><span class="toggle"></span></div>
+        </div>
+        <div class="btn">Add stay</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 5</div>
+      <h2>Add stay: the deadlines are asked when the stay is added</h2>
+      <div class="issue">#60 · on the live trip no deadline reminder ever fired, because no stay had a cancel-by date</div>
+      <ul>
+        <li><span class="n">18</span><b>Opened from the amber gap row</b>, so the stop and the dates are already in. Opened from "＋ Add stay" the dates default to the stop's dates, or to the nights still uncovered if there is a stay already.</li>
+        <li><span class="n">19</span><b>The two dates the reminders need, with an explicit no.</b> "No free cancellation" and "Charged at check-in" are chips, not blanks: a stay that was never asked and a stay with no cancellation window used to look the same, and both produced no reminder. Now a blank means "still to enter" and shows as "deadlines not set" on the stop card. The dates live in the booking email; the sheet says so nowhere, because the person adding the stay has that email open.</li>
+        <li><span class="n">20</span><b>The reminder is on by default and names its date.</b> It is the derived deadline reminder that already exists, born here instead of on a Reminders page. Off is one tap. The manual reminders list goes to Labs (#64).</li>
+        <li>The Booked chip is what makes Money import the stay on its charge date, as today. Idea and Shortlist stays keep the deadline fields hidden; they appear the moment Booked is chosen.</li>
+        <li><b>The second door (#60):</b> Trip settings gets a Deadlines row listing every cancel-by and charge date on the journey, whether or not any is due. A feature that only appears once it has content needs a door that does not.</li>
+      </ul>
+      <div class="q"><b>Question:</b> should Booked ask for a confirmation email address to forward to later (the premium "the stay fills itself" candidate), or leave that for when the feature exists? Drawn here as: leave it.</div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 6 · TRANSPORT ON A LEG ─────────────── -->
+  <section class="mock" id="s6">
+    <div class="phone">
+      <div class="status"><span>09:45</span><span>livhold.com/trip</span></div>
+      <div class="screen dim" style="min-height:700px"><div class="nocall"><div data-tpl="tpl-tl"></div></div></div>
+      <div class="scrim"></div>
+      <div class="sheet" style="gap:10px">
+        <div class="grab"></div>
+        <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">21</span><div class="kicker m">Leg 2 · leaves Bangkok Wed 30 Sep</div><h3 style="font-size:22px;font-weight:600;margin-top:2px">Bangkok → Hanoi</h3></div>
+        <div class="chips"><span class="chip on"><svg style="width:15px;height:15px"><use href="#plane"/></svg> Flight</span><span class="chip"><svg style="width:15px;height:15px"><use href="#train"/></svg> Train</span><span class="chip">Bus</span><span class="chip">Ferry</span></div>
+        <div class="two">
+          <label class="field">Departs<div class="inp">30 Sep<span class="faint">▾</span></div></label>
+          <label class="field">Time<div class="inp"><span class="ph">—</span><span class="faint">▾</span></div></label>
+        </div>
+        <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">22</span><span class="chip dash">＋ Add a connection</span><div class="line">A place you pass through, not a stop.</div></div>
+        <div style="display:grid;grid-template-columns:1fr 96px;gap:10px">
+          <label class="field">Price<div class="inp"><span class="ph">for everyone</span></div></label>
+          <label class="field">Currency<div class="inp">USD<span class="faint">▾</span></div></label>
+        </div>
+        <span class="add" style="color:var(--tx2)">＋ Link</span>
+        <div style="position:relative"><span class="callout" style="top:-6px;right:-8px">23</span><div class="chips"><span class="chip on">Idea</span><span class="chip">Shortlist</span><span class="chip">Booked</span></div><div class="line">Booked adds the charge date and draws the leg solid.</div></div>
+        <div class="btn">Save</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="eyebrow">Screen 6</div>
+      <h2>Transport on the leg, and the via that is not a stop</h2>
+      <div class="issue">#58 · "Add transport" lives on the leg, between the two stop cards</div>
+      <ul>
+        <li><span class="n">21</span><b>From, to and date are the leg's</b>, taken from the stops on either side, and are not fields. The only date typed is a departure time. Change the stop's Leave date and this leg moves with it (section 4).</li>
+        <li><span class="n">22</span><b>The connection appears only for a flight</b> (progressive, #64) and is one chip: tap it and a city field with hours appears, "Shanghai · 14 h 35" on leg 1. A via is a place you pass through: no nights, no budget, no check-in expected, a dogleg on the globe with the hours on it. It is never promoted to a stop by the app; if you sleep there, add a stop.</li>
+        <li><span class="n">23</span><b>Booked reveals the charge date</b> and the leg draws solid on the rail and on the globe; Money imports it on that date as today ("from booking"). Idea and Shortlist legs draw dashed and forecast with a price if one is typed, nothing if not.</li>
+        <li>Delete is gone from this sheet on purpose: a leg cannot be deleted, only emptied, because two stops always have a leg between them. "Remove transport" sits under a rule once something is booked.</li>
+      </ul>
+      <div class="ok"><b>Kept:</b> the transport tick that holds a leg's money in the budget is the Idea / Shortlist / Booked chip now. Idea forecasts nothing, Shortlist forecasts the typed price, Booked is money owed. Three states instead of a tick beside a state.</div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 7 · THE TAB BAR ─────────────── -->
+  <section class="mock wide" id="s7">
+    <div>
+      <div class="eyebrow">Screen 7</div>
+      <h2 style="font-size:24px;font-weight:600;margin-top:4px">The tab bar: a tab exists when it has something in it</h2>
+      <p class="muted" style="max-width:64ch;margin:8px 0 22px">The rule adopted in #63, drawn for the four states an account passes through. Which of the last two is right depends on section 2 versus 3.</p>
+      <div class="bars">
+        <div class="barframe"><div class="none">No bar. A new account with no journey and nobody followed is Home alone.</div></div>
+        <div class="barframe"><div class="nav three"><b><svg><use href="#house"/></svg>Home</b><span><svg><use href="#route"/></svg>Trip</span><span><svg><use href="#wallet"/></svg>Money</span></div></div>
+        <div class="barframe"><div data-tpl="tpl-nav-merged"></div></div>
+        <div class="barframe"><div data-tpl="tpl-nav-map"></div></div>
+      </div>
+      <div class="notes" style="margin-top:20px">
+        <ul>
+          <li><b>Left to right:</b> a brand-new account; a journey planned, nobody followed; live journey with people, Trip and Map merged (variant A); live journey with people, two pages (variant B, People behind the avatar).</li>
+          <li>The raised Check in appears only while the journey is live, as today. Money appears with the journey even before the opt-in in #62: the quiet page with the bookings is still a page.</li>
+          <li>People appears when you follow someone or someone follows you. For a follower with no journey, the bar is Home · People.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── 8 · DECIDE ─────────────── -->
+  <section class="mock wide" id="s8">
+    <div class="notes" style="max-width:70ch">
+      <div class="eyebrow">Decide on a phone</div>
+      <h2>What to look at before choosing</h2>
+      <ol style="padding-left:20px;color:var(--tx2)">
+        <li style="margin:8px 0"><b>Open this page on your phone</b> and tap the three sheets in section 2 until each height feels right or wrong. The strip is the thing you will see most: is one line enough, or does it want the progress bar?</li>
+        <li style="margin:8px 0"><b>Cold open time.</b> The globe today loads the three.js bundle and its textures on every Map visit. If Trip is opened ten times a day, that cost is paid ten times, unless the instance is kept alive across the tab. Time it on mobile data before deciding.</li>
+        <li style="margin:8px 0"><b>Thumb versus globe.</b> A drag meant for the list that spins the planet instead is the classic failure of this pattern. The sheet has to win every gesture that starts on it.</li>
+        <li style="margin:8px 0"><b>The editing day.</b> Adding three stays and two legs, with the globe alive behind the sheet: does the phone get warm, does the battery dip. Variant B has none of this cost and pays for it with a fuller tab bar and two places to edit a stop.</li>
+      </ol>
+      <div class="q"><b>Either way, section 1, 4, 5 and 6 are the build.</b> The timeline, the stop editor with its stays, the stay form with the deadlines, and transport on the leg do not depend on the sheet decision. Only the shell around them does. If the phone test is inconclusive, build the timeline as a page first (variant B without the cross-links) and put the sheet on it afterwards: the sheet is a container, the timeline is the content.</div>
+      <div class="ok"><b>Not in this mock, on purpose:</b> the between-journeys Home and the journey picker's list (#21), the Share button (#61), the copy pass on the rest of the app (#65). Side trips are parked (#57).</div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // Clone each template into its placeholders: the timeline, the stop list,
+  // the globe and the tab bars are drawn once and appear in several frames.
+  document.querySelectorAll('[data-tpl]').forEach(function (slot) {
+    var tpl = document.getElementById(slot.getAttribute('data-tpl'));
+    if (tpl) slot.replaceWith(tpl.content.cloneNode(true));
+  });
+  // The sheets in section 2 cycle collapsed → half → full on tap, so the
+  // heights can be judged on a real phone.
+  document.querySelectorAll('.gsheet').forEach(function (s) {
+    var cycle = function () { s.dataset.h = String((Number(s.dataset.h) + 1) % 3); };
+    s.addEventListener('click', cycle);
+    s.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycle(); } });
+  });
+</script>
+
+</html>

@@ -5,6 +5,52 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-22
+
+### MOCKED — the two mocks the product review put first: Trip timeline + globe sheet (#58, #63) and Money's quiet start (#62, #59, with #60's stay form)
+
+Round 1, on the shipped tokens, in `design/mocks/15-trip-timeline.html` and
+`design/mocks/16-money-quiet.html`. The same pages are published for review on a phone:
+Trip https://claude.ai/artifact/RWcAg4Rz3RY1EiKPB935fy · Money
+https://claude.ai/artifact/R7N1CQkiJUXaRbRF3vLFCq. Sample data is the live-shaped fixture
+viewed Mon 22 Sep, day 23, Bangkok night 22 (FIXTURES.md, "Mocks 15 and 16 canon").
+
+**15 — Trip.** One timeline: a hollow home node, leg cards between the stops (transport lives
+there; the via is a chip that appears for flights), stop cards with their stays nested and the
+"no bed" gap as an amber row, insert-a-stop on the rail, the journey picker as the title.
+Variant A: the globe as canvas, the timeline as a sheet at three heights (78 px / 56 % / 91 %);
+the sheets on the page cycle on tap so the heights can be judged on a real phone. Variant B: two
+pages with cross-links. Then the stop editor, Add stay with #60's deadline fields (explicit
+"No free cancellation" / "Charged at check-in" chips, the reminder on by default and naming its
+date), transport on a leg, and the four tab-bar states under "a tab exists when it has
+something in it".
+
+**16 — Money.** The once-per-account question as a sheet over the bookings; the quiet page for
+No; the Asia journey replayed on day 1, 4 and 9 with the fixture ledger so every unlock has a
+date; the unlock table with the thresholds #62 left to the mock; the inline Subscriptions
+question on the entry sheet; the one-time offer for entries already in the category.
+
+**Proposed in the mocks, decided nowhere yet — the things to say yes or no to:**
+
+- The stop's budget tick moves off the card into the stop editor, as a switch.
+- An empty leg card is tappable and opens the leg editor. A leg cannot be deleted, only
+  emptied: two stops always have a leg between them.
+- Projected total, Plan by stop and the cap row unlock after **7 days** of pace; per day and
+  the daily chart stay at 3 (as shipped); Where it goes at 3 colour families; the chart's range
+  switch at 14 days. A card never disappears again once it has appeared on a journey.
+- A journey longer than a month shows Subscriptions as a one-line door from day 1, not an empty
+  card.
+- "Doesn't repeat" is the third answer to the inline question; a later charge with the same
+  name is matched to the subscription with one tap instead of creating a second one.
+- The second door for deadlines (#60): a Deadlines row in Trip settings listing every cancel-by
+  and charge date, content or not.
+- The one-time subscriptions offer shows only to whoever categorised the entries.
+
+**Decided on a phone, not here:** sheet or two pages (#63). What to time is in mock 15 §8: a
+cold open of Trip on mobile data, how warm the phone is after five minutes of editing with the
+globe behind the sheet, and how often a drag meant for the list spins the globe.
+
+---
 ## 2026-09-20
 
 ### BUILT — Money v2: issues #35, #37, #38 and #39, off mock 14
