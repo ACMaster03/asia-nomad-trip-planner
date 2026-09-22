@@ -150,6 +150,20 @@
   .ask .field{color:var(--tagInk)}
   .ask .chip:not(.on){background:var(--sf)}
   .ask .toggle{background:var(--ac)}
+  .sheet h3{text-wrap:normal;word-spacing:-.03em}
+  .dots i{display:inline-block;font-style:normal;animation:dot 1.2s infinite ease-in-out}
+  .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+  @keyframes dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+  @media (prefers-reduced-motion:reduce){.dots i{animation:none}}
+  .toast{position:absolute;left:50%;transform:translateX(-50%);bottom:92px;background:var(--tx);color:var(--canvas);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:4}
+  .ohd{display:grid;grid-template-columns:1fr 84px 84px;gap:8px;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)}
+  .ohd .h{text-align:right;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3)}
+  .orow{display:grid;grid-template-columns:1fr 84px 84px;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--ln)}
+  .ohd + .orow{border-top:0}
+  .orow .b{min-width:0}.orow .t{font-weight:600;display:block}.orow .s{font-size:13px;color:var(--tx2);display:block}
+  .orow .c{text-align:right;font-weight:600;white-space:nowrap}
+  .orow.tot{margin:6px -18px -8px;padding:12px 18px;border-top:0;background:var(--ac2Soft);border-radius:12px 12px 22px 22px;color:var(--ac2Deep)}
+  .info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;border:1.5px solid var(--ac2Line);color:var(--ac2Deep);font-size:11px;font-weight:700;font-family:Lora,Georgia,serif;font-style:italic;flex:none}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -172,16 +186,16 @@
   <div class="card slim">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">Bookings</span><span class="faint" style="font-size:13px">edit on Trip ›</span></div>
     <div class="row"><span><span class="t">Paid</span><br><span class="s">Bangkok stay · flight Budapest → Bangkok</span></span><span class="amt">553 788 Ft</span></div>
-    <div class="row"><span><span class="t">Booked, to pay</span><br><span class="s">Hanoi stay · card 29 Sep</span></span><span class="amt">≈ 433 800 Ft</span></div>
-    <div class="row"><span><span class="t">Not booked</span><br><span class="s">Bangkok → Hanoi · Hanoi → Da Nang</span></span><span class="amt faint">2 legs</span></div>
+    <div class="row"><span><span class="t">Booked, to pay</span><br><span class="s">Hanoi stay · <span class="warnTx">card charged on 29 Sep</span></span></span><span class="amt">≈ 433 800 Ft</span></div>
+    <div class="row"><span><span class="t">Not booked</span><br><span class="s">Bangkok → Hanoi · Hanoi → Da Nang</span></span><span class="amt warnTx">2 legs</span></div>
     <div class="row tot last"><span class="t">Committed</span><span class="amt">≈ 987 600 Ft</span></div>
   </div>
 </template>
 
 <div class="page">
-  <div class="eyebrow">Livhold · Money · design review · round 1 · issues #62 and #59</div>
+  <div class="eyebrow">Livhold · Money · design review · round 2 · issues #62 and #59 · Petra's comments folded in</div>
   <h1>Money starts quiet and earns its cards</h1>
-  <p class="lede">Two changes. First, Money asks once per account whether you want to track what you spend, and a journey's cards appear one at a time as entries arrive instead of all nine on day one. Second, an entry categorised as Subscriptions asks one inline question and becomes a subscription, so the charge is the subscription. The frames replay the Asia journey with the fixture ledger, so every unlock has a date; figures are illustrative and ≈ marks a rounded one.</p>
+  <p class="lede">Round 2 applies Petra's twenty-two comments from round 1: a "Latest" strip with the last three entries right under the top card and a short confirmation when an entry is saved, the budget line reduced to a percentage and what is left, the One-offs card in two labelled columns, the Plan card leading with its one number and hiding its maths behind a tap, the chart's average in the title line where no bar can cover it, a custom cadence for subscriptions, and shared subscriptions on a shared journey. Every early page now says what will appear later. The frames still replay the Asia journey with the fixture ledger, so every unlock has a date; figures are illustrative and ≈ marks a rounded one.</p>
   <div class="model">
     <b>Decided in #62 and #59, not up for review here</b>
     <ul>
@@ -190,9 +204,16 @@
       <li>Money is per journey. Subscriptions belong to the person; each charge lands in whichever journey is live on the charge date. Yearly is a cadence.</li>
       <li>Cadence is declared, never inferred. The declaration moves to the moment of categorising: repeat, cadence with monthly prefilled, remind before the charge.</li>
     </ul>
+    <b style="display:block;margin-top:12px">Decided in round 1, from Petra's comments</b>
+    <ul>
+      <li>The last three entries sit under the top card, and saving an entry shows a short confirmation; the full ledger stays at the bottom.</li>
+      <li>The budget line says a percentage and what is left; the cap amount lives in its own row, shown from day one.</li>
+      <li>The Plan card leads with the projected total, one line per city, and the maths behind a tap. Planned and paid one-offs are two labelled columns.</li>
+      <li>Subscriptions: "Every month", "Every year" or a custom "every N months"; on a shared journey both travellers see every subscription and get its reminder.</li>
+    </ul>
     <b style="display:block;margin-top:12px">Open, and answered on this page</b>
     <ul>
-      <li>The exact unlock thresholds: proposed in section 6 as a table with the date each one fired on Asia.</li>
+      <li>The exact unlock thresholds: proposed in section 6 as a table with the date each one fired on Asia. Seven days for the projection is Patrik's call.</li>
       <li>What a journey longer than a month shows for Subscriptions before any is declared: a one-line door (section 3), not an empty card.</li>
       <li>Where No is undone: under your avatar, one switch (section 2).</li>
     </ul>
@@ -218,7 +239,7 @@
         </div>
         <div class="btn">Yes, track it</div>
         <div class="btn ghost">Not now</div>
-        <div class="line" style="margin-top:-2px;position:relative"><span class="callout" style="top:-4px;right:-8px">2</span>Asked once. Your bookings are here either way.</div>
+        <div class="line" style="margin-top:-2px;position:relative;text-align:center"><span class="callout" style="top:-4px;right:-8px">2</span>Asked once. Your bookings are here either way.</div>
       </div>
     </div>
     <div class="notes">
@@ -269,20 +290,27 @@
           <div class="kicker">Spent so far · day 1</div>
           <div class="hero">657 200 Ft</div>
           <div class="twocol" style="grid-template-columns:1fr">
-            <div><div class="kicker">Per day</div><div class="v faint">measuring…</div><div class="line" style="margin:0">1 of 3 days in Bangkok</div></div>
+            <div><div class="kicker">Per day</div><div class="v faint">measuring<span class="dots"><i>.</i><i>.</i><i>.</i></span></div><div class="line" style="margin:0">1 of 3 days in Bangkok</div></div>
           </div>
           <div class="bar"><span style="width:15%"></span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>15% of your budget</b></span><span class="muted">4 500 000 Ft · <b style="color:var(--tx)">3 842 800 Ft</b> left</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>15% of budget</b></span><span class="muted"><b style="color:var(--tx)">3 842 800 Ft</b> left</span></div>
           <div style="margin-top:14px;border-radius:var(--rCtl);background:var(--in);padding:10px 14px"><div style="font-weight:600">+ 618 700 Ft beyond the everyday</div><div class="line" style="margin:0">Stays, flight, gear. Counted below, not in the per-day rate.</div></div>
         </div>
-        <div data-tpl="tpl-bookings"></div>
         <div class="card slim new"><span class="callout" style="top:-8px;right:-8px">7</span>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">One-offs</span><span class="faint" style="font-size:13px">planned · paid</span></div>
-          <div class="row"><span><span class="t">Gear</span><br><span class="s">backpack bought 20 Aug</span></span><span class="amt">205 000<span class="s">64 900 paid</span></span></div>
-          <div class="row"><span><span class="t">Insurance &amp; visas</span><br><span class="s">planned, nothing paid yet</span></span><span class="amt">424 000<span class="s">—</span></span></div>
-          <div class="row tot last"><span class="t">Planned 629 000 · paid 64 900</span><span class="amt"></span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">Latest</span><span class="faint" style="font-size:13px">all entries ↓</span></div>
+          <div class="row"><span><span class="t">Airport (food, drinks)</span><br><span class="s">Food · just now</span></span><span class="amt">35 100 Ft</span></div>
+          <div class="row"><span><span class="t">Flight Budapest → Bangkok</span><br><span class="s">Transport · from booking · today</span></span><span class="amt">248 000 Ft</span></div>
+          <div class="row"><span><span class="t">Saily e-SIM 10 GB</span><br><span class="s">Phone &amp; internet · 30 Aug</span></span><span class="amt">3 400 Ft</span></div>
         </div>
-        <div class="oneliner new" style="position:relative"><span class="callout" style="top:-8px;right:-8px">8</span><span><span class="t">Subscriptions</span><span class="s">The monthly ones from home, as entries.</span></span><span class="pill" style="color:var(--ac2Deep);border-color:var(--ac2Line)">＋</span></div>
+        <div data-tpl="tpl-bookings"></div>
+        <div class="card slim new"><span class="callout" style="top:-8px;right:-8px">8</span>
+          <div class="ohd"><span class="kicker m">One-offs</span><span class="h">Planned</span><span class="h">Paid</span></div>
+          <div class="orow"><span class="b"><span class="t">Gear</span><span class="s">backpack bought 20 Aug</span></span><span class="c">205 000</span><span class="c">64 900</span></div>
+          <div class="orow"><span class="b"><span class="t">Insurance &amp; visas</span><span class="s warnTx">nothing paid yet</span></span><span class="c">424 000</span><span class="c faint">—</span></div>
+          <div class="orow tot"><span class="b"><span class="t">Total</span></span><span class="c">629 000</span><span class="c">64 900</span></div>
+        </div>
+        <div class="oneliner new" style="position:relative"><span class="callout" style="top:-8px;right:-8px">9</span><span><span class="t">Subscriptions</span><span class="s">Repeating costs, like Netflix or iCloud.</span></span><span class="pill" style="color:var(--ac2Deep);border-color:var(--ac2Line)">＋</span></div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px"><span><span style="font-weight:600">Budget cap</span><br><span class="muted" style="font-size:13px">4 500 000 Ft · 15% spent</span></span><span style="color:var(--ac2)">›</span></div>
         <div class="card slim">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">Ledger</span><span class="faint" style="font-size:13px">tap a row to edit</span></div>
           <div class="day" style="color:var(--tx2)"><span>Mon 31 Aug · day 1</span><b>283 100 Ft</b></div>
@@ -290,6 +318,8 @@
           <div class="row"><span><span class="t">Airport (food, drinks)</span><br><span class="s">Food</span></span><span class="amt">35 100 Ft</span></div>
           <div class="band">▲ Journey starts 31 Aug <span>· 3 entries before it, 374 100 Ft</span></div>
         </div>
+        <div class="faint" style="font-size:13px;text-align:center;padding:0 10px;position:relative;margin-bottom:48px"><span class="callout" style="top:-10px;right:-8px">10</span>More appears as you log: a chart after 3 days, a projection after a week.</div>
+        <div class="toast">Added · 35 100 Ft · Airport (food, drinks)</div>
       </div>
       <div data-tpl="tpl-nav"></div>
     </div>
@@ -298,11 +328,12 @@
       <h2>Day 1, Monday 31 August: yes, and two entries</h2>
       <div class="issue">#62 · the cards a first evening earns · "new" marks what appeared since the quiet page</div>
       <ul>
-        <li><span class="n">6</span><b>The overview appears with the first entry</b>, imports included, so on Asia it was there since the Bangkok stay was charged on 9 July. It shows the one number it can stand behind, spent so far, and the cap bar. Per day says "measuring…" with its count, as shipped. <b>Projected total is not there yet</b>: the tile appears after a week of pace (section 5), because a projection from a first-day shop is noise with a currency sign.</li>
-        <li><span class="n">7</span><b>One-offs appears because a one-off exists</b>: the backpack was bought on 20 August and there are planned extras. On a journey with none, the card waits for the first visa fee.</li>
-        <li><span class="n">8</span><b>Subscriptions on a journey longer than a month is a one-line door</b>, not a card: the name, eleven words, and ＋, which opens the entry sheet with Subscriptions preselected (section 7). It becomes the full card with the first declared subscription. On a journey of a month or less the line is not shown until then.</li>
-        <li>Bookings is unchanged and always present. The ledger is present from the first entry, twenty rows, newest first, the "journey starts" band as before.</li>
-        <li>Not on this screen: Daily spend, Where it goes, Plan by stop, the budget cap row. Four cards and a line instead of nine cards.</li>
+        <li><span class="n">6</span><b>The overview appears with the first entry</b>, imports included, so on Asia it was there since the Bangkok stay was charged on 9 July. It shows the one number it can stand behind, spent so far, and the cap bar. The line under the bar says only a percentage and what is left (Petra, round 1: the old "4 500 000 Ft · 3 842 800 Ft left" read as two unrelated numbers); the cap amount lives in its own row further down. Per day says "measuring" with moving dots and its count. <b>Projected total is not there yet</b>: the tile appears after a week of pace (section 5), because a projection from a first-day shop is noise with a currency sign.</li>
+        <li><span class="n">7</span><b>The last three entries sit right under the top card</b> (Petra, round 1: after adding an entry she scrolled to the bottom to check it landed). "Latest" is three rows and a link to the full ledger, and saving an entry shows a short confirmation for two seconds, the dark pill at the bottom. The full ledger stays last (#38), so the cards between them are not buried again.</li>
+        <li><span class="n">8</span><b>One-offs appears because a one-off exists</b>: the backpack was bought on 20 August and there are planned extras. Two labelled columns now, Planned and Paid, both on the right like Bookings (Petra: "why two prices?"): gear planned 205 000, 64 900 paid so far; "nothing paid yet" in amber. On a journey with none, the card waits for the first visa fee.</li>
+        <li><span class="n">9</span><b>Subscriptions on a journey longer than a month is a one-line door</b>, not a card: the name, six words, and ＋, which opens the entry sheet with Subscriptions preselected (section 7). "From home" is gone (Petra): a subscription can start anywhere. It becomes the full card with the first declared subscription. On a journey of a month or less the line is not shown until then.</li>
+        <li>Bookings is unchanged and always present; "card charged on 29 Sep" and "2 legs" are amber, the colour for what still needs doing. The budget cap row shows from day one: it is a setting, not a card that needs data. The ledger is present from the first entry, twenty rows, newest first, the "journey starts" band as before.</li>
+        <li><span class="n">10</span><b>Not on this screen, and not hidden behind a menu either:</b> Daily spend, Where it goes and the Plan (Petra: "then where can I see them?"). There is nothing to show yet. They appear by themselves, the chart after three days, the projection after a week, and the last line on the page says so.</li>
       </ul>
     </div>
   </section>
@@ -316,16 +347,16 @@
         <div class="card" style="padding:20px">
           <div class="kicker">Spent so far · day 4</div>
           <div class="hero">730 500 Ft</div>
-          <div class="twocol" style="grid-template-columns:1fr;position:relative"><span class="callout" style="top:6px;right:-8px">9</span>
+          <div class="twocol" style="grid-template-columns:1fr;position:relative"><span class="callout" style="top:6px;right:-8px">11</span>
             <div><div class="kicker">Per day</div><div class="v">24 400 Ft</div><div class="line" style="margin:0">everyday costs over 3 days in Bangkok</div></div>
           </div>
           <div class="bar"><span style="width:16%"></span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>16% of your budget</b></span><span class="muted">4 500 000 Ft · <b style="color:var(--tx)">3 769 500 Ft</b> left</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>16% of budget</b></span><span class="muted"><b style="color:var(--tx)">3 769 500 Ft</b> left</span></div>
         </div>
-        <div class="card new"><span class="callout" style="top:-8px;right:-8px">10</span>
-          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="kicker">Daily spend</span><span class="faint" style="font-size:12px">31 Aug – 3 Sep</span></div>
+        <div class="card new"><span class="callout" style="top:-8px;right:-8px">12</span>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="kicker">Daily spend</span><span class="faint" style="font-size:12px">31 Aug – 3 Sep · avg 24 400 a day</span></div>
           <svg viewBox="0 0 354 150" width="100%" style="margin-top:8px;display:block" role="img" aria-label="Four daily bars, 31 August to 3 September, with the three-day average at 24 400">
-            <line x1="0" x2="354" y1="72" y2="72" stroke="var(--ln2)" stroke-dasharray="3 3"/><text x="352" y="68" font-size="10" fill="var(--tx3)" text-anchor="end">avg 24 400 · 3 days</text>
+            <line x1="0" x2="354" y1="72" y2="72" stroke="var(--ln2)" stroke-dasharray="3 3"/>
             <rect x="30" y="47" width="52" height="81" fill="var(--ac)"/>
             <rect x="112" y="114" width="52" height="14" fill="var(--catGrocery)"/><rect x="112" y="107" width="52" height="7" fill="var(--catDaily)"/>
             <rect x="194" y="76" width="52" height="52" fill="var(--ac)"/><rect x="194" y="52" width="52" height="24" fill="var(--ac2)"/><rect x="194" y="28" width="52" height="24" fill="var(--warn)"/><rect x="194" y="14" width="52" height="14" fill="var(--catGrocery)"/>
@@ -335,7 +366,7 @@
           </svg>
           <div class="legend"><span><i style="background:var(--ac)"></i>Food &amp; drinks</span><span><i style="background:var(--catGrocery)"></i>Groceries &amp; shops</span><span><i style="background:var(--catDaily)"></i>Getting around</span><span><i style="background:var(--ac2)"></i>Clothes &amp; accessories</span><span><i style="background:var(--warn)"></i>Health &amp; care</span></div>
         </div>
-        <div class="card new"><span class="callout" style="top:-8px;right:-8px">11</span>
+        <div class="card new"><span class="callout" style="top:-8px;right:-8px">13</span>
           <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="kicker">Where it goes · 4 days</span><span class="faint" style="font-size:12px">everyday costs</span></div>
           <div style="display:flex;gap:16px;align-items:center;margin-top:10px">
             <svg viewBox="0 0 120 120" width="100" height="100" style="flex:none" role="img" aria-label="Share of everyday spending by family over four days">
@@ -356,7 +387,7 @@
             </table>
           </div>
         </div>
-        <div class="faint" style="text-align:center;font-size:13px">bookings · one-offs · subscriptions · ledger, as on day 1</div>
+        <div class="faint" style="text-align:center;font-size:13px;padding:0 10px">The rest of the page is the same as on day 1: latest, bookings, one-offs, subscriptions, budget cap, ledger.</div>
       </div>
       <div data-tpl="tpl-nav"></div>
     </div>
@@ -365,9 +396,9 @@
       <h2>Day 4, Thursday 3 September: the chart and the categories arrive</h2>
       <div class="issue">#62 · "the daily chart once there is a run of days, where it goes once there are categories"</div>
       <ul>
-        <li><span class="n">9</span><b>Per day becomes a number at three days in the stop</b>, exactly as shipped, measured over 1–3 September. The line names the basis. Still no projection: the tile is absent, not greyed. An absent tile asks no question; a greyed one asks "why not".</li>
-        <li><span class="n">10</span><b>Daily spend appears with three logged days.</b> The 7 / 14 / 30 / 90 switch and the paging arrows are not shown until there are fourteen days to switch between; with four bars they are controls for a window that does not exist. The average line uses the same three days as the per-day tile, so the two never disagree.</li>
-        <li><span class="n">11</span><b>Where it goes appears once everyday entries span three colour families.</b> On Asia that was 2 September (a restaurant, a drugstore, a pair of pants) and it shows the four-day picture here. The table lists families until there are more than six categories; then the round-two version with the individual categories and "3 more…" takes over.</li>
+        <li><span class="n">11</span><b>Per day becomes a number at three days in the stop</b>, exactly as shipped, measured over 1–3 September. The line names the basis. Still no projection: the tile is absent, not greyed. An absent tile asks no question; a greyed one asks "why not".</li>
+        <li><span class="n">12</span><b>Daily spend appears with three logged days.</b> The 7 / 14 / 30 / 90 switch and the paging arrows are not shown until there are fourteen days to switch between; with four bars they are controls for a window that does not exist. The average line uses the same three days as the per-day tile, so the two never disagree. The average's number now sits in the card's title line, where no bar can cover it (Petra, round 1: in the app today a tall bar hides the label at the end of the line; filed as a bug).</li>
+        <li><span class="n">13</span><b>Where it goes appears once everyday entries span three colour families.</b> On Asia that was 2 September (a restaurant, a drugstore, a pair of pants) and it shows the four-day picture here. The table lists families until there are more than six categories; then the round-two version with the individual categories and "3 more…" takes over.</li>
         <li>The airport meal on day 1 is the tallest bar and belongs: it is in the journey. The pre-trip backpack is not a bar: gear is outside the everyday.</li>
       </ul>
     </div>
@@ -384,25 +415,25 @@
           <div class="hero">765 400 Ft</div>
           <div class="twocol">
             <div><div class="kicker">Per day</div><div class="v">15 100 Ft</div><div class="line" style="margin:0">everyday costs over 7 days in Bangkok</div></div>
-            <div style="position:relative"><span class="callout" style="bottom:-4px;right:-8px">12</span><div class="kicker">Projected total</div><div class="v">≈ 3 496 000 Ft</div><div class="line" style="margin:0">103 planned nights, at this pace</div></div>
+            <div style="position:relative"><span class="callout" style="bottom:-4px;right:-8px">14</span><div class="kicker">Projected total</div><div class="v">≈ 3 496 000 Ft</div><div class="line" style="margin:0">103 planned nights, at this pace</div></div>
           </div>
           <div class="bar"><span style="width:17%"></span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>17% of your budget</b></span><span class="muted">4 500 000 Ft · <b style="color:var(--tx)">3 734 600 Ft</b> left</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span><b>17% of budget</b></span><span class="muted"><b style="color:var(--tx)">3 734 600 Ft</b> left</span></div>
         </div>
-        <div class="faint" style="text-align:center;font-size:13px">daily spend · where it goes · bookings · one-offs · subscriptions, as on day 4</div>
-        <div class="card slim new"><span class="callout" style="top:-8px;right:-8px">13</span>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:1px solid var(--ln)"><span class="kicker m">Plan · by stop</span><span class="faint" style="font-size:13px">stays + everyday</span></div>
-          <div class="row"><span><span class="t">Bangkok</span><br><span class="s">29 nights · 8 in · stay paid</span></span><span class="amt">≈ 745 000 Ft</span></div>
-          <div class="sub">106 000 spent + 21 nights × 15 100 + stay 305 788</div>
-          <div class="row"><span><span class="t">Hanoi</span><br><span class="s">44 nights · stay booked</span></span><span class="amt">≈ 1 100 000 Ft</span></div>
-          <div class="row"><span><span class="t">Da Nang</span><br><span class="s">30 nights · stay shortlisted</span></span><span class="amt">≈ 839 000 Ft</span></div>
-          <div class="row"><span><span class="t">Add the next stop</span><br><span class="s">the plan ends 13 Dec; the journey ends 30 Apr</span></span><span class="amt" style="color:var(--ac2)">›</span></div>
-          <div class="row tot"><span class="t">Stops subtotal</span><span class="amt">≈ 2 684 000 Ft</span></div>
-          <div class="row"><span><span class="t">Transport</span><br><span class="s">1 booked · 2 legs to book</span></span><span class="amt">248 000 Ft</span></div>
-          <div class="row"><span><span class="t">One-offs still to pay</span><br><span class="s">insurance, visas, the rest of the gear</span></span><span class="amt">≈ 564 000 Ft</span></div>
-          <div class="row tot last"><span class="t">Projected total</span><span class="amt">≈ 3 496 000 Ft</span></div>
+        <div class="faint" style="text-align:center;font-size:13px;padding:0 10px">The rest of the page is the same as on day 4: daily spend, where it goes, latest, bookings, one-offs, subscriptions.</div>
+        <div class="card new"><span class="callout" style="top:-8px;right:-8px">15</span>
+          <div class="kicker m">Plan</div>
+          <div class="hero" style="font-size:26px">≈ 3 496 000 Ft</div>
+          <div class="line" style="margin-top:0">Projected total · 103 planned nights, at this pace</div>
+          <div style="margin-top:10px">
+            <div class="row"><span><span class="t">Bangkok</span><br><span class="s">29 nights · 8 in · stay paid</span></span><span class="amt">≈ 745 000 Ft</span></div>
+            <div class="row"><span><span class="t">Hanoi</span><br><span class="s">44 nights · stay booked</span></span><span class="amt">≈ 1 100 000 Ft</span></div>
+            <div class="row"><span><span class="t">Da Nang</span><br><span class="s">30 nights · <span class="warnTx">stay not booked</span></span></span><span class="amt">≈ 839 000 Ft</span></div>
+            <div class="row"><span><span class="t">Add the next stop</span><br><span class="s">the plan ends 13 Dec; the journey ends 30 Apr</span></span><span class="amt" style="color:var(--ac2)">›</span></div>
+            <div class="row"><span><span class="t">How it adds up</span><br><span class="s">transport, one-offs · <span class="warnTx">2 legs to book</span></span></span><span class="amt" style="color:var(--ac2)">›</span></div>
+          </div>
         </div>
-        <div class="card new" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px"><span class="callout" style="top:-8px;right:-8px">14</span><span><span style="font-weight:600">Budget cap</span><br><span class="muted" style="font-size:13px">4 500 000 Ft · projected uses 78%</span></span><span style="color:var(--ac2)">›</span></div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;position:relative"><span class="callout" style="top:-8px;right:-8px">16</span><span><span style="font-weight:600">Budget cap</span><br><span class="muted" style="font-size:13px">4 500 000 Ft · projected uses 78%</span></span><span style="color:var(--ac2)">›</span></div>
       </div>
       <div data-tpl="tpl-nav"></div>
     </div>
@@ -411,12 +442,12 @@
       <h2>Day 9, Tuesday 8 September: a week of pace, so a projection</h2>
       <div class="issue">#62 · the last cards to unlock are the forward-looking ones</div>
       <ul>
-        <li><span class="n">12</span><b>Projected total appears after seven days of pace in a stop.</b> It is the shipped number (stops at your pace, plus bookings, plus one-offs) and, from here on, the one number the page speaks everywhere. Seven days is the proposal: a first week in a city absorbs the arrival shopping; three days does not.</li>
-        <li><span class="n">13</span><b>Plan by stop unlocks with the projection</b>, since every line in it is the projection itemised. The Add-the-next-stop row is the one forward nudge on the page and points at Trip.</li>
-        <li><span class="n">14</span><b>The budget cap row appears with the projection too</b>: "projected uses 78 %" has nothing to say before there is a projection. The bar in the overview measures actual spend against the cap and was there from day 1, because that only needs the cap.</li>
-        <li>From day 9 to today the page adds nothing new; today it is the round-three page as shipped. The subscriptions line became the card on 14 September, when iCloud charged and was declared (section 7).</li>
+        <li><span class="n">14</span><b>Projected total appears after seven days of pace in a stop.</b> It is the shipped number (stops at your pace, plus bookings, plus one-offs) and, from here on, the one number the page speaks everywhere. Seven days is the proposal: a first week in a city absorbs the arrival shopping; three days does not.</li>
+        <li><span class="n">15</span><b>The Plan card leads with its one number</b> and shows one short line per city (Petra, round 1: "so many informations that I don't even want to read it"). Tapping a city opens its maths, 106 000 spent + 21 nights × 15 100 + stay 305 788; tapping "How it adds up" opens transport and one-offs. The Add-the-next-stop row is the one forward nudge on the page and points at Trip. "Stay not booked" and "2 legs to book" are amber.</li>
+        <li><span class="n">16</span><b>The budget cap row is there from day one</b>, since it is a setting, not a card that needs data; from here on its line reads "projected uses 78 %" instead of "15 % spent". The bar in the overview measures actual spend against the cap and was there from day 1 too.</li>
+        <li>From day 9 to today the page adds nothing new. The subscriptions line became the card on 14 September, when iCloud charged and was declared (section 7).</li>
       </ul>
-      <div class="ok"><b>A rule proposed with the table below:</b> a card that has appeared on a journey never disappears again on that journey. Thresholds gate the first appearance only, so the page never breathes in and out as entries are edited.</div>
+      <div class="ok"><b>A rule proposed with the table below:</b> a card that has appeared on a journey never disappears again on that journey. Thresholds gate the first appearance only, so the page never breathes in and out as entries are edited. Seven days for the projection: Petra agrees; Patrik to confirm.</div>
     </div>
   </section>
 
@@ -431,6 +462,7 @@
         <tr><td>Bookings</td><td>always, once a journey exists</td><td>before departure</td><td>the plan already put money here; it is the quiet page's only card</td></tr>
         <tr><td>Spent so far + cap bar</td><td>the first entry, imports included</td><td>9 Jul, the Bangkok stay charged</td><td>one number, no inference</td></tr>
         <tr><td>Ledger</td><td>the first entry</td><td>9 Jul</td><td>receipts need nothing else</td></tr>
+        <tr><td>Latest, three rows</td><td>the first entry</td><td>9 Jul</td><td>the entry you just saved, without scrolling (Petra)</td></tr>
         <tr><td>Beyond-the-everyday strip</td><td>a non-daily entry dated on or after departure</td><td>31 Aug, the flight</td><td>the per-day rate leaves it out; saying so is the point (#35)</td></tr>
         <tr><td>One-offs</td><td>a planned extra or a paid one-off exists</td><td>20 Aug, the backpack</td><td>two columns need at least one row</td></tr>
         <tr><td>Subscriptions, the line</td><td>the journey runs longer than a month, or one is declared</td><td>day 1, the line; 14 Sep, the card</td><td>a long journey will have them; the door exists before the content (#60's lesson)</td></tr>
@@ -441,10 +473,10 @@
         <tr><td>Where it goes</td><td>everyday entries in 3 colour families</td><td>2 Sep, day 3</td><td>a donut with one slice is a circle</td></tr>
         <tr><td>Projected total</td><td>7 days of pace in a stop</td><td>7 Sep, day 8</td><td>a week absorbs the arrival shopping</td></tr>
         <tr><td>Plan by stop</td><td>with the projection</td><td>7 Sep</td><td>it is the projection itemised</td></tr>
-        <tr><td>Budget cap row</td><td>with the projection</td><td>7 Sep</td><td>"projected uses N %" needs a projection</td></tr>
+        <tr><td>Budget cap row</td><td>a cap is set</td><td>before departure</td><td>a setting, not a card; its line says "N % spent" until there is a projection, then "projected uses N %"</td></tr>
         <tr><td>FX panel (Trip settings)</td><td>a second currency in the ledger or the plan</td><td>1 Sep, first THB</td><td>from #64's progressive list; invisible unless stale</td></tr>
       </table></div>
-      <div class="q" style="max-width:none"><b>Still to say:</b> too early or too late anywhere? The two proposals that are new, not merely dated: seven days for the projection instead of three, and the one-line Subscriptions door on a long journey. A new journey starts at the top of this table again; subscriptions carried over from the person count as declared from day 1, which is the Labs experiment in #64.</div>
+      <div class="q" style="max-width:none"><b>Still to say (Patrik):</b> too early or too late anywhere? The two proposals that are new, not merely dated: seven days for the projection instead of three (Petra agrees, round 1), and the one-line Subscriptions door on a long journey. A new journey starts at the top of this table again; subscriptions carried over from the person count as declared from day 1, which is the Labs experiment in #64.</div>
     </div>
   </section>
 
@@ -462,15 +494,15 @@
           <label class="field">Amount<div class="inp"><span class="big">4 490</span></div></label>
           <label class="field">Currency<div class="inp"><span>HUF</span><span class="faint">▾</span></div></label>
         </div>
-        <div style="position:relative"><span class="callout" style="top:-12px;right:-8px">15</span>
-          <div class="field" style="display:flex;justify-content:space-between"><span>Category</span><span class="faint" style="font-weight:400;font-size:13px">suggested from the name</span></div>
+        <div style="position:relative"><span class="callout" style="top:-12px;right:-8px">17</span>
+          <div class="field" style="display:flex;align-items:center;gap:6px">Category <span class="info">i</span></div>
           <div class="chips"><span class="chip on">Subscriptions ✓</span><span class="chip">Food</span><span class="chip">Drinks</span><span class="chip">Convenience</span><span class="chip">Getting around</span><span class="chip more">All 20…</span></div>
         </div>
-        <div class="ask"><span class="callout" style="top:-8px;right:-8px">16</span>
+        <div class="ask"><span class="callout" style="top:-8px;right:-8px">18</span>
           <div class="field" style="display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#repeat"/></svg> Repeats</div>
-          <div class="chips" style="margin-top:6px"><span class="chip on">Every month</span><span class="chip">Every year</span><span class="chip">Doesn't repeat</span></div>
+          <div class="chips" style="margin-top:6px"><span class="chip on">Every month</span><span class="chip">Every year</span><span class="chip">Other…</span><span class="chip">Doesn't repeat</span></div>
           <div class="line">Next charge 22 Oct. Lands in whichever journey is live.</div>
-          <div class="trow" style="padding-bottom:0;position:relative"><span class="callout" style="top:-4px;right:52px">17</span><span><span class="t">Remind me before each charge</span><span class="line" style="margin:0">3 days before.</span></span><span class="toggle"></span></div>
+          <div class="trow" style="padding-bottom:0;position:relative"><span class="callout" style="top:-4px;right:52px">19</span><span><span class="t">Remind me before each charge</span><span class="line" style="margin:0">3 days before.</span></span><span class="toggle"></span></div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--tx2);padding:2px 4px"><span>Today, 22 Sep <span class="faint">· change</span></span></div>
         <div class="btn">Add expense</div>
@@ -481,9 +513,9 @@
       <h2>Categorise as Subscriptions, answer one question</h2>
       <div class="issue">#59 · the charge is the subscription; cadence is still declared, just here instead of in a second form</div>
       <ul>
-        <li><span class="n">15</span><b>The category comes from the name.</b> "Netflix", "Spotify" and "iCloud" are already aliases in the registry, so the chip is preselected. Picking Subscriptions by hand does the same thing.</li>
-        <li><span class="n">16</span><b>The inline block appears the moment Subscriptions is the category</b> and nowhere else: repeat, with monthly prefilled, and a yearly for the domain and the annual insurance. "Doesn't repeat" keeps the entry in the category without declaring anything, for the one-off app purchase. The line names the next charge date, derived from this entry's date, and says where charges go.</li>
-        <li><span class="n">17</span><b>Remind me is on by default</b>, three days before, the shipped lead. It reuses the stay-deadline pipe (#37, migration 40). Off is one tap and is remembered per subscription.</li>
+        <li><span class="n">17</span><b>The category comes from the name.</b> "Netflix", "Spotify" and "iCloud" are already aliases in the registry, so the chip is preselected. Picking Subscriptions by hand does the same thing. The words "suggested from the name" sit behind the ⓘ now (Petra: too much text).</li>
+        <li><span class="n">18</span><b>The inline block appears the moment Subscriptions is the category</b> and nowhere else: repeat, with monthly prefilled, a yearly for the domain and the annual insurance, and "Other…", which asks for a number of months, every 3 months for the quarterly ones (Petra, round 1). "Doesn't repeat" keeps the entry in the category without declaring anything, for the one-off app purchase. The line names the next charge date, derived from this entry's date, and says where charges go.</li>
+        <li><span class="n">19</span><b>Remind me is on by default</b>, three days before, the shipped lead. It reuses the stay-deadline pipe (#37, migration 40). Off is one tap and is remembered per subscription.</li>
         <li>Add expense does both things: the row lands in the ledger, dated today, and Netflix is a declared subscription on the card with its next charge on 22 October. No second form, ever. Editing the entry later shows the same block, so a cadence can be corrected where the charge is.</li>
         <li>A second charge with the same name on a later date is matched to the subscription and offered as "the 22 Oct charge of Netflix?" with one tap to confirm, instead of creating a second subscription. Declined, it is a plain entry.</li>
       </ul>
@@ -498,14 +530,14 @@
       <div class="screen">
         <div class="hd"><div><h2>Money</h2><div class="muted" style="font-size:14px">Asia · day 23 · Bangkok</div></div><span class="plus">＋</span></div>
         <div class="card" style="padding:14px 18px;opacity:.5"><div class="kicker">Spent so far · 23 days</div><div class="hero" style="font-size:26px">1 044 200 Ft</div></div>
-        <div class="card slim" style="border:1.5px solid var(--acLine)"><span class="callout" style="top:-8px;right:-8px">18</span>
+        <div class="card slim" style="border:1.5px solid var(--acLine)"><span class="callout" style="top:-8px;right:-8px">20</span>
           <div style="padding:12px 0 8px;border-bottom:1px solid var(--ln)"><span class="kicker m">Subscriptions</span><div style="font-size:18px;font-weight:600;margin-top:2px;font-family:Lora,Georgia,serif">5 entries look like subscriptions</div><div class="line" style="margin-top:2px">Say how often, and the card predicts each charge.</div></div>
           <div class="row" style="align-items:center"><span><span class="t">iCloud 2 TB</span><br><span class="s">3 290 Ft · 14 Sep</span></span><span class="chip sel">Every month <span class="faint">▾</span></span></div>
           <div class="row" style="align-items:center"><span><span class="t">Spotify Duo</span><br><span class="s">2 490 Ft · 17 Sep</span></span><span class="chip sel">Every month <span class="faint">▾</span></span></div>
           <div class="row" style="align-items:center"><span><span class="t">Home internet · Budapest flat</span><br><span class="s">7 990 Ft · 23 Aug</span></span><span class="chip sel">Every month <span class="faint">▾</span></span></div>
-          <div class="row" style="align-items:center;position:relative"><span class="callout" style="top:-10px;right:-8px">19</span><span><span class="t">Domain + hosting</span><br><span class="s">18 000 Ft · 12 Nov 2025</span></span><span class="chip sel on">Every year <span style="opacity:.7">▾</span></span></div>
+          <div class="row" style="align-items:center;position:relative"><span class="callout" style="top:-10px;right:-8px">21</span><span><span class="t">Domain + hosting</span><br><span class="s">18 000 Ft · 12 Nov 2025</span></span><span class="chip sel on">Every year <span style="opacity:.7">▾</span></span></div>
           <div class="row" style="align-items:center"><span><span class="t">Netflix</span><br><span class="s">4 490 Ft · 20 Aug</span></span><span class="chip sel">Every month <span class="faint">▾</span></span></div>
-          <div style="display:flex;gap:10px;padding:12px 0 10px;position:relative"><span class="callout" style="top:14px;right:-8px">20</span><span class="btn" style="flex:1">Add 5 subscriptions</span><span class="btn ghost" style="padding:13px 16px">Not now</span></div>
+          <div style="display:flex;gap:10px;padding:12px 0 10px;position:relative"><span class="callout" style="top:14px;right:-8px">22</span><span class="btn" style="flex:1">Add 5 subscriptions</span><span class="btn ghost" style="padding:13px 16px">Not now</span></div>
           <div class="line" style="padding-bottom:8px;margin-top:-6px">Reminders on, 3 days before. Change any on the card.</div>
         </div>
         <div class="faint" style="text-align:center;font-size:13px">the rest of the page, as shipped</div>
@@ -517,12 +549,12 @@
       <h2>The offer for entries already in the category, once</h2>
       <div class="issue">#59 · "existing entries in the category get the offer once, so the eight to ten on the live trip surface without retyping"</div>
       <ul>
-        <li><span class="n">18</span><b>One card, once, at the top of the page</b>, for every entry already categorised as Subscriptions that is not a declared subscription. Entries with the same name and amount are one row: iCloud has charged twice on Asia and is listed once, with its latest date.</li>
-        <li><span class="n">19</span><b>Every row is prefilled monthly and every row can be changed</b> before the button is pressed; cadence is declared, so the app guesses nothing from the dates, not even the domain's. Here the domain has been switched to yearly by hand.</li>
-        <li><span class="n">20</span><b>Add takes them all; Not now dismisses the card for good.</b> Each entry still gets the inline question whenever it is opened (section 7), so a dismissed offer costs nothing but the shortcut. Netflix, cancelled on 6 September, is added like the others and then marked cancelled on the card, which keeps the August charge (cancel is a state).</li>
+        <li><span class="n">20</span><b>One card, once, at the top of the page</b>, for every entry already categorised as Subscriptions that is not a declared subscription. Entries with the same name and amount are one row: iCloud has charged twice on Asia and is listed once, with its latest date.</li>
+        <li><span class="n">21</span><b>Every row is prefilled monthly and every row can be changed</b> before the button is pressed; cadence is declared, so the app guesses nothing from the dates, not even the domain's. Here the domain has been switched to yearly by hand.</li>
+        <li><span class="n">22</span><b>Add takes them all; Not now dismisses the card for good.</b> Each entry still gets the inline question whenever it is opened (section 7), so a dismissed offer costs nothing but the shortcut. Netflix, cancelled on 6 September, is added like the others and then marked cancelled on the card, which keeps the August charge (cancel is a state).</li>
         <li>The reminders default to on with the shipped three-day lead, said in one line under the buttons, and each bell is on the card afterwards, as built in #37.</li>
       </ul>
-      <div class="q"><b>Question:</b> should the offer also appear for a travel partner, who sees the same ledger? Drawn here as: no, only for whoever categorised the entries, since the subscriptions become theirs.</div>
+      <div class="ok"><b>Decided in round 1 (Petra, the joint card):</b> on a journey you share, both travellers see every subscription and both get its reminder; the offer shows to both, and whoever answers first settles it. Who added a subscription only matters for the next journey: it follows that person, and if the same two travel together again, both have it again.</div>
     </div>
   </section>
 </div>

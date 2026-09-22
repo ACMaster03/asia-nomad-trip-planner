@@ -58,6 +58,22 @@ nothing about forwarding booking emails until the feature exists; the flight con
 demoted to a small optional link. Version A and B carry labels and a side-by-side table now.
 Petra's vote: version A, because People gets its own tab; the phone test still decides.
 
+**Round 2 of mock 16 (2026-09-22, Petra's twenty-two comments on the review page).**
+Decided from them: a "Latest" strip with the last three entries right under the overview and
+a two-second confirmation toast on save, the full ledger staying last (#38); the budget line
+says only "N % of budget" and what is left, the cap amount lives in the Budget cap row, which
+shows from day one; One-offs in two labelled columns, Planned and Paid, both right-aligned;
+the Plan card leads with the projected total, one short line per city, the maths behind a tap
+on the row and transport/one-offs behind "How it adds up"; the chart's average number moves
+into the card's title line (a tall bar hides the in-plot label in the app today, filed as #66);
+"card charged on", "2 legs to book", "nothing paid yet" and "stay not booked" in amber;
+"from home" dropped from the subscriptions line; the cadence chips gain "Other…" (every N
+months); "suggested from the name" goes behind an ⓘ; the one-time offer and every
+subscription are visible to both travellers on a shared journey, both get the reminder, and
+whoever answers the offer first settles it, ownership mattering only for the next journey;
+every early page ends with "More appears as you log: a chart after 3 days, a projection after a
+week". Seven days for the projection: Petra agrees, Patrik to confirm.
+
 **Decided on a phone, not here:** sheet or two pages (#63). What to time is in mock 15 §8: a
 cold open of Trip on mobile data, how warm the phone is after five minutes of editing with the
 globe behind the sheet, and how often a drag meant for the list spins the globe.
