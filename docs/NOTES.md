@@ -18,7 +18,7 @@ viewed Mon 22 Sep, day 23, Bangkok night 22 (FIXTURES.md, "Mocks 15 and 16 canon
 **15 — Trip.** One timeline: a hollow home node, leg cards between the stops (transport lives
 there; the via is a chip that appears for flights), stop cards with their stays nested and the
 "no bed" gap as an amber row, insert-a-stop on the rail, the journey picker as the title.
-Variant A: the globe as canvas, the timeline as a sheet at three heights (78 px / 56 % / 91 %);
+Variant A: the globe as canvas, the timeline as a sheet at three heights (78 px / 60 % / 91 %);
 the sheets on the page cycle on tap so the heights can be judged on a real phone. Variant B: two
 pages with cross-links. Then the stop editor, Add stay with #60's deadline fields (explicit
 "No free cancellation" / "Charged at check-in" chips, the reminder on by default and naming its
