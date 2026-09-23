@@ -63,6 +63,22 @@ The Extras list says "paid 12 Aug" or "not paid yet" under each item; the ledger
 "from Extras". Not in the projection twice: extras were never added to the projected total,
 and the payment enters `spent` the way any ledger row does.
 
+**Round three on the phone (Petra, 23 Sep, after #74).** She set "Paid on" on the insurance
+and the e-visas; both rows landed in the ledger, and the One-offs card read "Insurance & …
+290 304 Ft | 290 304 Ft" with one line under it, "2 E-visas (Vietn…". Her reading: "the
+e-visas entry is not there, but when I click on Edit extras, it's there." The numbers were
+right (the heading is the category, and insurance and visas are one category, so the row
+held both); the card hid it three ways: the phone cut the heading, the line under it named
+only the latest payment, and that line was cut too. The card now lists, under each heading,
+every extra of that category by name with where it stands ("paid 12 Aug", "scheduled
+2 Oct", "not paid yet" in amber, "switched off" when unticked but paid), and one line for
+the payments typed on Money ("Osprey backpack · logged 20 Aug", or "… and 2 more · last
+logged …"). The heading wraps instead of truncating. The grouping moved out of the
+component into `oneOffs()` in `lib/trips/extras.ts`, with tests built on her card's exact
+numbers. One rule changed with it: an extra that is unticked but paid is listed and counted
+in Paid, never in Planned, and the "switched off" note at the bottom counts only unticked
+extras that are unpaid, so its "no total here counts" stays true.
+
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
 (mock 16 §6, projection after seven days), the one-line Subscriptions door on a journey

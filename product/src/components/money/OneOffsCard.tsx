@@ -2,10 +2,9 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Info } from 'lucide-react'
-import { categoryLabel, ONE_OFF_CATEGORIES } from '@/lib/trips/categories'
-import { extraCategoryId } from '@/lib/trips/extras'
-import { toBase } from '@/lib/trips/format'
-import { isSettled } from '@/lib/trips/commitment'
+import { categoryLabel } from '@/lib/trips/categories'
+import { oneOffs } from '@/lib/trips/extras'
+import { shortDate } from '@/lib/trips/timeline'
 import type { LedgerEntry, TripState } from '@/lib/trips/types'
 
 // One-offs & extras (#39) — the fourth budget family, back on the Money page.
@@ -33,9 +32,16 @@ import type { LedgerEntry, TripState } from '@/lib/trips/types'
 // as. Since 2026-09-23 an extra with a paid-on date writes that row itself
 // (importCosts.ts), so the two columns fill from one entry.
 //
-// Mock 16 §3 (2026-09-23): a line under each row says what the paid figure is
-// ("backpack · 20 Aug") or that nothing is paid yet, in amber; the total row
-// is called Total; the paragraph about the two columns went behind ⓘ (#65).
+// Mock 16 §3 (2026-09-23): the total row is called Total; the paragraph about
+// the two columns went behind ⓘ (#65).
+//
+// Under each heading, one line per extra of that category, by name, with where
+// it stands ("paid 12 Aug", "not paid yet" in amber), and one line for the
+// payments typed on Money ("backpack · logged 20 Aug"). The heading wraps
+// instead of truncating. Petra on the phone after #74: "the e-visas entry is
+// not there": insurance and visas share a category, the phone cut the heading
+// to "Insurance & …" and the single line under it named only the latest
+// payment. The grouping lives in oneOffs() (lib/trips/extras.ts), tested there.
 
 export function OneOffsCard({ state, ledger, fmt, todayIso }: {
   state: TripState
@@ -43,41 +49,10 @@ export function OneOffsCard({ state, ledger, fmt, todayIso }: {
   fmt: (n: number) => string
   todayIso: string
 }) {
-  const v = useMemo(() => {
-    const rates = state.rates
-    const planned: Record<string, number> = {}
-    const paid: Record<string, number> = {}
-    const last: Record<string, { date: string; note: string }> = {}
-    let excluded = 0
-    let excludedCount = 0
-    for (const e of state.extras) {
-      const value = toBase(e.amount, e.cur, rates)
-      if (e.include === false) { excluded += value; excludedCount++; continue }
-      const cat = extraCategoryId(e.category)
-      planned[cat] = (planned[cat] ?? 0) + value
-    }
-    for (const e of ledger) {
-      if (e.type !== 'expense' || !e.date || !isSettled(e.date, todayIso)) continue
-      if (!ONE_OFF_CATEGORIES.has(e.category) && e.source?.kind !== 'extra') continue
-      paid[e.category] = (paid[e.category] ?? 0) + toBase(e.amount, e.currency, rates)
-      if (!last[e.category] || e.date > last[e.category].date) last[e.category] = { date: e.date, note: e.note?.trim() ?? '' }
-    }
-    const keys = [...new Set([...Object.keys(planned), ...Object.keys(paid)])]
-    const rows = keys
-      .map((cat) => ({ cat, planned: planned[cat] ?? 0, paid: paid[cat] ?? 0, last: last[cat] }))
-      .sort((a, b) => Math.max(b.planned, b.paid) - Math.max(a.planned, a.paid))
-    return {
-      rows,
-      plannedTotal: Object.values(planned).reduce((a, n) => a + n, 0),
-      paidTotal: Object.values(paid).reduce((a, n) => a + n, 0),
-      excluded,
-      excludedCount,
-      count: state.extras.filter((e) => e.include !== false).length,
-    }
-  }, [state, ledger, todayIso])
+  const v = useMemo(() => oneOffs(state, ledger, todayIso), [state, ledger, todayIso])
   const [info, setInfo] = useState(false)
 
-  if (!v.rows.length && !v.excludedCount) {
+  if (!v.groups.length && !v.excludedCount) {
     return (
       <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] py-4 text-tx">
         <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">One-offs &amp; extras</div>
@@ -85,8 +60,6 @@ export function OneOffsCard({ state, ledger, fmt, todayIso }: {
       </div>
     )
   }
-  const shortDay = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-
   return (
     <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-1.5 text-tx">
       <div className="flex items-center justify-between border-b border-ln py-2.5">
@@ -105,20 +78,38 @@ export function OneOffsCard({ state, ledger, fmt, todayIso }: {
         <span className="w-[78px] text-right min-[380px]:w-[86px]">Planned</span>
         <span className="w-[78px] text-right min-[380px]:w-[86px]">Paid</span>
       </div>
-      {v.rows.map((r) => (
-        <div key={r.cat} className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4 border-t border-ln py-2.5">
-          <span className="min-w-0">
-            <span className="block truncate text-base font-semibold">{categoryLabel(r.cat)}</span>
-            {r.paid > 0 && r.last ? (
-              <span className="block truncate text-[13px] text-tx2">{r.last.note ? `${r.last.note} · ` : 'paid '}{shortDay(r.last.date)}</span>
-            ) : r.planned > 0 ? (
-              <span className="block text-[13px] text-warn">nothing paid yet</span>
-            ) : null}
-          </span>
-          <span className="w-[78px] text-right text-base min-[380px]:w-[86px]">{r.planned > 0 ? fmt(r.planned) : <span className="text-tx3">—</span>}</span>
-          <span className="w-[78px] text-right text-base font-semibold min-[380px]:w-[86px]">
-            {r.paid > 0 ? fmt(r.paid) : <span className="font-normal text-tx3">—</span>}
-          </span>
+      {v.groups.map((g) => (
+        <div key={g.cat} className="border-t border-ln py-2.5">
+          <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4">
+            <span className="min-w-0 text-base font-semibold">{categoryLabel(g.cat)}</span>
+            <span className="w-[78px] text-right text-base min-[380px]:w-[86px]">{g.planned > 0 ? fmt(g.planned) : <span className="text-tx3">—</span>}</span>
+            <span className="w-[78px] text-right text-base font-semibold min-[380px]:w-[86px]">
+              {g.paid > 0 ? fmt(g.paid) : <span className="font-normal text-tx3">—</span>}
+            </span>
+          </div>
+          {(g.items.length > 0 || g.logged) && (
+            <ul className="mt-1 space-y-0.5 text-[13px] leading-snug text-tx2">
+              {g.items.map((it) => (
+                <li key={it.id}>
+                  {it.label}
+                  {' · '}
+                  {it.state === 'unpaid' ? (
+                    <span className="text-warn">not paid yet</span>
+                  ) : (
+                    `${it.state === 'paid' ? 'paid' : 'scheduled'} ${it.date ? shortDate(it.date) : ''}`
+                  )}
+                  {it.off && ' · switched off'}
+                </li>
+              ))}
+              {g.logged && (
+                <li>
+                  {g.logged.more > 0
+                    ? `${g.logged.note || 'A payment'} and ${g.logged.more} more · last logged ${shortDate(g.logged.date)}`
+                    : `${g.logged.note ? `${g.logged.note} · ` : ''}logged ${shortDate(g.logged.date)}`}
+                </li>
+              )}
+            </ul>
+          )}
         </div>
       ))}
       <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4 border-t-[1.5px] border-ln3 py-2.5">
