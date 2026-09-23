@@ -101,7 +101,7 @@ export function StaySheet({
       </div>
       <label className={label}>
         Name
-        <input autoFocus={!initial} className={input} placeholder="Where you sleep" value={name} onChange={(e) => setName(e.target.value)} />
+        <input className={input} placeholder="Where you sleep" value={name} onChange={(e) => setName(e.target.value)} />
       </label>
       <Chips ariaLabel="Platform" value={platform} onChange={setPlatform} options={PLATFORMS.map((p) => ({ value: p, label: p }))} />
       {platform === 'Other' && (

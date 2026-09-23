@@ -27,6 +27,20 @@ transport, one-offs, the remainder and subscriptions ahead sit behind "How it ad
 diet (#65): the sentences under Bookings, Where it goes and the "beyond the everyday" box are
 gone or one line; the Subscriptions empty state says "Repeating costs, like Netflix or iCloud."
 
+**Round two on the phone (Petra, 23 Sep, after the merge).** Latest shows only what was
+logged by hand: an imported booking is dated by its charge date, which can lie in the
+future, so the Hanoi stay charged in October sat at the top of a strip about today. The
+entry sheet no longer puts the cursor in its first field on opening (nor do the stay and
+stop sheets): on the iPhone a keyboard that opens the instant a sheet appears shifts the
+sheet before it has settled and leaves a blank band under it; a tap opens the keyboard
+cleanly. The Budget cap row says in words what the journey does to the cap, "at this pace
+the journey uses 77 % of it", or in amber "goes 937 111 Ft over it"; "projected uses 132 %"
+meant nothing to her. The per-night line under a city's opened sum now reads "Bangkok costs
+35 446 Ft a night on average, the stay included"; Petra would drop the line, Patrik asked for
+the number on 19 Sep to compare cities, so it stays until he says otherwise. One finding
+was data, not code: Insurance and visas read "nothing paid yet" because no ledger entry sits
+in those categories; the card can only count what is logged there, whatever its date.
+
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
 (mock 16 §6, projection after seven days), the one-line Subscriptions door on a journey

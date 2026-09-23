@@ -351,8 +351,14 @@ export default function MoneyPage() {
         <span>
           <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>
           <span className="block text-[13px] text-tx2">
+            {/* In words (Petra, 23 Sep: "projected uses 132 %" meant nothing): what the
+                journey does to the cap at this pace, amber when it goes over. */}
             {cap > 0
-              ? `${fmt(cap)} · ${pace.perDay !== null ? `projected uses ${Math.round((projection.projected / cap) * 100)}%` : `${capPct}% spent`}`
+              ? pace.perDay === null
+                ? `${fmt(cap)} · ${capPct}% spent`
+                : projection.projected > cap
+                  ? <>{fmt(cap)} · <span className="text-warn">at this pace the journey goes {fmt(projection.projected - cap)} over it</span></>
+                  : `${fmt(cap)} · at this pace the journey uses ${Math.round((projection.projected / cap) * 100)}% of it`
               : 'a ceiling for the whole trip, in Settings'}
           </span>
         </span>

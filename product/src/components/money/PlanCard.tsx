@@ -117,7 +117,9 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
                   {/* The three lines above add up to this; then what that is a night (owner review, 2026-09-19),
                       said as a sentence (Petra, 23 Sep: two bare numbers on one line did not explain themselves). */}
                   <div className={words + ' border-t border-ln'}><span>Together</span><b className="text-tx">{fmt(p.projected)}</b></div>
-                  {perNight > 0 && <div className="pb-1 text-[13px] text-tx3">{fmt(perNight)} for each of the {p.nights} nights.</div>}
+                  {/* Said as what it is (Petra, 23 Sep: "one night is 35 446 Ft, or what?"). Patrik's number
+                      for comparing cities (2026-09-19); whether it stays is his call. */}
+                  {perNight > 0 && <div className="pb-1 text-[13px] text-tx3">{p.seg.city} costs {fmt(perNight)} a night on average, the stay included.</div>}
                 </div>
               )}
             </div>

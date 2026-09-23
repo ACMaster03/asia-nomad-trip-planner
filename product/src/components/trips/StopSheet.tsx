@@ -114,7 +114,7 @@ export function StopSheet({
         <>
           <label className={label}>
             City
-            <input className={input} value={city} placeholder="Type a city…" autoComplete="off" autoFocus onChange={(e) => { setCity(e.target.value); setPicked(false) }} />
+            <input className={input} value={city} placeholder="Type a city…" autoComplete="off" onChange={(e) => { setCity(e.target.value); setPicked(false) }} />
           </label>
           {!picked && city.trim().length >= 2 && (
             <div className="-mt-2 overflow-hidden rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-sf">
