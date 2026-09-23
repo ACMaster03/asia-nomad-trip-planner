@@ -7,6 +7,34 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-23
 
+### BUILT — Home's money card follows Money's projection rule (Petra, 23 Sep)
+
+Decided by Petra the same day, with Patrik's "we can continue on". Money waits a week of pace
+before it projects (round 2), but Home's card said "Spent X of ≈ Y projected" from the first
+day. Pull request #83.
+
+**What changed.** On a journey made after round 2, the card now shows:
+- until there is a daily pace (days 1–2): "Spent X so far · measuring your daily pace";
+- once Money's Per day has a figure (day 3 on): "Spent X so far · 24 739 Ft/day everyday in
+  Bangkok · a projection after a week";
+- once the projection unlocks: as before, "Spent X of ≈ Y projected · … · under/over the
+  estimate".
+
+Home asks `moneyUnlocks` with the same inputs as Money: the saved cards, the creation time,
+and the same UTC calendar day (`useToday` and Home share it). So the two never disagree, and
+a journey from before round 2, like Asia, shows what it always did. Before departure, Home's
+"Estimated total" card (city averages) is unchanged.
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); 122 node tests; `next build`.
+- The dev preview's Home (`?screen=home&day=N`, the browser clock set to the day), a new
+  journey:
+  - days 1 and 2: "so far · measuring your daily pace";
+  - day 4: "so far · 24 739 Ft/day everyday in Bangkok · a projection after a week";
+  - day 8: the projection appears, ≈ 3 663 739 Ft, the same day and figure as Money's Plan;
+  - day 9: ≈ 3 467 086 Ft, as on Money.
+- Asia today: unchanged.
+
 ### BUILT — Money gets shorter, step 1: the ledger on its own screen, All entries (Petra, 23 Sep)
 
 Petra, looking at the round 2 pictures before that merge, had two findings. First, the
@@ -76,6 +104,9 @@ use) or "History", Petra chose **All entries**. Recorded on #38.
 
 **Before the merge.** Patrik saw the pictures first, because the ledger leaving the Money page
 changes how he uses it every day too, and approved (above).
+
+**Live with #82.** Petra gave her go on 23 Sep, and the production build finished without errors.
+Her test on the phone is pending.
 
 **Step 2, not started.** If Money still feels long on the phone, Bookings, Subscriptions,
 One-offs and Plan become one-line summaries that open on tap, which could bring the page to
