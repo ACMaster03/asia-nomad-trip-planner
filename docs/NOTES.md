@@ -86,8 +86,10 @@ question: why the Total row's two numbers differ (290 304 Ft planned, 295 070 Ft
 gap, 4 766 Ft, is the two bank fees: paid on Money, never on the Extras list, so they sit in
 Paid with a dash under Planned. That is the card working as designed (two columns, never
 one total; the gap is the number worth seeing), but the Total row invites the question, and
-the ⓘ text does not answer it: it explains that one cost can sit in both columns, not that
-Paid also holds payments nobody planned.
+the ⓘ text did not answer it: it explained that one cost can sit in both columns, not that
+Paid also holds payments nobody planned. Offered to leave it or add one sentence to ⓘ, Petra
+chose the sentence: "Paid also counts payments you never planned, like bank fees." It sits
+after "…never added together", so the card stays as quiet as before until ⓘ is tapped.
 
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
