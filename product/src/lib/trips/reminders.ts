@@ -1,5 +1,6 @@
 import type { TripState } from './types'
-import { fmtMoney, segNights, toBase } from './format'
+import { fmtMoney, stayNights, toBase } from './format'
+import { isBookedStatus } from './commitment'
 
 // Reminders (handoff frames 25–26, rig: Interactive Phone "REMINDERS").
 //
@@ -87,11 +88,17 @@ export function deriveReminders(state: TripState, todayIso: string): ReminderIte
     // Chosen stays only — the same include the budget's "committed" view
     // trusts. A shortlist idea with a cancel date is not money on the line.
     if (!st.include) continue
+    // Since the timeline build an Idea counts in the forecast too, so the
+    // status gates here as it does for money (commitment.ts): a deadline on
+    // an unbooked idea is not a deadline.
+    if (!isBookedStatus(st.status)) continue
     const seg = state.segments.find((sg) => sg.id === st.segId)
-    const nights = st.nights != null ? st.nights : seg ? segNights(seg) : 0
+    const nights = stayNights(st, seg)
     const amount = fmtMoney(toBase(st.ppn, st.cur, state.rates) * nights, base)
     const name = st.name || 'Stay'
-    if (st.cancelUntil && dayDiff(todayIso, st.cancelUntil) >= 0) {
+    // The switch on the stay sheet (#60): off means no cancel reminder. The
+    // charge line stays; it is money, not a choice.
+    if (st.cancelUntil && st.remind !== false && dayDiff(todayIso, st.cancelUntil) >= 0) {
       items.push({
         id: `money-cancel-${st.id}`,
         kind: 'money',

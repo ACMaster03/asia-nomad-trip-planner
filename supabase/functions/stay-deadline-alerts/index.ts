@@ -27,6 +27,7 @@ type Stay = {
   name: string
   segId?: string
   cancelUntil?: string
+  remind?: boolean // the switch on the stay sheet (#60); absent = on
   chargeDate?: string
   include?: boolean
   status?: string
@@ -74,7 +75,7 @@ Deno.serve(async (req) => {
 
     for (const stay of stays) {
       if (stay.include === false) continue // out-of-plan stays don't alert
-      if (stay.cancelUntil) {
+      if (stay.cancelUntil && stay.remind !== false) {
         const d = daysUntil(stay.cancelUntil, today)
         for (const [kind, offset] of Object.entries(CANCEL_OFFSETS)) {
           if (d === offset) due.push({ stay, kind, date: stay.cancelUntil, label: `free cancellation ends in ${offset} day${offset > 1 ? 's' : ''}` })

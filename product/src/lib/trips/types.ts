@@ -50,6 +50,14 @@ export interface Stay {
   notes?: string
   cancelUntil?: string // ISO date — free-cancellation deadline
   chargeDate?: string // ISO date — when the card is charged
+  // Timeline build (2026-09-22, mock 15 §5, #58/#60). All optional and
+  // migration-free: a stay written before it simply spans its stop, as it
+  // always did, and its deadlines read as "never asked".
+  checkIn?: string // ISO date — the stay's own nights, so a stop can hold several stays
+  checkOut?: string // ISO date, exclusive: the morning you leave
+  noFreeCancel?: boolean // the explicit "No free cancellation" answer; blank cancelUntil without it = still to enter
+  chargeAtCheckIn?: boolean // the explicit "At check-in" answer; chargeDate mirrors checkIn so the import and the reminders need no new branch
+  remind?: boolean // the deadline reminder switch; absent = on (the derived reminder always existed), false = off
 }
 export interface TransportLeg {
   id: string
@@ -68,6 +76,11 @@ export interface TransportLeg {
   // date. Fares are usually paid at booking, months ahead; without this the
   // Money page reads a booked-and-paid flight as money still to come.
   chargeDate?: string
+  // Timeline build (mock 15 §6): from, to and date are the leg's, taken from
+  // the stops on either side. These are the only other things typed.
+  time?: string // HH:MM departure, optional
+  via?: string // a connection, a place you pass through: no nights, no budget, no check-in (#58)
+  hours?: number // total travel time when known, shown beside the via
 }
 // A recurring cost from home (issue #37). The cadence is DECLARED, never
 // inferred from ledger history: two rows 31 days apart could be monthly or two

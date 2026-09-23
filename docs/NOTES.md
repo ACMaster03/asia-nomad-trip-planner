@@ -7,6 +7,57 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-22
 
+### BUILT — the Trip timeline off mock 15 (§1, §4, §5, §6): #58, with #60's stay form
+
+Branch `kyh/cool-euler-7jcmqu`, on the shipped tokens; nothing is deployed until the pull
+request is merged. Preview without a sign-in: `/dev/trip-preview` (development only, the
+Money fixture with the stays and legs the mock shows).
+
+**What changed.** `/itinerary` is one timeline (`components/trips/Timeline.tsx`): home, leg,
+stop, leg, stop … home, in date order, no tabs. Legs are pale-mauve strips between the stop
+cards and the only place transport is entered; stops are white cards with their stays
+underneath, one row per stay with its nights, its money state and its total; the amber
+"No bed 30 Nov → 13 Dec" row inside a stop opens Add stay with those nights already in;
+"+ Add stop" sits above the way home, which is a dashed "not planned yet" leg into the home
+node. Three bottom sheets replace the centred modals: the stop editor (`StopSheet`: Arrive,
+Leave and the "moving Leave moves the Hanoi leg with it" line, Comfort behind ⓘ with the
+city's three nightly bands, the stop's stays, Delete below a rule), Add stay (`StaySheet`:
+check-in/check-out, per night with the base-currency line, Idea / Booked, and for Booked the
+two deadline dates each with an "or" and its explicit no, the reminder switch appearing once a
+cancel-by date exists, on by default and saying where it shows), and transport on the leg
+(`LegSheet`: from, to and day from the stops, type chips, Departs + Time, the optional
+Connection for flights, Price, Idea / Booked with the charge date, Remove under a rule).
+
+**The document.** No migration: five optional fields on a stay (`checkIn`, `checkOut`,
+`noFreeCancel`, `chargeAtCheckIn`, `remind`) and three on a transport leg (`time`, `via`,
+`hours`). Legs are DERIVED, never stored (`lib/trips/timeline.ts`): the space between two
+consecutive in-plan stops plus home → first and last → home, with transport attached by the
+same normalised from/to match the globe uses; an entry that matches no leg lists under the
+timeline as "Transport not on a leg". `stayNights` prefers the stay's own dates, then the
+typed override, then the stop, so every stay written before this reads as it always did.
+Two states everywhere: 'booked' (and the legacy 'chosen') is Booked, anything else is Idea;
+`include` still means "counts in the plan" for the budget and is set true on every save from
+the new sheets (an Idea with a price forecasts it); a stay left unticked on the old Stays tab
+shows as "old option · not counted", with a switch in its sheet to count it. Deadline
+reminders now also require Booked (an Idea's dates are hidden and are not a deadline) and
+respect the switch, in `reminders.ts` and in the `stay-deadline-alerts` function; "At
+check-in" mirrors the check-in date into `chargeDate`, so the ledger import and the Money
+page need no new branch. Moving a stop's Leave moves the leg after it: entries leaving that
+city on the old date follow (`shiftDepartures`).
+
+**Kept on purpose.** `?tab=extras` still renders the old Extras editor behind a "← Trip"
+link, because the Money page's One-offs card links to it; it goes when mock 16's One-offs
+editor is built. Home comes from the trip's `homeBase` for now (#58 wants it on the person);
+the journey picker in the title (#21) is not built, the trip name is the title.
+
+**Not in this build.** The globe-and-sheet shell (§2), which waits on the phone test recorded
+in the MOCKED entry below; the tab-bar rule (§7), which depends on that decision; the
+Deadlines row in Trip settings (#60's second door).
+
+**Verified.** `tsc` clean, `eslint` clean but for a warning that predates this, 96 node tests
+(12 new, `timeline.test.ts`), `next build` green, and phone-width screenshots of the
+timeline in both themes and of every sheet from the preview.
+
 ### MOCKED — the two mocks the product review put first: Trip timeline + globe sheet (#58, #63) and Money's quiet start (#62, #59, with #60's stay form)
 
 Round 1, on the shipped tokens, in `design/mocks/15-trip-timeline.html` and
@@ -84,6 +135,19 @@ warmth can be measured there, the drag question cannot. The Vercel preview of th
 the same app behind a Vercel login (Vercel Authentication is on for every URL but the custom
 domains), so it adds nothing to the test. Petra's steps are on the summary page,
 https://claude.ai/artifact/U3adVKLbKRp7Dxr9UTDUYe.
+
+**Measured (Petra, 22 Sep, an iPhone 13, mobile data, private tab, the shipped Map page):** cold
+open to the route drawn, 2 s; Home after Map, 3 s (Home has no globe: that is the teardown plus
+Home's own load); Map again from Home, 4 s, slower than the cold open because the globe is
+rebuilt on every visit; five minutes with the globe alive, battery 83 % → 80 % and the phone
+warm to slightly hot; an iPhone 13 is a strong phone, a mid-range Android does worse. Spin
+was on (the shipped default; #63 turns it off), but the cost is the render loop itself: `Globe.tsx` never pauses drawing while the page is open. Read against §8's
+three: the cold open passes, the heat and the battery do not for a screen opened many times a
+day, the drag question is untested. Patrik's call. What the numbers argue for: build the
+timeline as its own page first (§8's fallback), keep the globe on Map, and make "the globe
+sleeps behind the sheet" (`pauseAnimation()` at full sheet height or after a few idle seconds,
+spin off by default) a precondition before version A is tried on a phone again. People's tab
+waits on that.
 
 ---
 ## 2026-09-20

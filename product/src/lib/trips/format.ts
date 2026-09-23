@@ -62,8 +62,11 @@ export const segNights = (s: Segment) =>
 
 // A stay's nights and full cost — the ONE definition (owner note, 2026-09-11:
 // the Stays card "shows the per night stay and not the full cost and it isn't
-// clear"). The stay's own `nights` override wins; otherwise the stop's length.
+// clear"). The stay's own check-in/check-out dates win (a stop can hold
+// several stays, #58); then its typed `nights` override; otherwise the stop's
+// length, as every stay written before the timeline build assumed.
 export function stayNights(st: Stay, seg: Segment | undefined): number {
+  if (st.checkIn && st.checkOut) return nightsBetween(st.checkIn, st.checkOut)
   return st.nights != null ? st.nights : seg ? segNights(seg) : 0
 }
 export function stayTotal(st: Stay, seg: Segment | undefined): number {
