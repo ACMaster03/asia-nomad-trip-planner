@@ -119,7 +119,7 @@ card, the switch included. In the browser's saved copy: day 4 saves chart and Wh
 day 9 adds the projection, the older journey saves nothing.
 
 **Live with #81.** Petra gave her go on 23 Sep, and the production build finished without errors.
-Her check of Asia on the phone is pending.
+She checked Asia on her phone: it looks the same, every card still there.
 
 **Petra's question before the merge: why does the Plan only come up after day 9?** It comes on
 day 8, after 7 days in Bangkok; the pictures jump from day 4 to day 9, the mock's days. It waits
