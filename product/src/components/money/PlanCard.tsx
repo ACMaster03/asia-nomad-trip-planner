@@ -97,10 +97,10 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
                   {p.stay > 0 && (
                     <div className={words + (p.stayLabel === 'draft' ? ' text-warn' : '')}><span>{stayLine(p)}</span><b className={p.stayLabel === 'draft' ? '' : 'text-tx'}>{fmt(p.stay)}</b></div>
                   )}
-                  <div className={words + ' border-t border-ln'}>
-                    <span>= {fmt(p.projected)} over {p.nights} nights</span>
-                    {perNight > 0 && <b className="whitespace-nowrap text-tx">{fmt(perNight)} a night</b>}
-                  </div>
+                  {/* The three lines above add up to this; then what that is a night (owner review, 2026-09-19),
+                      said as a sentence (Petra, 23 Sep: two bare numbers on one line did not explain themselves). */}
+                  <div className={words + ' border-t border-ln'}><span>Together</span><b className="text-tx">{fmt(p.projected)}</b></div>
+                  {perNight > 0 && <div className="pb-1 text-[13px] text-tx3">{fmt(perNight)} for each of the {p.nights} nights.</div>}
                 </div>
               )}
             </div>
@@ -123,21 +123,20 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
         </button>
         {sum && (
           <div className="mb-2 rounded-[var(--rCtl)] bg-inp px-3.5 py-2">
-            <div className={words}><span>Stops, at your pace</span><b className="text-tx">{fmt(stops)}</b></div>
+            {/* Four things that add up, nothing else (Petra, 23 Sep: "so many things"). The
+                not-booked amount is a note under the first, not a fifth row: it is inside it. */}
+            <div className={words}><span>The cities above</span><b className="text-tx">{fmt(stops)}</b></div>
             {draftTotal > 0 && (
-              <div className={words + ' text-warn'}><span>of which stays not booked</span><b>{fmt(draftTotal)}</b></div>
+              <div className="-mt-1 pb-1 text-[13px] text-warn">{fmt(draftTotal)} of that is for stays not booked yet.</div>
             )}
-            <div className={words}>
-              <span>Transport, {booked} booked{unbooked ? `, ${unbooked} to book` : ''}</span>
-              <b className="text-tx">{fmt(transportTotal)}</b>
-            </div>
+            <div className={words}><span>Transport booked{booked ? `, ${booked} ${booked === 1 ? 'leg' : 'legs'}` : ''}</span><b className="text-tx">{fmt(transportTotal)}</b></div>
             {projection.residual !== 0 && (
-              <div className={words}><span>Everything else logged</span><b className="text-tx">{fmt(projection.residual)}</b></div>
+              <div className={words}><span>Everything else you logged</span><b className="text-tx">{fmt(projection.residual)}</b></div>
             )}
             {projection.subsAhead > 0 && (
-              <div className={words}><span>Subscriptions ahead</span><b className="text-tx">{fmt(projection.subsAhead)}</b></div>
+              <div className={words}><span>Subscriptions still to come</span><b className="text-tx">{fmt(projection.subsAhead)}</b></div>
             )}
-            <div className={words + ' border-t border-ln font-semibold text-ac2-deep'}><span>= Projected total</span><b>{fmt(projection.projected)}</b></div>
+            <div className={words + ' border-t border-ln font-semibold text-ac2-deep'}><span>Together, the projected total</span><b>{fmt(projection.projected)}</b></div>
           </div>
         )}
       </div>
