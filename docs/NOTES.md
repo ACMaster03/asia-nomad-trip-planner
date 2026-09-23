@@ -7,6 +7,69 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-23
 
+### BUILT — Money stage 2, round 1: the question and the quiet page (mock 16 §1–2)
+
+Asked for by Petra the same day, right after migration 41 went live; the globe question
+waits for a talk with Patrik.
+
+**What changed.** The first visit to Money asks, once per account, "Track what you spend on
+this journey?" in a sheet (`TrackQuestion.tsx`): "Log a coffee, see what a day here costs.",
+"Yes, track it", "Not now", and "Asked once. Your bookings are here either way." Only the two
+buttons answer; sliding it away, tapping beside it or pressing Escape closes it until the app
+is next opened. Behind it, someone who already logs costs on the journey sees their own page
+and a newcomer sees the quiet page. Yes is today's full page, which gains a "Track spending"
+switch next to the Budget cap row, "Only for you." (`TrackSpendingRow.tsx`), hidden while the
+answer cannot be read. Not now is the quiet page: the Bookings card, the add button
+and "Spending isn't tracked on this journey. Track it ›". The page never says ledger. Saving
+a cost from the quiet page's add button turns tracking on; the form says so above its
+button, "Saving this turns on spending tracking.", and the full page opens with the cost in it.
+
+**Changed before the merge (Petra, looking at the pictures), three things.** The mock's list
+of what you add after saying no, titled Spending, is gone: spending listed right under
+"Spending isn't tracked on this journey" made no sense, and for anyone who logged before
+saying no it was the whole ledger again. Without the list, a cost added on the quiet page
+had nowhere to show, so her next two ideas followed. The add button stays, as #62 decided,
+and saving a cost from it turns tracking on, reversing the mock's "logging one visa fee does
+not flip the answer": wanting to log is the answer, and one-offs like a visa fee have their
+own home now, the extra's paid-on date. And the switch moved from the Account page, where the
+mock put it "under your avatar", to the full Money page, where people look for it; its line
+says the answer is personal, because a switch on a journey's page reads like a setting for
+everyone on it, and Patrik's Money page does not change when Petra flips hers.
+
+**Then she asked whether it was all intuitive, and two more things changed.** A swipe no longer
+answers: in the mock, sliding the sheet away counted as Not now ("asked once"), but panels get
+swiped away out of habit, and for Patrik and Petra the first visit would have hidden 23 days of
+spending behind the quiet page until "Track it". Now only the buttons answer, a swipe closes
+the question until the app is next opened (module state in `MoneyPage.tsx`, so moving between
+tabs does not bring it straight back), and whoever already logs costs sees their own page
+behind the question (`hasLoggedSpending`: costs typed on Money; the plan's rows do not
+count). And the switch's line lost "on every journey", which read as a contradiction of the
+question's "this journey". That sentence is Patrik's (#62) and the answer does count for every
+journey; it only shows once a second journey starts.
+
+**How the answer is read.** `profiles.track_spending`, read by `useTrackSpending` into four
+states (`lib/trips/tracking.ts`): ask, yes, no, unknown. Money waits for it only on a
+device's first visit, since it is cached and persisted like every query, and a failed read
+falls back to the full page with no question. Saving is optimistic, so the page changes shape
+at once, and a failed save puts the old answer back with the save banner.
+
+**Checked.** `tsc`; `eslint` (only the old SettingsClient error and three old warnings); 109
+node tests, three new: the four states, which of them get the quiet page (a tracker behind the
+question does not), and which costs count as logged; `next build`. In the dev preview
+(`/dev/money-preview?track=ask|no|yes`, and `&logged=0` for a newcomer) at iPhone 13 width,
+with its database calls held open so a save stays in flight: the question over a tracker's
+own page and over a newcomer's quiet page; a tap beside it, Escape and a drag on the handle
+each close it and leave the answer unset, and it is back when the app is opened again; Yes
+opens the full page; Not now keeps the quiet page; the quiet page lists no spending; its add
+button's form shows the note, and saving opens the full page with the new cost in Latest;
+Track it opens the full page; the switch, "Only for you.", sits under the Budget cap row, and
+switching it off gives the quiet page.
+
+**Not in this round.** The cards that unlock as entries arrive and "More appears as you log"
+are round 2; the Subscriptions question on the entry sheet, the one-time offer and the
+One-offs editor on Money are round 3. As built, every existing account is asked once; the
+backfill alternative for Patrik is in the migration 41 entry below.
+
 ### DECIDED — Patrik, 23 Sep: the per-night line goes; the globe question is Petra's
 
 - **The per-night line under a city's opened sum on the Plan card is dropped.** It closed the
@@ -14,7 +77,7 @@ when a decision needs to survive the conversation it was made in.
   review of 19 Sep for comparing cities. Petra found it confusing on the phone and would drop
   it; Patrik let it go. It was the only all-in nightly figure in the app: the stay sheet's
   nightly price is the stay alone. Removed in #78, the pull request that carries migration 41,
-  so it goes live with that merge. Recorded on #62.
+  so it went live with that merge; Petra confirmed it on the phone. Recorded on #62.
 - **Version A of #63, the timeline as a sheet over the globe, is Petra's to decide.** What the
   phone test argued for is in the MOCKED entry of 22 Sep: the timeline as its own page (live
   since #68), the globe staying on Map, and "the globe sleeps behind the sheet" as a

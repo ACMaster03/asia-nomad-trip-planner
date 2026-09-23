@@ -28,7 +28,7 @@ const dayLabel = (iso: string) =>
   iso === todayISO() ? 'Today' : new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 
 export function EntrySheet({
-  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose,
+  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose, note,
 }: {
   initial: LedgerEntry | null
   ledger: LedgerEntry[]
@@ -40,6 +40,8 @@ export function EntrySheet({
   onSave: (e: LedgerEntry) => void
   onDelete?: (e: LedgerEntry) => void
   onClose: () => void
+  /** one line right above the save button, for what saving does beyond saving */
+  note?: string
 }) {
   const { base, fmt } = useMoney()
   const imported = !!initial?.source
@@ -202,6 +204,7 @@ export function EntrySheet({
         <span className="mt-1 block text-[13px] font-normal text-tx3">{dayLabel(date)}</span>
       </label>
 
+      {note && <p className="-mb-1 text-center text-[13px] text-tx2">{note}</p>}
       <button
         onClick={submit}
         disabled={!valid}

@@ -8,6 +8,8 @@ import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useToday } from '@/lib/useToday'
+import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
+import { hasLoggedSpending, isQuiet, type Tracking } from '@/lib/trips/tracking'
 import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
@@ -31,6 +33,8 @@ import { LedgerList } from './LedgerList'
 import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntrySheet } from './EntrySheet'
+import { TrackQuestion } from './TrackQuestion'
+import { TrackSpendingRow } from './TrackSpendingRow'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
 // Money — ONE page (round-two design signed off 2026-09-13; round three
@@ -47,8 +51,16 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // reduced to a percentage and what is left (the cap amount lives in its own
 // row), one-offs with a line per row, the Plan card leading with its one
 // number and hiding its maths, and every card's explanatory prose cut or
-// moved behind an info tap (#65). The quiet start, the once-per-account
-// question and the cards that unlock as entries arrive are stage 2.
+// moved behind an info tap (#65).
+//
+// Stage 2, round 1 (mock 16 §1–2, 23 Sep): the once-per-account question,
+// "Track what you spend on this journey?", as a sheet on the first visit (over
+// the quiet page, or over your own page if you already log costs), and the
+// quiet page itself for "Not now": the bookings, the
+// add button and one line back. The answer lives on the profile (migration 41;
+// lib/trips/tracking.ts has the four states). "Yes" is today's full page, with
+// a "Track spending" switch next to the Budget cap row; the cards that unlock
+// as entries arrive are round 2.
 //
 // A ninth card sat between the plan and the cap and is gone (2026-09-20). It
 // answered "what do we need to earn a month", first as projected outflow in
@@ -75,6 +87,12 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
 const wide = 'min-[900px]:col-span-2'
 
+// The question closed without an answer (a swipe, a tap beside it, Escape)
+// stays closed until the app is next opened. Module state rather than React
+// state, so moving between tabs does not bring it straight back, while a fresh
+// load of the app asks again.
+let questionClosedThisVisit = false
+
 export default function MoneyPage() {
   const { fmt, base } = useMoney()
   const confirm = useConfirm()
@@ -84,6 +102,9 @@ export default function MoneyPage() {
   const stateMut = useTripMutation()
   const { canEdit } = useTripRole()
   const today = useToday()
+  const track = useTrackSpending()
+  const setTrack = useSetTrackSpending()
+  const [questionClosed, setQuestionClosed] = useState(() => questionClosedThisVisit)
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
   const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
@@ -117,8 +138,16 @@ export default function MoneyPage() {
     [trip.data, cityIdx, today],
   )
 
-  if (trip.isPending || (trip.data && !today)) return <main className="mx-auto max-w-xl p-6 text-base text-tx2">Loading…</main>
+  // The answer decides the page's shape, so Money waits for it, but only on a
+  // device's first visit (it is cached like everything else) and never past a
+  // failed read, which falls back to the full page.
+  const answer: Tracking | undefined = track.data ?? (track.isError ? 'unknown' : undefined)
+  if (trip.isPending || (trip.data && (!today || answer === undefined))) {
+    return <main className="mx-auto max-w-xl p-6 text-base text-tx2">Loading…</main>
+  }
   if (!trip.data || !model) return <CreateTripEmptyState />
+  const tracking: Tracking = answer ?? 'unknown'
+  const quiet = isQuiet(tracking, hasLoggedSpending(trip.data.ledger))
   const s = trip.data.state
   const ledger = trip.data.ledger
   const { current, pace, plan, bookings, projection, subs, beyond, tripEnd } = model
@@ -166,6 +195,10 @@ export default function MoneyPage() {
     mut.mutate({ kind: 'upsert', entry })
     setSheet(null)
     // The two-second confirmation (mock 16 §3): what landed, so nobody scrolls to check.
+    // On the quiet page, logging a cost is the answer: saving one turns
+    // tracking on, so a cost you add is never hidden (Petra, 23 Sep). The form
+    // says so above its button, and the full page opens with the cost in it.
+    if (quiet && isNew) setTrack.mutate(true)
     toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
   }
   async function del(entry: LedgerEntry) {
@@ -262,8 +295,39 @@ export default function MoneyPage() {
       <div className={wide}>
         <SaveError show={mut.isError} error={mut.error} />
         <SaveError show={stateMut.isError} error={stateMut.error} />
+        <SaveError show={setTrack.isError} error={setTrack.error} />
       </div>
 
+      {quiet ? (
+        // The quiet page (mock 16 §2): the Bookings card is the whole page,
+        // because "what have we committed to" is the one money question someone
+        // who does not track still has. The page never says ledger, opt-in or
+        // analytics; it says bookings and spending.
+        //
+        // No list of spending under the line, although the mock had one for
+        // what you add after saying no. Petra, 23 Sep, before this merged: a
+        // list of spending right under "Spending isn't tracked on this journey"
+        // makes no sense, and for anyone who logged before saying no it was
+        // the whole ledger again. The add button stays (#62), and saving a
+        // cost from it turns tracking on (see save below).
+        <>
+          <BookingsCard
+            stays={bookings.stays} transport={bookings.transport}
+            paid={bookings.paid} toPay={bookings.toPay}
+            draftedStays={bookings.draftedStays} draftStays={bookings.draftStays}
+            fmt={fmt} todayIso={today}
+          />
+          <button
+            type="button"
+            onClick={() => setTrack.mutate(true)}
+            className={'flex min-h-11 w-full items-center justify-between gap-2.5 rounded-[14px] bg-tag px-3.5 py-2.5 text-left text-[14px] text-tag-ink ' + wide}
+          >
+            <span>Spending isn&apos;t tracked on this journey.</span>
+            <b className="whitespace-nowrap text-ac2-deep">Track it ›</b>
+          </button>
+        </>
+      ) : (
+      <>
       {/* overview */}
       <div className={'lv-enter rounded-[var(--r)] bg-sf p-5 ' + wide}>
         <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">
@@ -381,12 +445,16 @@ export default function MoneyPage() {
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
+      {/* Hidden when the answer can't be read: a switch that cannot save would lie. */}
+      {tracking === 'yes' && <TrackSpendingRow onChange={(on) => setTrack.mutate(on)} />}
       <div id="ledger" className={wide + ' scroll-mt-4'}>
         <LedgerList
           entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
           canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal}
         />
       </div>
+      </>
+      )}
 
       {sheet && (
         <EntrySheet
@@ -398,6 +466,7 @@ export default function MoneyPage() {
           onSave={save}
           onDelete={sheet.entry ? del : undefined}
           onClose={() => setSheet(null)}
+          note={quiet && !sheet.entry ? 'Saving this turns on spending tracking.' : undefined}
         />
       )}
       {subSheet && (
@@ -408,6 +477,15 @@ export default function MoneyPage() {
           onSave={saveSub}
           onDelete={subSheet.sub ? delSub : undefined}
           onClose={() => setSubSheet(null)}
+        />
+      )}
+      {tracking === 'ask' && !questionClosed && (
+        <TrackQuestion
+          onAnswer={(yes) => setTrack.mutate(yes)}
+          onDismiss={() => {
+            questionClosedThisVisit = true
+            setQuestionClosed(true)
+          }}
         />
       )}
     </main>

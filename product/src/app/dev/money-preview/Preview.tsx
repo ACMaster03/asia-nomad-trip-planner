@@ -22,7 +22,9 @@ export default function Preview({ screen }: { screen: 'money' | 'home' | 'extras
         <ConfirmProvider>
           <ToastProvider>
             <div className="pb-20">
-              {screen === 'home' ? <DashboardClient userEmail="dev@example.com" userName="Dev" /> : screen === 'extras' ? <ExtrasTab /> : <MoneyPage />}
+              {screen === 'home' ? <DashboardClient userEmail="dev@example.com" userName="Dev" />
+                : screen === 'extras' ? <ExtrasTab />
+                  : <MoneyPage />}
             </div>
           </ToastProvider>
         </ConfirmProvider>
