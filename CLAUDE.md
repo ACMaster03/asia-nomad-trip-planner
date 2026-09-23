@@ -36,8 +36,14 @@ Petra is new to software work; Patrik is not. The product conventions are in
   page, went live with Petra on 23 Sep (#73); her round on the phone and the
   "Paid on" date for extras (one entry instead of two) followed in #74, and
   #75 lists each extra by name on the One-offs card. Stage 2, the quiet
-  start, needs a `profiles` column for the once-per-account answer, a
-  migration Patrik applies in the Supabase dashboard.
+  start, began with migration 41 (`profiles.track_spending`, the
+  once-per-account answer), live on staging and production since 23 Sep:
+  Petra applied it in the Supabase SQL editor, guided. The stage 2 app code
+  comes next. Open for Patrik before it ships: whether existing accounts
+  are asked the question too (as built: yes, once).
+- Decided by Patrik on 23 Sep: the Plan card's per-night line is gone (#78),
+  and the globe question (#63, the timeline as a sheet over the globe) is
+  Petra's to decide.
 - Merges happen together with whoever is here, the same way: say what
   changes and what could go wrong, get a "go", merge, watch the Vercel build,
   test on livhold.com, record.

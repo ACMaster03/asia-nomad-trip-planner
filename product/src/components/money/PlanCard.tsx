@@ -11,11 +11,11 @@ import type { TripState } from '@/lib/trips/types'
 // (Petra, round 1: "so many informations that I don't even want to read
 // it"). A tap on a city opens its sum in words, three lines that add up to
 // the row's number: what you already spent here, the nights still to come at
-// your pace, the whole stay already paid. Round three's per-night comparison
-// (owner review, 2026-09-19: Hanoi at 22 900 a night against Kuala Lumpur at
-// 19 700 is what matters) closes the opened sum. Transport, one-offs and the
-// rest sit behind "How it adds up". The Add-the-next-stop row is the one
-// forward nudge on the page and points at Trip.
+// your pace, the whole stay already paid, then "Together". The per-night
+// comparison that used to close the opened sum (owner review, 2026-09-19) was
+// dropped on 23 Sep: Patrik let it go after Petra found it confusing on the
+// phone. Transport, one-offs and the rest sit behind "How it adds up". The
+// Add-the-next-stop row is the one forward nudge on the page and points at Trip.
 //
 // This card is a FORECAST, so a drafted stay still shapes it — a price
 // someone found beats a city average, and for a city outside the catalogue
@@ -79,7 +79,6 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
         {plan.map((p) => {
           const live = p.seg.arrive <= todayIso && todayIso <= p.seg.depart
           const shown = open === p.seg.id
-          const perNight = p.nights > 0 ? p.projected / p.nights : 0
           return (
             <div key={p.seg.id}>
               <button type="button" aria-expanded={shown} onClick={() => setOpen(shown ? null : p.seg.id)} className={row}>
@@ -114,12 +113,8 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
                   {p.stay > 0 && (
                     <div className={words + (p.stayLabel === 'draft' ? ' text-warn' : '')}><span>{stayLine(p)}</span><b className={p.stayLabel === 'draft' ? '' : 'text-tx'}>{fmt(p.stay)}</b></div>
                   )}
-                  {/* The three lines above add up to this; then what that is a night (owner review, 2026-09-19),
-                      said as a sentence (Petra, 23 Sep: two bare numbers on one line did not explain themselves). */}
+                  {/* The three lines above add up to this. */}
                   <div className={words + ' border-t border-ln'}><span>Together</span><b className="text-tx">{fmt(p.projected)}</b></div>
-                  {/* Said as what it is (Petra, 23 Sep: "one night is 35 446 Ft, or what?"). Patrik's number
-                      for comparing cities (2026-09-19); whether it stays is his call. */}
-                  {perNight > 0 && <div className="pb-1 text-[13px] text-tx3">{p.seg.city} costs {fmt(perNight)} a night on average, the stay included.</div>}
                 </div>
               )}
             </div>

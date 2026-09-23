@@ -7,6 +7,68 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-23
 
+### DECIDED — Patrik, 23 Sep: the per-night line goes; the globe question is Petra's
+
+- **The per-night line under a city's opened sum on the Plan card is dropped.** It closed the
+  sum with "Bangkok costs 35 446 Ft a night on average, the stay included", kept since the owner
+  review of 19 Sep for comparing cities. Petra found it confusing on the phone and would drop
+  it; Patrik let it go. It was the only all-in nightly figure in the app: the stay sheet's
+  nightly price is the stay alone. Removed in #78, the pull request that carries migration 41,
+  so it goes live with that merge. Recorded on #62.
+- **Version A of #63, the timeline as a sheet over the globe, is Petra's to decide.** What the
+  phone test argued for is in the MOCKED entry of 22 Sep: the timeline as its own page (live
+  since #68), the globe staying on Map, and "the globe sleeps behind the sheet" as a
+  precondition before version A is tried on a phone again. Recorded on #63.
+
+### APPLIED — migration 41, `profiles.track_spending`, on staging and production (Petra, 23 Sep): the first step of Money stage 2
+
+**Applied by Petra in the Supabase dashboard's SQL editor**, on Patrik's say-so ("it will be good
+practice for her and she can learn what these are"), guided step by step. The address bar
+stood in for the PROD prompt of `tools/db.sh`: every step began by checking the project ref in
+it. Staging, `fdcncqnklscbztcydtye`: the migration, then `41-TESTPLAN`, both "Success. No rows
+returned"; the test plan raises on any failure, so success is silence. Production,
+`wvmnudcwcqktcugouqoe`: the migration, then a read-only check of `information_schema.columns`,
+one row, `track_spending | boolean | YES | NULL`. The test plan was not run on production: its
+fixtures are pretend accounts. The backfill question below is still open; it matters only
+from the day stage 2 ships.
+
+**What it is.** One nullable boolean on `profiles`, the answer to mock 16's once-per-account
+question "Track what you spend on this journey?": null = not asked yet, true = "Yes, track
+it", false = "Not now". No new permission: `profiles_update` (03) already confines each
+person to their own row, and the two guard triggers look only at `is_admin` and
+`active_trip_id`. Nothing reads the column yet; the stage 2 app code will, so it goes to
+production before that code does.
+
+**The same steps from a terminal, for next time.** Each stops on the first error; the prod step asks for the word PROD.
+
+    tools/db.sh apply 41            # staging
+    tools/db.sh test 41             # staging; rolls itself back
+    tools/db.sh --prod apply 41     # production
+
+Then merge the pull request that carries the two files, so `main` says what is live.
+
+**Dry run, 23 Sep, before anyone touched a real database.** A throwaway local Postgres 16
+with `profiles` rebuilt from the real text of 03 (table, signup trigger, `is_admin()`, the
+policies, the admin guard), 06 (the co-member read) and 07 (`active_trip_id` and its
+guard). 41 applied twice without error; existing accounts stayed null; the test plan passed
+twice and left no users or trips behind. It also failed, each time with its own message, on
+every broken variant tried: 41 not applied, a default of false, NOT NULL, the update policy
+dropped, the update policy loosened to anyone, the co-member read missing (the fixture
+guard). The first version of the test only tried a stranger's row, which RLS hides anyway,
+so the loosened policy passed; it now tries a travel partner's row, which is readable.
+
+**The decision inside it: no backfill (Patrik to confirm).** Every account that exists when
+41 runs, Patrik's and Petra's included, is asked once, on its first visit to Money after the
+stage 2 build ships. Why: the ledger records no author, so "who already tracks" could only be
+guessed from trip membership, and the mock rules that out for a travel partner ("the answer
+is theirs, not the journey's"); one tap each costs little; and it lets the two of them see the
+question live on their own phones. The alternative, if nobody who exists today should be
+asked, is one more statement; the fixed cutoff keeps a later re-run from answering for anyone
+who signs up after it:
+
+    update public.profiles set track_spending = true
+    where track_spending is null and created_at < timestamptz '2026-09-24 00:00:00+00';
+
 ### BUILT — Money, stage 1 of mock 16: calmer before quieter
 
 Branch `kyh/cool-euler-7jcmqu`, the afternoon the timeline went live, with Petra on the
@@ -93,7 +155,8 @@ after "…never added together", so the card stays as quiet as before until ⓘ 
 Live with #76; Petra saw it on the phone. Her next ask: only the paid total bold in the
 Total row, the planned total regular, "to anchor the essence of this whole rectangle". It
 also made the card consistent: every row above already had Paid bold and Planned regular,
-and the Total row was the one place with both bold.
+and the Total row was the one place with both bold. Live with #77; Petra confirmed it on the
+phone the same morning.
 
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
