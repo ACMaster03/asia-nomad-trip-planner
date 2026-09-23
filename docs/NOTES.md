@@ -76,6 +76,7 @@ tracked on this journey.", where the "Track it ›" line was. It takes that line
 soft tag colours with "Track spending" in its mauve ("the same look as when someone only sees
 the bookings"), and it is slim, because trackers see it every day between the overview and
 Latest. It mirrors the page shown, so someone who closed the question can also answer with it.
+Live with #80; Petra confirmed it on the phone the same day.
 
 **Not in this round.** The cards that unlock as entries arrive and "More appears as you log"
 are round 2; the Subscriptions question on the entry sheet, the one-time offer and the
