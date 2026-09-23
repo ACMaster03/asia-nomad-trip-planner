@@ -1,28 +1,42 @@
 'use client'
 
-// "Track spending" on the full Money page, next to the Budget cap row (Petra,
-// 23 Sep: easier to reach here than under the avatar, where mock 16 first put
-// it). The answer is the person's, not the journey's, so switching it off
-// quiets only your own Money page; the line under it says so, because a
-// switch on a journey's page reads like a setting for everyone on it. It says
-// only "Only for you.": "on every journey", true as it is, read as a
-// contradiction of the question's "this journey" (Petra, 23 Sep). The quiet
-// page's "Track it ›" line is the way back on.
-export function TrackSpendingRow({ onChange }: { onChange: (on: boolean) => void }) {
+// "Track spending": one switch, right under the first card of Money on both
+// versions of the page. On the full page it sits under the overview, on; on
+// the quiet page under the Bookings card, off, where the "Track it ›" line
+// used to be. Petra, 23 Sep, after #79 went live: at the bottom of the page,
+// next to the Budget cap row, you had to scroll to nearly the end to notice
+// the switch exists (and before that, mock 16 had put it under the avatar).
+// It mirrors the page shown, so flipping it always does what it looks like.
+//
+// Slim, because trackers see it every day between the overview and Latest,
+// and in the soft tag colours of the quiet page's old "Track it ›" line on both
+// versions (Petra, the same afternoon: "the same look as when someone only sees
+// the bookings"), with "Track spending" in the line's mauve.
+// The answer is the person's, not the journey's: switching it off quiets only
+// your own Money page, which is what "Only for you." says. It does not say
+// "on every journey", which read as a contradiction of the question's "this
+// journey".
+export function TrackSpendingRow({ on, onChange, className = '' }: {
+  on: boolean
+  onChange: (on: boolean) => void
+  className?: string
+}) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-[18px] py-3.5">
-      <span>
-        <span className="block text-base font-semibold">Track spending</span>
-        <span className="block text-[13px] text-tx2">Only for you.</span>
+    <div className={'flex min-h-11 items-center justify-between gap-2.5 rounded-[14px] bg-tag px-3.5 py-2.5 text-[14px] text-tag-ink ' + className}>
+      <span className="min-w-0">
+        <b className="block font-semibold text-ac2-deep">Track spending</b>
+        <span className="block">{on ? 'Only for you.' : 'Spending isn’t tracked on this journey.'}</span>
       </span>
       <button
         role="switch"
-        aria-checked
+        aria-checked={on}
         aria-label="Track spending"
-        onClick={() => onChange(false)}
-        className="relative h-[31px] w-[52px] flex-none rounded-full bg-ac transition-colors duration-[180ms]"
+        onClick={() => onChange(!on)}
+        className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (on ? 'bg-ac' : 'bg-ln3')}
       >
-        <span className="absolute left-[24px] top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms]" />
+        <span
+          className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (on ? 'left-[24px]' : 'left-[3px]')}
+        />
       </button>
     </div>
   )

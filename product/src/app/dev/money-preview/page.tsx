@@ -21,8 +21,8 @@ import Preview from './Preview'
 // ?screen=extras renders the Extras list (and its form) from the same fixture.
 // ?track=ask | no | yes seeds Money's once-per-account answer (migration 41):
 // ask shows the question (over the full page, since the fixture has logged
-// costs), no the quiet page, yes (the default) the full page, with its Track
-// spending switch by the budget cap. ?logged=0 drops the costs typed on Money
+// costs), no the quiet page, yes (the default) the full page; both carry the
+// Track spending switch under their first card. ?logged=0 drops the costs typed on Money
 // from the fixture, for a newcomer: the question then sits over the quiet page.
 export default async function MoneyPreviewPage({
   searchParams,

@@ -65,6 +65,18 @@ button's form shows the note, and saving opens the full page with the new cost i
 Track it opens the full page; the switch, "Only for you.", sits under the Budget cap row, and
 switching it off gives the quiet page.
 
+**Live with #79; on the phone, and one more move.** Petra's test on the phone passed at every
+step: the question over her own page, a swipe only closing it, the question back after
+reopening the app, Not now giving the quiet page, Track it bringing the full page back, and
+the switch under the Budget cap row. Then she moved the switch: at the bottom, next to the
+Budget cap row, you had to scroll to nearly the end to notice it exists. It now sits right
+under the first card on both versions, one control in one place: under the overview on the
+full page, on, "Only for you."; under the Bookings card on the quiet page, off, "Spending isn't
+tracked on this journey.", where the "Track it ›" line was. It takes that line's look, the
+soft tag colours with "Track spending" in its mauve ("the same look as when someone only sees
+the bookings"), and it is slim, because trackers see it every day between the overview and
+Latest. It mirrors the page shown, so someone who closed the question can also answer with it.
+
 **Not in this round.** The cards that unlock as entries arrive and "More appears as you log"
 are round 2; the Subscriptions question on the entry sheet, the one-time offer and the
 One-offs editor on Money are round 3. As built, every existing account is asked once; the
