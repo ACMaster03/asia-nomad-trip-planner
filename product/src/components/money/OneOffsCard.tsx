@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Info } from 'lucide-react'
 import { categoryLabel, ONE_OFF_CATEGORIES } from '@/lib/trips/categories'
+import { extraCategoryId } from '@/lib/trips/extras'
 import { toBase } from '@/lib/trips/format'
 import { isSettled } from '@/lib/trips/commitment'
 import type { LedgerEntry, TripState } from '@/lib/trips/types'
@@ -20,8 +21,17 @@ import type { LedgerEntry, TripState } from '@/lib/trips/types'
 // The gap between the columns is the interesting number and the card shows it
 // by putting them side by side, not by subtracting them into a third figure.
 //
-// Rows pair by CATEGORY: that is the only join the data actually has, and it
-// is the one the picker already writes on both sides.
+// Rows pair by CATEGORY: that is the only join the data actually has. The
+// extras form writes its own words ("Insurance", "Visa") and the ledger writes
+// registry ids ("insurance"), so both sides go through extraCategoryId() —
+// before that (2026-09-23) "Insurance" planned and "insurance" paid were two
+// rows, which nobody saw only because nothing had been paid yet.
+//
+// Paid counts the ledger rows in the one-off categories PLUS every row that
+// came from an extra (source.kind 'extra'), whatever its category: a vaccine
+// files under health, and it must still pair with the Vaccines it was planned
+// as. Since 2026-09-23 an extra with a paid-on date writes that row itself
+// (importCosts.ts), so the two columns fill from one entry.
 //
 // Mock 16 §3 (2026-09-23): a line under each row says what the paid figure is
 // ("backpack · 20 Aug") or that nothing is paid yet, in amber; the total row
@@ -43,12 +53,12 @@ export function OneOffsCard({ state, ledger, fmt, todayIso }: {
     for (const e of state.extras) {
       const value = toBase(e.amount, e.cur, rates)
       if (e.include === false) { excluded += value; excludedCount++; continue }
-      const cat = e.category || 'other'
+      const cat = extraCategoryId(e.category)
       planned[cat] = (planned[cat] ?? 0) + value
     }
     for (const e of ledger) {
       if (e.type !== 'expense' || !e.date || !isSettled(e.date, todayIso)) continue
-      if (!ONE_OFF_CATEGORIES.has(e.category)) continue
+      if (!ONE_OFF_CATEGORIES.has(e.category) && e.source?.kind !== 'extra') continue
       paid[e.category] = (paid[e.category] ?? 0) + toBase(e.amount, e.currency, rates)
       if (!last[e.category] || e.date > last[e.category].date) last[e.category] = { date: e.date, note: e.note?.trim() ?? '' }
     }
@@ -87,7 +97,7 @@ export function OneOffsCard({ state, ledger, fmt, todayIso }: {
       </div>
       {info && (
         <p className="border-b border-ln py-2.5 text-[13px] text-tx2">
-          Planned is a forecast, paid is a ledger row. The same cost can sit in both columns, so they are never added together.
+          Planned is a forecast, paid is a ledger row. The same cost can sit in both columns, so they are never added together. Give an extra its paid-on date and the paid row is written for you.
         </p>
       )}
       <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4 pt-2 text-[12px] font-semibold uppercase tracking-[.09em] text-tx3">

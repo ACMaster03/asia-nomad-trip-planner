@@ -18,6 +18,7 @@ import Preview from './Preview'
 // older, reload with ?slow=3000 and watch the console. ?screen=home renders
 // Home instead: Money paints "Loading…" until it knows today's date, Home
 // server-renders the trip document, so Home is where a mismatch shows.
+// ?screen=extras renders the Extras list (and its form) from the same fixture.
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
@@ -35,7 +36,7 @@ export default async function MoneyPreviewPage({
   qc.setQueryData(tk.trip('fixture'), fixtureTrip(new Date().toISOString().slice(0, 10)))
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <Preview screen={params.screen === 'home' ? 'home' : 'money'} />
+      <Preview screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : 'money'} />
     </HydrationBoundary>
   )
 }

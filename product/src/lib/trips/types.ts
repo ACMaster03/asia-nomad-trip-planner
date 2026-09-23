@@ -118,8 +118,13 @@ export interface Extra {
   label: string
   cur: CurrencyCode
   amount: number
+  /** the extras form's own word (Visa, Insurance, …); lib/trips/extras.ts maps it onto a ledger id */
   category?: string
   include?: boolean
+  // ISO date the card was hit. Set, the import writes the payment into the
+  // ledger itself (importCosts.ts, 2026-09-23); cleared, that row goes again.
+  // Blank = planned, not paid yet. Optional and migration-free.
+  paidOn?: string
 }
 // A reminder the user typed (handoff frames 25–26). Lives on the state JSON —
 // optional and migration-free, like autoImport/importSkip. Money deadlines
@@ -163,7 +168,7 @@ export interface LedgerEntry {
   currency: CurrencyCode
   note: string
   // Auto-imported rows only (importCosts.ts): the booking this row mirrors.
-  source?: { kind: 'stay' | 'transport'; id: string }
+  source?: { kind: 'stay' | 'transport' | 'extra'; id: string }
   // Booking vanished from the plan — row stays on the books, flagged.
   orphaned?: boolean
 }
