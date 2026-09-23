@@ -9,7 +9,7 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useToday } from '@/lib/useToday'
 import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
-import { isQuiet, type Tracking } from '@/lib/trips/tracking'
+import { hasLoggedSpending, isQuiet, type Tracking } from '@/lib/trips/tracking'
 import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
@@ -54,8 +54,9 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // moved behind an info tap (#65).
 //
 // Stage 2, round 1 (mock 16 §1–2, 23 Sep): the once-per-account question,
-// "Track what you spend on this journey?", as a sheet over the quiet page on
-// the first visit, and the quiet page itself for "Not now": the bookings, the
+// "Track what you spend on this journey?", as a sheet on the first visit (over
+// the quiet page, or over your own page if you already log costs), and the
+// quiet page itself for "Not now": the bookings, the
 // add button and one line back. The answer lives on the profile (migration 41;
 // lib/trips/tracking.ts has the four states). "Yes" is today's full page, with
 // a "Track spending" switch next to the Budget cap row; the cards that unlock
@@ -86,6 +87,12 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
 const wide = 'min-[900px]:col-span-2'
 
+// The question closed without an answer (a swipe, a tap beside it, Escape)
+// stays closed until the app is next opened. Module state rather than React
+// state, so moving between tabs does not bring it straight back, while a fresh
+// load of the app asks again.
+let questionClosedThisVisit = false
+
 export default function MoneyPage() {
   const { fmt, base } = useMoney()
   const confirm = useConfirm()
@@ -97,6 +104,7 @@ export default function MoneyPage() {
   const today = useToday()
   const track = useTrackSpending()
   const setTrack = useSetTrackSpending()
+  const [questionClosed, setQuestionClosed] = useState(() => questionClosedThisVisit)
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
   const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
@@ -139,7 +147,7 @@ export default function MoneyPage() {
   }
   if (!trip.data || !model) return <CreateTripEmptyState />
   const tracking: Tracking = answer ?? 'unknown'
-  const quiet = isQuiet(tracking)
+  const quiet = isQuiet(tracking, hasLoggedSpending(trip.data.ledger))
   const s = trip.data.state
   const ledger = trip.data.ledger
   const { current, pace, plan, bookings, projection, subs, beyond, tripEnd } = model
@@ -471,7 +479,15 @@ export default function MoneyPage() {
           onClose={() => setSubSheet(null)}
         />
       )}
-      {tracking === 'ask' && <TrackQuestion onAnswer={(yes) => setTrack.mutate(yes)} />}
+      {tracking === 'ask' && !questionClosed && (
+        <TrackQuestion
+          onAnswer={(yes) => setTrack.mutate(yes)}
+          onDismiss={() => {
+            questionClosedThisVisit = true
+            setQuestionClosed(true)
+          }}
+        />
+      )}
     </main>
   )
 }

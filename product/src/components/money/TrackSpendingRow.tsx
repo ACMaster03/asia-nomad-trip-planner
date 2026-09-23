@@ -4,14 +4,16 @@
 // 23 Sep: easier to reach here than under the avatar, where mock 16 first put
 // it). The answer is the person's, not the journey's, so switching it off
 // quiets only your own Money page; the line under it says so, because a
-// switch on a journey's page reads like a setting for everyone on it. The
-// quiet page's "Track it ›" line is the way back on.
+// switch on a journey's page reads like a setting for everyone on it. It says
+// only "Only for you.": "on every journey", true as it is, read as a
+// contradiction of the question's "this journey" (Petra, 23 Sep). The quiet
+// page's "Track it ›" line is the way back on.
 export function TrackSpendingRow({ onChange }: { onChange: (on: boolean) => void }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-[18px] py-3.5">
       <span>
         <span className="block text-base font-semibold">Track spending</span>
-        <span className="block text-[13px] text-tx2">Only for you, on every journey.</span>
+        <span className="block text-[13px] text-tx2">Only for you.</span>
       </span>
       <button
         role="switch"

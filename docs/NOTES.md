@@ -13,12 +13,13 @@ Asked for by Petra the same day, right after migration 41 went live; the globe q
 waits for a talk with Patrik.
 
 **What changed.** The first visit to Money asks, once per account, "Track what you spend on
-this journey?" in a sheet over the quiet page (`TrackQuestion.tsx`): "Log a coffee, see what
-a day here costs.", "Yes, track it", "Not now", and "Asked once. Your bookings are here either
-way." Sliding it away, tapping beside it or pressing Escape counts as Not now, because the
-question is asked once. Yes is today's full page, which gains a "Track spending" switch next
-to the Budget cap row, "Only for you, on every journey." (`TrackSpendingRow.tsx`), hidden
-while the answer cannot be read. Not now is the quiet page: the Bookings card, the add button
+this journey?" in a sheet (`TrackQuestion.tsx`): "Log a coffee, see what a day here costs.",
+"Yes, track it", "Not now", and "Asked once. Your bookings are here either way." Only the two
+buttons answer; sliding it away, tapping beside it or pressing Escape closes it until the app
+is next opened. Behind it, someone who already logs costs on the journey sees their own page
+and a newcomer sees the quiet page. Yes is today's full page, which gains a "Track spending"
+switch next to the Budget cap row, "Only for you." (`TrackSpendingRow.tsx`), hidden while the
+answer cannot be read. Not now is the quiet page: the Bookings card, the add button
 and "Spending isn't tracked on this journey. Track it ›". The page never says ledger. Saving
 a cost from the quiet page's add button turns tracking on; the form says so above its
 button, "Saving this turns on spending tracking.", and the full page opens with the cost in it.
@@ -35,20 +36,34 @@ mock put it "under your avatar", to the full Money page, where people look for i
 says the answer is personal, because a switch on a journey's page reads like a setting for
 everyone on it, and Patrik's Money page does not change when Petra flips hers.
 
+**Then she asked whether it was all intuitive, and two more things changed.** A swipe no longer
+answers: in the mock, sliding the sheet away counted as Not now ("asked once"), but panels get
+swiped away out of habit, and for Patrik and Petra the first visit would have hidden 23 days of
+spending behind the quiet page until "Track it". Now only the buttons answer, a swipe closes
+the question until the app is next opened (module state in `MoneyPage.tsx`, so moving between
+tabs does not bring it straight back), and whoever already logs costs sees their own page
+behind the question (`hasLoggedSpending`: costs typed on Money; the plan's rows do not
+count). And the switch's line lost "on every journey", which read as a contradiction of the
+question's "this journey". That sentence is Patrik's (#62) and the answer does count for every
+journey; it only shows once a second journey starts.
+
 **How the answer is read.** `profiles.track_spending`, read by `useTrackSpending` into four
 states (`lib/trips/tracking.ts`): ask, yes, no, unknown. Money waits for it only on a
 device's first visit, since it is cached and persisted like every query, and a failed read
 falls back to the full page with no question. Saving is optimistic, so the page changes shape
 at once, and a failed save puts the old answer back with the save banner.
 
-**Checked.** `tsc`; `eslint` (only the old SettingsClient error and three old warnings); 108
-node tests, two new: the four states, and which of them are quiet; `next build`. In the dev
-preview (`/dev/money-preview?track=ask|no|yes`) at iPhone 13 width, with its database calls
-held open so a save stays in flight: the question over the quiet page; Yes opens the full
-page; Not now and a tap beside the sheet close it and keep the quiet page; the quiet page
-lists no spending; its add button's form shows the note, and saving opens the full page with
-the new cost in Latest; Track it opens the full page; the switch sits under the Budget cap
-row, and switching it off gives the quiet page.
+**Checked.** `tsc`; `eslint` (only the old SettingsClient error and three old warnings); 109
+node tests, three new: the four states, which of them get the quiet page (a tracker behind the
+question does not), and which costs count as logged; `next build`. In the dev preview
+(`/dev/money-preview?track=ask|no|yes`, and `&logged=0` for a newcomer) at iPhone 13 width,
+with its database calls held open so a save stays in flight: the question over a tracker's
+own page and over a newcomer's quiet page; a tap beside it, Escape and a drag on the handle
+each close it and leave the answer unset, and it is back when the app is opened again; Yes
+opens the full page; Not now keeps the quiet page; the quiet page lists no spending; its add
+button's form shows the note, and saving opens the full page with the new cost in Latest;
+Track it opens the full page; the switch, "Only for you.", sits under the Budget cap row, and
+switching it off gives the quiet page.
 
 **Not in this round.** The cards that unlock as entries arrive and "More appears as you log"
 are round 2; the Subscriptions question on the entry sheet, the one-time offer and the

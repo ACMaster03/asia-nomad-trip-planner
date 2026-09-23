@@ -8,14 +8,20 @@ import { Sheet } from '@/app/(app)/live/Sheet'
 // app only asks for a coffee. No projections, cap or pace; those are what the
 // page grows into.
 //
-// Sliding the sheet away, tapping beside it or pressing Escape counts as "Not
-// now": the question is asked once ("Asked once. Your bookings are here either
-// way."), and the quiet page under it keeps the way back, the "Track it" line.
-// Saving a cost there turns tracking on too, and the full page carries the
-// "Track spending" switch to turn it off.
-export function TrackQuestion({ onAnswer }: { onAnswer: (track: boolean) => void }) {
+// Only the two buttons answer. Sliding the sheet away, tapping beside it or
+// pressing Escape just closes it, and it comes back the next time the app is
+// opened (Petra, 23 Sep, before this merged: panels get swiped away out of
+// habit, and a swipe that saved "Not now" would have made a tracker's whole
+// spending seem to vanish on the first visit). Once answered it is never
+// asked again ("Asked once. Your bookings are here either way."); the quiet
+// page's "Track it" line, a cost saved there, and the full page's "Track
+// spending" switch change the answer later.
+export function TrackQuestion({ onAnswer, onDismiss }: {
+  onAnswer: (track: boolean) => void
+  onDismiss: () => void
+}) {
   return (
-    <Sheet label="Track what you spend on this journey?" onClose={() => onAnswer(false)}>
+    <Sheet label="Track what you spend on this journey?" onClose={onDismiss}>
       <div className="flex items-start gap-3">
         <span aria-hidden className="flex size-[42px] flex-none items-center justify-center rounded-[20px] bg-ac-soft text-ac">
           <Wallet className="size-5" />
