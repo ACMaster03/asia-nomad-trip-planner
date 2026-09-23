@@ -68,7 +68,7 @@ switching it off gives the quiet page.
 **Live with #79; on the phone, and one more move.** Petra's test on the phone passed at every
 step: the question over her own page, a swipe only closing it, the question back after
 reopening the app, Not now giving the quiet page, Track it bringing the full page back, and
-the switch under the Budget cap row. Then she moved the switch: at the bottom, next to the
+the switch under the Budget cap row. Then she moved the switch (#80): at the bottom, next to the
 Budget cap row, you had to scroll to nearly the end to notice it exists. It now sits right
 under the first card on both versions, one control in one place: under the overview on the
 full page, on, "Only for you."; under the Bookings card on the quiet page, off, "Spending isn't
