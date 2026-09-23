@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ChevronRight, Plus } from 'lucide-react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
@@ -10,17 +11,14 @@ import { useTripRole } from '@/lib/trips/useTripRole'
 import { useToday } from '@/lib/useToday'
 import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
 import { hasLoggedSpending, isQuiet, type Tracking } from '@/lib/trips/tracking'
-import { planImports, sourceKey } from '@/lib/trips/importCosts'
+import { usePlanSync } from '@/lib/trips/usePlanSync'
 import { moneyModel } from '@/lib/trips/moneyModel'
-import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
-import { countryCurrencies } from '@/lib/catalogue/countryCurrencies'
 import { addDays } from '@/lib/trips/spending'
 import { moneyUnlocks, moreLine } from '@/lib/trips/unlocks'
 import { categoryLabel } from '@/lib/trips/categories'
 import { tripDay } from '@/lib/trips/progress'
 import { useConfirm } from '@/components/Confirm'
-import { useToast } from '@/components/Toast'
-import { nightsBetween, toBase } from '@/lib/trips/format'
+import { nightsBetween } from '@/lib/trips/format'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -30,10 +28,9 @@ import { BookingsCard } from './BookingsCard'
 import { SubscriptionsCard } from './SubscriptionsCard'
 import { SubscriptionSheet } from './SubscriptionSheet'
 import { OneOffsCard } from './OneOffsCard'
-import { LedgerList } from './LedgerList'
 import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
-import { EntrySheet } from './EntrySheet'
+import { EntryEditor } from './EntryEditor'
 import { TrackQuestion } from './TrackQuestion'
 import { TrackSpendingRow } from './TrackSpendingRow'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
@@ -83,9 +80,9 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // in practice, which is how #35 came to be filed about a card (PlanCard's
 // residual line) that had existed the whole time.
 //
-// Past 900px the cards pair into two columns, with the overview and the ledger
-// spanning both. DOM order IS page order, so the grid never reorders anything
-// and the phone reading order survives.
+// Past 900px the cards pair into two columns, with the overview spanning
+// both. DOM order IS page order, so the grid never reorders anything and the
+// phone reading order survives.
 //
 // Every figure is derived from the ledger and the plan you already keep
 // (lib/trips/spending.ts, moneyModel.ts). The one thing this page stores is a
@@ -101,9 +98,9 @@ const wide = 'min-[900px]:col-span-2'
 let questionClosedThisVisit = false
 
 export default function MoneyPage() {
-  const { fmt, base } = useMoney()
+  const { fmt } = useMoney()
   const confirm = useConfirm()
-  const toast = useToast()
+  const router = useRouter()
   const { trip, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
   const stateMut = useTripMutation()
@@ -117,28 +114,9 @@ export default function MoneyPage() {
   const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
   const [range, setRange] = useState<Range>(14)
   const [end, setEnd] = useState<string | null>(null)
-  const [reveal, setReveal] = useState<{ date: string; n: number } | null>(null)
 
-  // Plan → ledger sync (importCosts.ts). Converges: every upsert is
-  // deterministic, so once the refetched document matches the plan this
-  // returns three empty arrays and the effect below no-ops.
-  const imp = useMemo(() => (trip.data ? planImports(trip.data.state, trip.data.ledger) : null), [trip.data])
-  const autoImport = trip.data?.state.autoImport
-  useEffect(() => {
-    if (!imp) return
-    // A viewer must never trigger this: the writes would all bounce off RLS and
-    // paint a save-error banner every time they merely OPENED the Money screen.
-    if (!canEdit) return
-    // Corrections to already-imported rows always apply (one-way sync + orphan
-    // flags, and the removal of an extra's row once its paid-on date is
-    // cleared). NEW rows flow automatically too unless the user switched that
-    // off: a booked stay with a charge date IS money spent (owner review
-    // 2026-09-12). `false` is the only value that keeps the ask-first card.
-    const ops = [...imp.updates, ...imp.orphans, ...(autoImport !== false ? imp.candidates : [])]
-    ops.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
-    imp.removals.forEach((entry) => mut.mutate({ kind: 'delete', id: entry.id }))
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is stable; imp derives from trip.data
-  }, [imp, autoImport, canEdit])
+  // Plan → ledger sync, shared with the Ledger screen (usePlanSync).
+  const imp = usePlanSync(trip.data, canEdit, mut)
 
   const model = useMemo(
     () => (trip.data && today ? moneyModel(trip.data.state, trip.data.ledger, cityIdx, today) : null),
@@ -202,9 +180,9 @@ export default function MoneyPage() {
     setEnd(next >= today ? null : next)
   }
   const rangeLabel = `${unlocks.range ? range : windowDays} days`
-  // The ledger is paged now, so a tapped bar has to page it far enough down
-  // before it can scroll — LedgerList owns both halves of that.
-  const scrollToDay = (date: string) => setReveal((r) => ({ date, n: (r?.n ?? 0) + 1 }))
+  // A tapped bar's "Show all in the ledger" opens the Ledger screen at that
+  // day; the list there pages far enough down to scroll to it.
+  const showDay = (date: string) => router.push(`/money/ledger?day=${date}`)
 
   const plannedNights = plan.reduce((a, p) => a + p.nights, 0)
   const cap = s.meta.budgetCap || 0
@@ -214,67 +192,8 @@ export default function MoneyPage() {
   // over a figure invented before departure. This one is a ceiling you set.
   const capPct = cap > 0 ? Math.round((projection.spent / cap) * 100) : 0
   const overCap = cap > 0 && projection.spent > cap
-  const lastCur = ledger.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).find((e) => e.type === 'expense')?.currency ?? base
   const beyondNames = beyond.rows.slice(0, 3).map((r) => categoryLabel(r.category).toLowerCase()).join(', ')
-  // A new entry opens on the money you are actually holding today. `current` is
-  // the stop that contains today's date, so this is empty before departure and
-  // on the days between stops, and the sheet falls back to what you last typed.
-  const hereCodes = countryCurrencies(current?.country)
-  const entryCur = pickEntryCurrency({
-    hereCodes,
-    watched: Object.keys(s.rates ?? {}),
-    lastUsed: lastCur,
-    base,
-  })
 
-  function save(entry: LedgerEntry) {
-    const isNew = !sheet?.entry
-    mut.mutate({ kind: 'upsert', entry })
-    setSheet(null)
-    // The two-second confirmation (mock 16 §3): what landed, so nobody scrolls to check.
-    // On the quiet page, logging a cost is the answer: saving one turns
-    // tracking on, so a cost you add is never hidden (Petra, 23 Sep). The form
-    // says so above its button, and the full page opens with the cost in it.
-    if (quiet && isNew) setTrack.mutate(true)
-    toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
-  }
-  async function del(entry: LedgerEntry) {
-    const listedExtra = entry.source?.kind === 'extra' ? s.extras.find((x) => x.id === entry.source!.id) : undefined
-    if (listedExtra) {
-      // The paid-on date IS this row (importCosts.ts): clear the date and the
-      // reconcile effect above deletes the row — one write, no skip record,
-      // and setting the date again brings the payment back.
-      const ok = await confirm({
-        title: 'Remove this payment?',
-        body: `“${listedExtra.label}” goes back to not paid on the Trip page. Give it a paid-on date again to bring the payment back.`,
-        confirmLabel: 'Remove',
-      })
-      if (!ok) return
-      stateMut.mutate((cur) => ({
-        ...cur,
-        extras: cur.extras.map((x) => (x.id === listedExtra.id ? { ...x, paidOn: undefined } : x)),
-      }))
-    } else if (entry.source) {
-      // Without the skip record, reconcile would resurrect the row next visit.
-      const ok = await confirm({
-        title: 'Remove this imported cost?',
-        body: 'The booking stays on the Trip page, but it won’t be re-imported here.',
-        confirmLabel: 'Remove',
-      })
-      if (!ok) return
-      const key = sourceKey(entry.source)
-      // Persist the skip BEFORE deleting: a ledger refetch landing between the
-      // two writes would otherwise re-import the row.
-      stateMut.mutate(
-        (cur) => ({ ...cur, importSkip: [...new Set([...(cur.importSkip ?? []), key])] }),
-        { onSuccess: () => mut.mutate({ kind: 'delete', id: entry.id }) },
-      )
-    } else {
-      if (!(await confirm({ title: 'Delete this entry?' }))) return
-      mut.mutate({ kind: 'delete', id: entry.id })
-    }
-    setSheet(null)
-  }
   function importNow() {
     if (!imp) return
     imp.candidates.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
@@ -437,7 +356,7 @@ export default function MoneyPage() {
 
       <LatestStrip entries={ledger} rates={s.rates} fmt={fmt} todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} />
 
-      {canEdit && imp && imp.candidates.length > 0 && autoImport === false && (
+      {canEdit && imp && imp.candidates.length > 0 && s.autoImport === false && (
         <div className={'lv-enter rounded-[var(--r)] bg-sf p-4 ' + wide}>
           <div className="text-base font-semibold">Import {imp.candidates.length} cost{imp.candidates.length > 1 ? 's' : ''} from the Trip page?</div>
           <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date, and extras with a paid-on date, can sit in the ledger as rows kept in sync with the Trip page.</p>
@@ -451,7 +370,7 @@ export default function MoneyPage() {
         <DailySpendChart
           ledger={ledger} rates={s.rates} from={from} to={to} todayIso={today} tripStart={tripStart}
           range={chartRange} onRange={(r) => { setRange(r); setEnd(null) }} onPage={page} canBack={canBack} canFwd={canFwd}
-          fmt={fmt} onShowDay={scrollToDay} controls={unlocks.range}
+          fmt={fmt} onShowDay={showDay} controls={unlocks.range}
         />
       )}
       {unlocks.where && <WhereItGoes ledger={ledger} rates={s.rates} from={from} to={to} fmt={fmt} rangeLabel={rangeLabel} />}
@@ -489,13 +408,18 @@ export default function MoneyPage() {
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
+      {/* The ledger is a screen of its own (Petra, 23 Sep): as the last card
+          it was over a third of this page. One row here, and Latest's
+          "all entries", lead to it; Latest shows nothing on a journey whose
+          only rows are bookings, so this row is the way in that always exists. */}
       {unlocks.first && (
-        <div id="ledger" className={wide + ' scroll-mt-4'}>
-          <LedgerList
-            entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
-            canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal}
-          />
-        </div>
+        <Link href="/money/ledger" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
+          <span>
+            <span className="block text-base font-semibold">Ledger</span>
+            <span className="block text-[14px] text-tx2">{ledger.length} {ledger.length === 1 ? 'entry' : 'entries'}, newest first</span>
+          </span>
+          <ChevronRight aria-hidden className="size-5 text-ac2" />
+        </Link>
       )}
       {/* The last line of an early page says what is still to come, so the
           missing cards are neither a mystery nor hidden behind a menu. */}
@@ -504,15 +428,18 @@ export default function MoneyPage() {
       )}
 
       {sheet && (
-        <EntrySheet
+        <EntryEditor
           initial={sheet.entry}
-          ledger={ledger}
-          rates={s.rates}
-          defaultCur={entryCur}
-          defaultCurWhere={hereCodes.includes(entryCur) ? current?.country : null}
-          onSave={save}
-          onDelete={sheet.entry ? del : undefined}
+          trip={trip.data}
+          todayIso={today}
+          mut={mut}
+          stateMut={stateMut}
           onClose={() => setSheet(null)}
+          // On the quiet page, logging a cost is the answer: saving one turns
+          // tracking on, so a cost you add is never hidden (Petra, 23 Sep). The
+          // form says so above its button, and the full page opens with the
+          // cost in it.
+          onAdded={quiet ? () => setTrack.mutate(true) : undefined}
           note={quiet && !sheet.entry ? 'Saving this turns on spending tracking.' : undefined}
         />
       )}

@@ -7,7 +7,7 @@ import { useEffect } from 'react'
 // Screen DATA comes from the persisted TanStack cache; this covers the shells.
 // /live is gone (it redirects), and a redirected response is skipped by the
 // worker anyway, so warming it only ever cost a round trip.
-const ROUTES = ['/dashboard', '/itinerary', '/money', '/map', '/knowledge', '/settings']
+const ROUTES = ['/dashboard', '/itinerary', '/money', '/money/ledger', '/map', '/knowledge', '/settings']
 
 export function OfflineWarmup() {
   useEffect(() => {

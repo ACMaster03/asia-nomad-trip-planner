@@ -4,6 +4,7 @@ import { MoneyProvider } from '@/lib/trips/Money'
 import { ConfirmProvider } from '@/components/Confirm'
 import { ToastProvider } from '@/components/Toast'
 import MoneyPage from '@/components/money/MoneyPage'
+import LedgerPage from '@/components/money/LedgerPage'
 import DashboardClient from '@/app/(app)/dashboard/DashboardClient'
 import { ExtrasTab } from '@/components/trips/ExtrasTab'
 
@@ -15,7 +16,7 @@ import { ExtrasTab } from '@/components/trips/ExtrasTab'
 // CLOSED, so without it every destructive action in this preview silently
 // declined and looked like a dead button. A harness that cannot test a delete
 // is not the harness for the screen with the deletes on it.
-export default function Preview({ screen }: { screen: 'money' | 'home' | 'extras' }) {
+export default function Preview({ screen, show }: { screen: 'money' | 'home' | 'extras' | 'ledger'; show?: string }) {
   return (
     <TripScopeProvider initialTripId="fixture" initialRole="owner">
       <MoneyProvider initialBase="HUF">
@@ -24,7 +25,8 @@ export default function Preview({ screen }: { screen: 'money' | 'home' | 'extras
             <div className="pb-20">
               {screen === 'home' ? <DashboardClient userEmail="dev@example.com" userName="Dev" />
                 : screen === 'extras' ? <ExtrasTab />
-                  : <MoneyPage />}
+                  : screen === 'ledger' ? <LedgerPage day={show} />
+                    : <MoneyPage />}
             </div>
           </ToastProvider>
         </ConfirmProvider>
