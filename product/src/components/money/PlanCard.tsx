@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { Info } from 'lucide-react'
 import type { StopPlan, BookingRow, Projection } from '@/lib/trips/spending'
 import type { TripState } from '@/lib/trips/types'
 
@@ -39,6 +40,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
 }) {
   const [open, setOpen] = useState<string | null>(null)
   const [sum, setSum] = useState(false)
+  const [info, setInfo] = useState(false)
   const plannedNights = plan.reduce((a, p) => a + p.nights, 0)
   const stops = plan.reduce((a, p) => a + p.projected, 0)
   const transportTotal = transport.filter((r) => r.status !== 'unbooked').reduce((a, r) => a + r.amount, 0)
@@ -56,9 +58,22 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
 
   return (
     <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-4 text-tx">
-      <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Plan</div>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Plan</span>
+        {/* What this card IS, behind a tap (#65). Petra, 23 Sep, on the opened sums: "is
+            everything I see here already booked?" No: it is a forecast, and the card has to
+            be able to say so without a paragraph on its face. */}
+        <button type="button" aria-label="What the plan is" aria-expanded={info} onClick={() => setInfo((v) => !v)} className="-m-2 flex size-11 items-center justify-center text-tx3">
+          <Info aria-hidden className="size-[18px]" />
+        </button>
+      </div>
       <div className="mt-0.5 text-[26px] font-semibold leading-[1.15] tracking-[-.02em]">{paceKnown ? '≈ ' : ''}{fmt(projection.projected)}</div>
       <div className="text-[13px] text-tx2">Projected total · {plannedNights} planned nights, {paceKnown ? 'at this pace' : 'city averages'}</div>
+      {info && (
+        <p className="mt-2 rounded-[var(--rCtl)] bg-inp px-3.5 py-2.5 text-[13px] leading-snug text-tx2">
+          A forecast for the whole journey, not a bill. It adds what you have spent, what is booked, and a guess for what is still to come: the nights ahead at your pace, a stay at the price you found or the city&rsquo;s average, the subscriptions until the end. What is booked is in Bookings.
+        </p>
+      )}
       <div className="mt-2.5">
         {plan.length === 0 && <p className="border-t border-ln py-3 text-base text-tx2">No stops in the plan yet.</p>}
         {plan.map((p) => {
