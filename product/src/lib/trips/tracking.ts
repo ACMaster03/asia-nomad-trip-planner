@@ -1,5 +1,3 @@
-import type { LedgerEntry } from './types'
-
 // === Money's once-per-account question (mock 16 §1–2, #62; migration 41) ===
 //
 // profiles.track_spending holds the person's answer to "Track what you spend
@@ -8,7 +6,8 @@ import type { LedgerEntry } from './types'
 //   ask      null: not asked yet. The question shows, as a sheet over the
 //            quiet page, and sliding it away counts as "Not now".
 //   yes      true, "Yes, track it": the full page.
-//   no       false, "Not now": the quiet page, the bookings and what you add.
+//   no       false, "Not now": the quiet page, the bookings, the add button
+//            and the way back, and no spending shown.
 //   unknown  nothing readable: signed out, offline with nothing cached, or a
 //            database without migration 41. The full page as before and no
 //            question: Money never blocks on this answer.
@@ -21,12 +20,5 @@ export function trackingOf(value: unknown): Tracking {
   return 'unknown'
 }
 
-/** The quiet page shows the bookings card and nothing else of the plan. */
+/** The quiet page shows the Bookings card, the add button and the way back; no spending. */
 export const isQuiet = (t: Tracking) => t === 'ask' || t === 'no'
-
-// The quiet page's list is what the person added: entries typed on Money, and
-// an extra's payment written from its paid-on date. A booked stay's or fare's
-// row is already counted by the Bookings card above it, so listing it again
-// would show the same money twice on a page of two things.
-export const quietEntries = (ledger: LedgerEntry[]) =>
-  ledger.filter((e) => !e.source || e.source.kind === 'extra')

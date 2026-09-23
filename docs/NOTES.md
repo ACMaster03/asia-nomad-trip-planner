@@ -17,11 +17,16 @@ this journey?" in a sheet over the quiet page (`TrackQuestion.tsx`): "Log a coff
 a day here costs.", "Yes, track it", "Not now", and "Asked once. Your bookings are here either
 way." Sliding it away, tapping beside it or pressing Escape counts as Not now, because the
 question is asked once. Yes is today's full page. Not now is the quiet page: the Bookings
-card, the add button, "Spending isn't tracked on this journey. Track it ›", and a list titled
-Spending with what the person added, typed entries and extras' payments (a booked stay's or
-fare's row stays in the Bookings card only, not twice). The page never says ledger. The
-Account page, behind the Home avatar, gains a Money card with a "Track spending" switch
-(`TrackSpendingCard.tsx`), hidden while the answer cannot be read.
+card, the add button and "Spending isn't tracked on this journey. Track it ›". The page never
+says ledger. The Account page, behind the Home avatar, gains a Money card with a "Track
+spending" switch (`TrackSpendingCard.tsx`), hidden while the answer cannot be read.
+
+**Changed before the merge (Petra, looking at the pictures).** The mock's list of what you
+add after saying no, titled Spending, is gone: spending listed right under "Spending isn't
+tracked on this journey" made no sense, and for anyone who logged before saying no it was
+the whole ledger again. The add button stays, as #62 decided; what you add is kept and shows
+once you track, and the quiet page's save confirmation says so: "Added · 950 Ft · shows once
+you track spending".
 
 **How the answer is read.** `profiles.track_spending`, read by `useTrackSpending` into four
 states (`lib/trips/tracking.ts`): ask, yes, no, unknown. Money waits for it only on a
@@ -29,12 +34,13 @@ device's first visit, since it is cached and persisted like every query, and a f
 falls back to the full page with no question. Saving is optimistic, so the page changes shape
 at once, and a failed save puts the old answer back with the save banner.
 
-**Checked.** `tsc`; `eslint` (only the old SettingsClient error and three old warnings); 109
-node tests, three new: the four states, which of them are quiet, and which entries the quiet
-list shows; `next build`. In the dev preview (`/dev/money-preview?track=ask|no|yes`, and
-`?screen=track` for the switch) at iPhone 13 width: the question over the quiet page; Yes
-opens the full page; Not now and a tap beside the sheet close it and keep the quiet page;
-Track it opens the full page; the switch flips and its line follows.
+**Checked.** `tsc`; `eslint` (only the old SettingsClient error and three old warnings); 108
+node tests, two new: the four states, and which of them are quiet; `next build`. In the dev
+preview (`/dev/money-preview?track=ask|no|yes`, and `?screen=track` for the switch) at
+iPhone 13 width: the question over the quiet page; Yes opens the full page; Not now and a tap
+beside the sheet close it and keep the quiet page; the quiet page lists no spending, and a
+cost added there confirms "shows once you track spending"; Track it opens the full page; the
+switch flips and its line follows.
 
 **Not in this round.** The cards that unlock as entries arrive and "More appears as you log"
 are round 2; the Subscriptions question on the entry sheet, the one-time offer and the

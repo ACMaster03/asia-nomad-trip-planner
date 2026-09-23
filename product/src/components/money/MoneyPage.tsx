@@ -9,7 +9,7 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useToday } from '@/lib/useToday'
 import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
-import { isQuiet, quietEntries, type Tracking } from '@/lib/trips/tracking'
+import { isQuiet, type Tracking } from '@/lib/trips/tracking'
 import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
@@ -55,7 +55,7 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // Stage 2, round 1 (mock 16 §1–2, 23 Sep): the once-per-account question,
 // "Track what you spend on this journey?", as a sheet over the quiet page on
 // the first visit, and the quiet page itself for "Not now": the bookings, the
-// add button, what you added, and one line back. The answer lives on the
+// add button and one line back. The answer lives on the
 // profile (migration 41; lib/trips/tracking.ts has the four states). "Yes"
 // is today's full page; the cards that unlock as entries arrive are round 2.
 //
@@ -185,7 +185,12 @@ export default function MoneyPage() {
     mut.mutate({ kind: 'upsert', entry })
     setSheet(null)
     // The two-second confirmation (mock 16 §3): what landed, so nobody scrolls to check.
-    toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
+    const amount = fmt(toBase(entry.amount, entry.currency, s.rates))
+    // On the quiet page nothing lists what you add, so the confirmation says
+    // where it went (Petra, 23 Sep, before round 1 merged).
+    toast(quiet
+      ? `Added · ${amount} · shows once you track spending`
+      : `${isNew ? 'Added' : 'Saved'} · ${amount} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
   }
   async function del(entry: LedgerEntry) {
     const listedExtra = entry.source?.kind === 'extra' ? s.extras.find((x) => x.id === entry.source!.id) : undefined
@@ -287,10 +292,15 @@ export default function MoneyPage() {
       {quiet ? (
         // The quiet page (mock 16 §2): the Bookings card is the whole page,
         // because "what have we committed to" is the one money question someone
-        // who does not track still has. The add button stays; what you add
-        // lands in a list under the bookings and nowhere else: no chart, no pace,
-        // no projection, and adding one does not flip the answer. The page
-        // never says ledger, opt-in or analytics; it says bookings and spending.
+        // who does not track still has. The page never says ledger, opt-in or
+        // analytics; it says bookings and spending.
+        //
+        // No list of spending under the line, although the mock had one for
+        // what you add after saying no. Petra, 23 Sep, before this merged: a
+        // list of spending right under "Spending isn't tracked on this journey"
+        // makes no sense, and for anyone who logged before saying no it was
+        // the whole ledger again. The add button stays (#62); what you add is
+        // kept and shows once you track, and the save confirmation says so.
         <>
           <BookingsCard
             stays={bookings.stays} transport={bookings.transport}
@@ -306,15 +316,6 @@ export default function MoneyPage() {
             <span>Spending isn&apos;t tracked on this journey.</span>
             <b className="whitespace-nowrap text-ac2-deep">Track it ›</b>
           </button>
-          {quietEntries(ledger).length > 0 && (
-            <div id="ledger" className={wide + ' scroll-mt-4'}>
-              <LedgerList
-                title="Spending"
-                entries={quietEntries(ledger)} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
-                canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })}
-              />
-            </div>
-          )}
         </>
       ) : (
       <>
