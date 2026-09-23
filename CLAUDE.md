@@ -41,10 +41,20 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Petra applied it in the Supabase SQL editor, guided. Round 1 of the
   stage 2 app code, the question and the quiet page, went live with #79;
   #80 puts the Track spending switch right under the first card of both
-  versions. Round 2, the cards that unlock as entries arrive, is #81, for
-  journeys made after it (older ones keep every card); round 3
+  versions. Round 2, the cards that unlock as entries arrive, went live
+  with #81 for journeys made after it (older ones keep every card); round 3
   (subscriptions, the One-offs editor on Money) follows. As built, every
   existing account is asked the question once; Patrik can change that.
+- Money is getting shorter (Petra, 23 Sep: about seven phone screens, the
+  ledger alone over a third of it). Step 1 is #82, approved by Patrik: the
+  ledger gets its own screen, named All entries (Petra's pick; Patrik
+  wanted a plainer word than ledger), at `/money/entries`. Scheduled
+  payments fold into one line there, and month totals count only what is
+  spent. It closes #38. Step 2, folding Bookings, Subscriptions, One-offs
+  and Plan to one line each, gets decided once step 1 is on the phone.
+- Next, in its own pull request: Home's money card follows Money's
+  projection rule (Petra, 23 Sep). A new journey shows only what is spent
+  until the projection unlocks; older journeys keep what they show.
 - Decided by Patrik on 23 Sep: the Plan card's per-night line is gone (#78),
   and the globe question (#63, the timeline as a sheet over the globe) is
   Petra's to decide.

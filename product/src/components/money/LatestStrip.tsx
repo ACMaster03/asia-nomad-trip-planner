@@ -1,12 +1,14 @@
 'use client'
+import Link from 'next/link'
 import { categoryLabel } from '@/lib/trips/categories'
 import { toBase } from '@/lib/trips/format'
 import type { LedgerEntry } from '@/lib/trips/types'
 
 // Latest — the last three entries YOU LOGGED, right under the overview (mock
 // 16 §3, Petra, round 1: after adding an entry she scrolled to the bottom of
-// the page to check it had landed). Three rows and a link to the full ledger,
-// which stays last (#38) so the cards between them are not buried again.
+// the page to check it had landed). Three rows and a link to the full list,
+// which has had a screen of its own since 23 Sep, All entries (Petra: the page
+// was too long, and the ledger alone was over a third of it).
 //
 // Imported bookings are left out (Petra, 23 Sep, on the live page): they are
 // not something you just did, and they are dated by their charge date, which
@@ -41,7 +43,7 @@ export function LatestStrip({ entries, rates, fmt, todayIso, canEdit, onEdit }: 
     <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-1 pt-1.5 text-tx">
       <div className="flex items-center justify-between border-b border-ln py-2.5">
         <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Latest</span>
-        <a href="#ledger" className="text-[13px] text-tx3">all entries ↓</a>
+        <Link href="/money/entries" className="text-[13px] text-tx3">all entries ›</Link>
       </div>
       {rows.map(({ e }) => (
         <button

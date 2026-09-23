@@ -72,7 +72,7 @@ export function OneOffsCard({ state, ledger, fmt, todayIso }: {
       </div>
       {info && (
         <p className="border-b border-ln py-2.5 text-[13px] text-tx2">
-          Planned is a forecast, paid is a ledger row. The same cost can sit in both columns, so they are never added together. Paid also counts payments you never planned, like bank fees. Give an extra its paid-on date and the paid row is written for you.
+          Planned is a forecast, paid is an entry in All entries. The same cost can sit in both columns, so they are never added together. Paid also counts payments you never planned, like bank fees. Give an extra its paid-on date and the paid entry is written for you.
         </p>
       )}
       <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4 pt-2 text-[12px] font-semibold uppercase tracking-[.09em] text-tx3">

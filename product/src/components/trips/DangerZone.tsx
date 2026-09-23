@@ -220,7 +220,7 @@ export function DangerZone({ tripName }: { tripName: string }) {
           {open === 'trip' && (
             <ConfirmFlow
               title="Delete this trip?"
-              explanation="Everything in it goes for everyone on the trip: stops, stays, transport, extras and the whole ledger, along with every photo and follow link."
+              explanation="Everything in it goes for everyone on the trip: stops, stays, transport, extras and every money entry, along with every photo and follow link."
               phrase={tripName}
               label={
                 <>

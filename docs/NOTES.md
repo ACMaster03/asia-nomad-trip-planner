@@ -7,6 +7,80 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-23
 
+### BUILT — Money gets shorter, step 1: the ledger on its own screen, All entries (Petra, 23 Sep)
+
+Petra, looking at the round 2 pictures before that merge, had two findings. First, the
+ledger's top was confusing: "I expect to see my added expenses and incomes there but it
+starts with something else entirely". Second, the page was "so so long… future users will
+think of it as boring". Measured on Asia at phone width, the page was 5 813 px, about 7
+screens:
+
+- the ledger alone was 2 080 px (36%);
+- the four planning cards (Bookings, Subscriptions, One-offs, Plan) were 32%;
+- the overview, Latest, the chart and Where it goes were 24%.
+
+Pull request #82. It also closes #38, Patrik's issue of 19 Sep about the ledger burying the
+cards below it, which already named this fix: "give it its own route and leave a summary row
+on the Money page".
+
+**Decided (Patrik, 23 Sep, after Petra showed him the pictures).** He loves the change: the
+ledger can and should get its own screen, and it gets a plainer name than ledger, a word Petra
+had not met before. Offered "All entries" (the words Latest's link and the + button already
+use) or "History", Petra chose **All entries**. Recorded on #38.
+
+**What changed.**
+
+- **The ledger has a screen of its own**, All entries at `/money/entries`. Its header reads
+  "‹ Money", "All entries", "Asia · 43 entries · tap a row to edit". Three ways lead to it:
+  - Latest's "all entries ›";
+  - a one-line "All entries · 43, newest first ›" row at the bottom of Money. This is the way
+    in that always exists, because Latest shows nothing on a journey whose only rows are
+    bookings;
+  - a chart bar's "Open in All entries", which opens the screen at that day (`?day=`).
+- **The word ledger is gone from the screens.** Beyond Money and All entries, it was in the
+  One-offs ⓘ ("paid is a ledger row", now "an entry in All entries"), on Home after a trip
+  ("the full ledger, month by month", now "all entries, month by month", linking to All
+  entries), in the delete-journey warning, in the welcome questions ("shared ledger", now
+  "shared costs") and on the delete-account page. The code keeps the word: the data is still
+  `trips.ledger`. **Left for Patrik:** the Terms and Privacy pages say "your money ledger";
+  they are legal texts.
+- **Rows edit and delete there exactly as on Money.** The sheet, with what saving and
+  deleting mean, moved into `EntryEditor.tsx`. The plan → ledger sync moved into
+  `usePlanSync.ts`, and both screens run it, so a one-off's payment removed on All entries
+  disappears there, not only on the next visit to Money. Adding stays on Money. The
+  screen is in the offline warm-up list.
+- **Money is 3 807 px, about 4.5 screens** (from 6.9).
+- **The ledger opens on what was logged.** Rows dated after today fold into one closed line at
+  the top, "Scheduled · 1 payment · 433 840 Ft". Opened, it lists them soonest first, with
+  "Dated after today, so not counted as spent yet." The "Today" band is gone.
+- **Fixed on the way, a mistake live since 15 Sep (0446093).** The month total counted the
+  scheduled rows while the box beside it said "not counted as spent". September on Asia's test
+  data showed 563 548 Ft, of which 433 840 Ft was the stay charged on 29 Sep. It shows
+  129 708 Ft now: month and day totals count only rows up to today (`lib/trips/ledgerView.ts`).
+
+**Checked.**
+
+- `tsc`; `eslint` (the same four old findings); `next build`.
+- 122 node tests, three new: the scheduled stay folded away and counted in no total; soonest
+  first, with today counted as spent; no single total when an income is scheduled.
+- In the dev preview (`?screen=entries`, `&show=YYYY-MM-DD`) at iPhone 13 width:
+  - Money's height;
+  - the All entries row and Latest's link go to the new screen;
+  - the chart's link goes to the screen at that day (`?day=2026-09-23`);
+  - All entries opens on the closed Scheduled line, then September 129 708 Ft, then today,
+    and the line opens;
+  - a tapped row opens the sheet;
+  - `?show=2026-09-05` opens the screen scrolled to that day;
+  - removing "Visas · TH ext, VN e-visa ×2" (from Extras) asks "Remove this payment?", and the
+    row goes.
+
+**Before the merge.** Patrik saw the pictures first, because the ledger leaving the Money page
+changes how he uses it every day too, and approved (above).
+
+**Step 2, not started.** If Money still feels long on the phone, Bookings, Subscriptions,
+One-offs and Plan become one-line summaries that open on tap, which could bring the page to
+about 3 screens. This gets decided once step 1 is on the phone.
+
 ### BUILT — Money stage 2, round 2: the cards arrive as entries do (mock 16 §6)
 
 Asked for by Petra the same day, after #80. Pull request #81.
@@ -58,11 +132,34 @@ this pace the journey uses 77% of it", the mock's own number; today (an older jo
 card, the switch included. In the browser's saved copy: day 4 saves chart and Where it goes,
 day 9 adds the projection, the older journey saves nothing.
 
+**Live with #81.** Petra gave her go on 23 Sep, and the production build finished without errors.
+She checked Asia on her phone: it looks the same, every card still there.
+
+**Petra's question before the merge: why does the Plan only come up after day 9?** It comes on
+day 8, after 7 days in Bangkok; the pictures jump from day 4 to day 9, the mock's days. It waits
+because every figure on it is the stay plus the daily pace times the nights, and the first days
+run high: 24 739 Ft a day on day 4, 15 274 Ft on day 8, 5 401 Ft on day 24. Her point stands for
+a journey still being planned. The card is called Plan, yet Money now shows no estimate for the
+whole journey until day 8 of the trip; before round 2 it showed one from city averages. The
+proposal for Patrik was the Plan card from day one on city averages, labelled so, switching to
+"at this pace" after the week. **Withdrawn the same day (Claude's correction).** Home already
+shows an "Estimated total" from city averages before departure ("city averages, not your
+numbers"), so a journey being planned has its estimate. The Plan card keeps waiting a week, and
+there was nothing for Patrik to decide.
+
 **Still to say (Patrik).** Only the 7 days is his (22 Sep); the chart at 3 days, the switch at
 14 days, Where it goes at 3 families and "a card never disappears" are the mock's proposals.
-Home's money card still says "Spent X of ≈ Y projected" from day one, while Money waits 7 days
-for its projection. And whether journeys made before round 2 should start short too (as built,
-they keep every card).
+And whether journeys made before round 2 should start short too (as built, they keep every
+card).
+
+**Home's money card, decided by Petra on 23 Sep** (Patrik: "we can continue on"). It still
+says "Spent X of ≈ Y projected" from day one, while Money waits 7 days for its projection. It
+follows Money's rule, in its own pull request after #82. On a new journey:
+- days 1–2: "Spent X so far · measuring your daily pace";
+- days 3–7: the daily figure, like Money's Per day, and "a projection after a week";
+- from the unlock: as today.
+
+Older journeys keep what they show.
 
 **Not in this round.** The one-line Subscriptions door on a journey longer than a month, the
 Subscriptions question on the entry sheet, the one-time offer and the One-offs editor on Money

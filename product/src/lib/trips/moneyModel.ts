@@ -11,7 +11,7 @@ import { subsCharges } from './subscriptions'
 export function moneyModel(state: TripState, ledger: LedgerEntry[], cityIdx: Record<string, CityCost>, todayIso: string) {
   const budget = computeBudget(state, cityIdx)
   const inPlan = state.segments.filter((s) => s.include !== false).slice().sort((a, b) => a.arrive.localeCompare(b.arrive))
-  const current: Segment | null = inPlan.find((s) => s.arrive <= todayIso && todayIso <= s.depart) ?? null
+  const current = currentStop(state, todayIso)
   const pace = tripPace(state, ledger, todayIso, current)
   const plan = planByStop(state, ledger, budget.perSeg, todayIso, pace.perDay)
   const bookings = bookingsSummary(state, ledger)
@@ -38,3 +38,11 @@ export function moneyModel(state: TripState, ledger: LedgerEntry[], cityIdx: Rec
   return { budget, inPlan, current, pace, plan, bookings, projection, subs, subCharges, beyond, tripEnd }
 }
 export type MoneyModel = ReturnType<typeof moneyModel>
+
+/** The stop that contains today, in plan order: none before departure and between stops. */
+export function currentStop(state: TripState, todayIso: string): Segment | null {
+  return state.segments
+    .filter((s) => s.include !== false)
+    .sort((a, b) => a.arrive.localeCompare(b.arrive))
+    .find((s) => s.arrive <= todayIso && todayIso <= s.depart) ?? null
+}
