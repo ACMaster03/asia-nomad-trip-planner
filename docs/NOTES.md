@@ -58,6 +58,22 @@ Deadlines row in Trip settings (#60's second door).
 (12 new, `timeline.test.ts`), `next build` green, and phone-width screenshots of the
 timeline in both themes and of every sheet from the preview.
 
+**Day one on the phone (Petra, iPhone 13, 23 Sep, after the merge).** Three findings, three
+fixes in the follow-up pull request: (1) no sheet could be dismissed on the phone, a tall
+sheet leaves almost no scrim to tap and there was no other way out, so every Trip sheet
+now carries a ✕ and `Sheet.tsx` closes on a drag of the handle past 80 px (a shorter drag
+springs back); (2) the Hanoi → Hong Kong flight sat under the timeline as "not on a leg"
+with no way forward, because Hong Kong is not a stop yet and a leg only exists between two
+consecutive stops: the entry's sheet now says so, offers "+ Add Hong Kong as a stop"
+(Add stop opens with the city, its country from the catalogue and the flight's day filled
+in) and "move it onto a leg", and the list under the timeline explains itself in one line;
+(3) the chart's average was hidden behind a tall bar (#66): the number now sits in the
+card's title line, "10 Sep – 23 Sep · avg 13 098 Ft a day", as mock 16 §4 decided, and the
+in-plot label is gone. Two more observations belong to the Money build (mock 16, not
+started): the budget line still shows the cap amount squeezed on the right, and the page
+carries too much text. Extras being reachable only from the Money One-offs card is the
+design, until that card grows its own editor.
+
 ### MOCKED — the two mocks the product review put first: Trip timeline + globe sheet (#58, #63) and Money's quiet start (#62, #59, with #60's stay form)
 
 Round 1, on the shipped tokens, in `design/mocks/15-trip-timeline.html` and

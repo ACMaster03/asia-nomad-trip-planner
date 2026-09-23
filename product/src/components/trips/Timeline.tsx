@@ -48,7 +48,7 @@ import { fmtDay, fmtHours, kicker } from './sheetKit'
 // shell (§2) waits on the phone test recorded in docs/NOTES.md.
 
 type SheetState =
-  | { kind: 'stop'; seg: Segment | null }
+  | { kind: 'stop'; seg: Segment | null; prefill?: { city: string; arrive?: string } }
   | { kind: 'stay'; seg: Segment; stay: Stay | null; range: NightRange | null }
   | { kind: 'leg'; leg: Leg | null; entry: TransportLeg | null }
   | null
@@ -170,12 +170,12 @@ function LegStrip({ leg, entry, todayIso, fmt, rates, canEdit, onOpen }: {
           {cap(entry.type)}
           {entry.date ? ` · ${fmtDay(entry.date)}` : ''}
           {entry.time ? ` ${entry.time}` : ''}
-          {!leg ? ` · ${entry.from} → ${entry.to}` : ''}
         </span>
       </span>
       {price ? <span className="text-base font-semibold tabular-nums">{price}</span> : <span />}
       {/* The connection is a place you pass through, drawn on the globe as a dogleg with the hours on it (#58). Its own line, so the price never squeezes it. */}
       <span className="col-span-2 block truncate text-[13px] text-tx2">
+        {!leg ? `${entry.from} → ${entry.to} · ` : ''}
         {entry.via ? `via ${entry.via}${entry.hours ? ` · ${fmtHours(entry.hours)}` : ''} · ` : ''}
         <span className={TONE[money.tone]}>{money.label}</span>
       </span>
@@ -465,7 +465,10 @@ export function Timeline() {
       {tl.orphans.length > 0 && (
         <section className="mt-5">
           <div className={kicker}>Transport not on a leg</div>
-          <div className="mt-2 flex flex-col gap-1.5">
+          <p className={'mt-1 mb-2 text-[13px] text-tx2'}>
+            A leg runs between two stops that follow each other. These go to or from a city that is not a stop yet; tap one to add that stop or to move it onto a leg.
+          </p>
+          <div className="flex flex-col gap-1.5">
             {tl.orphans.map((t) => (
               <LegStrip key={t.id} leg={null} entry={t} todayIso={todayIso} fmt={fmt} rates={s.rates} canEdit={canEdit} onOpen={(e) => setSheet({ kind: 'leg', leg: null, entry: e })} />
             ))}
@@ -476,6 +479,7 @@ export function Timeline() {
       {sheet?.kind === 'stop' && (
         <StopSheet
           initial={sheet.seg}
+          prefill={sheet.prefill}
           cities={cities.data ?? []}
           stays={sheet.seg ? s.stays.filter((x) => x.segId === sheet.seg!.id) : []}
           cityCost={sheet.seg ? cityIdx[sheet.seg.city] : undefined}
@@ -498,7 +502,18 @@ export function Timeline() {
         <StaySheet initial={sheet.stay} seg={sheet.seg} range={sheet.range} rates={s.rates} currencies={currencies} onClose={close} onSave={saveStay} onDelete={sheet.stay ? deleteStay : undefined} />
       )}
       {sheet?.kind === 'leg' && (
-        <LegSheet leg={sheet.leg} initial={sheet.entry} rates={s.rates} currencies={currencies} onClose={close} onSave={saveLeg} onRemove={sheet.entry ? removeLeg : undefined} />
+        <LegSheet
+          leg={sheet.leg}
+          initial={sheet.entry}
+          rates={s.rates}
+          currencies={currencies}
+          legs={tl.legs}
+          stops={tl.stops}
+          onClose={close}
+          onSave={saveLeg}
+          onRemove={sheet.entry ? removeLeg : undefined}
+          onAddStop={(prefill) => setSheet({ kind: 'stop', seg: null, prefill })}
+        />
       )}
     </main>
   )
