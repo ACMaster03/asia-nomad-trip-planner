@@ -12,7 +12,9 @@ import { lockBodyScroll } from '@/lib/scrollLock'
 // 2026-09-23, the first day of the timeline: "I cannot slide it down, I have
 // to quit the app"): tap the scrim, press Escape, or drag the handle down. The
 // drag lives on the handle zone only, so it never fights the sheet's own
-// scrolling; past 80px the sheet closes, short of it it springs back.
+// scrolling; past 80px the sheet closes, short of it it springs back. No ✕:
+// Petra tried one the same day and asked for the handle alone, two ways to
+// close on one sheet read as two versions of the sheet.
 export function Sheet({
   label,
   onClose,

@@ -125,3 +125,12 @@ test('shiftDepartures moves only the entries leaving that city on the old date',
   assert.deepEqual(out.map((x) => x.date), ['2026-10-01', '2026-10-02', '2026-09-30'])
   assert.equal(shiftDepartures(t, 'Bangkok', '2026-09-30', '2026-09-30'), t)
 })
+
+test('a transport entry finds its leg when one name is the other plus a word: "Hong Kong" and "Hong Kong Island"', () => {
+  const tl = buildTimeline(state({
+    segments: [seg('han', 'Hanoi', '2026-09-30', '2026-12-02'), seg('hk', 'Hong Kong Island', '2026-12-02', '2026-12-10')],
+    transport: [leg('f', 'Hanoi', 'Hong Kong', { status: 'booked', date: '2026-12-02' })],
+  }))
+  assert.equal(tl.orphans.length, 0)
+  assert.equal(tl.legs.find((l) => l.to.city === 'Hong Kong Island')?.booked?.id, 'f')
+})

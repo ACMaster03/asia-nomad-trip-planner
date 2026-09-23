@@ -19,13 +19,12 @@ export function loadMapOpts(): MapOpts {
 }
 export function saveMapOpts(o: MapOpts) { try { localStorage.setItem(LS, JSON.stringify(o)) } catch {} }
 
-import { normCity } from './norm'
+import { normCity, sameCity } from './norm'
 export { normCity }
 export const isBooked = (t?: TransportLeg | null) => !!(t && (t.status === 'booked' || t.status === 'chosen'))
 
 export function flightFor(transport: TransportLeg[], aCity: string, bCity: string) {
-  const na = normCity(aCity), nb = normCity(bCity)
-  const m = transport.filter((t) => normCity(t.from) === na && normCity(t.to) === nb)
+  const m = transport.filter((t) => sameCity(t.from, aCity) && sameCity(t.to, bCity))
   if (!m.length) return null
   return m.find(isBooked) ?? m.find((t) => t.include) ?? m[0]
 }

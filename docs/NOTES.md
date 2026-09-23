@@ -67,9 +67,14 @@ with no way forward, because Hong Kong is not a stop yet and a leg only exists b
 consecutive stops: the entry's sheet now says so, offers "+ Add Hong Kong as a stop"
 (Add stop opens with the city, its country from the catalogue and the flight's day filled
 in) and "move it onto a leg", and the list under the timeline explains itself in one line;
-(3) the chart's average was hidden behind a tall bar (#66): the number now sits in the
-card's title line, "10 Sep – 23 Sep · avg 13 098 Ft a day", as mock 16 §4 decided, and the
-in-plot label is gone. Two more observations belong to the Money build (mock 16, not
+(3) the chart's average was hidden behind a tall bar (#66): the number now sits at the top
+right of the chart, above the tallest bar, where nothing can cover it. Round two, same day,
+after the fixes went live: the ✕ goes again, two ways to close on one sheet read as two
+versions of it, the handle and the scrim stay; "Hong Kong" now finds the stop "Hong Kong
+Island" (`sameCity` in `lib/map/norm.ts`: one name is the other plus more words, used by the
+timeline and the globe alike; the "move it onto a leg" picker stays for the rest); and the
+average, first moved to the title line as mock 16 §4 had decided, moved on to the corner of
+the chart because the title line got too busy. Mock 16 §4 updated to match. Two more observations belong to the Money build (mock 16, not
 started): the budget line still shows the cap amount squeezed on the right, and the page
 carries too much text. Extras being reachable only from the Money One-offs card is the
 design, until that card grows its own editor.

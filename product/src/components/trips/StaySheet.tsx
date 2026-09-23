@@ -5,7 +5,7 @@ import { useMoney } from '@/lib/trips/Money'
 import { nightsBetween, toBase } from '@/lib/trips/format'
 import { addDays, stateOf, stayRange, type NightRange } from '@/lib/trips/timeline'
 import type { Segment, Stay } from '@/lib/trips/types'
-import { Chips, CloseButton, StateChips, Toggle, addLink, chipCls, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
+import { Chips, StateChips, Toggle, addLink, chipCls, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
 
 // Add / edit a stay (mock 15 §5, #60). Opened from a stop's "+ Add stay",
 // from a stay row, or from an amber "No bed" row with those nights already
@@ -95,11 +95,8 @@ export function StaySheet({
     <Sheet label={initial ? 'Edit stay' : 'Add stay'} onClose={onClose}>
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-[22px] font-semibold">{initial ? 'Edit stay' : 'Add stay'}</h3>
-        <span className="flex min-w-0 items-center gap-3">
-          <span className="truncate rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink">
-            {seg.city} · {fmtDay(checkIn)} – {fmtDay(checkOut)}
-          </span>
-          <CloseButton onClose={onClose} />
+        <span className="min-w-0 truncate rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink">
+          {seg.city} · {fmtDay(checkIn)} – {fmtDay(checkOut)}
         </span>
       </div>
       <label className={label}>
