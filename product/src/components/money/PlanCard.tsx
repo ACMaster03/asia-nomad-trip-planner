@@ -41,9 +41,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
   const [sum, setSum] = useState(false)
   const plannedNights = plan.reduce((a, p) => a + p.nights, 0)
   const stops = plan.reduce((a, p) => a + p.projected, 0)
-  const draftTotal = plan.filter((p) => p.stayLabel === 'draft').reduce((a, p) => a + p.stay, 0)
   const transportTotal = transport.filter((r) => r.status !== 'unbooked').reduce((a, r) => a + r.amount, 0)
-  const booked = transport.length - unbooked
   const lastDepart = plan.reduce((m, p) => (p.seg.depart > m ? p.seg.depart : m), '')
   const planShort = !!state.meta.endDate && !!lastDepart && lastDepart < state.meta.endDate
   const stayWord = (p: StopPlan) =>
@@ -124,12 +122,10 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
         {sum && (
           <div className="mb-2 rounded-[var(--rCtl)] bg-inp px-3.5 py-2">
             {/* Four things that add up, nothing else (Petra, 23 Sep: "so many things"). The
-                not-booked amount is a note under the first, not a fifth row: it is inside it. */}
+                stays nobody booked are said on their own city rows, in amber, not repeated
+                here: a note about them next to "transport booked" read as a contradiction. */}
             <div className={words}><span>The cities above</span><b className="text-tx">{fmt(stops)}</b></div>
-            {draftTotal > 0 && (
-              <div className="-mt-1 pb-1 text-[13px] text-warn">{fmt(draftTotal)} of that is for stays not booked yet.</div>
-            )}
-            <div className={words}><span>Transport booked{booked ? `, ${booked} ${booked === 1 ? 'leg' : 'legs'}` : ''}</span><b className="text-tx">{fmt(transportTotal)}</b></div>
+            <div className={words}><span>Transport</span><b className="text-tx">{fmt(transportTotal)}</b></div>
             {projection.residual !== 0 && (
               <div className={words}><span>Everything else you logged</span><b className="text-tx">{fmt(projection.residual)}</b></div>
             )}
