@@ -90,7 +90,6 @@ export function BookingsCard({ stays, transport, paid, toPay, draftedStays, draf
           <ChevronRight aria-hidden className="size-5 text-ac2" />
         </span>
       </div>
-      <p className="mt-1.5 text-[13px] text-tx2">Every stay and leg, and the editing, is on the Trip page.</p>
     </Link>
   )
 }

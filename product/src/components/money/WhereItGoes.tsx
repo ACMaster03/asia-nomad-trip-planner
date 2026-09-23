@@ -80,7 +80,6 @@ export function WhereItGoes({ ledger, rates, from, to, fmt, rangeLabel }: {
           </table>
         </>
       )}
-      <p className="mt-2 text-[12px] text-tx3">Stays, flights, gear, subscriptions and fees are counted in Bookings and Plan, not here, because they don’t say what a day costs.</p>
     </div>
   )
 }

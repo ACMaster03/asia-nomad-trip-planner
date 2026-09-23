@@ -26,15 +26,19 @@ Petra is new to software work; Patrik is not. The product conventions are in
 - He decides product questions. Record decisions in `docs/NOTES.md` and on the
   GitHub issue that holds the topic.
 
-## Pull request #68, the Trip timeline build
+## Where the work stands (23 Sep)
 
-- Not merged on 22 Sep, on Patrik's instruction. On 23 Sep, merge it together
-  with Petra and guide her through testing it: explain merge → Vercel
-  production build → livhold.com, watch the build finish, walk the Trip page
-  with her on her iPhone 13 (the timeline, the stop editor, Add stay with the
-  deadlines, transport on a leg), and record what she finds in
-  `docs/NOTES.md`. Say before merging that Vercel's instant rollback restores
-  the previous deployment if something is wrong.
+- The Trip timeline (mock 15 §1, §4, §5, §6) is live: pull request #68 was
+  merged with Petra on 23 Sep, then #71 and #72 with her findings from the
+  phone. Every merge followed the validation step above and a guided test on
+  livhold.com; findings are in `docs/NOTES.md`.
+- The Money page (mock 16) is the next build, in two stages: stage 1, the
+  calmer page (no data change), then stage 2, the quiet start, which needs a
+  `profiles` column for the once-per-account answer, a migration Patrik
+  applies in the Supabase dashboard.
+- Merges happen together with whoever is here, the same way: say what
+  changes and what could go wrong, get a "go", merge, watch the Vercel build,
+  test on livhold.com, record.
 - No hourly check-ins on pull requests unless someone asks for them.
 
 ## Running the checks

@@ -2,6 +2,7 @@
 import { TripScopeProvider } from '@/lib/trips/TripScope'
 import { MoneyProvider } from '@/lib/trips/Money'
 import { ConfirmProvider } from '@/components/Confirm'
+import { ToastProvider } from '@/components/Toast'
 import MoneyPage from '@/components/money/MoneyPage'
 import DashboardClient from '@/app/(app)/dashboard/DashboardClient'
 
@@ -18,9 +19,11 @@ export default function Preview({ screen }: { screen: 'money' | 'home' }) {
     <TripScopeProvider initialTripId="fixture" initialRole="owner">
       <MoneyProvider initialBase="HUF">
         <ConfirmProvider>
-          <div className="pb-20">
-            {screen === 'home' ? <DashboardClient userEmail="dev@example.com" userName="Dev" /> : <MoneyPage />}
-          </div>
+          <ToastProvider>
+            <div className="pb-20">
+              {screen === 'home' ? <DashboardClient userEmail="dev@example.com" userName="Dev" /> : <MoneyPage />}
+            </div>
+          </ToastProvider>
         </ConfirmProvider>
       </MoneyProvider>
     </TripScopeProvider>
