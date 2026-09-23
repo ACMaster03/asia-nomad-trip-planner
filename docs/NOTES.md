@@ -14,7 +14,7 @@ when a decision needs to survive the conversation it was made in.
   review of 19 Sep for comparing cities. Petra found it confusing on the phone and would drop
   it; Patrik let it go. It was the only all-in nightly figure in the app: the stay sheet's
   nightly price is the stay alone. Removed in #78, the pull request that carries migration 41,
-  so it goes live with that merge. Recorded on #62.
+  so it went live with that merge; Petra confirmed it on the phone. Recorded on #62.
 - **Version A of #63, the timeline as a sheet over the globe, is Petra's to decide.** What the
   phone test argued for is in the MOCKED entry of 22 Sep: the timeline as its own page (live
   since #68), the globe staying on Map, and "the globe sleeps behind the sheet" as a
