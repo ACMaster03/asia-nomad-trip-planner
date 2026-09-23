@@ -69,7 +69,7 @@ and the e-visas; both rows landed in the ledger, and the One-offs card read "Ins
 e-visas entry is not there, but when I click on Edit extras, it's there." The numbers were
 right (the heading is the category, and insurance and visas are one category, so the row
 held both); the card hid it three ways: the phone cut the heading, the line under it named
-only the latest payment, and that line was cut too. The card now lists, under each heading,
+only the latest payment, and that line was cut too. The card now (#75) lists, under each heading,
 every extra of that category by name with where it stands ("paid 12 Aug", "scheduled
 2 Oct", "not paid yet" in amber, "switched off" when unticked but paid), and one line for
 the payments typed on Money ("Osprey backpack · logged 20 Aug", or "… and 2 more · last
