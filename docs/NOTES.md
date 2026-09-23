@@ -79,6 +79,18 @@ numbers. One rule changed with it: an extra that is unticked but paid is listed 
 in Paid, never in Planned, and the "switched off" note at the bottom counts only unticked
 extras that are unpaid, so its "no total here counts" stays true.
 
+**On the phone after #75 (Petra, 23 Sep).** Both extras listed under "Insurance & visas"
+with their dates (insurance paid 6 Aug, e-visas paid 15 Sep), the heading whole on two
+lines, and "Bank transaction fee and 1 more · last logged 18 Sep" under Fees & cash. Her
+question: why the Total row's two numbers differ (290 304 Ft planned, 295 070 Ft paid). The
+gap, 4 766 Ft, is the two bank fees: paid on Money, never on the Extras list, so they sit in
+Paid with a dash under Planned. That is the card working as designed (two columns, never
+one total; the gap is the number worth seeing), but the Total row invites the question, and
+the ⓘ text did not answer it: it explained that one cost can sit in both columns, not that
+Paid also holds payments nobody planned. Offered to leave it or add one sentence to ⓘ, Petra
+chose the sentence: "Paid also counts payments you never planned, like bank fees." It sits
+after "…never added together", so the card stays as quiet as before until ⓘ is tapped.
+
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
 (mock 16 §6, projection after seven days), the one-line Subscriptions door on a journey
