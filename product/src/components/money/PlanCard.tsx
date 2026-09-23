@@ -1,37 +1,33 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { ChevronDown, Info } from 'lucide-react'
 import type { StopPlan, BookingRow, Projection } from '@/lib/trips/spending'
 import type { TripState } from '@/lib/trips/types'
 
-// Plan · by stop — honest about time. A stop you're in: what you've spent
-// there plus the nights left at your pace. A future stop: its stay plus nights
-// × your pace (city average until you have a pace). The mauve bands are the
-// only numbers that matter at a glance.
+// Plan — the forecast, led by its one number (mock 16 §5, 2026-09-23).
 //
-// Round three (owner review, 2026-09-19): the row now carries a PER-NIGHT
-// average and the arithmetic moved behind a tap. Hanoi at 22 900/night against
-// Kuala Lumpur at 19 700 is the comparison that matters — the totals are not
-// comparable at all, because the nights differ. Three lines of arithmetic under
-// every row said the same thing the Bookings card and the ledger already said.
+// The card opens with the projected total, then one short line per city
+// (Petra, round 1: "so many informations that I don't even want to read
+// it"). A tap on a city opens its sum in words, three lines that add up to
+// the row's number: what you already spent here, the nights still to come at
+// your pace, the whole stay already paid. Round three's per-night comparison
+// (owner review, 2026-09-19: Hanoi at 22 900 a night against Kuala Lumpur at
+// 19 700 is what matters) closes the opened sum. Transport, one-offs and the
+// rest sit behind "How it adds up". The Add-the-next-stop row is the one
+// forward nudge on the page and points at Trip.
 //
-// This card is a FORECAST, so a drafted stay still shapes it — a price someone
-// found beats a city average, and for a city outside the catalogue it is the
-// only number there is. It is never reported as money owed; the Bookings card
-// above is where committed money is counted.
-//
-// A drafted stop is marked STRUCTURALLY, not with a symbol (owner review
-// 2026-09-15): "≈" already means rounded in one place and estimated in
-// another, so it cannot also mean "this booking does not exist". The row gets
-// the warn tint, a dashed rule top and bottom, a DRAFT chip and an amber
-// figure, and the stops subtotal says how much of itself is not booked.
+// This card is a FORECAST, so a drafted stay still shapes it — a price
+// someone found beats a city average, and for a city outside the catalogue
+// it is the only number there is. It is never reported as money owed; the
+// Bookings card is where committed money is counted. A stay nobody booked is
+// said in amber, "stay not booked", the colour for what still needs doing.
 
 const d = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-const band = 'mt-1.5 -mx-[18px] flex items-center justify-between gap-3 bg-ac2-soft px-[18px] py-3 text-base font-semibold text-ac2-deep'
-const draftRow = '-mx-[18px] my-1.5 border-y-[1.5px] border-dashed border-warn-line bg-warn-soft px-[18px]'
-const draftChip = 'flex-none rounded-full border-[1.4px] border-warn-line px-2 py-[1px] text-[11px] font-bold uppercase tracking-[.08em] text-warn'
+const row = 'flex w-full items-start justify-between gap-3 border-t border-ln py-2.5 text-left'
+const words = 'flex items-baseline justify-between gap-3 py-1 text-[13px] text-tx2'
 
-export function PlanCard({ plan, transport, projection, state, fmt, todayIso, unbooked }: {
+export function PlanCard({ plan, transport, projection, state, fmt, todayIso, unbooked, paceKnown }: {
   plan: StopPlan[]
   transport: BookingRow[]
   projection: Projection
@@ -39,119 +35,126 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
   fmt: (n: number) => string
   todayIso: string
   unbooked: number
+  /** a pace exists (three days in the stop); before that the rows rest on city averages */
+  paceKnown: boolean
 }) {
   const [open, setOpen] = useState<string | null>(null)
+  const [sum, setSum] = useState(false)
+  const [info, setInfo] = useState(false)
+  const plannedNights = plan.reduce((a, p) => a + p.nights, 0)
   const stops = plan.reduce((a, p) => a + p.projected, 0)
-  // How much of the subtotal rests on stays nobody has booked — the question
-  // the chip makes you ask, answered where the number is.
-  const draftTotal = plan.filter((p) => p.stayLabel === 'draft').reduce((a, p) => a + p.stay, 0)
   const transportTotal = transport.filter((r) => r.status !== 'unbooked').reduce((a, r) => a + r.amount, 0)
-  const booked = transport.length - unbooked
   const lastDepart = plan.reduce((m, p) => (p.seg.depart > m ? p.seg.depart : m), '')
   const planShort = !!state.meta.endDate && !!lastDepart && lastDepart < state.meta.endDate
-  const stayText = (p: StopPlan) =>
-    p.stayLabel === 'booked' ? 'stay booked'
-      : p.stayLabel === 'unpaid' ? 'stay chosen, unpaid'
-      : p.stayLabel === 'draft' ? 'stay not booked · forecast only'
-      : p.stayLabel === 'estimate' ? 'no stay yet · city average'
-      : 'no stay yet'
+  const stayWord = (p: StopPlan) =>
+    p.stayLabel === 'booked' ? <>stay paid</>
+      : p.stayLabel === 'unpaid' ? <>stay booked</>
+      : p.stayLabel === 'draft' ? <span className="text-warn">stay not booked</span>
+      : <span className="text-warn">no stay yet</span>
+  const stayLine = (p: StopPlan) =>
+    p.stayLabel === 'booked' ? 'The whole stay, already paid'
+      : p.stayLabel === 'unpaid' ? 'The whole stay, booked'
+      : 'The stay, not booked'
 
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-1.5 text-tx">
-      <div className="flex items-center justify-between border-b border-ln py-2.5">
-        <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Plan · by stop</span>
-        <span className="text-[13px] text-tx3">tap a row for the maths</span>
+    <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-4 text-tx">
+      <div className="flex items-center gap-1.5">
+        <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Plan</span>
+        {/* What this card IS, behind a tap (#65). Petra, 23 Sep, on the opened sums: "is
+            everything I see here already booked?" No: it is a forecast, and the card has to
+            be able to say so without a paragraph on its face. */}
+        <button type="button" aria-label="What the plan is" aria-expanded={info} onClick={() => setInfo((v) => !v)} className="-m-2 flex size-11 items-center justify-center text-tx3">
+          <Info aria-hidden className="size-[18px]" />
+        </button>
       </div>
-      {plan.length === 0 && <p className="py-3 text-base text-tx2">No stops in the plan yet.</p>}
-      {plan.map((p) => {
-        const live = p.seg.arrive <= todayIso && todayIso <= p.seg.depart
-        const draft = p.stayLabel === 'draft'
-        const perNight = p.nights > 0 ? p.projected / p.nights : 0
-        const shown = open === p.seg.id
-        return (
-          <div key={p.seg.id} className={draft ? draftRow : ''}>
-            <div
-              role="button"
-              tabIndex={0}
-              aria-expanded={shown}
-              onClick={() => setOpen(shown ? null : p.seg.id)}
-              onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); setOpen(shown ? null : p.seg.id) } }}
-              className={'flex cursor-pointer items-start justify-between gap-3 py-2.5' + (draft ? '' : ' border-t border-ln')}
-            >
-              <span className="min-w-0">
-                <span className="flex items-center gap-2 text-base font-semibold">
-                  <span className="truncate">{p.seg.city}</span>
-                  {draft && <span className={draftChip}>draft</span>}
-                </span>
-                <span className={'block text-[14px] ' + (draft ? 'text-warn' : 'text-tx2')}>
-                  {p.nights} nights{perNight > 0 ? ` · ${fmt(perNight)}/night` : ''}
-                  {live ? ` · ${p.nightsIn} in` : p.nightsIn >= p.nights && p.nights > 0 ? ' · done' : ` · from ${d(p.seg.arrive)}`}
-                </span>
-              </span>
-              <span className={'flex-none text-base font-semibold' + (draft ? ' text-warn' : '')}>
-                {p.remaining > 0 && p.rateSrc === 'catalogue' ? '≈ ' : ''}{fmt(p.projected)}
-              </span>
-            </div>
-            {shown && (
-              <div className={'mb-2.5 rounded-[var(--rCtl)] px-3.5 py-3 text-[13px] leading-[1.7] ' + (draft ? 'bg-sf' : 'bg-inp') + (draft ? ' text-warn' : ' text-tx2')}>
-                <div>{stayText(p)}</div>
-                {p.stay > 0 && (
-                  <div>Stay <b className="text-tx">{fmt(p.stay)}</b>{draft ? ' (not booked)' : ''}</div>
-                )}
-                {p.spent > 0 && <div>+ logged here <b className="text-tx">{fmt(p.spent)}</b></div>}
-                {p.remaining > 0 && (
-                  <div>
-                    + {p.remaining} {p.remaining === 1 ? 'night' : 'nights'} left × {fmt(p.rate)}
-                    {p.rateSrc === 'catalogue' ? ' (city average)' : ' at your pace'} <b className="text-tx">{fmt(p.remaining * p.rate)}</b>
-                  </div>
-                )}
-                <div className="mt-1 border-t border-ln pt-1">
-                  = <b className="text-tx">{fmt(p.projected)}</b> over {p.nights} nights ·{' '}
-                  <b className="text-tx">{fmt(perNight)}</b>/night
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      })}
-      {planShort && (
-        <Link href="/itinerary" className="flex items-center justify-between gap-3 border-t border-ln py-2.5">
-          <span><span className="block text-base font-semibold">Add the next stop</span><span className="block text-[14px] text-tx2">the plan ends {d(lastDepart)}; the trip ends {d(state.meta.endDate!)}</span></span>
-          <span className="text-ac2">›</span>
-        </Link>
-      )}
-      <div className={band + ' rounded-[12px]'}><span>Stops subtotal</span><span>{fmt(stops)}</span></div>
-      {draftTotal > 0 && (
-        <p className="pt-2 text-[13px] text-warn">
-          Includes <b>{fmt(draftTotal)}</b> for {plan.filter((x) => x.stayLabel === 'draft').length === 1 ? 'a stay that is' : 'stays that are'} not booked.
+      <div className="mt-0.5 text-[26px] font-semibold leading-[1.15] tracking-[-.02em]">{paceKnown ? '≈ ' : ''}{fmt(projection.projected)}</div>
+      <div className="text-[13px] text-tx2">Projected total · {plannedNights} planned nights, {paceKnown ? 'at this pace' : 'city averages'}</div>
+      {info && (
+        <p className="mt-2 rounded-[var(--rCtl)] bg-inp px-3.5 py-2.5 text-[13px] leading-snug text-tx2">
+          A forecast for the whole journey, not a bill. It adds what you have spent, what is booked, and a guess for what is still to come: the nights ahead at your pace, a stay at the price you found or the city&rsquo;s average, the subscriptions until the end. What is booked is in Bookings.
         </p>
       )}
-      <div className="flex items-start justify-between gap-3 pt-3 pb-2.5">
-        <span><span className="block text-base font-semibold">Transport</span><span className="block text-[14px] text-tx2">{booked} booked{unbooked ? ` · ${unbooked} still to book` : ''}</span></span>
-        <span className="flex-none text-base font-semibold">{fmt(transportTotal)}</span>
+      <div className="mt-2.5">
+        {plan.length === 0 && <p className="border-t border-ln py-3 text-base text-tx2">No stops in the plan yet.</p>}
+        {plan.map((p) => {
+          const live = p.seg.arrive <= todayIso && todayIso <= p.seg.depart
+          const shown = open === p.seg.id
+          const perNight = p.nights > 0 ? p.projected / p.nights : 0
+          return (
+            <div key={p.seg.id}>
+              <button type="button" aria-expanded={shown} onClick={() => setOpen(shown ? null : p.seg.id)} className={row}>
+                <span className="min-w-0">
+                  <span className="block truncate text-base font-semibold">{p.seg.city}</span>
+                  <span className="block text-[14px] text-tx2">
+                    {p.nights} nights{live ? ` · ${p.nightsIn} in` : ''} · {stayWord(p)}
+                  </span>
+                </span>
+                <span className="flex flex-none items-center gap-1">
+                  <span className={'text-base font-semibold' + (p.stayLabel === 'draft' ? ' text-warn' : '')}>
+                    {p.remaining > 0 ? '≈ ' : ''}{fmt(p.projected)}
+                  </span>
+                  {/* The one sign that a row opens (Petra, 23 Sep: nothing told a first-time user). */}
+                  <ChevronDown aria-hidden className={'size-4 text-tx3 transition-transform duration-[180ms]' + (shown ? ' rotate-180' : '')} />
+                </span>
+              </button>
+              {shown && (
+                <div className="mb-2.5 rounded-[var(--rCtl)] bg-inp px-3.5 py-2">
+                  {p.spent > 0 && (
+                    <div className={words}><span>Already spent here, {p.nightsIn} {p.nightsIn === 1 ? 'night' : 'nights'}</span><b className="text-tx">{fmt(p.spent)}</b></div>
+                  )}
+                  {p.remaining > 0 && (
+                    <div className={words}>
+                      <span>
+                        {p.remaining} more {p.remaining === 1 ? 'night' : 'nights'}{' '}
+                        {p.rateSrc === 'pace' ? `at your pace, ${fmt(p.rate)} a day` : `at the city average, ${fmt(p.rate)} a night`}
+                      </span>
+                      <b className="text-tx">{fmt(p.remaining * p.rate)}</b>
+                    </div>
+                  )}
+                  {p.stay > 0 && (
+                    <div className={words + (p.stayLabel === 'draft' ? ' text-warn' : '')}><span>{stayLine(p)}</span><b className={p.stayLabel === 'draft' ? '' : 'text-tx'}>{fmt(p.stay)}</b></div>
+                  )}
+                  {/* The three lines above add up to this; then what that is a night (owner review, 2026-09-19),
+                      said as a sentence (Petra, 23 Sep: two bare numbers on one line did not explain themselves). */}
+                  <div className={words + ' border-t border-ln'}><span>Together</span><b className="text-tx">{fmt(p.projected)}</b></div>
+                  {perNight > 0 && <div className="pb-1 text-[13px] text-tx3">{fmt(perNight)} for each of the {p.nights} nights.</div>}
+                </div>
+              )}
+            </div>
+          )
+        })}
+        {planShort && (
+          <Link href="/itinerary" className={row}>
+            <span><span className="block text-base font-semibold">Add the next stop</span><span className="block text-[14px] text-tx2">the plan ends {d(lastDepart)}; the journey ends {d(state.meta.endDate!)}</span></span>
+            <span className="text-ac2">›</span>
+          </Link>
+        )}
+        <button type="button" aria-expanded={sum} onClick={() => setSum((v) => !v)} className={row}>
+          <span>
+            <span className="block text-base font-semibold">How it adds up</span>
+            <span className="block text-[14px] text-tx2">
+              transport, one-offs{unbooked > 0 && <> · <span className="text-warn">{unbooked} {unbooked === 1 ? 'leg' : 'legs'} to book</span></>}
+            </span>
+          </span>
+          <ChevronDown aria-hidden className={'mt-1 size-4 flex-none text-tx3 transition-transform duration-[180ms]' + (sum ? ' rotate-180' : '')} />
+        </button>
+        {sum && (
+          <div className="mb-2 rounded-[var(--rCtl)] bg-inp px-3.5 py-2">
+            {/* Four things that add up, nothing else (Petra, 23 Sep: "so many things"). The
+                stays nobody booked are said on their own city rows, in amber, not repeated
+                here: a note about them next to "transport booked" read as a contradiction. */}
+            <div className={words}><span>The cities above</span><b className="text-tx">{fmt(stops)}</b></div>
+            <div className={words}><span>Transport</span><b className="text-tx">{fmt(transportTotal)}</b></div>
+            {projection.residual !== 0 && (
+              <div className={words}><span>Everything else you logged</span><b className="text-tx">{fmt(projection.residual)}</b></div>
+            )}
+            {projection.subsAhead > 0 && (
+              <div className={words}><span>Subscriptions still to come</span><b className="text-tx">{fmt(projection.subsAhead)}</b></div>
+            )}
+            <div className={words + ' border-t border-ln font-semibold text-ac2-deep'}><span>Together, the projected total</span><b>{fmt(projection.projected)}</b></div>
+          </div>
+        )}
       </div>
-      {projection.residual !== 0 && (
-        <div className="flex items-start justify-between gap-3 border-t border-ln pt-2.5 pb-2.5">
-          <span>
-            <span className="block text-base font-semibold">Everything else logged</span>
-            {/* #35's correction: this is projection.residual — spend MINUS what the
-                stops and paid bookings account for. Naming three categories made
-                it read as a category total, which it has never been. */}
-            <span className="block text-[14px] text-tx2">gear, insurance, fees and days between stops · a remainder, not a category total</span>
-          </span>
-          <span className="flex-none text-base font-semibold">{fmt(projection.residual)}</span>
-        </div>
-      )}
-      {projection.subsAhead > 0 && (
-        <div className="flex items-start justify-between gap-3 border-t border-ln pt-2.5 pb-2.5">
-          <span>
-            <span className="block text-base font-semibold">Subscriptions ahead</span>
-            <span className="block text-[14px] text-tx2">the recurring ones from home, to the end of the trip</span>
-          </span>
-          <span className="flex-none text-base font-semibold">{fmt(projection.subsAhead)}</span>
-        </div>
-      )}
-      <div className={band + ' -mb-2 rounded-t-[12px] rounded-b-[var(--r)]'}><span>Projected total</span><span>{fmt(projection.projected)}</span></div>
     </div>
   )
 }

@@ -16,6 +16,8 @@ import { addDays } from '@/lib/trips/spending'
 import { categoryLabel } from '@/lib/trips/categories'
 import { tripDay } from '@/lib/trips/progress'
 import { useConfirm } from '@/components/Confirm'
+import { useToast } from '@/components/Toast'
+import { toBase } from '@/lib/trips/format'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -26,6 +28,7 @@ import { SubscriptionsCard } from './SubscriptionsCard'
 import { SubscriptionSheet } from './SubscriptionSheet'
 import { OneOffsCard } from './OneOffsCard'
 import { LedgerList } from './LedgerList'
+import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntrySheet } from './EntrySheet'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
@@ -36,8 +39,16 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // Budget / Monthly / Ledger problem under different names.
 //
 // Order is tense: what we spent, then what is coming, then the receipts.
-//   overview → daily spend → where it goes → bookings → subscriptions →
-//   one-offs → plan by stop → budget cap → ledger
+//   overview → latest → daily spend → where it goes → bookings →
+//   subscriptions → one-offs → plan by stop → budget cap → ledger
+//
+// Stage 1 of mock 16 (2026-09-23, Petra's rounds): the page gets calmer
+// before it gets quieter. The Latest strip and a save toast, the budget line
+// reduced to a percentage and what is left (the cap amount lives in its own
+// row), one-offs with a line per row, the Plan card leading with its one
+// number and hiding its maths, and every card's explanatory prose cut or
+// moved behind an info tap (#65). The quiet start, the once-per-account
+// question and the cards that unlock as entries arrive are stage 2.
 //
 // A ninth card sat between the plan and the cap and is gone (2026-09-20). It
 // answered "what do we need to earn a month", first as projected outflow in
@@ -67,6 +78,7 @@ const wide = 'min-[900px]:col-span-2'
 export default function MoneyPage() {
   const { fmt, base } = useMoney()
   const confirm = useConfirm()
+  const toast = useToast()
   const { trip, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
   const stateMut = useTripMutation()
@@ -148,8 +160,11 @@ export default function MoneyPage() {
   })
 
   function save(entry: LedgerEntry) {
+    const isNew = !sheet?.entry
     mut.mutate({ kind: 'upsert', entry })
     setSheet(null)
+    // The two-second confirmation (mock 16 §3): what landed, so nobody scrolls to check.
+    toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
   }
   async function del(entry: LedgerEntry) {
     if (entry.source) {
@@ -272,10 +287,12 @@ export default function MoneyPage() {
                 style={{ width: Math.min(100, capPct) + '%' }}
               />
             </div>
+            {/* A percentage and what is left, nothing else (Petra, round 1: the cap
+                amount beside them read as two unrelated numbers). The cap itself
+                lives in its own row further down. */}
             <div className="mt-1.5 flex justify-between gap-3 text-[13px] text-tx2">
               <span className="flex-none"><b className="text-tx">{capPct}% of your budget</b></span>
               <span className="text-right">
-                {fmt(cap)} ·{' '}
                 {overCap
                   ? <b className="text-warn">{fmt(projection.spent - cap)} over</b>
                   : <><b className="text-tx">{fmt(cap - projection.spent)}</b> left</>}
@@ -291,12 +308,13 @@ export default function MoneyPage() {
           <div className="mt-3.5 rounded-[var(--rCtl)] bg-inp px-3.5 py-3">
             <div className="text-base font-semibold">+ {fmt(beyond.total)} beyond the everyday</div>
             <div className="mt-0.5 text-[13px] text-tx2">
-              {beyondNames ? `${beyondNames} — ` : ''}real money, deliberately outside the per-day rate. It is counted
-              in the cards below.
+              {beyondNames ? beyondNames[0].toUpperCase() + beyondNames.slice(1) + '. ' : ''}Counted below, not in the per-day rate.
             </div>
           </div>
         )}
       </div>
+
+      <LatestStrip entries={ledger} rates={s.rates} fmt={fmt} todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} />
 
       {canEdit && imp && imp.candidates.length > 0 && autoImport === false && (
         <div className={'lv-enter rounded-[var(--r)] bg-sf p-4 ' + wide}>
@@ -328,17 +346,19 @@ export default function MoneyPage() {
         onToggleRemind={toggleRemind}
       />
       <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} />
-      <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} />
+      <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} paceKnown={pace.perDay !== null} />
       <Link href="/settings" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
         <span>
           <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>
           <span className="block text-[13px] text-tx2">
-            {cap > 0 ? `${fmt(cap)} · projected uses ${Math.round((projection.projected / cap) * 100)}%` : 'a ceiling for the whole trip, in Settings'}
+            {cap > 0
+              ? `${fmt(cap)} · ${pace.perDay !== null ? `projected uses ${Math.round((projection.projected / cap) * 100)}%` : `${capPct}% spent`}`
+              : 'a ceiling for the whole trip, in Settings'}
           </span>
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
-      <div className={wide}>
+      <div id="ledger" className={wide + ' scroll-mt-4'}>
         <LedgerList
           entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
           canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal}

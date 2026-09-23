@@ -5,6 +5,36 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-23
+
+### BUILT — Money, stage 1 of mock 16: calmer before quieter
+
+Branch `kyh/cool-euler-7jcmqu`, the afternoon the timeline went live, with Petra on the
+phone. Mock 16 splits into two builds: what makes the page calmer needs no data change and
+is this one; the quiet start needs a per-account answer and is stage 2.
+
+**What changed.** The overview's budget line says only "18 % of your budget" and what is
+left; the cap amount lives in its own row, whose line reads "N % spent" until there is a
+pace and "projected uses N %" after. A "Latest" strip with the last three entries sits right
+under the overview (`LatestStrip.tsx`, "all entries ↓" jumps to the ledger, which stays last,
+#38), and saving an entry shows the two-second toast, "Added · 35 100 Ft · Airport (food,
+drinks)". One-offs keeps its two columns and gains a line per row, what the paid figure is
+("backpack · 20 Aug") or "nothing paid yet" in amber; the two-column explanation went behind
+ⓘ. The Plan card leads with the projected total, then one short line per city with the stay
+state in words (amber where nothing is booked); a tap on a city opens its sum in three lines
+that add up to the row, closed by the per-night figure Patrik wanted kept (2026-09-19);
+transport, one-offs, the remainder and subscriptions ahead sit behind "How it adds up". Copy
+diet (#65): the sentences under Bookings, Where it goes and the "beyond the everyday" box are
+gone or one line; the Subscriptions empty state says "Repeating costs, like Netflix or iCloud."
+
+**Stage 2, not started.** The once-per-account question and the quiet page for No (a
+`profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
+(mock 16 §6, projection after seven days), the one-line Subscriptions door on a journey
+longer than a month, the Subscriptions question on the entry sheet with its cadence chips,
+the one-time offer for entries already in the category, and the "More appears as you log"
+line. The Extras editor stays reachable only from the One-offs card until stage 2 gives the
+card its own.
+
 ## 2026-09-22
 
 ### BUILT — the Trip timeline off mock 15 (§1, §4, §5, §6): #58, with #60's stay form

@@ -46,7 +46,7 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhe
         <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Subscriptions</div>
         <p className="mt-1.5 text-base text-tx2">
           {canEdit
-            ? 'The monthly ones from home — iCloud, Spotify, the flat’s internet. Add them and the plan knows what still leaves the account while you travel.'
+            ? 'Repeating costs, like Netflix or iCloud.'
             : 'Nothing recurring recorded yet.'}
         </p>
         {canEdit && (
@@ -127,7 +127,7 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhe
     <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-1.5 text-tx">
       <div className="flex items-center justify-between border-b border-ln py-2.5">
         <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Subscriptions</span>
-        <span className="text-[13px] text-tx3">the ones from home</span>
+        <span className="text-[13px] text-tx3">repeating costs</span>
       </div>
       {live.map(row)}
       {showCancelled && dead.map(row)}
