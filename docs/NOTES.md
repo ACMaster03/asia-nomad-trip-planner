@@ -27,6 +27,42 @@ transport, one-offs, the remainder and subscriptions ahead sit behind "How it ad
 diet (#65): the sentences under Bookings, Where it goes and the "beyond the everyday" box are
 gone or one line; the Subscriptions empty state says "Repeating costs, like Netflix or iCloud."
 
+**Round two on the phone (Petra, 23 Sep, after the merge).** Latest shows only what was
+logged by hand: an imported booking is dated by its charge date, which can lie in the
+future, so the Hanoi stay charged in October sat at the top of a strip about today. The
+entry sheet no longer puts the cursor in its first field on opening (nor do the stay and
+stop sheets): on the iPhone a keyboard that opens the instant a sheet appears shifts the
+sheet before it has settled and leaves a blank band under it; a tap opens the keyboard
+cleanly. The Budget cap row says in words what the journey does to the cap, "at this pace
+the journey uses 77 % of it", or in amber "goes 937 111 Ft over it"; "projected uses 132 %"
+meant nothing to her. The per-night line under a city's opened sum now reads "Bangkok costs
+35 446 Ft a night on average, the stay included"; Petra would drop the line, Patrik asked for
+the number on 19 Sep to compare cities, so it stays until he says otherwise. One finding
+was data, not code, and pointed at a gap: Insurance and visas read "nothing paid yet" because
+they were entered as planned extras (the Extras list, which had no date) and the payments
+were never logged on Money; the Paid column counts only ledger rows. A one-off had to be
+typed twice, once as a plan and once as a payment. Petra asked for that in this same merge
+rather than in stage 2, so it is here: an extra has a "Paid on" date (`Extra.paidOn`, blank
+= planned), and the import that writes a booking's row on its charge date writes the
+extra's row on that date (`importCosts.ts`, source kind `extra`, id `le-plan-extra-<id>`),
+keeps it in line with the amount and label, and, the one departure from the booking rules,
+DELETES the row when the date is cleared while the extra is still listed: "not paid after
+all" must not leave the money in "spent". Deleting the extra itself leaves the row flagged,
+like a booking. Removing the imported row on Money clears the extra's date (one write; no
+skip record for extras). Two things came out in the reading. The extras form stores its own
+words ("Insurance", "Visa") while the ledger stores registry ids ("insurance"), and the
+One-offs card paired its two columns by raw category, so "Insurance" planned and
+"insurance" paid would have been two rows the moment anything was paid; both sides now go
+through one bridge (`lib/trips/extras.ts`: Visa and Insurance → insurance, Vaccines →
+health, Gear → gear, Flights (intl) → transport, SIM/eSIM → connectivity, anything else →
+other), and the Paid column also counts every row that came from an extra whatever its
+category. And a row the plan wrote is never day-to-day: `everydayOnly`, the burn rate and
+"beyond the everyday" skip rows with a `source`, so a vaccine paid mid-trip does not lift
+that week's rate (a no-op for existing data, since stays and fares were non-daily already).
+The Extras list says "paid 12 Aug" or "not paid yet" under each item; the ledger badge reads
+"from Extras". Not in the projection twice: extras were never added to the projected total,
+and the payment enters `spent` the way any ledger row does.
+
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
 (mock 16 §6, projection after seven days), the one-line Subscriptions door on a journey

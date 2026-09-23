@@ -12,6 +12,7 @@ import { SaveError } from './SaveError'
 import { ViewerNotice } from './ViewerNotice'
 import CreateTripEmptyState from './CreateTripEmptyState'
 import { useTripRole } from '@/lib/trips/useTripRole'
+import { shortDate } from '@/lib/trips/timeline'
 import type { Extra } from '@/lib/trips/types'
 
 // 24px visual tick inside a 44px tap target: the negative margin keeps the
@@ -60,7 +61,8 @@ export function ExtrasTab() {
         )}
       </div>
       <p className="mb-4 mt-1 text-base text-tx2">
-        Visas, insurance, gear. Untick anything you&apos;re not committed to yet.
+        Visas, insurance, gear. Untick anything you&apos;re not committed to yet. Once you pay one, give it its
+        paid-on date and the payment appears in Money by itself.
         {canEdit && <span className="font-medium text-ac2-deep"> Tap a card to edit or delete it.</span>}
       </p>
       <ViewerNotice />
@@ -89,7 +91,10 @@ export function ExtrasTab() {
               </button>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[18px] font-semibold">{x.label}</span>
-                <span className="block text-base text-tx2">{x.category}</span>
+                <span className="block text-base text-tx2">
+                  {x.category}
+                  {x.paidOn ? <span className="text-ac"> · paid {shortDate(x.paidOn)}</span> : <span className="text-warn"> · not paid yet</span>}
+                </span>
               </span>
               <span className="flex-none text-right">
                 <span className="block whitespace-nowrap text-[19px] font-semibold">{x.amount} {x.cur}</span>

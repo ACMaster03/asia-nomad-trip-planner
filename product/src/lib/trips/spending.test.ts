@@ -269,3 +269,16 @@ test('beyondEveryday says out loud what the per-day rate leaves out', () => {
   // scheduled rows are not "spent so far" and never reach this figure
   assert.equal(beyondEveryday([...mLedger, e('ahead', '2026-12-01', 'gear', 500, 'HUF')], rates, today).total, 72_290)
 })
+
+test('a row the plan wrote is never everyday, whatever its category (a paid extra filed under health)', () => {
+  const vaccine = e('le-plan-extra-x9', '2026-09-02', 'health', 3000, 'THB', { source: { kind: 'extra', id: 'x9' } })
+  const pharmacy = e('h1', '2026-09-02', 'health', 100)
+  const rows = [...ledger, vaccine, pharmacy]
+  // the hand-typed pharmacy run is everyday; the planned vaccine is not
+  assert.deepEqual(everydayOnly(rows).map((r) => r.id).sort(), ['a', 'b', 'c', 'h1'])
+  // ...so it neither lifts the per-day rate
+  assert.equal(burnRate(rows, rates, '2026-09-01', '2026-09-03').total, burnRate([...ledger, pharmacy], rates, '2026-09-01', '2026-09-03').total)
+  // ...nor falls between the two figures: it is counted beyond the everyday
+  const beyond = beyondEveryday(rows, rates, '2026-09-03')
+  assert.equal(beyond.rows.find((r) => r.category === 'health')?.amount, 3000 * 10)
+})

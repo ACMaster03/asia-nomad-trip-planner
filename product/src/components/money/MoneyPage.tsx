@@ -102,11 +102,13 @@ export default function MoneyPage() {
     // paint a save-error banner every time they merely OPENED the Money screen.
     if (!canEdit) return
     // Corrections to already-imported rows always apply (one-way sync + orphan
-    // flags). NEW rows flow automatically too unless the user switched that
+    // flags, and the removal of an extra's row once its paid-on date is
+    // cleared). NEW rows flow automatically too unless the user switched that
     // off: a booked stay with a charge date IS money spent (owner review
     // 2026-09-12). `false` is the only value that keeps the ask-first card.
     const ops = [...imp.updates, ...imp.orphans, ...(autoImport !== false ? imp.candidates : [])]
     ops.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
+    imp.removals.forEach((entry) => mut.mutate({ kind: 'delete', id: entry.id }))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is stable; imp derives from trip.data
   }, [imp, autoImport, canEdit])
 
@@ -167,7 +169,22 @@ export default function MoneyPage() {
     toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
   }
   async function del(entry: LedgerEntry) {
-    if (entry.source) {
+    const listedExtra = entry.source?.kind === 'extra' ? s.extras.find((x) => x.id === entry.source!.id) : undefined
+    if (listedExtra) {
+      // The paid-on date IS this row (importCosts.ts): clear the date and the
+      // reconcile effect above deletes the row — one write, no skip record,
+      // and setting the date again brings the payment back.
+      const ok = await confirm({
+        title: 'Remove this payment?',
+        body: `“${listedExtra.label}” goes back to not paid on the Trip page. Give it a paid-on date again to bring the payment back.`,
+        confirmLabel: 'Remove',
+      })
+      if (!ok) return
+      stateMut.mutate((cur) => ({
+        ...cur,
+        extras: cur.extras.map((x) => (x.id === listedExtra.id ? { ...x, paidOn: undefined } : x)),
+      }))
+    } else if (entry.source) {
       // Without the skip record, reconcile would resurrect the row next visit.
       const ok = await confirm({
         title: 'Remove this imported cost?',
@@ -318,8 +335,8 @@ export default function MoneyPage() {
 
       {canEdit && imp && imp.candidates.length > 0 && autoImport === false && (
         <div className={'lv-enter rounded-[var(--r)] bg-sf p-4 ' + wide}>
-          <div className="text-base font-semibold">Import your {imp.candidates.length} booked cost{imp.candidates.length > 1 ? 's' : ''}?</div>
-          <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date can sit in the ledger as “from booking” rows, kept in sync with the Trip page.</p>
+          <div className="text-base font-semibold">Import {imp.candidates.length} cost{imp.candidates.length > 1 ? 's' : ''} from the Trip page?</div>
+          <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date, and extras with a paid-on date, can sit in the ledger as rows kept in sync with the Trip page.</p>
           <button onClick={importNow} disabled={mut.isPending} className="mt-3 rounded-[var(--rCtl)] bg-ac px-[18px] py-2.5 text-base font-semibold text-on disabled:opacity-50">
             Import and keep importing
           </button>
@@ -351,8 +368,14 @@ export default function MoneyPage() {
         <span>
           <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>
           <span className="block text-[13px] text-tx2">
+            {/* In words (Petra, 23 Sep: "projected uses 132 %" meant nothing): what the
+                journey does to the cap at this pace, amber when it goes over. */}
             {cap > 0
-              ? `${fmt(cap)} · ${pace.perDay !== null ? `projected uses ${Math.round((projection.projected / cap) * 100)}%` : `${capPct}% spent`}`
+              ? pace.perDay === null
+                ? `${fmt(cap)} · ${capPct}% spent`
+                : projection.projected > cap
+                  ? <>{fmt(cap)} · <span className="text-warn">at this pace the journey goes {fmt(projection.projected - cap)} over it</span></>
+                  : `${fmt(cap)} · at this pace the journey uses ${Math.round((projection.projected / cap) * 100)}% of it`
               : 'a ceiling for the whole trip, in Settings'}
           </span>
         </span>

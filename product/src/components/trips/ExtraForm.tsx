@@ -7,6 +7,8 @@ const uid = (p: string) => p + crypto.randomUUID()
 const label = 'block min-w-0 text-base font-medium text-tx2'
 const input =
   'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base font-medium text-tx outline-none transition-colors duration-[180ms] focus:border-ac'
+const hint = 'mt-1.5 text-[13px] leading-snug text-tx2'
+// The form's own words; lib/trips/extras.ts maps them onto ledger categories.
 const CATS = ['Visa', 'Insurance', 'Vaccines', 'Gear', 'Flights (intl)', 'SIM/eSIM', 'Other']
 
 export function ExtraForm({
@@ -21,6 +23,7 @@ export function ExtraForm({
   const [category, setCategory] = useState(initial?.category ?? 'Visa')
   const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount) : '')
   const [cur, setCur] = useState(initial?.cur ?? 'USD')
+  const [paidOn, setPaidOn] = useState(initial?.paidOn ?? '')
 
   function submit() {
     if (!label_.trim()) { alert('Enter an item'); return }
@@ -29,6 +32,9 @@ export function ExtraForm({
       label: label_.trim(), category, cur,
       amount: Number(amount) || 0,
       include: initial?.include ?? true,
+      // Blank means planned, not paid. Set, the Money page writes the payment
+      // row itself (importCosts.ts) — no second entry by hand (2026-09-23).
+      ...(paidOn ? { paidOn } : {}),
     }
     onSave(extra)
   }
@@ -50,6 +56,10 @@ export function ExtraForm({
             </select>
           </label>
         </div>
+        <label className={label}>Paid on
+          <input type="date" className={input} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
+          <span className={hint}>Empty date means not paid yet. If you add a date, it puts the payment on the Money page for you.</span>
+        </label>
         <div className="flex gap-2 pt-1">
           <button onClick={submit} className="flex-1 rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-base font-semibold text-on">Save</button>
           <button onClick={onCancel} className="rounded-[calc(var(--r)-2px)] border-[1.5px] border-ln3 px-5 py-3.5 text-base font-semibold text-tx2">Cancel</button>

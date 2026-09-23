@@ -1,8 +1,9 @@
-import type { LedgerEntry, Stay, TransportLeg, TripState } from './types'
+import type { Extra, LedgerEntry, Stay, TransportLeg, TripState } from './types'
 // Straight from format.ts, not the budget.ts re-export: budget.ts pulls in the
 // catalogue path aliases, which the node tests cannot resolve.
 import { stayTotal } from './format.ts'
 import { isBookedStatus } from './commitment.ts'
+import { extraCategoryId, isPaidExtra } from './extras.ts'
 
 // === Auto-import planned costs into the ledger (mock 04, ledger states) ===
 //
@@ -12,6 +13,11 @@ import { isBookedStatus } from './commitment.ts'
 // chargeDate when set, else the travel date — fares are committed money once
 // booked). A draft (idea/shortlist) never imports: nothing has been charged.
 //
+// An EXTRA (the one-offs list: visas, insurance, gear) imports the moment it
+// has a paid-on date (2026-09-23, Petra's finding: a one-off had to be typed
+// twice, once as a plan and once as a payment). The tick on the extra is about
+// the forecast only; a date is a fact about money, so it imports ticked or not.
+//
 // The date matters beyond ordering: the Money page reads rows dated after
 // today as SCHEDULED rather than spent, so a fare paid months in advance
 // needs its own chargeDate to land in the month the card was actually hit.
@@ -19,7 +25,11 @@ import { isBookedStatus } from './commitment.ts'
 // Imported entries carry `source` ("⤵ from plan" badge) and keep syncing:
 // amount/date/currency/note follow the plan until the booking disappears, at
 // which point the row STAYS and is flagged `orphaned` (decided in the gap
-// review — money already spent doesn't vanish from the books).
+// review — money already spent doesn't vanish from the books). An extra's row
+// is the one exception: while the extra itself is still on the list, clearing
+// its paid-on date means "not paid after all", and the row is REMOVED rather
+// than flagged — a flagged row would keep the money in "spent". Delete the
+// extra altogether and its row stays flagged like a booking's.
 //
 // `state.importSkip` lists source keys the user explicitly deleted from the
 // ledger; without it, reconcile would resurrect every deleted row.
@@ -28,7 +38,7 @@ import { isBookedStatus } from './commitment.ts'
 // ask-first card only delayed it). false = the opt-out: the Ledger shows the
 // import card whenever NEW unimported bookings appear.
 
-export type ImportSource = { kind: 'stay' | 'transport'; id: string }
+export type ImportSource = { kind: 'stay' | 'transport' | 'extra'; id: string }
 
 export const sourceKey = (s: ImportSource) => `${s.kind}:${s.id}`
 
@@ -42,7 +52,7 @@ interface Candidate {
   source: ImportSource
   date: string
   /** registry ids (lib/trips/categories.ts) */
-  category: 'stays' | 'transport'
+  category: string
   amount: number
   currency: string
   note: string
@@ -80,6 +90,18 @@ function transportCandidate(t: TransportLeg): Candidate | null {
   }
 }
 
+function extraCandidate(x: Extra): Candidate | null {
+  if (!isPaidExtra(x)) return null
+  return {
+    source: { kind: 'extra', id: x.id },
+    date: x.paidOn!,
+    category: extraCategoryId(x.category),
+    amount: cents(x.amount),
+    currency: x.cur,
+    note: x.label,
+  }
+}
+
 function toEntry(c: Candidate, id: string): LedgerEntry {
   return {
     id,
@@ -100,6 +122,8 @@ export interface ImportPlan {
   updates: LedgerEntry[]
   /** already-imported rows whose booking is gone — flag, never delete */
   orphans: LedgerEntry[]
+  /** an extra's row whose paid-on date was cleared while the extra is still listed — delete */
+  removals: LedgerEntry[]
 }
 
 export function planImports(state: TripState, ledger: LedgerEntry[]): ImportPlan {
@@ -112,11 +136,16 @@ export function planImports(state: TripState, ledger: LedgerEntry[]): ImportPlan
     const c = transportCandidate(t)
     if (c) wanted.set(sourceKey(c.source), c)
   }
+  for (const x of state.extras ?? []) {
+    const c = extraCandidate(x)
+    if (c) wanted.set(sourceKey(c.source), c)
+  }
 
   const skip = new Set(state.importSkip ?? [])
   const candidates: LedgerEntry[] = []
   const updates: LedgerEntry[] = []
   const orphans: LedgerEntry[] = []
+  const removals: LedgerEntry[] = []
 
   const imported = new Map<string, LedgerEntry>()
   for (const e of ledger) if (e.source) imported.set(sourceKey(e.source), e)
@@ -135,15 +164,19 @@ export function planImports(state: TripState, ledger: LedgerEntry[]): ImportPlan
       existing.date !== synced.date ||
       existing.currency !== synced.currency ||
       existing.note !== synced.note ||
+      existing.category !== synced.category ||
       existing.orphaned
     ) {
       updates.push(synced)
     }
   }
 
+  const listedExtras = new Set((state.extras ?? []).map((x) => x.id))
   for (const [key, e] of imported) {
-    if (!wanted.has(key) && !e.orphaned) orphans.push({ ...e, orphaned: true })
+    if (wanted.has(key)) continue
+    if (e.source!.kind === 'extra' && listedExtras.has(e.source!.id)) removals.push(e)
+    else if (!e.orphaned) orphans.push({ ...e, orphaned: true })
   }
 
-  return { candidates, updates, orphans }
+  return { candidates, updates, orphans, removals }
 }

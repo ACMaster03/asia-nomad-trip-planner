@@ -105,7 +105,10 @@ export function burnRate(
 ): BurnRate {
   if (!from || !to || to < from) return { days: 0, total: 0, perDay: 0 }
   const days = nightsBetween(from, to) + 1
-  const total = dailySpend(ledger, rates, { from, to, exclude }).reduce((a, d) => a + d.total, 0)
+  // Rows the plan wrote (a stay, a fare, a paid extra) are never day-to-day,
+  // whatever category they landed in: a vaccine planned on the Extras list
+  // files under health and would otherwise lift the rate of the week it was paid.
+  const total = dailySpend(ledger.filter((e) => !e.source), rates, { from, to, exclude }).reduce((a, d) => a + d.total, 0)
   return { days, total, perDay: days ? total / days : 0 }
 }
 
@@ -281,8 +284,11 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
 export const nightsSpan = (start: string, iso: string) =>
   iso >= start ? nightsBetween(start, iso) + 1 : -nightsBetween(iso, start) + 1
 
+/** Everyday = an everyday category AND typed by hand; a row the plan wrote is a cost of the whole trip. */
+export const isEverydayRow = (e: LedgerEntry) => !e.source && isEverydayCategory(e.category)
+
 /** Everyday expenses only — the subset every "per day" figure is built from. */
-export const everydayOnly = (ledger: LedgerEntry[]) => ledger.filter((e) => isEverydayCategory(e.category))
+export const everydayOnly = (ledger: LedgerEntry[]) => ledger.filter(isEverydayRow)
 
 export interface Projection {
   /** expenses dated today or earlier — money that has actually left */
@@ -370,7 +376,7 @@ export function beyondEveryday(ledger: LedgerEntry[], rates: Record<string, numb
   const sum = (rows: LedgerEntry[]) => rows.reduce((a, e) => a + toBase(e.amount, e.currency, rates), 0)
   const by: Record<string, number> = {}
   for (const e of settled) {
-    if (isEverydayCategory(e.category)) continue
+    if (isEverydayRow(e)) continue
     by[e.category] = (by[e.category] ?? 0) + toBase(e.amount, e.currency, rates)
   }
   return {

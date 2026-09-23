@@ -116,8 +116,10 @@ export function EntrySheet({
 
       <label className={label}>
         What was it?
+        {/* No autoFocus: on the iPhone a keyboard that opens the instant the sheet
+            appears shifts the sheet before it has settled and leaves a blank band
+            under it (Petra, 23 Sep). A tap on a field opens it cleanly. */}
         <input
-          autoFocus={!initial}
           className={box}
           placeholder={type === 'expense' ? 'e.g. Iced coffee, Grab to the airport' : 'e.g. September invoice'}
           value={name}
