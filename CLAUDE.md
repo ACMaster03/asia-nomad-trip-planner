@@ -36,8 +36,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   page, went live with Petra on 23 Sep (#73); her round on the phone and the
   "Paid on" date for extras (one entry instead of two) followed in #74, and
   #75 lists each extra by name on the One-offs card. Stage 2, the quiet
-  start, needs a `profiles` column for the once-per-account answer, a
-  migration Patrik applies in the Supabase dashboard.
+  start, begins with migration 41 (`profiles.track_spending`, the
+  once-per-account answer): Patrik applies it with `tools/db.sh`, staging
+  first, then production; the stage 2 app code comes after it is live.
 - Merges happen together with whoever is here, the same way: say what
   changes and what could go wrong, get a "go", merge, watch the Vercel build,
   test on livhold.com, record.

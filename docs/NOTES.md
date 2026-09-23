@@ -7,6 +7,45 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-23
 
+### TO APPLY — migration 41, `profiles.track_spending` (Patrik): the first step of Money stage 2
+
+**What it is.** One nullable boolean on `profiles`, the answer to mock 16's once-per-account
+question "Track what you spend on this journey?": null = not asked yet, true = "Yes, track
+it", false = "Not now". No new permission: `profiles_update` (03) already confines each
+person to their own row, and the two guard triggers look only at `is_admin` and
+`active_trip_id`. Nothing reads the column yet; the stage 2 app code will, so it goes to
+production before that code does.
+
+**Steps, staging first.** Each stops on the first error; the prod step asks for the word PROD.
+
+    tools/db.sh apply 41            # staging
+    tools/db.sh test 41             # staging; rolls itself back
+    tools/db.sh --prod apply 41     # production
+
+Then merge the pull request that carries the two files, so `main` says what is live.
+
+**Dry run, 23 Sep, before anyone touched a real database.** A throwaway local Postgres 16
+with `profiles` rebuilt from the real text of 03 (table, signup trigger, `is_admin()`, the
+policies, the admin guard), 06 (the co-member read) and 07 (`active_trip_id` and its
+guard). 41 applied twice without error; existing accounts stayed null; the test plan passed
+twice and left no users or trips behind. It also failed, each time with its own message, on
+every broken variant tried: 41 not applied, a default of false, NOT NULL, the update policy
+dropped, the update policy loosened to anyone, the co-member read missing (the fixture
+guard). The first version of the test only tried a stranger's row, which RLS hides anyway,
+so the loosened policy passed; it now tries a travel partner's row, which is readable.
+
+**The decision inside it: no backfill (Patrik to confirm).** Every account that exists when
+41 runs, Patrik's and Petra's included, is asked once, on its first visit to Money after the
+stage 2 build ships. Why: the ledger records no author, so "who already tracks" could only be
+guessed from trip membership, and the mock rules that out for a travel partner ("the answer
+is theirs, not the journey's"); one tap each costs little; and it lets the two of them see the
+question live on their own phones. The alternative, if nobody who exists today should be
+asked, is one more statement; the fixed cutoff keeps a later re-run from answering for anyone
+who signs up after it:
+
+    update public.profiles set track_spending = true
+    where track_spending is null and created_at < timestamptz '2026-09-24 00:00:00+00';
+
 ### BUILT — Money, stage 1 of mock 16: calmer before quieter
 
 Branch `kyh/cool-euler-7jcmqu`, the afternoon the timeline went live, with Petra on the
