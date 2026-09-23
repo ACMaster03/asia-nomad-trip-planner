@@ -33,7 +33,9 @@ import type { LedgerEntry, TripState } from '@/lib/trips/types'
 // (importCosts.ts), so the two columns fill from one entry.
 //
 // Mock 16 §3 (2026-09-23): the total row is called Total; the paragraph about
-// the two columns went behind ⓘ (#65).
+// the two columns went behind ⓘ (#65). Only the paid total is bold, as the
+// paid figure is on every row above (Petra, 23 Sep): what has actually moved
+// is the card's anchor, the forecast beside it stays regular.
 //
 // Under each heading, one line per extra of that category, by name, with where
 // it stands ("paid 12 Aug", "not paid yet" in amber), and one line for the
@@ -114,7 +116,7 @@ export function OneOffsCard({ state, ledger, fmt, todayIso }: {
       ))}
       <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4 border-t-[1.5px] border-ln3 py-2.5">
         <span className="text-base font-semibold">Total</span>
-        <b className="w-[78px] text-right text-base min-[380px]:w-[86px]">{fmt(v.plannedTotal)}</b>
+        <span className="w-[78px] text-right text-base min-[380px]:w-[86px]">{fmt(v.plannedTotal)}</span>
         <b className="w-[78px] text-right text-base min-[380px]:w-[86px]">{fmt(v.paidTotal)}</b>
       </div>
       {v.excludedCount > 0 && (

@@ -90,6 +90,10 @@ the ⓘ text did not answer it: it explained that one cost can sit in both colum
 Paid also holds payments nobody planned. Offered to leave it or add one sentence to ⓘ, Petra
 chose the sentence: "Paid also counts payments you never planned, like bank fees." It sits
 after "…never added together", so the card stays as quiet as before until ⓘ is tapped.
+Live with #76; Petra saw it on the phone. Her next ask: only the paid total bold in the
+Total row, the planned total regular, "to anchor the essence of this whole rectangle". It
+also made the card consistent: every row above already had Paid bold and Planned regular,
+and the Total row was the one place with both bold.
 
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
