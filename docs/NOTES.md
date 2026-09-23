@@ -7,6 +7,40 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-23
 
+### BUILT — Money stage 2, round 1: the question and the quiet page (mock 16 §1–2)
+
+Asked for by Petra the same day, right after migration 41 went live; the globe question
+waits for a talk with Patrik.
+
+**What changed.** The first visit to Money asks, once per account, "Track what you spend on
+this journey?" in a sheet over the quiet page (`TrackQuestion.tsx`): "Log a coffee, see what
+a day here costs.", "Yes, track it", "Not now", and "Asked once. Your bookings are here either
+way." Sliding it away, tapping beside it or pressing Escape counts as Not now, because the
+question is asked once. Yes is today's full page. Not now is the quiet page: the Bookings
+card, the add button, "Spending isn't tracked on this journey. Track it ›", and a list titled
+Spending with what the person added, typed entries and extras' payments (a booked stay's or
+fare's row stays in the Bookings card only, not twice). The page never says ledger. The
+Account page, behind the Home avatar, gains a Money card with a "Track spending" switch
+(`TrackSpendingCard.tsx`), hidden while the answer cannot be read.
+
+**How the answer is read.** `profiles.track_spending`, read by `useTrackSpending` into four
+states (`lib/trips/tracking.ts`): ask, yes, no, unknown. Money waits for it only on a
+device's first visit, since it is cached and persisted like every query, and a failed read
+falls back to the full page with no question. Saving is optimistic, so the page changes shape
+at once, and a failed save puts the old answer back with the save banner.
+
+**Checked.** `tsc`; `eslint` (only the old SettingsClient error and three old warnings); 109
+node tests, three new: the four states, which of them are quiet, and which entries the quiet
+list shows; `next build`. In the dev preview (`/dev/money-preview?track=ask|no|yes`, and
+`?screen=track` for the switch) at iPhone 13 width: the question over the quiet page; Yes
+opens the full page; Not now and a tap beside the sheet close it and keep the quiet page;
+Track it opens the full page; the switch flips and its line follows.
+
+**Not in this round.** The cards that unlock as entries arrive and "More appears as you log"
+are round 2; the Subscriptions question on the entry sheet, the one-time offer and the
+One-offs editor on Money are round 3. As built, every existing account is asked once; the
+backfill alternative for Patrik is in the migration 41 entry below.
+
 ### DECIDED — Patrik, 23 Sep: the per-night line goes; the globe question is Petra's
 
 - **The per-night line under a city's opened sum on the Plan card is dropped.** It closed the

@@ -28,7 +28,7 @@ const shortDay = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString
 
 const PAGE = 20
 
-export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, canEdit, onEdit, reveal }: {
+export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, canEdit, onEdit, reveal, title = 'Ledger' }: {
   entries: LedgerEntry[]
   rates: Record<string, number>
   base: string
@@ -43,6 +43,8 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
    * rendered before it can be scrolled to.
    */
   reveal?: { date: string; n: number } | null
+  /** The card's kicker. The quiet page says "Spending": it never says "ledger" to someone who said no (mock 16 §2). */
+  title?: string
 }) {
   const sorted = useMemo(() => entries.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)), [entries])
   const { byMonth, byDay, preCount, preTotal, aheadCount, aheadTotal } = useMemo(() => {
@@ -85,7 +87,7 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
   return (
     <div className="rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-1.5 text-tx">
       <div className="flex items-center justify-between border-b border-ln py-2.5">
-        <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Ledger</span>
+        <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">{title}</span>
         {canEdit && <span className="text-[13px] text-tx3">tap a row to edit</span>}
       </div>
       {visible.map((e, i) => {

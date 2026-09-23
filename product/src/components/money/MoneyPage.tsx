@@ -8,6 +8,8 @@ import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useToday } from '@/lib/useToday'
+import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
+import { isQuiet, quietEntries, type Tracking } from '@/lib/trips/tracking'
 import { planImports, sourceKey } from '@/lib/trips/importCosts'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
@@ -31,6 +33,7 @@ import { LedgerList } from './LedgerList'
 import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntrySheet } from './EntrySheet'
+import { TrackQuestion } from './TrackQuestion'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
 // Money — ONE page (round-two design signed off 2026-09-13; round three
@@ -47,8 +50,14 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // reduced to a percentage and what is left (the cap amount lives in its own
 // row), one-offs with a line per row, the Plan card leading with its one
 // number and hiding its maths, and every card's explanatory prose cut or
-// moved behind an info tap (#65). The quiet start, the once-per-account
-// question and the cards that unlock as entries arrive are stage 2.
+// moved behind an info tap (#65).
+//
+// Stage 2, round 1 (mock 16 §1–2, 23 Sep): the once-per-account question,
+// "Track what you spend on this journey?", as a sheet over the quiet page on
+// the first visit, and the quiet page itself for "Not now": the bookings, the
+// add button, what you added, and one line back. The answer lives on the
+// profile (migration 41; lib/trips/tracking.ts has the four states). "Yes"
+// is today's full page; the cards that unlock as entries arrive are round 2.
 //
 // A ninth card sat between the plan and the cap and is gone (2026-09-20). It
 // answered "what do we need to earn a month", first as projected outflow in
@@ -84,6 +93,8 @@ export default function MoneyPage() {
   const stateMut = useTripMutation()
   const { canEdit } = useTripRole()
   const today = useToday()
+  const track = useTrackSpending()
+  const setTrack = useSetTrackSpending()
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
   const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
@@ -117,8 +128,16 @@ export default function MoneyPage() {
     [trip.data, cityIdx, today],
   )
 
-  if (trip.isPending || (trip.data && !today)) return <main className="mx-auto max-w-xl p-6 text-base text-tx2">Loading…</main>
+  // The answer decides the page's shape, so Money waits for it, but only on a
+  // device's first visit (it is cached like everything else) and never past a
+  // failed read, which falls back to the full page.
+  const answer: Tracking | undefined = track.data ?? (track.isError ? 'unknown' : undefined)
+  if (trip.isPending || (trip.data && (!today || answer === undefined))) {
+    return <main className="mx-auto max-w-xl p-6 text-base text-tx2">Loading…</main>
+  }
   if (!trip.data || !model) return <CreateTripEmptyState />
+  const tracking: Tracking = answer ?? 'unknown'
+  const quiet = isQuiet(tracking)
   const s = trip.data.state
   const ledger = trip.data.ledger
   const { current, pace, plan, bookings, projection, subs, beyond, tripEnd } = model
@@ -262,8 +281,43 @@ export default function MoneyPage() {
       <div className={wide}>
         <SaveError show={mut.isError} error={mut.error} />
         <SaveError show={stateMut.isError} error={stateMut.error} />
+        <SaveError show={setTrack.isError} error={setTrack.error} />
       </div>
 
+      {quiet ? (
+        // The quiet page (mock 16 §2): the Bookings card is the whole page,
+        // because "what have we committed to" is the one money question someone
+        // who does not track still has. The add button stays; what you add
+        // lands in a list under the bookings and nowhere else: no chart, no pace,
+        // no projection, and adding one does not flip the answer. The page
+        // never says ledger, opt-in or analytics; it says bookings and spending.
+        <>
+          <BookingsCard
+            stays={bookings.stays} transport={bookings.transport}
+            paid={bookings.paid} toPay={bookings.toPay}
+            draftedStays={bookings.draftedStays} draftStays={bookings.draftStays}
+            fmt={fmt} todayIso={today}
+          />
+          <button
+            type="button"
+            onClick={() => setTrack.mutate(true)}
+            className={'flex min-h-11 w-full items-center justify-between gap-2.5 rounded-[14px] bg-tag px-3.5 py-2.5 text-left text-[14px] text-tag-ink ' + wide}
+          >
+            <span>Spending isn&apos;t tracked on this journey.</span>
+            <b className="whitespace-nowrap text-ac2-deep">Track it ›</b>
+          </button>
+          {quietEntries(ledger).length > 0 && (
+            <div id="ledger" className={wide + ' scroll-mt-4'}>
+              <LedgerList
+                title="Spending"
+                entries={quietEntries(ledger)} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
+                canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })}
+              />
+            </div>
+          )}
+        </>
+      ) : (
+      <>
       {/* overview */}
       <div className={'lv-enter rounded-[var(--r)] bg-sf p-5 ' + wide}>
         <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">
@@ -387,6 +441,8 @@ export default function MoneyPage() {
           canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal}
         />
       </div>
+      </>
+      )}
 
       {sheet && (
         <EntrySheet
@@ -410,6 +466,7 @@ export default function MoneyPage() {
           onClose={() => setSubSheet(null)}
         />
       )}
+      {tracking === 'ask' && <TrackQuestion onAnswer={(yes) => setTrack.mutate(yes)} />}
     </main>
   )
 }

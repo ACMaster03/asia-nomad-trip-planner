@@ -23,6 +23,7 @@ import { useTripRole } from '@/lib/trips/useTripRole'
 import { AccountDeletion } from '@/components/trips/DangerZone'
 import { Modal } from '@/components/trips/Modal'
 import { NotificationSettings } from '@/components/trips/NotificationSettings'
+import { TrackSpendingCard } from '@/components/money/TrackSpendingCard'
 import { useToast } from '@/components/Toast'
 import { applyLarger, applyTheme, storedLarger, storedTheme, type Theme } from '@/lib/theme'
 import { ActiveTripCard } from '@/app/(app)/settings/ActiveTripCard'
@@ -735,6 +736,10 @@ export default function AccountClient({
       <div id="alerts" className="scroll-mt-4">
         <NotificationSettings />
       </div>
+
+      {/* Money's once-per-account answer (mock 16 §2): the answer is the
+          person's, so its switch lives here, under the Home avatar. */}
+      <TrackSpendingCard />
 
       <AppearanceCard />
 

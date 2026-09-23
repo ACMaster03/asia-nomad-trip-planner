@@ -41,4 +41,8 @@ export const tk = {
   // per-trip mutes — account-scoped, like following.
   notifyPrefs: ['notify-prefs'] as const,
   tripNotify: ['trip-notify'] as const,
+  // Money's once-per-account answer (profiles.track_spending, migration 41),
+  // read as a Tracking state (lib/trips/tracking.ts). Account-scoped: sign-out
+  // clears the whole cache, so one key serves whoever is signed in.
+  trackSpending: ['track-spending'] as const,
 }

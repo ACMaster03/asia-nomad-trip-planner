@@ -19,10 +19,13 @@ import Preview from './Preview'
 // Home instead: Money paints "Loading…" until it knows today's date, Home
 // server-renders the trip document, so Home is where a mismatch shows.
 // ?screen=extras renders the Extras list (and its form) from the same fixture.
+// ?track=ask | no | yes seeds Money's once-per-account answer (migration 41):
+// ask shows the question over the quiet page, no the quiet page, yes (the
+// default) the full page. ?screen=track renders the Account page's switch.
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slow?: string; screen?: string }>
+  searchParams: Promise<{ slow?: string; screen?: string; track?: string }>
 }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   // ?slow=<ms> streams the page that long after the shell, the way the real
@@ -34,9 +37,12 @@ export default async function MoneyPreviewPage({
   if (slow > 0) await new Promise((r) => setTimeout(r, Math.min(slow, 10_000)))
   const qc = new QueryClient()
   qc.setQueryData(tk.trip('fixture'), fixtureTrip(new Date().toISOString().slice(0, 10)))
+  qc.setQueryData(tk.trackSpending, params.track === 'ask' ? 'ask' : params.track === 'no' ? 'no' : 'yes')
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <Preview screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : 'money'} />
+      <Preview
+        screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : params.screen === 'track' ? 'track' : 'money'}
+      />
     </HydrationBoundary>
   )
 }
