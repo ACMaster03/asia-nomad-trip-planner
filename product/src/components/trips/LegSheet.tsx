@@ -6,8 +6,8 @@ import { useMoney } from '@/lib/trips/Money'
 import { toBase } from '@/lib/trips/format'
 import { shortDate, stateOf, type Leg } from '@/lib/trips/timeline'
 import type { TransportLeg } from '@/lib/trips/types'
-import { Chips, CloseButton, StateChips, addLink, dangerBtn, hint, input, label, primaryBtn, uid } from './sheetKit'
-import { normCity } from '@/lib/map/norm'
+import { Chips, StateChips, addLink, dangerBtn, hint, input, label, primaryBtn, uid } from './sheetKit'
+import { sameCity } from '@/lib/map/norm'
 import type { Segment } from '@/lib/trips/types'
 
 // Transport on a leg (mock 15 §6, #58). From, to and the day are the leg's,
@@ -63,7 +63,7 @@ export function LegSheet({
   const from = leg?.from.city ?? target?.from.city ?? initial?.from ?? ''
   const to = leg?.to.city ?? target?.to.city ?? initial?.to ?? ''
   const orphan = !leg && !!initial
-  const stopNamed = (city: string) => stops.find((s) => normCity(s.city) === normCity(city))
+  const stopNamed = (city: string) => stops.find((s) => sameCity(s.city, city))
   const missing = orphan ? [initial!.to, initial!.from].find((c) => !stopNamed(c)) : undefined
   const [type, setType] = useState(asType(initial?.type))
   const [otherType, setOtherType] = useState(initial && asType(initial.type) === 'Other' ? initial.type : '')
@@ -107,15 +107,12 @@ export function LegSheet({
 
   return (
     <Sheet label={initial ? 'Edit transport' : 'Add transport'} onClose={onClose}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">
-            {/* The entry's own day when it has one (an overnight flight leaves the day before the stop begins), else the leg's. */}
-            {leg ? `Leg ${leg.index} · leaves ${leg.from.city}${(initial?.date || leg.date) ? ' ' + longDay(initial?.date || leg.date) : ''}` : 'Not on a leg of this journey'}
-          </div>
-          <h3 className="mt-0.5 text-[22px] font-semibold">{from} → {to}</h3>
+      <div>
+        <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">
+          {/* The entry's own day when it has one (an overnight flight leaves the day before the stop begins), else the leg's. */}
+          {leg ? `Leg ${leg.index} · leaves ${leg.from.city}${(initial?.date || leg.date) ? ' ' + longDay(initial?.date || leg.date) : ''}` : 'Not on a leg of this journey'}
         </div>
-        <CloseButton onClose={onClose} />
+        <h3 className="mt-0.5 text-[22px] font-semibold">{from} → {to}</h3>
       </div>
       {orphan && (
         <div className="rounded-[calc(var(--r)-6px)] bg-warn-soft px-3.5 py-3 text-[14px] leading-snug text-tx">

@@ -13,7 +13,7 @@ import { nightsBetween, usdToBase, TIER_LABELS } from '@/lib/trips/format'
 import type { CityCost } from '@/lib/trips/budget'
 import { stayMoneyState, stayRange } from '@/lib/trips/timeline'
 import type { Segment, Stay, Tier } from '@/lib/trips/types'
-import { Chips, CloseButton, addLink, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
+import { Chips, addLink, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
 import { normCity } from '@/lib/map/norm'
 
 // The stop editor (mock 15 §4): a bottom sheet instead of the centred Modal.
@@ -103,14 +103,11 @@ export function StopSheet({
     <Sheet label={initial ? `Edit ${initial.city}` : 'Add stop'} onClose={onClose}>
       <div className="flex items-center justify-between gap-3">
         <h3 className="min-w-0 truncate text-[22px] font-semibold">{initial ? initial.city : 'Add stop'}</h3>
-        <span className="flex min-w-0 items-center gap-3">
-          {initial?.country && (
-            <span className="truncate rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink">
-              {countryFlag(initial.country)} {initial.country}
-            </span>
-          )}
-          <CloseButton onClose={onClose} />
-        </span>
+        {initial?.country && (
+          <span className="min-w-0 truncate rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink">
+            {countryFlag(initial.country)} {initial.country}
+          </span>
+        )}
       </div>
 
       {!initial && (

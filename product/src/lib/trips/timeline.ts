@@ -1,7 +1,7 @@
 import type { Segment, Stay, TransportLeg, TripState } from './types'
 import { nightsBetween, segNights } from './format.ts'
 import { isBookedStatus } from './commitment.ts'
-import { normCity } from '../map/norm.ts'
+import { sameCity } from '../map/norm.ts'
 
 // The Trip timeline (mock 15 §1, #58): home → leg → stop → leg → stop … →
 // leg → home. Pure functions, node-testable; the screen only renders them.
@@ -123,9 +123,9 @@ const byArrive = (a: Segment, b: Segment) => {
 }
 const endId = (e: LegEnd) => (e.kind === 'home' ? 'home' : e.seg!.id)
 
-/** Which leg an entry sits on, by its from/to cities — the globe's match (flightFor). */
+/** Which leg an entry sits on, by its from/to cities — the globe's match (flightFor), forgiving a longer spelling of the same place. */
 export function legFor(legs: Leg[], t: Pick<TransportLeg, 'from' | 'to'>): Leg | undefined {
-  return legs.find((l) => normCity(l.from.city) === normCity(t.from) && normCity(l.to.city) === normCity(t.to))
+  return legs.find((l) => sameCity(l.from.city, t.from) && sameCity(l.to.city, t.to))
 }
 
 export function buildTimeline(state: TripState): Timeline {
@@ -204,5 +204,5 @@ export const stateOf = (status?: string): 'idea' | 'booked' => (isBookedStatus(s
 /** Moving a stop's Leave moves the leg after it (mock 15 §4): entries dated on the old departure follow. */
 export function shiftDepartures(transport: TransportLeg[], city: string, oldDepart: string, newDepart: string): TransportLeg[] {
   if (!oldDepart || !newDepart || oldDepart === newDepart) return transport
-  return transport.map((t) => (normCity(t.from) === normCity(city) && t.date === oldDepart ? { ...t, date: newDepart } : t))
+  return transport.map((t) => (sameCity(t.from, city) && t.date === oldDepart ? { ...t, date: newDepart } : t))
 }

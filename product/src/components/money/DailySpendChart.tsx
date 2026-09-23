@@ -1,6 +1,6 @@
 'use client'
 import { useMemo, useState } from 'react'
-import { dailySpend, everydayOnly } from '@/lib/trips/spending'
+import { dailySpend, everydayOnly, nightsSpan } from '@/lib/trips/spending'
 import { GROUPS, GROUP_ORDER, groupOf, categoryLabel } from '@/lib/trips/categories'
 import { toBase } from '@/lib/trips/format'
 import type { LedgerEntry } from '@/lib/trips/types'
@@ -60,11 +60,9 @@ export function DailySpendChart({
     <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
       <div className="flex items-baseline justify-between">
         <span className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">Daily spend</span>
-        {/* The average sits up here, where no bar can cover it (#66; mock 16 §4). It
-            replaces the day numbers, which the range under the bars already gives. */}
         <span className="text-[12px] text-tx3">
           {shortDay(from)} – {shortDay(to)}
-          {n > 0 && <> · avg {fmt(avg)} a day</>}
+          {tripStart && <> · day {nightsSpan(tripStart, from)} to {nightsSpan(tripStart, to)}</>}
         </span>
       </div>
       <div className="mt-2.5 flex items-center gap-2">
@@ -84,6 +82,10 @@ export function DailySpendChart({
       ) : (
         <svg viewBox={`0 0 ${W} ${H}`} className="mt-1.5 block w-full" role="img" aria-label={`Daily spend from ${from} to ${to}`}>
           <line x1={0} x2={W} y1={y(avg)} y2={y(avg)} stroke="var(--ln2)" strokeDasharray="3 3" />
+          {/* The average's number lives in the top-right corner, above the tallest bar (bars never rise
+              past TOP), where nothing can cover it (#66). Not at the end of its own line, where a tall
+              bar hid it, and not in the title line, which got too busy (Petra, 2026-09-23, on the phone). */}
+          <text x={W - 2} y={12} fontSize={10} fill="var(--tx3)" textAnchor="end">avg {fmt(avg)} a day</text>
           {startIdx > 0 && (
             <>
               <line x1={X0 + startIdx * slot} x2={X0 + startIdx * slot} y1={TOP - 4} y2={BASE} stroke="var(--ac2)" strokeWidth={1.5} strokeDasharray="4 3" />

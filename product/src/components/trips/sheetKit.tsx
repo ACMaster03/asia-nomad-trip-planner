@@ -66,15 +66,6 @@ export function StateChips({ value, onChange }: { value: 'idea' | 'booked'; onCh
   )
 }
 
-/** The ✕ every Trip sheet carries top-right, as the Money sheets do: a tall sheet leaves little scrim to tap. */
-export function CloseButton({ onClose }: { onClose: () => void }) {
-  return (
-    <button type="button" onClick={onClose} aria-label="Close" className="-m-2 flex size-11 flex-none items-center justify-center text-tx3">
-      ✕
-    </button>
-  )
-}
-
 export function Toggle({ on, onChange, label: name }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button
