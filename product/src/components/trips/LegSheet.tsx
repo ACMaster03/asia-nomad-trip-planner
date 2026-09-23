@@ -6,7 +6,9 @@ import { useMoney } from '@/lib/trips/Money'
 import { toBase } from '@/lib/trips/format'
 import { shortDate, stateOf, type Leg } from '@/lib/trips/timeline'
 import type { TransportLeg } from '@/lib/trips/types'
-import { Chips, StateChips, addLink, dangerBtn, hint, input, label, primaryBtn, uid } from './sheetKit'
+import { Chips, CloseButton, StateChips, addLink, dangerBtn, hint, input, label, primaryBtn, uid } from './sheetKit'
+import { normCity } from '@/lib/map/norm'
+import type { Segment } from '@/lib/trips/types'
 
 // Transport on a leg (mock 15 §6, #58). From, to and the day are the leg's,
 // taken from the stops on either side, and are not fields; the only date
@@ -16,9 +18,12 @@ import { Chips, StateChips, addLink, dangerBtn, hint, input, label, primaryBtn, 
 // because two stops always have a leg between them; "Remove transport" sits
 // under a rule once an entry exists.
 //
-// An entry that matches no leg (its from/to name no stop on the journey any
-// more) opens here too, with its own from and to as the title, so nothing is
-// orphaned out of reach.
+// An entry that matches no leg opens here too, with its own from and to as
+// the title, so nothing is out of reach. It says WHY it matches none (the
+// usual case, Petra 2026-09-23: the flight goes to a city that is not a stop
+// yet) and offers the two ways out: add that city as a stop, so the leg
+// appears and the entry moves onto it by itself, or move the entry onto one
+// of the journey's legs.
 
 const TYPES: { value: string; label: React.ReactNode }[] = [
   { value: 'Flight', label: <><Plane aria-hidden className="size-4" /> Flight</> },
@@ -36,19 +41,30 @@ const longDay = (iso: string) =>
   iso ? `${new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short' })}, ${shortDate(iso)}` : ''
 
 export function LegSheet({
-  leg, initial, rates, currencies, onClose, onSave, onRemove,
+  leg, initial, rates, currencies, legs = [], stops = [], onClose, onSave, onRemove, onAddStop,
 }: {
   leg: Leg | null
   initial: TransportLeg | null
   rates: Record<string, number>
   currencies: string[]
+  /** the journey's legs and in-plan stops, for an entry that is on none of them */
+  legs?: Leg[]
+  stops?: Segment[]
   onClose: () => void
   onSave: (t: TransportLeg) => void
   onRemove?: (id: string) => void
+  /** open Add stop with this city and arrival day filled in */
+  onAddStop?: (prefill: { city: string; arrive?: string }) => void
 }) {
   const { base, fmt } = useMoney()
-  const from = leg?.from.city ?? initial?.from ?? ''
-  const to = leg?.to.city ?? initial?.to ?? ''
+  // An entry on no leg can be moved onto one: its from and to become that leg's.
+  const [moveTo, setMoveTo] = useState('')
+  const target = moveTo ? legs.find((l) => l.key === moveTo) : undefined
+  const from = leg?.from.city ?? target?.from.city ?? initial?.from ?? ''
+  const to = leg?.to.city ?? target?.to.city ?? initial?.to ?? ''
+  const orphan = !leg && !!initial
+  const stopNamed = (city: string) => stops.find((s) => normCity(s.city) === normCity(city))
+  const missing = orphan ? [initial!.to, initial!.from].find((c) => !stopNamed(c)) : undefined
   const [type, setType] = useState(asType(initial?.type))
   const [otherType, setOtherType] = useState(initial && asType(initial.type) === 'Other' ? initial.type : '')
   const [date, setDate] = useState(initial?.date || leg?.date || '')
@@ -91,13 +107,40 @@ export function LegSheet({
 
   return (
     <Sheet label={initial ? 'Edit transport' : 'Add transport'} onClose={onClose}>
-      <div>
-        <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">
-          {/* The entry's own day when it has one (an overnight flight leaves the day before the stop begins), else the leg's. */}
-          {leg ? `Leg ${leg.index} · leaves ${leg.from.city}${(initial?.date || leg.date) ? ' ' + longDay(initial?.date || leg.date) : ''}` : 'Not on a leg of this journey'}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">
+            {/* The entry's own day when it has one (an overnight flight leaves the day before the stop begins), else the leg's. */}
+            {leg ? `Leg ${leg.index} · leaves ${leg.from.city}${(initial?.date || leg.date) ? ' ' + longDay(initial?.date || leg.date) : ''}` : 'Not on a leg of this journey'}
+          </div>
+          <h3 className="mt-0.5 text-[22px] font-semibold">{from} → {to}</h3>
         </div>
-        <h3 className="mt-0.5 text-[22px] font-semibold">{from} → {to}</h3>
+        <CloseButton onClose={onClose} />
       </div>
+      {orphan && (
+        <div className="rounded-[calc(var(--r)-6px)] bg-warn-soft px-3.5 py-3 text-[14px] leading-snug text-tx">
+          <p>
+            A leg runs between two stops that follow each other on the journey.{' '}
+            {missing
+              ? <><b>{missing}</b> is not a stop yet, so this entry has no leg to sit on. Add it as a stop and the entry moves onto that leg by itself.</>
+              : <><b>{initial!.from}</b> and <b>{initial!.to}</b> are both stops, but not one after the other, so there is no leg between them.</>}
+          </p>
+          {missing && onAddStop && (
+            <button type="button" onClick={() => onAddStop({ city: missing, arrive: missing === initial!.to ? initial!.date : undefined })} className={addLink + ' mt-1'}>
+              + Add {missing} as a stop
+            </button>
+          )}
+          {legs.length > 0 && (
+            <label className={label + ' mt-2'}>
+              Or move it onto a leg
+              <select className={input} value={moveTo} onChange={(e) => setMoveTo(e.target.value)}>
+                <option value="">Keep {initial!.from} → {initial!.to}</option>
+                {legs.map((l) => <option key={l.key} value={l.key}>{l.from.city} → {l.to.city}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+      )}
       <Chips ariaLabel="Type" value={type} onChange={setType} options={TYPES} />
       {type === 'Other' && (
         <input aria-label="What kind of transport" className={input + ' mt-0'} placeholder="Car, boat, …" value={otherType} onChange={(e) => setOtherType(e.target.value)} />

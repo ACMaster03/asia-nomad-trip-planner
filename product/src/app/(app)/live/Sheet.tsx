@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { lockBodyScroll } from '@/lib/scrollLock'
 
 // LIVHOLD bottom sheet (handoff frames 23/26 vocabulary): dim scrim + bottom-
@@ -7,6 +7,12 @@ import { lockBodyScroll } from '@/lib/scrollLock'
 // behavior mirrors components/trips/Modal.tsx — including the onCloseRef
 // pattern that keeps iOS from closing the keyboard on every keystroke of
 // parent-held form state (phone dogfood, 2026-07-24).
+//
+// Three ways out, because a tall sheet leaves almost no scrim to tap (Petra,
+// 2026-09-23, the first day of the timeline: "I cannot slide it down, I have
+// to quit the app"): tap the scrim, press Escape, or drag the handle down. The
+// drag lives on the handle zone only, so it never fights the sheet's own
+// scrolling; past 80px the sheet closes, short of it it springs back.
 export function Sheet({
   label,
   onClose,
@@ -17,6 +23,8 @@ export function Sheet({
   children: React.ReactNode
 }) {
   const sheetRef = useRef<HTMLDivElement>(null)
+  const drag = useRef<number | null>(null)
+  const [dy, setDy] = useState(0)
 
   const onCloseRef = useRef(onClose)
   useEffect(() => {
@@ -52,8 +60,31 @@ export function Sheet({
         aria-modal="true"
         aria-label={label}
         className="lv-sheet fixed inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col gap-[13px] overflow-y-auto overscroll-contain rounded-t-[var(--r)] bg-sf px-[18px] pb-[max(26px,env(safe-area-inset-bottom))] pt-2.5 text-tx outline-none"
+        style={dy ? { transform: `translateY(${dy}px)`, transition: 'none' } : undefined}
       >
-        <div aria-hidden className="mx-auto h-[5px] w-11 flex-none rounded-full bg-ln3" />
+        <div
+          aria-hidden
+          className="-mx-[18px] -mt-2.5 flex h-11 flex-none cursor-grab touch-none items-center justify-center"
+          onPointerDown={(e) => {
+            drag.current = e.clientY
+            e.currentTarget.setPointerCapture(e.pointerId)
+          }}
+          onPointerMove={(e) => {
+            if (drag.current !== null) setDy(Math.max(0, e.clientY - drag.current))
+          }}
+          onPointerUp={(e) => {
+            const far = drag.current !== null && e.clientY - drag.current > 80
+            drag.current = null
+            setDy(0)
+            if (far) onCloseRef.current()
+          }}
+          onPointerCancel={() => {
+            drag.current = null
+            setDy(0)
+          }}
+        >
+          <span className="h-[5px] w-11 rounded-full bg-ln3" />
+        </div>
         {children}
       </div>
     </div>

@@ -30,6 +30,8 @@ export default async function TripPreviewPage() {
       transport: [
         { id: 't1', type: 'flight', from: 'Budapest', to: 'Bangkok', date: '2026-08-31', time: '13:20', via: 'Shanghai', hours: 14.58, cur: 'HUF', price: 248_000, status: 'booked', include: true, chargeDate: '2026-07-09' },
         { id: 't2', type: 'flight', from: 'Bangkok', to: 'Hanoi', date: '2026-09-30', cur: 'USD', price: 0, status: 'idea', include: true },
+        // Goes to a city that is not a stop: lands under the timeline as "not on a leg" (Petra's real case, 2026-09-23).
+        { id: 't3', type: 'flight', from: 'Da Nang', to: 'Hong Kong', date: '2026-12-13', cur: 'USD', price: 258, status: 'booked', include: true, chargeDate: '2026-09-15' },
       ],
     },
   }

@@ -13,7 +13,8 @@ import { nightsBetween, usdToBase, TIER_LABELS } from '@/lib/trips/format'
 import type { CityCost } from '@/lib/trips/budget'
 import { stayMoneyState, stayRange } from '@/lib/trips/timeline'
 import type { Segment, Stay, Tier } from '@/lib/trips/types'
-import { Chips, addLink, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
+import { Chips, CloseButton, addLink, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
+import { normCity } from '@/lib/map/norm'
 
 // The stop editor (mock 15 §4): a bottom sheet instead of the centred Modal.
 // Arrive and Leave are the stop; the city and country were picked when the
@@ -31,10 +32,12 @@ import { Chips, addLink, dangerBtn, fmtDay, hint, input, kicker, label, primaryB
 const TONE = { ok: 'text-ac', warn: 'text-warn', muted: 'text-tx3' } as const
 
 export function StopSheet({
-  initial, cities, stays, cityCost, rates, nextCity, defaultArrive, todayIso, onClose, onSave, onDelete, onOpenStay, onAddStay,
+  initial, cities, stays, cityCost, rates, nextCity, defaultArrive, todayIso, prefill, onClose, onSave, onDelete, onOpenStay, onAddStay,
 }: {
   initial: Segment | null
   cities: CityLite[]
+  /** a new stop opened from a transport entry that names it: the city and the day it arrives are already known */
+  prefill?: { city: string; arrive?: string }
   /** the stop's stays, for the list inside the editor */
   stays: Stay[]
   cityCost: CityCost | undefined
@@ -50,10 +53,11 @@ export function StopSheet({
   onAddStay: () => void
 }) {
   const { fmt } = useMoney()
-  const [city, setCity] = useState(initial?.city ?? '')
-  const [country, setCountry] = useState(initial?.country ?? '')
+  const known = prefill ? cities.find((c) => normCity(c.city) === normCity(prefill.city)) : undefined
+  const [city, setCity] = useState(initial?.city ?? prefill?.city ?? '')
+  const [country, setCountry] = useState(initial?.country ?? known?.country ?? '')
   const [tier, setTier] = useState<number>(initial?.tier ?? 1)
-  const [arrive, setArrive] = useState(initial?.arrive ?? defaultArrive ?? '')
+  const [arrive, setArrive] = useState(initial?.arrive ?? prefill?.arrive ?? defaultArrive ?? '')
   const [depart, setDepart] = useState(initial?.depart ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [showNote, setShowNote] = useState(!!initial?.notes)
@@ -61,7 +65,7 @@ export function StopSheet({
   const sb = createClient()
 
   const [q, setQ] = useState('')
-  const [picked, setPicked] = useState(!!initial?.city)
+  const [picked, setPicked] = useState(!!initial?.city || !!prefill?.city)
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (debounce.current) clearTimeout(debounce.current)
@@ -97,18 +101,17 @@ export function StopSheet({
 
   return (
     <Sheet label={initial ? `Edit ${initial.city}` : 'Add stop'} onClose={onClose}>
-      {initial ? (
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="min-w-0 truncate text-[22px] font-semibold">{initial.city}</h3>
-          {initial.country && (
-            <span className="flex-none rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="min-w-0 truncate text-[22px] font-semibold">{initial ? initial.city : 'Add stop'}</h3>
+        <span className="flex min-w-0 items-center gap-3">
+          {initial?.country && (
+            <span className="truncate rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink">
               {countryFlag(initial.country)} {initial.country}
             </span>
           )}
-        </div>
-      ) : (
-        <h3 className="text-[22px] font-semibold">Add stop</h3>
-      )}
+          <CloseButton onClose={onClose} />
+        </span>
+      </div>
 
       {!initial && (
         <>
