@@ -98,6 +98,7 @@ export function fixtureTrip(today: string): Trip {
   ]
   return {
     id: 'fixture', owner: 'dev', name: 'Asia', state, ledger,
-    updated_at: new Date().toISOString(), created_at: new Date().toISOString(), state_rev: 0, ledger_rev: 0,
+    // made before departure, like Asia: a journey from before Money round 2 keeps every card
+    updated_at: new Date().toISOString(), created_at: '2026-08-10T09:00:00.000Z', state_rev: 0, ledger_rev: 0,
   }
 }

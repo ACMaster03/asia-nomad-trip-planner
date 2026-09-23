@@ -153,6 +153,10 @@ export interface TripState {
   autoImport?: boolean
   // Source keys ("stay:<id>") the user deleted from the ledger — never re-import.
   importSkip?: string[]
+  // Money's cards that wait for data (mock 16 §6, lib/trips/unlocks.ts): the
+  // day each first qualified on this journey, so it never disappears again as
+  // entries are edited. Optional and migration-free, like everything here.
+  moneyUnlocked?: Partial<Record<'chart' | 'range' | 'where' | 'projection', string>>
   // User reminders (frames 25–26). Optional — older documents simply lack it.
   reminders?: UserReminder[]
   // Recurring costs from home (#37). Optional and migration-free, like

@@ -9,6 +9,10 @@ import type { LedgerEntry } from '@/lib/trips/types'
 // coloured by the five families. 7/14/30/90-day window, ‹ › pages back
 // through the trip, tap a bar to open that day underneath. Days before the
 // trip start are drawn neutral and excluded from the average.
+//
+// Without `controls` (mock 16 §6: until the journey has 14 days with entries)
+// the switch and the arrows are not drawn: with four bars they are controls
+// for a window that does not exist. The page then passes the days there are.
 
 export type Range = 7 | 14 | 30 | 90
 export const RANGES: Range[] = [7, 14, 30, 90]
@@ -18,7 +22,7 @@ const shortDay = (iso: string, withWeekday = false) =>
   new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', withWeekday ? { weekday: 'short', day: 'numeric' } : { day: 'numeric', month: 'short' })
 
 export function DailySpendChart({
-  ledger, rates, from, to, todayIso, tripStart, range, onRange, onPage, canBack, canFwd, fmt, onShowDay,
+  ledger, rates, from, to, todayIso, tripStart, range, onRange, onPage, canBack, canFwd, fmt, onShowDay, controls = true,
 }: {
   ledger: LedgerEntry[]
   rates: Record<string, number>
@@ -33,6 +37,7 @@ export function DailySpendChart({
   canFwd: boolean
   fmt: (n: number) => string
   onShowDay: (date: string) => void
+  controls?: boolean
 }) {
   const [sel, setSel] = useState<string | null>(null)
   const days = useMemo(() => dailySpend(everydayOnly(ledger), rates, { from, to }), [ledger, rates, from, to])
@@ -65,7 +70,7 @@ export function DailySpendChart({
           {tripStart && <> · day {nightsSpan(tripStart, from)} to {nightsSpan(tripStart, to)}</>}
         </span>
       </div>
-      <div className="mt-2.5 flex items-center gap-2">
+      {controls && <div className="mt-2.5 flex items-center gap-2">
         <button onClick={() => onPage(-1)} disabled={!canBack} aria-label="Earlier" className="flex size-[34px] items-center justify-center rounded-full border-[1.5px] border-ln2 text-tx2 disabled:opacity-35">‹</button>
         <div className="flex flex-1 rounded-[14px] border-[1.5px] border-ln2 bg-inp p-[3px]" role="radiogroup" aria-label="Range">
           {RANGES.map((r) => (
@@ -75,7 +80,7 @@ export function DailySpendChart({
           ))}
         </div>
         <button onClick={() => onPage(1)} disabled={!canFwd} aria-label="Later" className="flex size-[34px] items-center justify-center rounded-full border-[1.5px] border-ln2 text-tx2 disabled:opacity-35">›</button>
-      </div>
+      </div>}
 
       {n === 0 ? (
         <p className="mt-3 text-base text-tx2">Nothing logged in this window yet.</p>
