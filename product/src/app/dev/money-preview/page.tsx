@@ -21,7 +21,7 @@ import Preview from './Preview'
 // ?screen=extras renders the Extras list (and its form) from the same fixture.
 // ?track=ask | no | yes seeds Money's once-per-account answer (migration 41):
 // ask shows the question over the quiet page, no the quiet page, yes (the
-// default) the full page. ?screen=track renders the Account page's switch.
+// default) the full page, with its Track spending switch by the budget cap.
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
@@ -41,7 +41,7 @@ export default async function MoneyPreviewPage({
   return (
     <HydrationBoundary state={dehydrate(qc)}>
       <Preview
-        screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : params.screen === 'track' ? 'track' : 'money'}
+        screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : 'money'}
       />
     </HydrationBoundary>
   )

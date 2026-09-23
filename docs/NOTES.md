@@ -16,17 +16,24 @@ waits for a talk with Patrik.
 this journey?" in a sheet over the quiet page (`TrackQuestion.tsx`): "Log a coffee, see what
 a day here costs.", "Yes, track it", "Not now", and "Asked once. Your bookings are here either
 way." Sliding it away, tapping beside it or pressing Escape counts as Not now, because the
-question is asked once. Yes is today's full page. Not now is the quiet page: the Bookings
-card, the add button and "Spending isn't tracked on this journey. Track it ›". The page never
-says ledger. The Account page, behind the Home avatar, gains a Money card with a "Track
-spending" switch (`TrackSpendingCard.tsx`), hidden while the answer cannot be read.
+question is asked once. Yes is today's full page, which gains a "Track spending" switch next
+to the Budget cap row, "Only for you, on every journey." (`TrackSpendingRow.tsx`), hidden
+while the answer cannot be read. Not now is the quiet page: the Bookings card, the add button
+and "Spending isn't tracked on this journey. Track it ›". The page never says ledger. Saving
+a cost from the quiet page's add button turns tracking on; the form says so above its
+button, "Saving this turns on spending tracking.", and the full page opens with the cost in it.
 
-**Changed before the merge (Petra, looking at the pictures).** The mock's list of what you
-add after saying no, titled Spending, is gone: spending listed right under "Spending isn't
-tracked on this journey" made no sense, and for anyone who logged before saying no it was
-the whole ledger again. The add button stays, as #62 decided; what you add is kept and shows
-once you track, and the quiet page's save confirmation says so: "Added · 950 Ft · shows once
-you track spending".
+**Changed before the merge (Petra, looking at the pictures), three things.** The mock's list
+of what you add after saying no, titled Spending, is gone: spending listed right under
+"Spending isn't tracked on this journey" made no sense, and for anyone who logged before
+saying no it was the whole ledger again. Without the list, a cost added on the quiet page
+had nowhere to show, so her next two ideas followed. The add button stays, as #62 decided,
+and saving a cost from it turns tracking on, reversing the mock's "logging one visa fee does
+not flip the answer": wanting to log is the answer, and one-offs like a visa fee have their
+own home now, the extra's paid-on date. And the switch moved from the Account page, where the
+mock put it "under your avatar", to the full Money page, where people look for it; its line
+says the answer is personal, because a switch on a journey's page reads like a setting for
+everyone on it, and Patrik's Money page does not change when Petra flips hers.
 
 **How the answer is read.** `profiles.track_spending`, read by `useTrackSpending` into four
 states (`lib/trips/tracking.ts`): ask, yes, no, unknown. Money waits for it only on a
@@ -36,11 +43,12 @@ at once, and a failed save puts the old answer back with the save banner.
 
 **Checked.** `tsc`; `eslint` (only the old SettingsClient error and three old warnings); 108
 node tests, two new: the four states, and which of them are quiet; `next build`. In the dev
-preview (`/dev/money-preview?track=ask|no|yes`, and `?screen=track` for the switch) at
-iPhone 13 width: the question over the quiet page; Yes opens the full page; Not now and a tap
-beside the sheet close it and keep the quiet page; the quiet page lists no spending, and a
-cost added there confirms "shows once you track spending"; Track it opens the full page; the
-switch flips and its line follows.
+preview (`/dev/money-preview?track=ask|no|yes`) at iPhone 13 width, with its database calls
+held open so a save stays in flight: the question over the quiet page; Yes opens the full
+page; Not now and a tap beside the sheet close it and keep the quiet page; the quiet page
+lists no spending; its add button's form shows the note, and saving opens the full page with
+the new cost in Latest; Track it opens the full page; the switch sits under the Budget cap
+row, and switching it off gives the quiet page.
 
 **Not in this round.** The cards that unlock as entries arrive and "More appears as you log"
 are round 2; the Subscriptions question on the entry sheet, the one-time offer and the

@@ -10,8 +10,9 @@ import { Sheet } from '@/app/(app)/live/Sheet'
 //
 // Sliding the sheet away, tapping beside it or pressing Escape counts as "Not
 // now": the question is asked once ("Asked once. Your bookings are here either
-// way."), and the quiet page under it keeps the way back, the "Track it" line,
-// with the same switch on the Account page.
+// way."), and the quiet page under it keeps the way back, the "Track it" line.
+// Saving a cost there turns tracking on too, and the full page carries the
+// "Track spending" switch to turn it off.
 export function TrackQuestion({ onAnswer }: { onAnswer: (track: boolean) => void }) {
   return (
     <Sheet label="Track what you spend on this journey?" onClose={() => onAnswer(false)}>

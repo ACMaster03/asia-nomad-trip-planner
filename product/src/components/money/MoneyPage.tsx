@@ -34,6 +34,7 @@ import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntrySheet } from './EntrySheet'
 import { TrackQuestion } from './TrackQuestion'
+import { TrackSpendingRow } from './TrackSpendingRow'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
 // Money — ONE page (round-two design signed off 2026-09-13; round three
@@ -55,9 +56,10 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // Stage 2, round 1 (mock 16 §1–2, 23 Sep): the once-per-account question,
 // "Track what you spend on this journey?", as a sheet over the quiet page on
 // the first visit, and the quiet page itself for "Not now": the bookings, the
-// add button and one line back. The answer lives on the
-// profile (migration 41; lib/trips/tracking.ts has the four states). "Yes"
-// is today's full page; the cards that unlock as entries arrive are round 2.
+// add button and one line back. The answer lives on the profile (migration 41;
+// lib/trips/tracking.ts has the four states). "Yes" is today's full page, with
+// a "Track spending" switch next to the Budget cap row; the cards that unlock
+// as entries arrive are round 2.
 //
 // A ninth card sat between the plan and the cap and is gone (2026-09-20). It
 // answered "what do we need to earn a month", first as projected outflow in
@@ -185,12 +187,11 @@ export default function MoneyPage() {
     mut.mutate({ kind: 'upsert', entry })
     setSheet(null)
     // The two-second confirmation (mock 16 §3): what landed, so nobody scrolls to check.
-    const amount = fmt(toBase(entry.amount, entry.currency, s.rates))
-    // On the quiet page nothing lists what you add, so the confirmation says
-    // where it went (Petra, 23 Sep, before round 1 merged).
-    toast(quiet
-      ? `Added · ${amount} · shows once you track spending`
-      : `${isNew ? 'Added' : 'Saved'} · ${amount} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
+    // On the quiet page, logging a cost is the answer: saving one turns
+    // tracking on, so a cost you add is never hidden (Petra, 23 Sep). The form
+    // says so above its button, and the full page opens with the cost in it.
+    if (quiet && isNew) setTrack.mutate(true)
+    toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
   }
   async function del(entry: LedgerEntry) {
     const listedExtra = entry.source?.kind === 'extra' ? s.extras.find((x) => x.id === entry.source!.id) : undefined
@@ -299,8 +300,8 @@ export default function MoneyPage() {
         // what you add after saying no. Petra, 23 Sep, before this merged: a
         // list of spending right under "Spending isn't tracked on this journey"
         // makes no sense, and for anyone who logged before saying no it was
-        // the whole ledger again. The add button stays (#62); what you add is
-        // kept and shows once you track, and the save confirmation says so.
+        // the whole ledger again. The add button stays (#62), and saving a
+        // cost from it turns tracking on (see save below).
         <>
           <BookingsCard
             stays={bookings.stays} transport={bookings.transport}
@@ -436,6 +437,8 @@ export default function MoneyPage() {
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
+      {/* Hidden when the answer can't be read: a switch that cannot save would lie. */}
+      {tracking === 'yes' && <TrackSpendingRow onChange={(on) => setTrack.mutate(on)} />}
       <div id="ledger" className={wide + ' scroll-mt-4'}>
         <LedgerList
           entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
@@ -455,6 +458,7 @@ export default function MoneyPage() {
           onSave={save}
           onDelete={sheet.entry ? del : undefined}
           onClose={() => setSheet(null)}
+          note={quiet && !sheet.entry ? 'Saving this turns on spending tracking.' : undefined}
         />
       )}
       {subSheet && (

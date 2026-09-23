@@ -39,8 +39,8 @@ Petra is new to software work; Patrik is not. The product conventions are in
   start, began with migration 41 (`profiles.track_spending`, the
   once-per-account answer), live on staging and production since 23 Sep:
   Petra applied it in the Supabase SQL editor, guided. Round 1 of the
-  stage 2 app code, the question, the quiet page and the Account switch,
-  is #79; round 2 (cards that unlock as entries arrive) and round 3
+  stage 2 app code, the question, the quiet page and the Track spending
+  switch on Money, is #79; round 2 (cards that unlock as entries arrive) and round 3
   (subscriptions, the One-offs editor on Money) follow. As built, every
   existing account is asked the question once; Patrik can change that.
 - Decided by Patrik on 23 Sep: the Plan card's per-night line is gone (#78),
