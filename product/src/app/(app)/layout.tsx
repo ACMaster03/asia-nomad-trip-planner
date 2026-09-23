@@ -67,8 +67,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <CheckInProvider>
           <OfflineWarmup />
           {/* pb clears the fixed bottom tab bar (52px bar + raised button slack
-              + safe area) so no screen's last card hides behind it. */}
-          <div className="min-h-screen pb-[calc(76px+env(safe-area-inset-bottom))]">
+              + safe area) so no screen's last card hides behind it. pt/px are
+              the other three insets: with viewport-fit=cover (layout.tsx) the
+              window reaches the status bar and, in landscape, the notch. All
+              four are 0 on a phone without a cutout. */}
+          <div className="min-h-screen pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pt-[env(safe-area-inset-top)] pb-[calc(76px+env(safe-area-inset-bottom))]">
             {/* Above every screen: an invite is to a trip you cannot navigate to
                 yet, so it has no page of its own to live on. Renders nothing
                 unless you actually have one. */}

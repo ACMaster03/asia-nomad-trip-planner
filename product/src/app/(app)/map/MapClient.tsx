@@ -91,7 +91,7 @@ export default function MapClient() {
       <Link
         href="/knowledge"
         aria-label="Search places"
-        className="absolute right-4 top-4 z-10 flex h-[44px] w-[44px] items-center justify-center rounded-full border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] text-[#d8e0e5] backdrop-blur"
+        className="absolute right-4 top-[calc(16px+env(safe-area-inset-top))] z-10 flex h-[44px] w-[44px] items-center justify-center rounded-full border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] text-[#d8e0e5] backdrop-blur"
       >
         <Search aria-hidden className="size-5" strokeWidth={2} />
       </Link>
@@ -112,7 +112,7 @@ export default function MapClient() {
         <button
           type="button"
           onClick={() => setSelected(null)}
-          className="absolute left-4 top-[64px] z-10 flex items-center gap-2 rounded-full border border-[rgba(140,184,220,.5)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base font-medium text-[#8CB8DC] backdrop-blur"
+          className="absolute left-4 top-[calc(64px+env(safe-area-inset-top))] z-10 flex items-center gap-2 rounded-full border border-[rgba(140,184,220,.5)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base font-medium text-[#8CB8DC] backdrop-blur"
         >
           {selected.label}&rsquo;s route
           <X aria-hidden className="size-4" strokeWidth={2} />

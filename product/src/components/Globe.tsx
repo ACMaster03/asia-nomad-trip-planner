@@ -397,7 +397,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     <>
       <div ref={boxRef} className="absolute inset-0" />
       {/* below MapClient's top-right search button (frame 19) */}
-      <div className="absolute right-4 top-[72px] z-10 flex flex-col items-end gap-1.5">
+      <div className="absolute right-4 top-[calc(72px+env(safe-area-inset-top))] z-10 flex flex-col items-end gap-1.5">
         <button className={chip + ' md:hidden'} onClick={() => setMenuOpen((o) => !o)}>
           <SlidersHorizontal aria-hidden className="size-4" strokeWidth={2} /> Map options
         </button>
@@ -422,7 +422,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
           type="button"
           onClick={() => setHazHelp(true)}
           aria-label="What Hazards shows"
-          className="absolute left-4 top-4 z-10 flex min-h-11 items-center gap-2 rounded-full border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base text-[#d8e0e5] backdrop-blur"
+          className="absolute left-4 top-[calc(16px+env(safe-area-inset-top))] z-10 flex min-h-11 items-center gap-2 rounded-full border border-[rgba(216,224,229,.16)] bg-[rgba(11,15,20,.86)] px-3.5 py-2 text-base text-[#d8e0e5] backdrop-blur"
         >
           <Zap aria-hidden className="size-4 text-[#D9A85C]" strokeWidth={2} />
           {hazInfo.total} hazard{hazInfo.total === 1 ? '' : 's'}

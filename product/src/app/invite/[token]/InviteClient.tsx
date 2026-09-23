@@ -102,7 +102,7 @@ export default function InviteClient({
   if (phase === 'dead') {
     return (
       <main
-        className="flex min-h-dvh flex-col px-6 pb-8 pt-10"
+        className="flex min-h-dvh flex-col px-6 pb-8 pt-[calc(40px+env(safe-area-inset-top))]"
         style={{ background: 'var(--washLogin)', color: 'var(--washInk)' }}
       >
         <div className="mx-auto flex w-full max-w-sm flex-col">
@@ -143,7 +143,7 @@ export default function InviteClient({
 
   return (
     <main
-      className="flex min-h-dvh flex-col px-6 pb-8 pt-10"
+      className="flex min-h-dvh flex-col px-6 pb-8 pt-[calc(40px+env(safe-area-inset-top))]"
       style={{ background: 'var(--washLogin)', color: 'var(--washInk)' }}
     >
       <div className="mx-auto flex w-full max-w-sm flex-1 flex-col">
