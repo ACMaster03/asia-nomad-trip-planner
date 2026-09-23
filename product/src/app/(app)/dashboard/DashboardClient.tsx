@@ -173,10 +173,10 @@ export default function DashboardClient({
             ))}
           </div>
         </div>
-        <Link href="/money" className={card + ' flex items-center justify-between'}>
+        <Link href="/money/entries" className={card + ' flex items-center justify-between'}>
           <span>
             <span className="block text-base font-semibold">Final numbers</span>
-            <span className="block text-base text-tx2">the full ledger, month by month</span>
+            <span className="block text-base text-tx2">all entries, month by month</span>
           </span>
           <ChevronRight aria-hidden className="size-5 text-ac2" />
         </Link>

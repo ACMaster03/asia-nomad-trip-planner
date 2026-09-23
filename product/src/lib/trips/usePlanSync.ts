@@ -5,7 +5,7 @@ import type { useLedgerMutation } from './useLedgerMutation'
 import type { Trip } from './types'
 
 // Plan → ledger sync (importCosts.ts), run by both screens that show the
-// ledger, Money and the Ledger screen, so an edit on the Trip page or a
+// ledger, Money and All entries, so an edit on the Trip page or a
 // one-off's cleared paid-on date lands whichever of them is open. Converges:
 // every upsert is deterministic, so once the refetched document matches the
 // plan this returns three empty arrays and the effect below no-ops. The page

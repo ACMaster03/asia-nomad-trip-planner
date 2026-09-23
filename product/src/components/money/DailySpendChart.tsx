@@ -157,7 +157,7 @@ export function DailySpendChart({
           <div className="flex items-center justify-between border-t border-ln pt-2.5">
             <button onClick={() => setSel(null)} className="min-h-11 text-[13px] text-tx3">tap the bar again to close</button>
             {dayEntries.length > 0 && (
-              <button onClick={() => onShowDay(sel)} className="min-h-11 text-base font-semibold text-ac2-deep">Show all {dayEntries.length} in the ledger ›</button>
+              <button onClick={() => onShowDay(sel)} className="min-h-11 text-base font-semibold text-ac2-deep">Open in All entries ›</button>
             )}
           </div>
         </div>

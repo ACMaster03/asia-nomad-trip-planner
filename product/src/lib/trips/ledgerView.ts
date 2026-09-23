@@ -1,7 +1,7 @@
 import type { LedgerEntry } from './types'
 import { toBase } from './format.ts'
 
-// What the Ledger screen lists, split at today (Petra, 23 Sep). A row dated
+// What All entries lists, split at today (Petra, 23 Sep). A row dated
 // after today is scheduled, not spent: a booked stay charged next week, a fare
 // still to be taken. Those used to sit at the top, above a "Today" band, so the
 // list opened on something nobody had logged, and the month total above them

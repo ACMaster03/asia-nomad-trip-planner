@@ -13,8 +13,8 @@ import type { useTripMutation } from '@/lib/trips/useTripMutation'
 import type { LedgerEntry, Trip } from '@/lib/trips/types'
 import { EntrySheet } from './EntrySheet'
 
-// The entry sheet with what saving and deleting mean, shared by Money and the
-// Ledger screen so a row edits the same way on both. The page owns whether the
+// The entry sheet with what saving and deleting mean, shared by Money and All
+// entries so a row edits the same way on both. The page owns whether the
 // sheet is open and the two mutations, because its save-error banners watch
 // them.
 export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, onAdded, note }: {

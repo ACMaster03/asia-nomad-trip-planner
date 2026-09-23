@@ -294,7 +294,7 @@ export default function PersonalisationFlow() {
                 <span className="flex-1">
                   <span className="block text-[17px] font-semibold">{w}</span>
                   <span className="block text-base text-tx2">
-                    {w === 'Just me' ? 'One set of costs, no splits' : w === 'Two of us' ? 'Per-person totals, shared ledger' : '3+ · set the number next'}
+                    {w === 'Just me' ? 'One set of costs, no splits' : w === 'Two of us' ? 'Per-person totals, shared costs' : '3+ · set the number next'}
                   </span>
                 </span>
                 <Check on={c.who === w} />

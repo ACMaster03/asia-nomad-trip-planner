@@ -7,7 +7,7 @@ import { ledgerView } from '@/lib/trips/ledgerView'
 import type { LedgerEntry } from '@/lib/trips/types'
 
 // The ledger — one continuous list, newest first, on a screen of its own
-// (/money/ledger, since 23 Sep). Month separators (mauve) and day separators
+// (All entries, /money/entries, since 23 Sep). Month separators (mauve) and day separators
 // both carry their total; a mauve band marks where the trip starts, so what
 // came before it (flights, gear, e-SIM) is visibly a different chapter. Rows
 // are the tap target for editing.
@@ -100,8 +100,8 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
 
   const n = scheduled.length
   return (
-    // No title row: the screen's own title says Ledger, and its subtitle says
-    // a row can be tapped.
+    // No title row: the screen's own title says what it is, and its subtitle
+    // says a row can be tapped.
     <div className="rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-1.5 text-tx">
       {n > 0 && (
         <div className="-mx-[18px] mb-1 mt-0.5 rounded-[12px] border border-dashed border-ln2 px-[18px]">

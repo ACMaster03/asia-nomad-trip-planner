@@ -84,7 +84,7 @@ export default function DeleteAccountPage() {
             Nothing is retained, nothing is archived, and there is no undo.
           </b>{' '}
           We keep no backup copy we could restore you from, so export anything you want to keep
-          before you do this. The app writes your trip and your money ledger out as files.
+          before you do this. The app writes your trip and all your money entries out as files.
         </p>
         <p>
           A trip owned by someone else that you had joined is theirs, and stays. If you want your

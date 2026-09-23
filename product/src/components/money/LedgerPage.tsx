@@ -16,12 +16,14 @@ import type { LedgerEntry } from '@/lib/trips/types'
 import { LedgerList } from './LedgerList'
 import { EntryEditor } from './EntryEditor'
 
-// The Ledger screen (Petra, 23 Sep). As the last card on Money it was over a
-// third of that page, 20 rows long, under nine other cards. Here it is the
-// whole screen, reached from Latest's "all entries", from the Ledger row at
-// the bottom of Money, and from a chart bar's "Show all in the ledger", which
-// opens it at that day. Rows edit exactly as they do on Money (EntryEditor).
-// Adding stays on Money, next to the page that shows what an entry changes.
+// All entries, the ledger's own screen (Petra, 23 Sep; #38). As the last card
+// on Money it was over a third of that page, 20 rows long, under nine other
+// cards. Here it is the whole screen, reached from Latest's "all entries",
+// from the All entries row at the bottom of Money, and from a chart bar's
+// "Open in All entries", which opens it at that day. The name is Petra's:
+// Patrik wanted a plainer word than ledger, which she had not met before. Rows
+// edit exactly as they do on Money (EntryEditor). Adding stays on Money, next
+// to the page that shows what an entry changes.
 export default function LedgerPage({ day }: { day?: string }) {
   const { fmt, base } = useMoney()
   const { trip } = useTripScreen()
@@ -47,7 +49,7 @@ export default function LedgerPage({ day }: { day?: string }) {
         <Link href="/money" className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep">
           <ChevronLeft aria-hidden className="size-5" />Money
         </Link>
-        <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">Ledger</h1>
+        <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">All entries</h1>
         <p className="mt-0.5 text-[14px] text-tx2">
           {s.meta.tripName} · {n} {n === 1 ? 'entry' : 'entries'}{canEdit && n > 0 ? ' · tap a row to edit' : ''}
         </p>

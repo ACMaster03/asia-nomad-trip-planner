@@ -115,7 +115,7 @@ export default function MoneyPage() {
   const [range, setRange] = useState<Range>(14)
   const [end, setEnd] = useState<string | null>(null)
 
-  // Plan → ledger sync, shared with the Ledger screen (usePlanSync).
+  // Plan → ledger sync, shared with All entries (usePlanSync).
   const imp = usePlanSync(trip.data, canEdit, mut)
 
   const model = useMemo(
@@ -180,9 +180,9 @@ export default function MoneyPage() {
     setEnd(next >= today ? null : next)
   }
   const rangeLabel = `${unlocks.range ? range : windowDays} days`
-  // A tapped bar's "Show all in the ledger" opens the Ledger screen at that
-  // day; the list there pages far enough down to scroll to it.
-  const showDay = (date: string) => router.push(`/money/ledger?day=${date}`)
+  // A tapped bar's "Open in All entries" opens that screen at the day; the
+  // list there pages far enough down to scroll to it.
+  const showDay = (date: string) => router.push(`/money/entries?day=${date}`)
 
   const plannedNights = plan.reduce((a, p) => a + p.nights, 0)
   const cap = s.meta.budgetCap || 0
@@ -359,7 +359,7 @@ export default function MoneyPage() {
       {canEdit && imp && imp.candidates.length > 0 && s.autoImport === false && (
         <div className={'lv-enter rounded-[var(--r)] bg-sf p-4 ' + wide}>
           <div className="text-base font-semibold">Import {imp.candidates.length} cost{imp.candidates.length > 1 ? 's' : ''} from the Trip page?</div>
-          <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date, and extras with a paid-on date, can sit in the ledger as rows kept in sync with the Trip page.</p>
+          <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date, and extras with a paid-on date, can be added to All entries and kept in sync with the Trip page.</p>
           <button onClick={importNow} disabled={mut.isPending} className="mt-3 rounded-[var(--rCtl)] bg-ac px-[18px] py-2.5 text-base font-semibold text-on disabled:opacity-50">
             Import and keep importing
           </button>
@@ -408,15 +408,17 @@ export default function MoneyPage() {
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
-      {/* The ledger is a screen of its own (Petra, 23 Sep): as the last card
-          it was over a third of this page. One row here, and Latest's
-          "all entries", lead to it; Latest shows nothing on a journey whose
-          only rows are bookings, so this row is the way in that always exists. */}
+      {/* The ledger is a screen of its own, All entries (Petra, 23 Sep; the
+          name is hers, Patrik wanted a plainer word than ledger): as the last
+          card it was over a third of this page (#38). One row here, and
+          Latest's "all entries", lead to it; Latest shows nothing on a journey
+          whose only rows are bookings, so this row is the way in that always
+          exists. */}
       {unlocks.first && (
-        <Link href="/money/ledger" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
+        <Link href="/money/entries" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
           <span>
-            <span className="block text-base font-semibold">Ledger</span>
-            <span className="block text-[14px] text-tx2">{ledger.length} {ledger.length === 1 ? 'entry' : 'entries'}, newest first</span>
+            <span className="block text-base font-semibold">All entries</span>
+            <span className="block text-[14px] text-tx2">{ledger.length}, newest first</span>
           </span>
           <ChevronRight aria-hidden className="size-5 text-ac2" />
         </Link>

@@ -20,8 +20,9 @@ import Preview from './Preview'
 // Home instead: Money paints "Loading…" until it knows today's date, Home
 // server-renders the trip document, so Home is where a mismatch shows.
 // ?screen=extras renders the Extras list (and its form) from the same fixture.
-// ?screen=ledger renders the Ledger screen, and &show=YYYY-MM-DD opens it at
-// that day, the way a chart bar's "Show all in the ledger" does.
+// ?screen=entries renders All entries, the ledger's screen, and
+// &show=YYYY-MM-DD opens it at that day, the way a chart bar's "Open in All
+// entries" does.
 // ?track=ask | no | yes seeds Money's once-per-account answer (migration 41):
 // ask shows the question (over the full page, since the fixture has logged
 // costs), no the quiet page, yes (the default) the full page; both carry the
@@ -60,7 +61,7 @@ export default async function MoneyPreviewPage({
   return (
     <HydrationBoundary state={dehydrate(qc)}>
       <Preview
-        screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : params.screen === 'ledger' ? 'ledger' : 'money'}
+        screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : params.screen === 'entries' ? 'entries' : 'money'}
         show={params.show}
       />
     </HydrationBoundary>

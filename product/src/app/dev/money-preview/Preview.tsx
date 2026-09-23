@@ -16,7 +16,7 @@ import { ExtrasTab } from '@/components/trips/ExtrasTab'
 // CLOSED, so without it every destructive action in this preview silently
 // declined and looked like a dead button. A harness that cannot test a delete
 // is not the harness for the screen with the deletes on it.
-export default function Preview({ screen, show }: { screen: 'money' | 'home' | 'extras' | 'ledger'; show?: string }) {
+export default function Preview({ screen, show }: { screen: 'money' | 'home' | 'extras' | 'entries'; show?: string }) {
   return (
     <TripScopeProvider initialTripId="fixture" initialRole="owner">
       <MoneyProvider initialBase="HUF">
@@ -25,7 +25,7 @@ export default function Preview({ screen, show }: { screen: 'money' | 'home' | '
             <div className="pb-20">
               {screen === 'home' ? <DashboardClient userEmail="dev@example.com" userName="Dev" />
                 : screen === 'extras' ? <ExtrasTab />
-                  : screen === 'ledger' ? <LedgerPage day={show} />
+                  : screen === 'entries' ? <LedgerPage day={show} />
                     : <MoneyPage />}
             </div>
           </ToastProvider>
