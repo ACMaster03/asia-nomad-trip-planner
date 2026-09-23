@@ -58,7 +58,7 @@ export function ExtraForm({
         </div>
         <label className={label}>Paid on
           <input type="date" className={input} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
-          <span className={hint}>Empty means not paid yet. A date puts the payment on Money for you.</span>
+          <span className={hint}>Empty date means not paid yet. If you add a date, it puts the payment on the Money page for you.</span>
         </label>
         <div className="flex gap-2 pt-1">
           <button onClick={submit} className="flex-1 rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-base font-semibold text-on">Save</button>
