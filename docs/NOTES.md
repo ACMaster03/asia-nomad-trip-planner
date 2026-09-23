@@ -93,7 +93,8 @@ after "…never added together", so the card stays as quiet as before until ⓘ 
 Live with #76; Petra saw it on the phone. Her next ask: only the paid total bold in the
 Total row, the planned total regular, "to anchor the essence of this whole rectangle". It
 also made the card consistent: every row above already had Paid bold and Planned regular,
-and the Total row was the one place with both bold.
+and the Total row was the one place with both bold. Live with #77; Petra confirmed it on the
+phone the same morning.
 
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
