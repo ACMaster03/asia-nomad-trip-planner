@@ -58,9 +58,9 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // the quiet page, or over your own page if you already log costs), and the
 // quiet page itself for "Not now": the bookings, the
 // add button and one line back. The answer lives on the profile (migration 41;
-// lib/trips/tracking.ts has the four states). "Yes" is today's full page, with
-// a "Track spending" switch next to the Budget cap row; the cards that unlock
-// as entries arrive are round 2.
+// lib/trips/tracking.ts has the four states). "Yes" is today's full page. Both
+// versions carry one "Track spending" switch right under their first card; the
+// cards that unlock as entries arrive are round 2.
 //
 // A ninth card sat between the plan and the cap and is gone (2026-09-20). It
 // answered "what do we need to earn a month", first as projected outflow in
@@ -304,8 +304,8 @@ export default function MoneyPage() {
         // who does not track still has. The page never says ledger, opt-in or
         // analytics; it says bookings and spending.
         //
-        // No list of spending under the line, although the mock had one for
-        // what you add after saying no. Petra, 23 Sep, before this merged: a
+        // No list of spending under the switch, although the mock had one for
+        // what you add after saying no. Petra, 23 Sep, before #79 merged: a
         // list of spending right under "Spending isn't tracked on this journey"
         // makes no sense, and for anyone who logged before saying no it was
         // the whole ledger again. The add button stays (#62), and saving a
@@ -317,14 +317,7 @@ export default function MoneyPage() {
             draftedStays={bookings.draftedStays} draftStays={bookings.draftStays}
             fmt={fmt} todayIso={today}
           />
-          <button
-            type="button"
-            onClick={() => setTrack.mutate(true)}
-            className={'flex min-h-11 w-full items-center justify-between gap-2.5 rounded-[14px] bg-tag px-3.5 py-2.5 text-left text-[14px] text-tag-ink ' + wide}
-          >
-            <span>Spending isn&apos;t tracked on this journey.</span>
-            <b className="whitespace-nowrap text-ac2-deep">Track it ›</b>
-          </button>
+          <TrackSpendingRow on={false} onChange={(on) => setTrack.mutate(on)} className={wide} />
         </>
       ) : (
       <>
@@ -395,6 +388,10 @@ export default function MoneyPage() {
         )}
       </div>
 
+      {/* Right under the first card, as on the quiet page. Hidden when the
+          answer can't be read: a switch that cannot save would lie. */}
+      {tracking !== 'unknown' && <TrackSpendingRow on onChange={(on) => setTrack.mutate(on)} className={wide} />}
+
       <LatestStrip entries={ledger} rates={s.rates} fmt={fmt} todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} />
 
       {canEdit && imp && imp.candidates.length > 0 && autoImport === false && (
@@ -445,8 +442,6 @@ export default function MoneyPage() {
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
-      {/* Hidden when the answer can't be read: a switch that cannot save would lie. */}
-      {tracking === 'yes' && <TrackSpendingRow onChange={(on) => setTrack.mutate(on)} />}
       <div id="ledger" className={wide + ' scroll-mt-4'}>
         <LedgerList
           entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}

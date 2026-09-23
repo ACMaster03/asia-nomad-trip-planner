@@ -13,9 +13,9 @@ import { Sheet } from '@/app/(app)/live/Sheet'
 // opened (Petra, 23 Sep, before this merged: panels get swiped away out of
 // habit, and a swipe that saved "Not now" would have made a tracker's whole
 // spending seem to vanish on the first visit). Once answered it is never
-// asked again ("Asked once. Your bookings are here either way."); the quiet
-// page's "Track it" line, a cost saved there, and the full page's "Track
-// spending" switch change the answer later.
+// asked again ("Asked once. Your bookings are here either way."); the "Track
+// spending" switch under the first card, on both versions of the page, and a
+// cost saved on the quiet page change the answer later.
 export function TrackQuestion({ onAnswer, onDismiss }: {
   onAnswer: (track: boolean) => void
   onDismiss: () => void
