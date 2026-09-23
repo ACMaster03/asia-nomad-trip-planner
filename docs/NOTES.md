@@ -38,8 +38,12 @@ the journey uses 77 % of it", or in amber "goes 937 111 Ft over it"; "projected 
 meant nothing to her. The per-night line under a city's opened sum now reads "Bangkok costs
 35 446 Ft a night on average, the stay included"; Petra would drop the line, Patrik asked for
 the number on 19 Sep to compare cities, so it stays until he says otherwise. One finding
-was data, not code: Insurance and visas read "nothing paid yet" because no ledger entry sits
-in those categories; the card can only count what is logged there, whatever its date.
+was data, not code, and points at a gap: Insurance and visas read "nothing paid yet" because
+they were entered as planned extras (the Extras list, which has no date) and the payments
+were never logged on Money; the Paid column counts only ledger rows. Today a one-off has to
+be typed twice, once as a plan and once as a payment. For stage 2's One-offs editor: a
+"paid on" date on the extra that writes its ledger row itself, the way a booking's charge
+date does through the import.
 
 **Stage 2, not started.** The once-per-account question and the quiet page for No (a
 `profiles` column, a migration Patrik applies), the cards that unlock as entries arrive
