@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Info } from 'lucide-react'
+import { ChevronDown, Info } from 'lucide-react'
 import type { StopPlan, BookingRow, Projection } from '@/lib/trips/spending'
 import type { TripState } from '@/lib/trips/types'
 
@@ -89,8 +89,12 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
                     {p.nights} nights{live ? ` · ${p.nightsIn} in` : ''} · {stayWord(p)}
                   </span>
                 </span>
-                <span className={'flex-none text-base font-semibold' + (p.stayLabel === 'draft' ? ' text-warn' : '')}>
-                  {p.remaining > 0 ? '≈ ' : ''}{fmt(p.projected)}
+                <span className="flex flex-none items-center gap-1">
+                  <span className={'text-base font-semibold' + (p.stayLabel === 'draft' ? ' text-warn' : '')}>
+                    {p.remaining > 0 ? '≈ ' : ''}{fmt(p.projected)}
+                  </span>
+                  {/* The one sign that a row opens (Petra, 23 Sep: nothing told a first-time user). */}
+                  <ChevronDown aria-hidden className={'size-4 text-tx3 transition-transform duration-[180ms]' + (shown ? ' rotate-180' : '')} />
                 </span>
               </button>
               {shown && (
@@ -132,7 +136,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
               transport, one-offs{unbooked > 0 && <> · <span className="text-warn">{unbooked} {unbooked === 1 ? 'leg' : 'legs'} to book</span></>}
             </span>
           </span>
-          <span className="text-ac2">{sum ? '⌃' : '›'}</span>
+          <ChevronDown aria-hidden className={'mt-1 size-4 flex-none text-tx3 transition-transform duration-[180ms]' + (sum ? ' rotate-180' : '')} />
         </button>
         {sum && (
           <div className="mb-2 rounded-[var(--rCtl)] bg-inp px-3.5 py-2">
