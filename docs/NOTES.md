@@ -7,6 +7,67 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-23
 
+### BUILT — Money stage 2, round 2: the cards arrive as entries do (mock 16 §6)
+
+Asked for by Petra the same day, after #80. Pull request #81.
+
+**What changed, on a journey made from now on.** Money starts short and the cards arrive as
+entries do, by the mock's table (`lib/trips/unlocks.ts`, the numbers in `UNLOCK`):
+
+- the overview and the ledger with the first entry, the plan's rows included;
+- the "beyond the everyday" line once a stay, fare or one-off is paid on or after the start;
+- Daily spend at 3 days with everyday entries, drawn over the days there are (from the first
+  one, at most 14 back), with no 7/14/30/90 switch or arrows until 14 days;
+- Where it goes at 3 colour families;
+- the Projected total tile, the Plan card and the cap row's "at this pace…" after 7 days of
+  pace, and never before the chart;
+- as the last line, "More appears as you log: a chart after 3 days, a projection after a
+  week.", naming only what is still to come, until both have come.
+
+Per day keeps its "measuring… 1 of 3 days". Latest, Bookings, Subscriptions, One-offs and the
+Budget cap row show from day one, as before (the Subscriptions and One-offs rules are round 3).
+
+**A card never goes away.** The day each of the four data-hungry cards first qualified is saved
+in the journey (`state.moneyUnlocked`; no migration, the trip document is JSON) by whoever can
+edit it, and a viewer reads what they saved, so deleting or re-dating entries never takes a card
+back off the page.
+
+**Journeys that already existed keep everything.** Caught in the preview before the pull
+request: the Asia test data has 12 days with everyday entries, and its 7/14/30/90 switch
+vanished. A journey created before 09:45 UTC on 23 Sep (`ROUND2_SHIPPED`, when the pull request
+was opened) looks as it did: every card, the overview and its strip included, also before
+departure or with nothing logged. That comes from its creation time on every view and is never
+saved, so opening Money saves nothing to an existing journey: a save there would bump the
+journey's version and could turn a partner's save at the same moment into a conflict. The line
+is a moment rather than a day so that a journey made after the merge starts short at once,
+which also makes round 2 testable on a fresh journey today. If the merge slips past 23 Sep, the
+line moves to the merge time; otherwise a journey made in between loses the cards it had.
+
+**Checked.** `tsc`; `eslint` (the same four old findings); 119 node tests, ten new: the mock's
+days, a week of pace with nothing logged (no projection), the switch at 14 days (the plan's
+rows and future dates do not count), a saved card staying, an old journey having everything
+and nothing to save, the line between old and new journeys (whatever offset the timestamp
+carries); `next build`. Reading the diff before the pull request caught one more: the cap row
+said "% spent" whenever there was no pace yet, and a first version asked only whether the
+projection had unlocked, which an old journey before departure always has; it asks both now. In the dev preview at iPhone 13
+width, with the new `?day=N` replay (the journey as of its Nth day, dated as made after round
+2, the browser clock set to match): day 1 measuring, no chart and no projection, the last line
+naming both; day 4 the chart without its switch, "24 739 Ft everyday costs over 3 days in
+Bangkok", the line naming the projection; day 9 the projection and Plan, and the cap row's "at
+this pace the journey uses 77% of it", the mock's own number; today (an older journey) every
+card, the switch included. In the browser's saved copy: day 4 saves chart and Where it goes,
+day 9 adds the projection, the older journey saves nothing.
+
+**Still to say (Patrik).** Only the 7 days is his (22 Sep); the chart at 3 days, the switch at
+14 days, Where it goes at 3 families and "a card never disappears" are the mock's proposals.
+Home's money card still says "Spent X of ≈ Y projected" from day one, while Money waits 7 days
+for its projection. And whether journeys made before round 2 should start short too (as built,
+they keep every card).
+
+**Not in this round.** The one-line Subscriptions door on a journey longer than a month, the
+Subscriptions question on the entry sheet, the one-time offer and the One-offs editor on Money
+are round 3.
+
 ### BUILT — Money stage 2, round 1: the question and the quiet page (mock 16 §1–2)
 
 Asked for by Petra the same day, right after migration 41 went live; the globe question

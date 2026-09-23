@@ -3,6 +3,7 @@ import { dehydrate, QueryClient } from '@tanstack/react-query'
 import { HydrationBoundary } from '@/lib/query/HydrationBoundary'
 import { tk } from '@/lib/trips/keys'
 import { fixtureTrip } from './fixture'
+import { addDays } from '@/lib/trips/spending'
 import Preview from './Preview'
 
 // DEV ONLY: renders the Money page from a fixture trip, no sign-in needed.
@@ -24,10 +25,14 @@ import Preview from './Preview'
 // costs), no the quiet page, yes (the default) the full page; both carry the
 // Track spending switch under their first card. ?logged=0 drops the costs typed on Money
 // from the fixture, for a newcomer: the question then sits over the quiet page.
+// ?day=N replays the journey as of its Nth day (day 1 = the start date), for
+// round 2's unlocks: the fixture is built for that date and keeps only the
+// costs typed by then (the plan's rows stay, like the plan). The page reads
+// today from the device, so pair it with a browser clock set to the same day.
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string }>
+  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string }>
 }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   // ?slow=<ms> streams the page that long after the shell, the way the real
@@ -38,7 +43,15 @@ export default async function MoneyPreviewPage({
   const slow = Number(params.slow)
   if (slow > 0) await new Promise((r) => setTimeout(r, Math.min(slow, 10_000)))
   const qc = new QueryClient()
-  const fixture = fixtureTrip(new Date().toISOString().slice(0, 10))
+  const realToday = new Date().toISOString().slice(0, 10)
+  const replayDay = Number(params.day) > 0 ? addDays(fixtureTrip(realToday).state.meta.startDate!, Number(params.day) - 1) : null
+  const fixture = fixtureTrip(replayDay ?? realToday)
+  if (replayDay) {
+    fixture.ledger = fixture.ledger.filter((e) => e.source || e.date <= replayDay)
+    // replayed as a journey made after round 2 shipped, so it starts short
+    // instead of keeping every card the way an older journey does
+    fixture.created_at = '2026-12-01T00:00:00.000Z'
+  }
   if (params.logged === '0') fixture.ledger = fixture.ledger.filter((e) => e.source)
   qc.setQueryData(tk.trip('fixture'), fixture)
   qc.setQueryData(tk.trackSpending, params.track === 'ask' ? 'ask' : params.track === 'no' ? 'no' : 'yes')

@@ -15,11 +15,12 @@ import { moneyModel } from '@/lib/trips/moneyModel'
 import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
 import { countryCurrencies } from '@/lib/catalogue/countryCurrencies'
 import { addDays } from '@/lib/trips/spending'
+import { moneyUnlocks, moreLine } from '@/lib/trips/unlocks'
 import { categoryLabel } from '@/lib/trips/categories'
 import { tripDay } from '@/lib/trips/progress'
 import { useConfirm } from '@/components/Confirm'
 import { useToast } from '@/components/Toast'
-import { toBase } from '@/lib/trips/format'
+import { nightsBetween, toBase } from '@/lib/trips/format'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -59,8 +60,14 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // quiet page itself for "Not now": the bookings, the
 // add button and one line back. The answer lives on the profile (migration 41;
 // lib/trips/tracking.ts has the four states). "Yes" is today's full page. Both
-// versions carry one "Track spending" switch right under their first card; the
-// cards that unlock as entries arrive are round 2.
+// versions carry one "Track spending" switch right under their first card.
+//
+// Round 2 (mock 16 §6): the full page starts short and earns its cards as
+// entries arrive, per journey. The overview, Latest and the ledger come with
+// the first entry; the daily chart with 3 days of everyday entries, its range
+// switch with 14; Where it goes with 3 colour families; the projected total and
+// the Plan with 7 days of pace. Until then the last line says what is coming.
+// Once a card has appeared it stays (lib/trips/unlocks.ts).
 //
 // A ninth card sat between the plan and the cap and is gone (2026-09-20). It
 // answered "what do we need to earn a month", first as projected outflow in
@@ -137,6 +144,30 @@ export default function MoneyPage() {
     () => (trip.data && today ? moneyModel(trip.data.state, trip.data.ledger, cityIdx, today) : null),
     [trip.data, cityIdx, today],
   )
+  const unlocks = useMemo(
+    () => (trip.data && model && today
+      ? moneyUnlocks({
+        ledger: trip.data.ledger, todayIso: today, tripStart: trip.data.state.meta.startDate || undefined,
+        pace: model.pace, recorded: trip.data.state.moneyUnlocked, createdAt: trip.data.created_at,
+      })
+      : null),
+    [trip.data, model, today],
+  )
+  // Record the day a card first qualifies, so it never disappears again on this
+  // journey. Editors only, like the import above; a viewer reads what they wrote.
+  // Keeps any date already there: the first appearance is the one that counts.
+  // A journey from before round 2 has nothing to record (it keeps everything,
+  // lib/trips/unlocks.ts), so opening Money saves nothing to it.
+  useEffect(() => {
+    if (!canEdit || !unlocks || !today) return
+    const fresh = unlocks.toRecord
+    if (!fresh.length) return
+    stateMut.mutate((cur) => ({
+      ...cur,
+      moneyUnlocked: { ...Object.fromEntries(fresh.map((k) => [k, today])), ...cur.moneyUnlocked },
+    }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stateMut is stable; unlocks derives from trip.data
+  }, [unlocks, canEdit, today])
 
   // The answer decides the page's shape, so Money waits for it, but only on a
   // device's first visit (it is cached like everything else) and never past a
@@ -145,7 +176,7 @@ export default function MoneyPage() {
   if (trip.isPending || (trip.data && (!today || answer === undefined))) {
     return <main className="mx-auto max-w-xl p-6 text-base text-tx2">Loading…</main>
   }
-  if (!trip.data || !model) return <CreateTripEmptyState />
+  if (!trip.data || !model || !unlocks) return <CreateTripEmptyState />
   const tracking: Tracking = answer ?? 'unknown'
   const quiet = isQuiet(tracking, hasLoggedSpending(trip.data.ledger))
   const s = trip.data.state
@@ -154,9 +185,15 @@ export default function MoneyPage() {
   const tripStart = s.meta.startDate || undefined
   const day = tripDay(s.meta, today)
 
-  // chart window: `range` days ending on `end` (today unless paged back)
-  const to = end ?? today
-  const from = addDays(to, -(range - 1))
+  // chart window: `range` days ending on `end` (today unless paged back). Until
+  // the journey has 14 days with everyday entries there is no switch and no
+  // paging: the window is the days there are, from the first everyday entry,
+  // 14 at most, and Where it goes counts the same days.
+  const lockedFrom = unlocks.firstEveryday && unlocks.firstEveryday > addDays(today, -13) ? unlocks.firstEveryday : addDays(today, -13)
+  const to = unlocks.range ? end ?? today : today
+  const from = unlocks.range ? addDays(to, -(range - 1)) : lockedFrom
+  const windowDays = nightsBetween(from, to) + 1
+  const chartRange: Range = unlocks.range ? range : windowDays <= 7 ? 7 : 14
   const firstDate = ledger.reduce((m, e) => (e.date && e.date < m ? e.date : m), today)
   const canBack = from > firstDate
   const canFwd = to < today
@@ -164,7 +201,7 @@ export default function MoneyPage() {
     const next = addDays(to, dir * range)
     setEnd(next >= today ? null : next)
   }
-  const rangeLabel = `${range} days`
+  const rangeLabel = `${unlocks.range ? range : windowDays} days`
   // The ledger is paged now, so a tapped bar has to page it far enough down
   // before it can scroll — LedgerList owns both halves of that.
   const scrollToDay = (date: string) => setReveal((r) => ({ date, n: (r?.n ?? 0) + 1 }))
@@ -321,7 +358,8 @@ export default function MoneyPage() {
         </>
       ) : (
       <>
-      {/* overview */}
+      {/* overview: with the first entry, imports included */}
+      {unlocks.first && (
       <div className={'lv-enter rounded-[var(--r)] bg-sf p-5 ' + wide}>
         <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">
           Spent so far{day ? ` · ${day} ${day === 1 ? 'day' : 'days'}` : tripStart ? ' · before departure' : ''}
@@ -347,11 +385,15 @@ export default function MoneyPage() {
               </>
             )}
           </div>
-          <div>
-            <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">Projected total</div>
-            <div className="mt-0.5 whitespace-nowrap text-[22px] font-semibold">{fmt(projection.projected)}</div>
-            <div className="text-[13px] text-tx2">{plannedNights} planned nights, {pace.perDay !== null ? 'at this pace' : 'city averages'}</div>
-          </div>
+          {/* After a week of pace; absent before, not greyed: an absent tile asks
+              no question, a greyed one asks "why not" (mock 16 §4). */}
+          {unlocks.projection && (
+            <div>
+              <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">Projected total</div>
+              <div className="mt-0.5 whitespace-nowrap text-[22px] font-semibold">{fmt(projection.projected)}</div>
+              <div className="text-[13px] text-tx2">{plannedNights} planned nights, {pace.perDay !== null ? 'at this pace' : 'city averages'}</div>
+            </div>
+          )}
         </div>
         {cap > 0 && (
           <>
@@ -378,7 +420,7 @@ export default function MoneyPage() {
             subscriptions — correctly. Until now it did it in silence, and
             nothing on the page admitted that 989 000 of a million spent was
             simply not in that number. */}
-        {beyond.total > 0 && (
+        {beyond.total > 0 && unlocks.beyond && (
           <div className="mt-3.5 rounded-[var(--rCtl)] bg-inp px-3.5 py-3">
             <div className="text-base font-semibold">+ {fmt(beyond.total)} beyond the everyday</div>
             <div className="mt-0.5 text-[13px] text-tx2">
@@ -387,6 +429,7 @@ export default function MoneyPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Right under the first card, as on the quiet page. Hidden when the
           answer can't be read: a switch that cannot save would lie. */}
@@ -404,12 +447,14 @@ export default function MoneyPage() {
         </div>
       )}
 
-      <DailySpendChart
-        ledger={ledger} rates={s.rates} from={from} to={to} todayIso={today} tripStart={tripStart}
-        range={range} onRange={(r) => { setRange(r); setEnd(null) }} onPage={page} canBack={canBack} canFwd={canFwd}
-        fmt={fmt} onShowDay={scrollToDay}
-      />
-      <WhereItGoes ledger={ledger} rates={s.rates} from={from} to={to} fmt={fmt} rangeLabel={rangeLabel} />
+      {unlocks.chart && (
+        <DailySpendChart
+          ledger={ledger} rates={s.rates} from={from} to={to} todayIso={today} tripStart={tripStart}
+          range={chartRange} onRange={(r) => { setRange(r); setEnd(null) }} onPage={page} canBack={canBack} canFwd={canFwd}
+          fmt={fmt} onShowDay={scrollToDay} controls={unlocks.range}
+        />
+      )}
+      {unlocks.where && <WhereItGoes ledger={ledger} rates={s.rates} from={from} to={to} fmt={fmt} rangeLabel={rangeLabel} />}
       <BookingsCard
         stays={bookings.stays} transport={bookings.transport}
         paid={bookings.paid} toPay={bookings.toPay}
@@ -424,7 +469,9 @@ export default function MoneyPage() {
         onToggleRemind={toggleRemind}
       />
       <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} />
-      <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} paceKnown={pace.perDay !== null} />
+      {unlocks.projection && (
+        <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} paceKnown={pace.perDay !== null} />
+      )}
       <Link href="/settings" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
         <span>
           <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>
@@ -432,7 +479,7 @@ export default function MoneyPage() {
             {/* In words (Petra, 23 Sep: "projected uses 132 %" meant nothing): what the
                 journey does to the cap at this pace, amber when it goes over. */}
             {cap > 0
-              ? pace.perDay === null
+              ? !unlocks.projection || pace.perDay === null
                 ? `${fmt(cap)} · ${capPct}% spent`
                 : projection.projected > cap
                   ? <>{fmt(cap)} · <span className="text-warn">at this pace the journey goes {fmt(projection.projected - cap)} over it</span></>
@@ -442,12 +489,17 @@ export default function MoneyPage() {
         </span>
         <ChevronRight aria-hidden className="size-5 text-ac2" />
       </Link>
-      <div id="ledger" className={wide + ' scroll-mt-4'}>
-        <LedgerList
-          entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
-          canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal}
-        />
-      </div>
+      {unlocks.first && (
+        <div id="ledger" className={wide + ' scroll-mt-4'}>
+          <LedgerList
+            entries={ledger} rates={s.rates} base={base} fmt={fmt} tripStart={tripStart} todayIso={today}
+            canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal}
+          />
+        </div>
+      )}
+      {/* The last line of an early page says what is still to come, so the
+          missing cards are neither a mystery nor hidden behind a menu. */}
+      {moreLine(unlocks) && <p className={'px-1 pt-1 text-center text-[14px] text-tx2 ' + wide}>{moreLine(unlocks)}</p>}
       </>
       )}
 
