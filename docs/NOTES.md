@@ -20,7 +20,17 @@ when a decision needs to survive the conversation it was made in.
   since #68), the globe staying on Map, and "the globe sleeps behind the sheet" as a
   precondition before version A is tried on a phone again. Recorded on #63.
 
-### TO APPLY — migration 41, `profiles.track_spending` (Patrik): the first step of Money stage 2
+### APPLIED — migration 41, `profiles.track_spending`, on staging and production (Petra, 23 Sep): the first step of Money stage 2
+
+**Applied by Petra in the Supabase dashboard's SQL editor**, on Patrik's say-so ("it will be good
+practice for her and she can learn what these are"), guided step by step. The address bar
+stood in for the PROD prompt of `tools/db.sh`: every step began by checking the project ref in
+it. Staging, `fdcncqnklscbztcydtye`: the migration, then `41-TESTPLAN`, both "Success. No rows
+returned"; the test plan raises on any failure, so success is silence. Production,
+`wvmnudcwcqktcugouqoe`: the migration, then a read-only check of `information_schema.columns`,
+one row, `track_spending | boolean | YES | NULL`. The test plan was not run on production: its
+fixtures are pretend accounts. The backfill question below is still open; it matters only
+from the day stage 2 ships.
 
 **What it is.** One nullable boolean on `profiles`, the answer to mock 16's once-per-account
 question "Track what you spend on this journey?": null = not asked yet, true = "Yes, track
@@ -29,7 +39,7 @@ person to their own row, and the two guard triggers look only at `is_admin` and
 `active_trip_id`. Nothing reads the column yet; the stage 2 app code will, so it goes to
 production before that code does.
 
-**Steps, staging first.** Each stops on the first error; the prod step asks for the word PROD.
+**The same steps from a terminal, for next time.** Each stops on the first error; the prod step asks for the word PROD.
 
     tools/db.sh apply 41            # staging
     tools/db.sh test 41             # staging; rolls itself back
