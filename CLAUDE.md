@@ -39,6 +39,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   start, begins with migration 41 (`profiles.track_spending`, the
   once-per-account answer): Patrik applies it with `tools/db.sh`, staging
   first, then production; the stage 2 app code comes after it is live.
+- Decided by Patrik on 23 Sep: the Plan card's per-night line is gone (#78),
+  and the globe question (#63, the timeline as a sheet over the globe) is
+  Petra's to decide.
 - Merges happen together with whoever is here, the same way: say what
   changes and what could go wrong, get a "go", merge, watch the Vercel build,
   test on livhold.com, record.

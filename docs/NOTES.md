@@ -7,6 +7,19 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-23
 
+### DECIDED — Patrik, 23 Sep: the per-night line goes; the globe question is Petra's
+
+- **The per-night line under a city's opened sum on the Plan card is dropped.** It closed the
+  sum with "Bangkok costs 35 446 Ft a night on average, the stay included", kept since the owner
+  review of 19 Sep for comparing cities. Petra found it confusing on the phone and would drop
+  it; Patrik let it go. It was the only all-in nightly figure in the app: the stay sheet's
+  nightly price is the stay alone. Removed in #78, the pull request that carries migration 41,
+  so it goes live with that merge. Recorded on #62.
+- **Version A of #63, the timeline as a sheet over the globe, is Petra's to decide.** What the
+  phone test argued for is in the MOCKED entry of 22 Sep: the timeline as its own page (live
+  since #68), the globe staying on Map, and "the globe sleeps behind the sheet" as a
+  precondition before version A is tried on a phone again. Recorded on #63.
+
 ### TO APPLY — migration 41, `profiles.track_spending` (Patrik): the first step of Money stage 2
 
 **What it is.** One nullable boolean on `profiles`, the answer to mock 16's once-per-account
