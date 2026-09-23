@@ -337,7 +337,7 @@ const snapFalse = () => false
 function Shell({ children }: { children: React.ReactNode }) {
   // Phone-first narrow column on the honeydew page wash, same on desktop.
   return (
-    <div className="min-h-dvh bg-pg text-tx">
+    <div className="min-h-dvh bg-pg pt-[env(safe-area-inset-top)] text-tx">
       <main className="lv-enter mx-auto max-w-xl px-4 py-6 sm:px-6">{children}</main>
     </div>
   )

@@ -55,7 +55,7 @@ export function AppNav({ showCheckIn }: { showCheckIn: boolean }) {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-ln bg-sf pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-ln bg-sf pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
     >
       <div className={'relative mx-auto max-w-lg ' + (showCheckIn ? 'grid grid-cols-5' : 'grid grid-cols-4')}>
         {tab(TABS[0])}

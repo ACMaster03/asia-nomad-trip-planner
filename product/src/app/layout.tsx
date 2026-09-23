@@ -29,6 +29,22 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
+  // WITHOUT THIS, EVERY env(safe-area-inset-*) IN THE APP IS 0px. The padding
+  // was written everywhere (AppNav, the app shell, the sheets, the toast) and
+  // quietly did nothing: a viewport only reports real insets once it opts into
+  // the display cutout area with viewport-fit=cover.
+  //
+  // It only ever showed in the INSTALLED iOS app (owner report, issue #69).
+  // statusBarStyle 'black-translucent' above lays the web view out edge to
+  // edge there, so the tab bar sat on the home indicator — the swipe-up strip
+  // for home and Siri. In a browser tab Safari's own chrome covers that strip,
+  // which is why the bug never appeared on the web.
+  //
+  // Cover also stops the top and the landscape edges being inset for us, so
+  // everything that reaches a screen edge now pads itself: the app shell in
+  // (app)/layout.tsx, the map's floating controls, and the pages that render
+  // their own full-height shell (login, invite, follow).
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f0eee9' },
     { media: '(prefers-color-scheme: dark)', color: '#12161a' },
