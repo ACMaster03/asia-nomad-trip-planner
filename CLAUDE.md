@@ -50,11 +50,12 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Patrik: the ledger has its own screen, named All entries (Petra's pick;
   Patrik wanted a plainer word than ledger), at `/money/entries`. Scheduled
   payments fold into one line there, and month totals count only what is
-  spent. It closed #38. Step 2 is #85 (Petra, 24 Sep): Bookings,
-  Subscriptions and One-offs & extras fold to one line each, with a summary
-  that carries anything needing attention. Plan and the cards above it stay
-  open, and the rows sit below Plan with Budget cap and All entries. That
-  makes Money about 3 phone screens.
+  spent. It closed #38. Step 2 went live with #85 (Petra, 24 Sep):
+  Bookings, Subscriptions and One-offs & extras fold to one line each, with
+  a summary that carries anything needing attention. Plan and the cards
+  above it stay open. The rows sit below Plan, followed by All entries and,
+  last, Budget cap with a grey "Settings ›" (#86, Petra's choice over a
+  colour of its own). Money is about 3 phone screens now.
 - Home's money card follows Money's projection rule, live with #83 on
   24 Sep (Petra's decision of 23 Sep). A new journey shows only what is
   spent until the projection unlocks; older journeys keep what they show.
