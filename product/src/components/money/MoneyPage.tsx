@@ -383,7 +383,8 @@ export default function MoneyPage() {
         <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} paceKnown={pace.perDay !== null} />
       )}
       {/* Below the big cards, one group of one-line rows (Petra, 24 Sep): the
-          three folded cards, then the Budget cap and All entries. */}
+          three that open in place (⌄), then the two that go elsewhere (›),
+          All entries and, last, the Budget cap. */}
       <BookingsCard
         stays={bookings.stays} transport={bookings.transport}
         paid={bookings.paid} toPay={bookings.toPay}
@@ -398,23 +399,6 @@ export default function MoneyPage() {
         onToggleRemind={toggleRemind} folded={!subsOpen} onToggle={toggleSubs}
       />
       <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} folded={!oneOffsOpen} onToggle={toggleOneOffs} />
-      <Link href="/settings" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
-        <span>
-          <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>
-          <span className="block text-[13px] text-tx2">
-            {/* In words (Petra, 23 Sep: "projected uses 132 %" meant nothing): what the
-                journey does to the cap at this pace, amber when it goes over. */}
-            {cap > 0
-              ? !unlocks.projection || pace.perDay === null
-                ? `${fmt(cap)} · ${capPct}% spent`
-                : projection.projected > cap
-                  ? <>{fmt(cap)} · <span className="text-warn">at this pace the journey goes {fmt(projection.projected - cap)} over it</span></>
-                  : `${fmt(cap)} · at this pace the journey uses ${Math.round((projection.projected / cap) * 100)}% of it`
-              : 'a ceiling for the whole trip, in Settings'}
-          </span>
-        </span>
-        <ChevronRight aria-hidden className="size-5 text-ac2" />
-      </Link>
       {/* The ledger is a screen of its own, All entries (Petra, 23 Sep; the
           name is hers, Patrik wanted a plainer word than ledger): as the last
           card it was over a third of this page (#38). One row here, and
@@ -430,6 +414,25 @@ export default function MoneyPage() {
           <ChevronRight aria-hidden className="size-5 text-ac2" />
         </Link>
       )}
+      {/* Last, because it is the one row that leaves Money: it opens Settings
+          (Petra, 24 Sep, after step 2 on the phone). */}
+      <Link href="/settings" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
+        <span>
+          <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>
+          <span className="block text-[14px] text-tx2">
+            {/* In words (Petra, 23 Sep: "projected uses 132 %" meant nothing): what the
+                journey does to the cap at this pace, amber when it goes over. */}
+            {cap > 0
+              ? !unlocks.projection || pace.perDay === null
+                ? `${fmt(cap)} · ${capPct}% spent`
+                : projection.projected > cap
+                  ? <>{fmt(cap)} · <span className="text-warn">at this pace the journey goes {fmt(projection.projected - cap)} over it</span></>
+                  : `${fmt(cap)} · at this pace the journey uses ${Math.round((projection.projected / cap) * 100)}% of it`
+              : 'a ceiling for the whole trip, in Settings'}
+          </span>
+        </span>
+        <ChevronRight aria-hidden className="size-5 text-ac2" />
+      </Link>
       {/* The last line of an early page says what is still to come, so the
           missing cards are neither a mystery nor hidden behind a menu. */}
       {moreLine(unlocks) && <p className={'px-1 pt-1 text-center text-[14px] text-tx2 ' + wide}>{moreLine(unlocks)}</p>}
