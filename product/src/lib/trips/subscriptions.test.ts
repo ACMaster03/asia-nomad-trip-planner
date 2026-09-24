@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  chargeSoon, chargesBetween, isCancelled, monthlyRunRate, nextCharge, ordinalDay, scheduleLabel, shiftMonths, subsBetween, subsCharges,
+  chargeSoon, chargesBetween, isCancelled, nearestCharge, nextChargeFrom, subFromEntry, subNamed, monthlyRunRate, nextCharge, ordinalDay, scheduleLabel, shiftMonths, subsBetween, subsCharges,
 } from './subscriptions.ts'
 import type { Subscription } from './types.ts'
 
@@ -126,4 +126,37 @@ test('chargeSoon: the soonest live charge within a week, today included; cancell
   assert.equal(chargeSoon(CANON, '2026-09-24'), null, 'nothing until 14 Oct')
   assert.equal(chargeSoon(CANON, '2026-09-24', 30)?.sub.id, 'icloud')
   assert.equal(chargeSoon([CANON[4]], '2026-09-18'), null, 'Netflix was cancelled on 6 Sep')
+})
+
+test('subNamed: the live subscription an entry is named after, whatever the case and spacing', () => {
+  const named = [sub({ id: 'a', label: 'iCloud 2 TB', amount: 3290, anchor: '2026-08-14' }), sub({ id: 'n', label: 'Netflix', amount: 4490, anchor: '2026-08-20', cancelledOn: '2026-09-06' })]
+  assert.equal(subNamed(named, '  icloud  2 tb ')?.id, 'a')
+  assert.equal(subNamed(named, 'Netflix'), null, 'a cancelled one is not matched: a new charge starts a new one')
+  assert.equal(subNamed(named, 'iCloud'), null, 'the whole name, not a part of it')
+  assert.equal(subNamed(named, ''), null)
+})
+
+test('nearestCharge: the scheduled charge an entry most likely is', () => {
+  const icloud = CANON[0] // the 14th of every month
+  assert.equal(nearestCharge(icloud, '2026-10-15'), '2026-10-14', 'a day late')
+  assert.equal(nearestCharge(icloud, '2026-10-12'), '2026-10-14', 'two days early')
+  assert.equal(nearestCharge(CANON[3], '2026-09-20'), null, 'the domain is yearly, nothing near')
+})
+
+test('subFromEntry: the entry declares it, anchored on its date, charges written from the next day, the reminder three days before', () => {
+  const s = subFromEntry({ label: ' Netflix ', amount: 4490, cur: 'HUF', date: '2026-09-22' }, 1, true, 'sub1')
+  assert.deepEqual(s, { id: 'sub1', label: 'Netflix', cur: 'HUF', amount: 4490, everyMonths: 1, anchor: '2026-09-22', autoFrom: '2026-09-23', remind: true, leadDays: 3 })
+  assert.equal(nextCharge(s, '2026-09-23'), '2026-10-22')
+  assert.equal(subFromEntry({ label: '', amount: 1, cur: 'EUR', date: '2026-09-22' }, 3, false, 'x').label, 'Subscription')
+})
+
+test('a charge logged today is not still to come: the next one counts from the day after it', () => {
+  const netflix = sub({ id: 'nf', label: 'Netflix', amount: 4490, anchor: '2026-09-24' })
+  const logged = [{ subId: 'nf', date: '2026-09-24' }, { subId: 'other', date: '2026-09-30' }]
+  assert.equal(nextChargeFrom(netflix, '2026-09-24', logged), '2026-09-25')
+  assert.equal(nextChargeFrom(netflix, '2026-09-24', []), '2026-09-24', 'nothing logged: from today, as before')
+  assert.equal(nextChargeFrom(netflix, '2026-10-01', logged), '2026-10-01', 'an older charge changes nothing')
+  assert.equal(chargeSoon([netflix], '2026-09-24', 7, logged), null, 'not "Netflix today"')
+  assert.equal(chargeSoon([netflix], '2026-09-24')?.inDays, 0, 'without the ledger it still would be')
+  assert.equal(nextChargeFrom(netflix, '2026-12-31', [{ subId: 'nf', date: '2026-12-31' }]), '2027-01-01', 'across the year')
 })

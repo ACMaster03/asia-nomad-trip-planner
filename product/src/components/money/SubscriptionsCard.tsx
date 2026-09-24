@@ -4,9 +4,9 @@ import { Bell, BellOff } from 'lucide-react'
 import { toBase } from '@/lib/trips/format'
 import { dayDiff } from '@/lib/trips/reminders'
 import {
-  cadenceLabel, chargeSoon, isCancelled, leadLabel, monthlyRate, monthlyRunRate, nextCharge, scheduleLabel, shortDate,
+  cadenceLabel, chargeSoon, isCancelled, leadLabel, monthlyRate, monthlyRunRate, nextCharge, nextChargeFrom, scheduleLabel, shortDate,
 } from '@/lib/trips/subscriptions'
-import type { Subscription } from '@/lib/trips/types'
+import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 import { FoldButton, FoldedRow } from './Fold'
 
 // Subscriptions (#37) — the recurring costs from home, the one set of expenses
@@ -26,8 +26,10 @@ import { FoldButton, FoldedRow } from './Fold'
 // monthly total, and the charge due this week if there is one, in the same
 // amber pill the open card uses.
 
-export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhead, canEdit, onAdd, onEdit, onToggleRemind, folded, onToggle }: {
+export function SubscriptionsCard({ subs, ledger = [], rates, fmt, todayIso, tripEnd, subsAhead, canEdit, onAdd, onEdit, onToggleRemind, folded, onToggle }: {
   subs: Subscription[]
+  /** so a charge already logged (an entry with its subId) is not "today" */
+  ledger?: LedgerEntry[]
   rates: Record<string, number>
   fmt: (n: number) => string
   todayIso: string
@@ -69,7 +71,7 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhe
   const when = (days: number) => (days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`)
   const pill = 'inline-block whitespace-nowrap rounded-full bg-warn-soft px-2 py-[1px] text-[12px] font-bold text-warn'
   if (folded && onToggle) {
-    const soon = chargeSoon(subs, todayIso)
+    const soon = chargeSoon(subs, todayIso, 7, ledger)
     return (
       <FoldedRow
         title="Subscriptions"
@@ -84,7 +86,7 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhe
 
   const row = (sub: Subscription) => {
     const off = isCancelled(sub)
-    const next = off ? null : nextCharge(sub, todayIso)
+    const next = off ? null : nextCharge(sub, nextChargeFrom(sub, todayIso, ledger))
     const soon = next ? dayDiff(todayIso, next) : null
     const per = toBase(monthlyRate(sub), sub.cur, rates)
     const remind = !!sub.remind && !off

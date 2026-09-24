@@ -15,6 +15,7 @@ import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import type { LedgerEntry } from '@/lib/trips/types'
 import { LedgerList } from './LedgerList'
 import { EntryEditor } from './EntryEditor'
+import { ChargeNotice } from './ChargeNotice'
 
 // All entries, the ledger's own screen (Petra, 23 Sep; #38). As the last card
 // on Money it was over a third of that page, 20 rows long, under nine other
@@ -73,6 +74,7 @@ export default function LedgerPage({ day }: { day?: string }) {
           onClose={() => setSheet(null)}
         />
       )}
+      <ChargeNotice trip={trip.data} canEdit={canEdit} mut={mut} stateMut={stateMut} />
     </main>
   )
 }

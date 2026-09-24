@@ -1,20 +1,38 @@
 'use client'
 import { useMemo, useState } from 'react'
+import { Info } from 'lucide-react'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { CategoryPicker } from './CategoryPicker'
 import { useMoney } from '@/lib/trips/Money'
 import { toBase } from '@/lib/trips/format'
+import { addDays } from '@/lib/trips/spending'
 import {
   categoriesFor,
-  categoryLabel, mostUsedCategories, suggestCategory, DEFAULT_CATEGORY, type CategoryKind,
+  categoryLabel, mostUsedCategories, suggestCategory, DEFAULT_CATEGORY, RECURRING_CATEGORY, type CategoryKind,
 } from '@/lib/trips/categories'
-import type { LedgerEntry } from '@/lib/trips/types'
+import { nearestCharge, nextCharge, shortDate, subFromEntry, subNamed } from '@/lib/trips/subscriptions'
+import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
 // Add / edit an entry (round-two design, 2026-09-13). Name first — it is what
 // the ledger shows, so it is labelled as such instead of hiding as "Note" at
 // the bottom. The category is suggested from the name (alias table), shown as
 // a pre-selected chip; six most-used chips + "All N…" opens the picker. No
 // pick = Other. Amount and currency share one 52px row.
+//
+// In the Subscriptions category it asks one question (mock 16 §7, round 3):
+// does it repeat? The charge IS the subscription (#59), so saving declares it,
+// anchored on this entry's date, and no second form is ever needed.
+// - A new name: Every month (preselected on a new entry), Every year, Other…
+//   (every N months) or Doesn't repeat, the next charge, and a reminder three
+//   days before, on by default.
+// - A name that is already a live subscription: "Is this its 14 Oct charge?",
+//   one tap to confirm, so a second charge never makes a second subscription.
+//   The tap fills an empty amount and an untouched currency from it.
+//   Unconfirmed, it is a plain entry.
+// - An entry that is a charge already: the same block, set as the subscription
+//   is, so a cadence can be corrected where the charge is.
+// An entry typed before round 3 opens with nothing preselected: opening one to
+// fix its amount must not declare anything.
 
 const newId = (p: string) => p + crypto.randomUUID()
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -27,24 +45,41 @@ const chip = (on: boolean) =>
 const dayLabel = (iso: string) =>
   iso === todayISO() ? 'Today' : new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 
+/** What saving an entry does to the subscriptions beside it. */
+export type SubChange =
+  | { kind: 'create'; sub: Subscription }
+  | { kind: 'update'; id: string; everyMonths: number; remind: boolean }
+type Repeat = '1' | '12' | 'other' | 'no'
+const REPEATS: { id: Repeat; label: string }[] = [
+  { id: '1', label: 'Every month' },
+  { id: '12', label: 'Every year' },
+  { id: 'other', label: 'Other…' },
+  { id: 'no', label: 'Doesn’t repeat' },
+]
+
 export function EntrySheet({
-  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose, note,
+  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose, note, subs = [],
 }: {
   initial: LedgerEntry | null
   ledger: LedgerEntry[]
   rates: Record<string, number>
+  /** the journey's subscriptions, for the Subscriptions question */
+  subs?: Subscription[]
   /** what the currency box starts on for a NEW entry (see pickEntryCurrency) */
   defaultCur: string
   /** the country that chose it, when the choice came from today's stop */
   defaultCurWhere?: string | null
-  onSave: (e: LedgerEntry) => void
+  /** replaceId: the charge the app wrote that this entry replaces */
+  onSave: (e: LedgerEntry, sub?: SubChange, replaceId?: string) => void
   onDelete?: (e: LedgerEntry) => void
   onClose: () => void
   /** one line right above the save button, for what saving does beyond saving */
   note?: string
 }) {
   const { base, fmt } = useMoney()
-  const imported = !!initial?.source
+  // A booking's row follows the Trip page. A subscription charge the app wrote
+  // is the ledger's own from then on: its amount and date can be corrected.
+  const imported = !!initial?.source && initial.source.kind !== 'sub'
   const [type, setType] = useState<CategoryKind>(initial?.type ?? 'expense')
   const [name, setName] = useState(initial?.note ?? '')
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '')
@@ -54,6 +89,17 @@ export function EntrySheet({
   const [catTouched, setCatTouched] = useState(!!initial)
   const [date, setDate] = useState(initial?.date ?? todayISO())
   const [picker, setPicker] = useState(false)
+  const [why, setWhy] = useState(false)
+
+  // The Subscriptions question (see the header).
+  const linked = initial?.subId ? subs.find((x) => x.id === initial.subId) ?? null : null
+  const [repeat, setRepeat] = useState<Repeat | null>(() =>
+    linked ? (linked.everyMonths === 1 ? '1' : linked.everyMonths === 12 ? '12' : 'other')
+      : initial?.subId === null ? 'no'
+        : initial ? null : '1')
+  const [otherMonths, setOtherMonths] = useState(() => (linked && ![1, 12].includes(linked.everyMonths) ? String(linked.everyMonths) : '3'))
+  const [remind, setRemind] = useState(linked ? !!linked.remind : true)
+  const [isCharge, setIsCharge] = useState<boolean | null>(initial?.subId === null ? false : null)
 
   // The suggestion follows the name until the user picks a chip themselves.
   const suggested = useMemo(() => suggestCategory(name, type), [name, type])
@@ -74,14 +120,36 @@ export function EntrySheet({
       ? `${cur} is the currency in ${defaultCurWhere}, where you are today.`
       : null
 
+  const isSubCat = type === 'expense' && effective === RECURRING_CATEGORY && !imported
+  const match = isSubCat && !linked ? subNamed(subs, name) : null
+  const mode: 'linked' | 'match' | 'new' | null = !isSubCat ? null : linked ? 'linked' : match ? 'match' : 'new'
+  const other = Math.round(Number(otherMonths))
+  const otherOk = other >= 2 && other <= 24
+  const months = repeat === '1' ? 1 : repeat === '12' ? 12 : repeat === 'other' && otherOk ? other : null
+  const tomorrow = addDays(todayISO(), 1)
+  const next = months && (mode === 'new' || mode === 'linked')
+    ? nextCharge(
+      mode === 'linked' ? { ...linked!, everyMonths: months } : { id: 'draft', label: '', cur, amount: 0, everyMonths: months, anchor: date },
+      mode === 'linked' || addDays(date, 1) < tomorrow ? tomorrow : addDays(date, 1),
+    )
+    : null
+  const matchCharge = match ? nearestCharge(match, date) : null
+  // The row the app already wrote for that charge, if it has.
+  const written = match
+    ? ledger.find((e) => e.source?.kind === 'sub' && e.subId === match.id && e.id !== initial?.id
+      && Math.abs(Date.parse(e.date) - Date.parse(date)) <= 15 * 86_400_000)
+    : undefined
+  const badOther = repeat === 'other' && !otherOk && (mode === 'new' || mode === 'linked')
+  const dated = (iso: string) => (iso.slice(0, 4) === todayISO().slice(0, 4) ? shortDate(iso) : `${shortDate(iso)} ${iso.slice(0, 4)}`)
+
   function switchType(t: CategoryKind) {
     setType(t)
     setCat(null)
     setCatTouched(false)
   }
   function submit() {
-    if (!valid) return
-    onSave({
+    if (!valid || badOther) return
+    const entry: LedgerEntry = {
       id: initial?.id ?? newId('le'),
       date: date || todayISO(),
       type,
@@ -91,7 +159,21 @@ export function EntrySheet({
       note: name.trim(),
       ...(initial?.source ? { source: initial.source } : {}),
       ...(initial?.orphaned ? { orphaned: initial.orphaned } : {}),
-    })
+    }
+    // Out of the Subscriptions category, a charge is no longer one: no subId.
+    let change: SubChange | undefined
+    if (mode === 'new' && repeat === 'no') entry.subId = null
+    else if (mode === 'new' && months) {
+      const sub = subFromEntry({ label: entry.note, amount: amt, cur: entry.currency, date: entry.date }, months, remind, 'sub' + crypto.randomUUID())
+      change = { kind: 'create', sub }
+      entry.subId = sub.id
+    } else if (mode === 'linked' && repeat === 'no') entry.subId = null
+    else if (mode === 'linked' && months) {
+      change = { kind: 'update', id: linked!.id, everyMonths: months, remind }
+      entry.subId = linked!.id
+    } else if (mode === 'match' && isCharge !== null) entry.subId = isCharge ? match!.id : null
+    else if (mode && initial?.subId !== undefined) entry.subId = initial.subId
+    onSave(entry, change, mode === 'match' && isCharge === true && written ? written.id : undefined)
   }
 
   return (
@@ -173,9 +255,15 @@ export function EntrySheet({
       <div>
         <div className="flex items-baseline justify-between">
           <span className={label}>Category</span>
-          {!catTouched && suggested && <span className="text-[13px] text-tx3">suggested from the name</span>}
+          {/* Behind an ⓘ, not always on (Petra, mock 16 round 2: too much text). */}
+          {!catTouched && suggested && (
+            <button type="button" onClick={() => setWhy((v) => !v)} aria-expanded={why} aria-label="Why this category" className="-my-3 -mr-3 flex size-11 items-center justify-center text-tx3">
+              <Info aria-hidden className="size-[18px]" />
+            </button>
+          )}
           {!effective && name.trim().length >= 3 && <span className="text-[13px] text-tx3">none picked → Other</span>}
         </div>
+        {why && !catTouched && suggested && <p className="mt-1 text-[13px] text-tx3">Suggested from the name. Tap another to change it.</p>}
         <div className="mt-2 flex flex-wrap gap-[7px]">
           {chips.map((id) => (
             <button key={id} onClick={() => { setCat(id); setCatTouched(true) }} className={chip(effective === id)} aria-pressed={effective === id}>
@@ -187,6 +275,81 @@ export function EntrySheet({
           </button>
         </div>
       </div>
+
+      {mode === 'match' && match && (
+        <div>
+          <span className={label}>Repeats</span>
+          <p className="mt-1 text-base">
+            {match.label} is one of your subscriptions. Is this {matchCharge ? `its ${dated(matchCharge)} charge` : 'a charge of it'}?
+          </p>
+          <div className="mt-2 flex flex-wrap gap-[7px]" role="radiogroup" aria-label="Is this its charge">
+            {/* Yes also fills what is still empty from the subscription: in
+                Bangkok the currency box starts on THB, a bill from home is HUF. */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={isCharge === true}
+              onClick={() => {
+                setIsCharge(true)
+                if (!amount) setAmount(String(match.amount))
+                if (!curTouched) { setCur(match.cur); setCurTouched(true) }
+              }}
+              className={chip(isCharge === true)}
+            >
+              Yes, it is
+            </button>
+            <button type="button" role="radio" aria-checked={isCharge === false} onClick={() => setIsCharge(false)} className={chip(isCharge === false)}>No</button>
+          </div>
+          {isCharge === true && written && (
+            <p className="mt-2 text-[14px] text-tx2">It was added by itself on {dated(written.date)}. Saving this replaces it.</p>
+          )}
+        </div>
+      )}
+      {(mode === 'new' || mode === 'linked') && (
+        <div>
+          <span className={label}>Repeats</span>
+          <div className="mt-2 flex flex-wrap gap-[7px]" role="radiogroup" aria-label="Repeats">
+            {REPEATS.map((r) => (
+              <button key={r.id} type="button" role="radio" aria-checked={repeat === r.id} onClick={() => setRepeat(r.id)} className={chip(repeat === r.id)}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+          {repeat === 'other' && (
+            <label className="mt-2.5 flex items-center gap-2 text-base text-tx2">
+              every
+              <input
+                aria-label="Every how many months"
+                type="number"
+                inputMode="numeric"
+                min={2}
+                max={24}
+                className={box + ' mt-0 w-[76px] text-center'}
+                value={otherMonths}
+                onChange={(e) => setOtherMonths(e.target.value)}
+              />
+              months
+            </label>
+          )}
+          {repeat === 'other' && !otherOk && <p className="mt-1 text-[13px] text-warn">From 2 to 24 months.</p>}
+          {next && <p className="mt-2 text-[14px] text-tx2">Next charge {dated(next)}.</p>}
+          {months && (
+            <div className="mt-2.5 flex min-h-11 items-center justify-between gap-3">
+              <span className="text-base">Remind me before each charge<span className="block text-[13px] text-tx3">3 days before</span></span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={remind}
+                aria-label="Remind me before each charge"
+                onClick={() => setRemind(!remind)}
+                className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (remind ? 'bg-ac' : 'bg-ln3')}
+              >
+                <span className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (remind ? 'left-[24px]' : 'left-[3px]')} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* A field, not a grey "change" link. Logging yesterday's dinner this
           morning is the normal case on the road, and the date it defaults to
@@ -207,7 +370,7 @@ export function EntrySheet({
       {note && <p className="-mb-1 text-center text-[13px] text-tx2">{note}</p>}
       <button
         onClick={submit}
-        disabled={!valid}
+        disabled={!valid || badOther}
         className="w-full rounded-[var(--rCtl)] bg-ac py-3.5 text-base font-semibold text-on disabled:opacity-50"
       >
         {initial ? 'Save changes' : type === 'expense' ? 'Add expense' : 'Add income'}

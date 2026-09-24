@@ -85,7 +85,7 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
           <span className="block text-base font-semibold">{e.note?.trim() || categoryLabel(e.category)}</span>
           <span className="block text-[14px] text-tx2">
             {categoryLabel(e.category)}
-            {e.source && (e.source.kind === 'extra' ? ' · from Extras' : ' · from booking')}
+            {e.source && (e.source.kind === 'extra' ? ' · from Extras' : e.source.kind === 'sub' ? ' · from Subscriptions' : ' · from booking')}
             {sub && ` · ${sub}`}
             {e.orphaned && <span className="text-warn">{e.source?.kind === 'extra' ? ' · extra removed' : ' · booking removed'}</span>}
           </span>

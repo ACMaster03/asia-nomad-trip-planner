@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { planImports } from './importCosts.ts'
-import type { TripState } from './types.ts'
+import { planImports, subChargesDue } from './importCosts.ts'
+import type { LedgerEntry, Subscription, TripState } from './types.ts'
 
 const base = {
   meta: { version: 1, tripName: 'T', travelers: 1, baseCurrency: 'HUF', budgetCap: 0, startDate: '2026-09-01' },
@@ -107,4 +107,49 @@ test('an extra’s row follows the extra, and goes when the date is cleared but 
   const back = planImports(stayDrafted, [stayRow])
   assert.deepEqual(back.removals, [])
   assert.equal(back.orphans.length, 1)
+})
+
+// ---- subscription charges, written by themselves (Patrik, 24 Sep, #37) ----
+
+const netflix: Subscription = { id: 'nf', label: 'Netflix', cur: 'HUF', amount: 4490, everyMonths: 1, anchor: '2026-08-22' }
+const withSubs = (subs: Subscription[], over: Partial<TripState> = {}, meta: Record<string, string> = {}) =>
+  ({ ...base, meta: { ...base.meta, startDate: '2026-08-31', endDate: '2027-04-30', ...meta }, subscriptions: subs, ...over }) as unknown as TripState
+const logged = (over: Partial<LedgerEntry>): LedgerEntry =>
+  ({ id: 'x', date: '2026-10-24', type: 'expense', category: 'subscriptions', amount: 4490, currency: 'HUF', note: 'netflix', ...over })
+
+test('a subscription charge is written once its date has come, never before, and from 25 Sep only', () => {
+  const state = withSubs([netflix])
+  assert.deepEqual(subChargesDue(state, [], '2026-10-21'), [], 'the 22 Sep charge was theirs to log; the 22 Oct one has not come')
+  const rows = subChargesDue(state, [], '2026-10-22')
+  assert.deepEqual(rows.map((e) => [e.id, e.date, e.amount, e.currency, e.note, e.category, e.subId, e.source?.id]),
+    [['le-sub-nf-2026-10-22', '2026-10-22', 4490, 'HUF', 'Netflix', 'subscriptions', 'nf', 'nf@2026-10-22']])
+  assert.deepEqual(subChargesDue(state, [], '2026-11-30').map((e) => e.date), ['2026-10-22', '2026-11-22'], 'a long absence catches up')
+  assert.deepEqual(subChargesDue(state, [], ''), [], 'no date yet, nothing')
+})
+
+test('a charge already written, deleted, logged by hand or linked is not written again', () => {
+  const state = withSubs([netflix])
+  const written = subChargesDue(state, [], '2026-10-22')
+  assert.deepEqual(subChargesDue(state, written, '2026-10-30'), [], 'written once')
+  assert.deepEqual(subChargesDue(withSubs([netflix], { importSkip: ['sub:nf@2026-10-22'] }), [], '2026-10-30'), [], 'deleted stays deleted')
+  assert.deepEqual(subChargesDue(state, [logged({})], '2026-10-30'), [], 'its name, two days late, logged by hand')
+  assert.deepEqual(subChargesDue(state, [logged({ note: 'Streaming', subId: 'nf' })], '2026-10-30'), [], 'linked to it')
+  assert.equal(subChargesDue(state, [logged({ subId: null })], '2026-10-30').length, 1, 'an entry said not to repeat is not this charge')
+  assert.equal(subChargesDue(state, [logged({ date: '2026-11-10' })], '2026-10-30').length, 1, 'more than 15 days away')
+  assert.equal(subChargesDue(state, [logged({ category: 'food' })], '2026-10-30').length, 1, 'another category')
+})
+
+test('subscription charges stay inside the journey, stop at a cancellation and start at autoFrom', () => {
+  assert.deepEqual(subChargesDue(withSubs([{ ...netflix, cancelledOn: '2026-11-01' }]), [], '2027-01-31').map((e) => e.date), ['2026-10-22'])
+  assert.deepEqual(subChargesDue(withSubs([netflix], {}, { endDate: '2026-11-10' }), [], '2027-01-31').map((e) => e.date), ['2026-10-22'], 'the journey ended')
+  assert.deepEqual(subChargesDue(withSubs([netflix], {}, { startDate: '2026-12-01' }), [], '2026-12-31').map((e) => e.date), ['2026-12-22'], 'not before departure')
+  const declared = { ...netflix, anchor: '2026-10-05', autoFrom: '2026-10-06' }
+  assert.deepEqual(subChargesDue(withSubs([declared]), [], '2026-11-10').map((e) => e.date), ['2026-11-05'], 'its own entry was the 5 Oct charge')
+})
+
+test('the booking sync leaves subscription charges alone: no updates, flags or removals', () => {
+  const [row] = subChargesDue(withSubs([netflix]), [], '2026-10-22')
+  const pricier = planImports(withSubs([{ ...netflix, amount: 5490 }]), [row], '2026-10-22')
+  assert.deepEqual([pricier.updates, pricier.orphans, pricier.removals, pricier.subCharges], [[], [], [], []], 'a price rise does not rewrite October')
+  assert.deepEqual(planImports(withSubs([]), [row], '2026-10-22').orphans, [], 'a deleted subscription leaves its charges')
 })

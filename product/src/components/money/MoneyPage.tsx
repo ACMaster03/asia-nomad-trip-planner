@@ -31,6 +31,7 @@ import { OneOffsCard } from './OneOffsCard'
 import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntryEditor } from './EntryEditor'
+import { ChargeNotice } from './ChargeNotice'
 import { TrackQuestion } from './TrackQuestion'
 import { TrackSpendingRow } from './TrackSpendingRow'
 import { useFold } from './Fold'
@@ -392,7 +393,7 @@ export default function MoneyPage() {
         fmt={fmt} todayIso={today} folded={!bookingsOpen} onToggle={toggleBookings}
       />
       <SubscriptionsCard
-        subs={subs} rates={s.rates} fmt={fmt} todayIso={today} tripEnd={tripEnd}
+        subs={subs} ledger={ledger} rates={s.rates} fmt={fmt} todayIso={today} tripEnd={tripEnd}
         subsAhead={projection.subsAhead} canEdit={canEdit}
         onAdd={() => setSubSheet({ sub: null })}
         onEdit={(sub) => setSubSheet({ sub })}
@@ -470,6 +471,7 @@ export default function MoneyPage() {
           onClose={() => setSubSheet(null)}
         />
       )}
+      <ChargeNotice trip={trip.data} canEdit={canEdit} mut={mut} stateMut={stateMut} />
       {tracking === 'ask' && !questionClosed && (
         <TrackQuestion
           onAnswer={(yes) => setTrack.mutate(yes)}

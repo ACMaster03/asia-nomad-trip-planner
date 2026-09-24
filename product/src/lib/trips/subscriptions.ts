@@ -69,15 +69,92 @@ export function nextCharge(sub: Subscription, fromIso: string): string | null {
 }
 
 /** Every charge in [fromIso, toIso], inclusive. Empty once cancelled. */
+// ---- the question on the entry form (mock 16 §7, round 3) -----------------
+
+const nameKey = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
+/** Two names for the same thing, whatever the case and spacing. */
+export const sameName = (a: string, b: string) => !!nameKey(a) && nameKey(a) === nameKey(b)
+/** The ISO day after `iso`. */
+export function dayAfter(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10)
+}
+
+/** The live subscription an entry's name belongs to, if one is called that. */
+export function subNamed(subs: Subscription[], name: string): Subscription | null {
+  const key = nameKey(name)
+  if (!key) return null
+  return subs.find((s) => !isCancelled(s) && nameKey(s.label) === key) ?? null
+}
+
+/**
+ * The scheduled charge of `sub` nearest to `dateIso`, within `withinDays`: the
+ * one an entry on that date most likely is ("its 14 Oct charge?").
+ */
+export function nearestCharge(sub: Subscription, dateIso: string, withinDays = 20): string | null {
+  if (!validIso(dateIso)) return null
+  const t = Date.parse(dateIso)
+  const day = 86_400_000
+  const from = new Date(t - (withinDays + 1) * day).toISOString().slice(0, 10)
+  const to = new Date(t + (withinDays + 1) * day).toISOString().slice(0, 10)
+  let best: string | null = null
+  for (const at of chargesBetween(sub, from, to)) {
+    const d = Math.abs(Date.parse(at) - t) / day
+    if (d <= withinDays && (!best || d < Math.abs(Date.parse(best) - t) / day)) best = at
+  }
+  return best
+}
+
+/**
+ * The subscription an entry declares when its form says it repeats: the
+ * charge is the subscription (#59), so the schedule hangs off the entry's date
+ * and nothing else is asked. The entry is its first charge, so the app writes
+ * the charges from the day after it (autoFrom).
+ */
+export function subFromEntry(
+  entry: { label: string; amount: number; cur: string; date: string },
+  everyMonths: number,
+  remind: boolean,
+  id: string,
+): Subscription {
+  return {
+    id,
+    label: entry.label.trim() || 'Subscription',
+    cur: entry.cur,
+    amount: entry.amount,
+    everyMonths: Math.max(1, Math.round(everyMonths) || 1),
+    anchor: entry.date,
+    autoFrom: dayAfter(entry.date),
+    ...(remind ? { remind: true, leadDays: 3 } : { remind: false }),
+  }
+}
+
+/** A ledger row, as far as the subscription it may be a charge of goes. */
+export type LoggedCharge = { subId?: string | null; date: string }
+
+/**
+ * Where to look for a subscription's next charge from: today, or the day after
+ * its latest logged charge when that is today or later. A subscription
+ * declared from today's entry has already charged today; without this, the
+ * card called that charge "today" in amber, as if it were still to come.
+ */
+export function nextChargeFrom(sub: Subscription, todayIso: string, ledger: LoggedCharge[]): string {
+  let last = ''
+  for (const e of ledger) if (e.subId === sub.id && e.date > last) last = e.date
+  return last < todayIso ? todayIso : dayAfter(last)
+}
+
 /**
  * The live subscription that charges soonest, today included, within `days`
  * days: what a folded Subscriptions line still has to show, so a charge due
  * this week is never behind a tap (Money, 24 Sep).
  */
-export function chargeSoon(subs: Subscription[], todayIso: string, days = 7): { sub: Subscription; inDays: number } | null {
+export function chargeSoon(
+  subs: Subscription[], todayIso: string, days = 7, ledger: LoggedCharge[] = [],
+): { sub: Subscription; inDays: number } | null {
   let best: { sub: Subscription; inDays: number } | null = null
   for (const sub of subs) {
-    const next = nextCharge(sub, todayIso)
+    const next = nextCharge(sub, nextChargeFrom(sub, todayIso, ledger))
     if (!next) continue
     const inDays = Math.round((Date.parse(next) - Date.parse(todayIso)) / 86_400_000)
     if (inDays > days) continue

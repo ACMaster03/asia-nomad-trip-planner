@@ -42,9 +42,13 @@ Petra is new to software work; Patrik is not. The product conventions are in
   stage 2 app code, the question and the quiet page, went live with #79;
   #80 puts the Track spending switch right under the first card of both
   versions. Round 2, the cards that unlock as entries arrive, went live
-  with #81 for journeys made after it (older ones keep every card); round 3
-  (subscriptions, the One-offs editor on Money) follows. As built, every
-  existing account is asked the question once; Patrik can change that.
+  with #81 for journeys made after it (older ones keep every card). Round 3
+  goes out in three pull requests. 3a is #88: the Subscriptions question
+  on the entry form, and subscription charges that add themselves on their
+  date, each announced until tapped ("Cancelled it?"). Patrik decided the
+  latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer, and
+  3c, editing one-off costs on Money, follow. As built, every existing account is asked the
+  question once; Patrik can change that.
 - Money is getting shorter (Petra, 23 Sep: about seven phone screens, the
   ledger alone over a third of it). Step 1 went live with #82, approved by
   Patrik: the ledger has its own screen, named All entries (Petra's pick;
