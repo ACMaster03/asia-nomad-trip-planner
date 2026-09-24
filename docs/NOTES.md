@@ -53,6 +53,9 @@ Subscriptions, One-offs & extras, Budget cap, All entries. On a new journey, bef
 unlocks, the rows follow Where it goes, and "More appears as you log" stays last. The
 preview checked both orders.
 
+**Live with #85.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her test on the phone is pending.
+
 ---
 
 ## 2026-09-23
