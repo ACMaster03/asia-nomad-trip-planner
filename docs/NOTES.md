@@ -46,6 +46,9 @@ entry also needed "Load 20 more" first. Pull request #90.
   - the ⊗ brings back "showing 20 of 42";
   - a match opens its form.
 
+**Live with #90.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her test on the phone is pending.
+
 ### BUILT — Money's forms lose the ✕ (Petra, 24 Sep)
 
 Petra, after testing #88: Money's forms "still have an "x" and a slide down bar, both for
@@ -61,7 +64,8 @@ dev preview at phone width, none of the three has a Close button, and the entry 
 Escape, on a tap above it and on a 120 px drag of the handle, while a 40 px drag springs back.
 
 **Live with #89.** Petra gave her go on 24 Sep, and the production build finished without errors.
-Her test on the phone is pending.
+Her test on the phone passed the same day: an entry opened from All entries had no ✕, and it
+closed both ways, sliding the handle down and tapping the dim strip above it.
 
 ### BUILT — Money stage 2, round 3a: the Subscriptions question, and charges that add themselves (mock 16 §7)
 
