@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { useMoney } from '@/lib/trips/Money'
-import { useConfirm } from '@/components/Confirm'
 import { useToday } from '@/lib/useToday'
 import { sourceKey } from '@/lib/trips/importCosts'
 import { shortDate } from '@/lib/trips/subscriptions'
@@ -13,6 +12,8 @@ import type { Trip } from '@/lib/trips/types'
 // Petra's safeguard for the subscription charges the app writes by itself
 // (Patrik, 24 Sep, #37). Each one is announced in the toast's dark pill, but
 // it stays until tapped, because it may need an answer: "Cancelled it?"
+// asks, in the same pill (Petra, 24 Sep: the question changes where it
+// stands instead of a dialog jumping to the top of the screen), and then
 // removes the charge and marks the subscription cancelled on that date. So a
 // subscription cancelled outside the app, and never marked cancelled in it,
 // shows up at its next charge instead of adding money nobody spent. With the
@@ -48,11 +49,12 @@ export function ChargeNotice({ trip, canEdit, mut, stateMut }: {
   stateMut: ReturnType<typeof useTripMutation>
 }) {
   const { fmt } = useMoney()
-  const confirm = useConfirm()
   // '' on the server and the first client render, like the screens' own date,
   // so the pill never appears in server markup (and never mismatches it).
   const today = useToday()
   const [seen, setSeen] = useState<string[]>(readSeen)
+  // The charge whose "Cancelled it?" is being asked; a new charge asks afresh.
+  const [asking, setAsking] = useState<string | null>(null)
   if (!canEdit || !today) return null
 
   const from = daysBefore(today, 30)
@@ -69,14 +71,7 @@ export function ChargeNotice({ trip, canEdit, mut, stateMut }: {
     setSeen(next)
     writeSeen(next)
   }
-  async function cancelled() {
-    const ok = await confirm({
-      title: `Cancelled ${name}?`,
-      body: `This ${amount} charge is removed, and ${name} is marked cancelled from ${shortDate(e.date)}, so no more are added.`,
-      confirmLabel: 'Yes, remove it',
-      cancelLabel: 'No',
-    })
-    if (!ok) return
+  function cancelled() {
     const key = sourceKey(e.source!)
     stateMut.mutate(
       (cur) => ({
@@ -92,19 +87,38 @@ export function ChargeNotice({ trip, canEdit, mut, stateMut }: {
   return (
     <div className="fixed inset-x-0 bottom-[calc(88px+env(safe-area-inset-bottom))] z-[55] flex justify-center px-[18px]">
       <div role="status" aria-live="polite" className="lv-enter w-full max-w-md rounded-[20px] bg-tx px-4 pb-3 pt-3.5 text-canvas shadow-lg">
-        <p className="text-base leading-snug">
-          <b className="font-semibold">{name} · {amount}</b> added to All entries, charged {shortDate(e.date)}.
-        </p>
-        <div className="mt-2.5 flex justify-end gap-2">
-          {sub && !sub.cancelledOn && (
-            <button type="button" onClick={cancelled} className="min-h-11 rounded-full border-[1.5px] border-canvas/40 px-4 text-base font-semibold">
-              Cancelled it?
-            </button>
-          )}
-          <button type="button" onClick={done} className="min-h-11 rounded-full bg-canvas px-5 text-base font-semibold text-tx">
-            OK
-          </button>
-        </div>
+        {asking === e.id ? (
+          <>
+            <p className="text-base leading-snug">
+              <b className="font-semibold">Cancelled {name}?</b> This {amount} charge is removed, and {name} is marked
+              cancelled from {shortDate(e.date)}, so no more are added.
+            </p>
+            <div className="mt-2.5 flex justify-end gap-2">
+              <button type="button" onClick={() => setAsking(null)} className="min-h-11 rounded-full border-[1.5px] border-canvas/40 px-5 text-base font-semibold">
+                No
+              </button>
+              <button type="button" onClick={cancelled} className="min-h-11 rounded-full bg-canvas px-5 text-base font-semibold text-tx">
+                Yes, remove it
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-base leading-snug">
+              <b className="font-semibold">{name} · {amount}</b> added to All entries, charged {shortDate(e.date)}.
+            </p>
+            <div className="mt-2.5 flex justify-end gap-2">
+              {sub && !sub.cancelledOn && (
+                <button type="button" onClick={() => setAsking(e.id)} className="min-h-11 rounded-full border-[1.5px] border-canvas/40 px-4 text-base font-semibold">
+                  Cancelled it?
+                </button>
+              )}
+              <button type="button" onClick={done} className="min-h-11 rounded-full bg-canvas px-5 text-base font-semibold text-tx">
+                OK
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

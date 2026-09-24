@@ -78,7 +78,11 @@ Recorded on #37. It was built into #88, so only one version ships.
 - **Petra's safeguard** (`ChargeNotice.tsx`). Each charge written is announced in the toast's
   dark pill, but it stays until tapped: "iCloud 2 TB · 3290 Ft added to All entries, charged
   14 Oct." with "Cancelled it?" and "OK".
-  - "Cancelled it?" asks first. Then it removes the charge and marks the subscription
+  - "Cancelled it?" asks first, in the same pill: its text becomes "Cancelled Spotify Duo?
+    This 2490 Ft charge is removed, and Spotify Duo is marked cancelled from 17 Oct, so no
+    more are added." with No / Yes, remove it. A first version used a dialog; Petra, on its
+    picture, wanted the dark rectangle to stay where it is and only its text to change. No
+    goes back to the first message. Yes removes the charge and marks the subscription
     cancelled on that date, so a cancellation never told to the app shows up at the next
     charge.
   - One at a time, oldest first, the last 30 days only. Each is remembered as seen on the
@@ -99,7 +103,8 @@ Recorded on #37. It was built into #88, so only one version ships.
     `autoFrom`; left alone by the booking sync after a price rise or a deleted subscription.
 - In the dev preview with the clock on 20 Oct:
   - Money writes iCloud (14 Oct) and Spotify (17 Oct) and announces them one at a time;
-  - "Cancelled it?" asks, removes Spotify's charge and leaves 3 active;
+  - "Cancelled it?" asks in place (no dialog), No goes back, and Yes removes the charge and
+    leaves 3 active;
   - All entries lists both "· from Subscriptions", with an editable amount;
   - logging iCloud by hand offers to replace the written row;
   - Home announces the charge too.
