@@ -59,6 +59,9 @@ Petra, 24 Sep, after search (#90): "let's do 3b!" Pull request #91.
 **For the phone:** the card appears only if Asia has old Subscriptions entries that are not on
 the Subscriptions card. Answering it is for real, once, for both travellers.
 
+**Live with #91.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her test on the phone is pending.
+
 ### BUILT — Search on All entries (Petra, 24 Sep)
 
 Petra, testing #88 on the phone: "I had to swipe through the All entries to find the iCloud
