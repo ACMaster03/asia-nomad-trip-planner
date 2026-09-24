@@ -7,6 +7,45 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-24
 
+### BUILT — Search on All entries (Petra, 24 Sep)
+
+Petra, testing #88 on the phone: "I had to swipe through the All entries to find the iCloud
+subs … what if we added a search bar there in the All entries, where one could search by
+names? It would have made my search faster". The list shows 20 rows at a time, so an older
+entry also needed "Load 20 more" first. Pull request #90.
+
+**What changed.**
+- **A search box above the list**, "Search by name or category". It is not autofocused, since
+  the keyboard would cover the list. The keyboard's Search key puts the keyboard away. A grey ⊗
+  inside the box empties it, and the whole list comes back. The ⊗ is ours, not the browser's:
+  Safari shows its own only while typing, and Chrome draws it blue.
+- **It matches what a row shows, the name and the category** (`ledgerSearch.ts`). An entry
+  saved without a name shows its category instead, so a search by name alone would never find
+  it. This was proposed with the build, and Petra's go covered it. Every word typed has to
+  appear, in any order, ignoring case and accents: "pho" finds "Phở", and "da nang" finds
+  "Đà Nẵng".
+- **The matches replace the list,** newest first, each row with its date, with no paging. One
+  line above them gives the count and what they cost together: "11 entries · 73 200 Ft spent",
+  plus "· X received" when an income matches. The total follows the month totals' rule, today
+  and before only. A match dated after today comes last, under "Scheduled", with the fold's
+  line "Dated after today, so not counted as spent yet." Scheduled rows on top were what made
+  the list confusing on 23 Sep.
+- A match opens its form, as any row does. Nothing stored changes.
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); `next build`.
+- 136 node tests, five new in `ledgerSearch.test.ts`: an empty query; case, word order, accents
+  and đ; the category for an entry without a name; a scheduled match listed and not counted;
+  income apart.
+- In the dev preview at phone width, light and dark:
+  - "icloud" gives 1 entry · 3290 Ft spent;
+  - "food" gives 11 entries · 73 200 Ft;
+  - "stays" gives 2, with the Văn Giang booking under Scheduled;
+  - "zzz" says no entry has it;
+  - Enter puts the keyboard away;
+  - the ⊗ brings back "showing 20 of 42";
+  - a match opens its form.
+
 ### BUILT — Money's forms lose the ✕ (Petra, 24 Sep)
 
 Petra, after testing #88: Money's forms "still have an "x" and a slide down bar, both for
@@ -21,9 +60,8 @@ Pull request #89.
 dev preview at phone width, none of the three has a Close button, and the entry form closes on
 Escape, on a tap above it and on a 120 px drag of the handle, while a 40 px drag springs back.
 
-**Next, Petra's idea (24 Sep):** search by name on All entries. "I had to swipe through the All
-entries to find the iCloud subs … It would have made my search faster." It goes out as its own
-pull request after this one.
+**Live with #89.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her test on the phone is pending.
 
 ### BUILT — Money stage 2, round 3a: the Subscriptions question, and charges that add themselves (mock 16 §7)
 
