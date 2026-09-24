@@ -92,10 +92,7 @@ export function SubscriptionSheet({ initial, rates, todayIso, onSave, onDelete, 
 
   return (
     <Sheet label={initial ? 'Edit subscription' : 'Add subscription'} onClose={onClose}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-[20px] font-semibold">{initial ? 'Edit subscription' : 'Add subscription'}</h3>
-        <button onClick={onClose} aria-label="Close" className="-m-2 flex size-11 items-center justify-center text-tx3">✕</button>
-      </div>
+      <h3 className="text-[20px] font-semibold">{initial ? 'Edit subscription' : 'Add subscription'}</h3>
 
       <label className={label}>
         What is it?

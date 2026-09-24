@@ -7,6 +7,24 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-24
 
+### BUILT — Money's forms lose the ✕ (Petra, 24 Sep)
+
+Petra, after testing #88: Money's forms "still have an "x" and a slide down bar, both for
+closing the page, but we agreed a few days ago that we should delete the "x" and keep the
+other". The Trip sheets lost theirs on 23 Sep (the timeline's first day on the phone, below),
+and `Sheet.tsx` says so. Money's three were built before that and kept it: the entry form, the
+subscription form and the category list. Each now opens with its title alone and closes like
+every other sheet: drag the handle down past 80 px, tap the dim strip above, or press Escape.
+Pull request #89.
+
+**Checked.** `tsc`; `eslint` (the same four old findings); 131 node tests; `next build`. In the
+dev preview at phone width, none of the three has a Close button, and the entry form closes on
+Escape, on a tap above it and on a 120 px drag of the handle, while a 40 px drag springs back.
+
+**Next, Petra's idea (24 Sep):** search by name on All entries. "I had to swipe through the All
+entries to find the iCloud subs … It would have made my search faster." It goes out as its own
+pull request after this one.
+
 ### BUILT — Money stage 2, round 3a: the Subscriptions question, and charges that add themselves (mock 16 §7)
 
 Petra, 24 Sep: "let's do round 3!" Round 3 goes out in three pull requests, one at a time:
@@ -118,6 +136,12 @@ Recorded on #37. It was built into #88, so only one version ships.
     to 24 months.";
   - an old iCloud entry opened from All entries asks, with nothing preselected;
   - the ⓘ opens "Suggested from the name. Tap another to change it."
+
+**Live with #88.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her two steps on the phone worked the same day: the Repeats block on a new "Netflix", and the
+"Is this its … charge?" question on a subscription's name. The first charges the app writes
+by itself can appear from 25 Sep, on a declared subscription's charge day, and each one is
+announced.
 
 ### BUILT — Money gets shorter, step 2: three cards fold to one line (Petra, 24 Sep)
 
