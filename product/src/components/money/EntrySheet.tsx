@@ -178,10 +178,7 @@ export function EntrySheet({
 
   return (
     <Sheet label={initial ? 'Edit entry' : 'Add entry'} onClose={onClose}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-[20px] font-semibold">{initial ? 'Edit entry' : 'Add entry'}</h3>
-        <button onClick={onClose} aria-label="Close" className="-m-2 flex size-11 items-center justify-center text-tx3">✕</button>
-      </div>
+      <h3 className="text-[20px] font-semibold">{initial ? 'Edit entry' : 'Add entry'}</h3>
 
       <div className="flex rounded-[14px] border-[1.5px] border-ln2 bg-inp p-[3px]" role="radiogroup" aria-label="Type">
         {(['expense', 'income'] as const).map((t) => (
