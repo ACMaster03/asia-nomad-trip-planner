@@ -60,6 +60,10 @@ Petra is new to software work; Patrik is not. The product conventions are in
   above it stay open. The rows sit below Plan, followed by All entries and,
   last, Budget cap with a grey "Settings ›" (#86, Petra's choice over a
   colour of its own). Money is about 3 phone screens now.
+- Money's forms (entry, subscription, category list) lost their ✕ with
+  #89 on 24 Sep, like the Trip sheets on 23 Sep: the handle, the scrim
+  and Escape close them. Search on All entries, by name or category,
+  with what the matches cost, is #90 (Petra's idea, 24 Sep).
 - Home's money card follows Money's projection rule, live with #83 on
   24 Sep (Petra's decision of 23 Sep). A new journey shows only what is
   spent until the projection unlocks; older journeys keep what they show.
