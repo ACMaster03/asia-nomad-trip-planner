@@ -415,9 +415,9 @@ export default function MoneyPage() {
         </Link>
       )}
       {/* Last, because it is the one row that leaves Money: it opens Settings
-          (Petra, 24 Sep, after step 2 on the phone). */}
-      <Link href="/settings" className="flex items-center justify-between rounded-[var(--r)] bg-sf px-[18px] py-3.5">
-        <span>
+          (Petra, 24 Sep, after step 2 on the phone), and says so. */}
+      <Link href="/settings" className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-[18px] py-3.5">
+        <span className="min-w-0">
           <span className="block text-base font-semibold">{cap > 0 ? 'Budget cap' : 'Set a budget cap'}</span>
           <span className="block text-[14px] text-tx2">
             {/* In words (Petra, 23 Sep: "projected uses 132 %" meant nothing): what the
@@ -428,10 +428,15 @@ export default function MoneyPage() {
                 : projection.projected > cap
                   ? <>{fmt(cap)} · <span className="text-warn">at this pace the journey goes {fmt(projection.projected - cap)} over it</span></>
                   : `${fmt(cap)} · at this pace the journey uses ${Math.round((projection.projected / cap) * 100)}% of it`
-              : 'a ceiling for the whole trip, in Settings'}
+              : 'a ceiling for the whole trip'}
           </span>
         </span>
-        <ChevronRight aria-hidden className="size-5 text-ac2" />
+        {/* Where it leads, in words rather than a colour of its own (Petra,
+            24 Sep): colour on this page means the Track switch or a warning. */}
+        <span className="flex flex-none items-center gap-0.5">
+          <span className="text-[13px] text-tx3">Settings</span>
+          <ChevronRight aria-hidden className="size-5 text-ac2" />
+        </span>
       </Link>
       {/* The last line of an early page says what is still to come, so the
           missing cards are neither a mystery nor hidden behind a menu. */}

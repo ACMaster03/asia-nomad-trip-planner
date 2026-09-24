@@ -74,7 +74,9 @@ same colour with a quiet "Settings" label before ›. Claude advised against the
 - a coloured Budget cap row would look like a second switch or a notice;
 - it would pull the eye to the least-used row;
 - it would compete with the row's own amber, "at this pace the journey goes … over it".
-The label says where the row leads without any of that. Petra's choice is on #86.
+The label says where the row leads without any of that. **Petra chose the label**: "Settings ›"
+in grey, the same size as the rows' second lines. When no cap is set, the second line drops its
+"…, in Settings", which the label now says.
 
 ---
 
