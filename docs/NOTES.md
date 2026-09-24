@@ -36,7 +36,7 @@ a journey from before round 2, like Asia, shows what it always did. Before depar
 - Asia today: unchanged.
 
 **Live with #83.** Petra gave her go on 24 Sep, and the production build finished without errors.
-Her check on the phone is pending.
+She checked it on her phone: Asia's Home card still says "Spent … of ≈ … projected".
 
 ### BUILT — Money gets shorter, step 1: the ledger on its own screen, All entries (Petra, 23 Sep)
 
