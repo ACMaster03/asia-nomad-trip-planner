@@ -79,7 +79,10 @@ in grey, the same size as the rows' second lines. When no cap is set, the second
 "…, in Settings", which the label now says.
 
 **Live with #86.** Petra gave her go on 24 Sep, and the production build finished without errors.
-Her test on the phone is pending.
+Her test on the phone passed:
+- All entries, then Budget cap, are the last rows;
+- Budget cap shows "Settings ›";
+- tapping it opens Settings.
 
 ---
 
