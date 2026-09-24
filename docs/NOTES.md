@@ -15,6 +15,7 @@ other". The Trip sheets lost theirs on 23 Sep (the timeline's first day on the p
 and `Sheet.tsx` says so. Money's three were built before that and kept it: the entry form, the
 subscription form and the category list. Each now opens with its title alone and closes like
 every other sheet: drag the handle down past 80 px, tap the dim strip above, or press Escape.
+Pull request #89.
 
 **Checked.** `tsc`; `eslint` (the same four old findings); 131 node tests; `next build`. In the
 dev preview at phone width, none of the three has a Close button, and the entry form closes on
