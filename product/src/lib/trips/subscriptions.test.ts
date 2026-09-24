@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  chargesBetween, isCancelled, monthlyRunRate, nextCharge, ordinalDay, scheduleLabel, shiftMonths, subsBetween, subsCharges,
+  chargeSoon, chargesBetween, isCancelled, monthlyRunRate, nextCharge, ordinalDay, scheduleLabel, shiftMonths, subsBetween, subsCharges,
 } from './subscriptions.ts'
 import type { Subscription } from './types.ts'
 
@@ -117,4 +117,13 @@ test('a broken subscription predicts nothing rather than throwing', () => {
   assert.deepEqual(chargesBetween(sub({ id: 'ok', amount: 1, anchor: '2026-09-14' }), TRIP_END, TOMORROW), [])
   // a zero/NaN cadence falls back to monthly instead of spinning
   assert.equal(chargesBetween(sub({ id: 'z', amount: 1, anchor: '2026-09-14', everyMonths: 0 }), TOMORROW, '2026-11-01').length, 2)
+})
+
+test('chargeSoon: the soonest live charge within a week, today included; cancelled ones never', () => {
+  assert.deepEqual(chargeSoon(CANON, TODAY), { sub: CANON[0], inDays: 2 }, 'iCloud on the 14th')
+  assert.equal(chargeSoon(CANON, '2026-09-14')?.inDays, 0, 'a charge today counts')
+  assert.equal(chargeSoon(CANON, '2026-09-15')?.sub.id, 'spotify', 'iCloud has moved to next month')
+  assert.equal(chargeSoon(CANON, '2026-09-24'), null, 'nothing until 14 Oct')
+  assert.equal(chargeSoon(CANON, '2026-09-24', 30)?.sub.id, 'icloud')
+  assert.equal(chargeSoon([CANON[4]], '2026-09-18'), null, 'Netflix was cancelled on 6 Sep')
 })

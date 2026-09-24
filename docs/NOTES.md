@@ -5,6 +5,53 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-24
+
+### BUILT — Money gets shorter, step 2: three cards fold to one line (Petra, 24 Sep)
+
+Petra, after step 1 (#82) on the phone: "it still feels long". She chose which cards fold:
+One-offs & extras, Subscriptions and Bookings. The others are "too important to collapse":
+the overview, Latest, the chart, Where it goes, and Plan, the one card that looks ahead.
+Pull request #85.
+
+**What changed.**
+- **Each of the three starts as one line** (`Fold.tsx`): a title, a summary, and ⌄. Tapped,
+  the full card opens in place, with ⌃ at its top to fold it again. ⌄ opens in place and ›
+  goes to another screen, so the two never look alike.
+- **The summary carries anything that needs attention.** Folded, the warnings each card
+  shows would otherwise sit behind a tap. On Asia's test data:
+  - Bookings: "1 432 421 Ft · 418 200 Ft not booked yet", the not-booked part in amber; or
+    else what is still to pay, or "all paid".
+  - Subscriptions: "4 active · ≈ 15 270 Ft a month", plus the charge due within a week in
+    the open card's amber pill, e.g. "· Home internet · Budapest flat in 2 days"
+    (`chargeSoon`, `lib/trips/subscriptions.ts`).
+  - One-offs & extras: "629 000 Ft planned · 491 100 Ft paid · 1 not paid yet", the
+    columns side by side and never added, as on the card.
+- **They start folded each time the app is opened.** One that is opened stays open while you
+  move around the app (module state, like the Track question's), so a trip to All entries
+  does not fold it again.
+- **The quiet page is unchanged.** Its Bookings card is the whole page there, so it shows open
+  and without ⌃. The open Bookings card still taps through to the Trip page from its figures.
+  Its header now holds ⌃, and a button cannot sit inside a link.
+- **Empty cards are not folded.** They are one sentence already.
+- **Money is 2 622 px, about 3.1 phone screens.** It was 6.9 before step 1 and 4.5 after it.
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); `next build`.
+- 123 node tests, one new: `chargeSoon` counts today, skips cancelled subscriptions, and
+  looks only a week ahead.
+- In the dev preview at iPhone 13 width:
+  - each row opens with ⌃ and folds again;
+  - the open Bookings figures link to the Trip page;
+  - with the clock on 21 Sep, the Subscriptions line names the internet bill "in 2 days";
+  - the quiet page shows Bookings open, with no ⌃.
+
+**Offered to Petra, not built:** moving the three rows below Plan, so the page ends in one
+group of lines (Bookings, Subscriptions, One-offs, Budget cap, All entries) under the big
+cards. It was shown as a picture, with the cards moved in the browser only.
+
+---
+
 ## 2026-09-23
 
 ### BUILT — Home's money card follows Money's projection rule (Petra, 23 Sep)

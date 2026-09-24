@@ -33,6 +33,7 @@ import { PlanCard } from './PlanCard'
 import { EntryEditor } from './EntryEditor'
 import { TrackQuestion } from './TrackQuestion'
 import { TrackSpendingRow } from './TrackSpendingRow'
+import { useFold } from './Fold'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
 // Money — ONE page (round-two design signed off 2026-09-13; round three
@@ -109,6 +110,10 @@ export default function MoneyPage() {
   const track = useTrackSpending()
   const setTrack = useSetTrackSpending()
   const [questionClosed, setQuestionClosed] = useState(() => questionClosedThisVisit)
+  // Step 2 of a shorter Money (Petra, 24 Sep): three cards start as one line.
+  const [bookingsOpen, toggleBookings] = useFold('bookings')
+  const [subsOpen, toggleSubs] = useFold('subscriptions')
+  const [oneOffsOpen, toggleOneOffs] = useFold('one-offs')
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
   const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
@@ -378,16 +383,16 @@ export default function MoneyPage() {
         stays={bookings.stays} transport={bookings.transport}
         paid={bookings.paid} toPay={bookings.toPay}
         draftedStays={bookings.draftedStays} draftStays={bookings.draftStays}
-        fmt={fmt} todayIso={today}
+        fmt={fmt} todayIso={today} folded={!bookingsOpen} onToggle={toggleBookings}
       />
       <SubscriptionsCard
         subs={subs} rates={s.rates} fmt={fmt} todayIso={today} tripEnd={tripEnd}
         subsAhead={projection.subsAhead} canEdit={canEdit}
         onAdd={() => setSubSheet({ sub: null })}
         onEdit={(sub) => setSubSheet({ sub })}
-        onToggleRemind={toggleRemind}
+        onToggleRemind={toggleRemind} folded={!subsOpen} onToggle={toggleSubs}
       />
-      <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} />
+      <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} folded={!oneOffsOpen} onToggle={toggleOneOffs} />
       {unlocks.projection && (
         <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} paceKnown={pace.perDay !== null} />
       )}

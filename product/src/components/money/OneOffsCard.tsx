@@ -6,6 +6,7 @@ import { categoryLabel } from '@/lib/trips/categories'
 import { oneOffs } from '@/lib/trips/extras'
 import { shortDate } from '@/lib/trips/timeline'
 import type { LedgerEntry, TripState } from '@/lib/trips/types'
+import { FoldButton, FoldedRow } from './Fold'
 
 // One-offs & extras (#39) — the fourth budget family, back on the Money page.
 //
@@ -44,12 +45,18 @@ import type { LedgerEntry, TripState } from '@/lib/trips/types'
 // not there": insurance and visas share a category, the phone cut the heading
 // to "Insurance & …" and the single line under it named only the latest
 // payment. The grouping lives in oneOffs() (lib/trips/extras.ts), tested there.
+//
+// On Money it starts folded to one line (Fold.tsx): the two totals side by
+// side, never added, and how many extras are not paid yet, in amber.
 
-export function OneOffsCard({ state, ledger, fmt, todayIso }: {
+export function OneOffsCard({ state, ledger, fmt, todayIso, folded, onToggle }: {
   state: TripState
   ledger: LedgerEntry[]
   fmt: (n: number) => string
   todayIso: string
+  /** with onToggle: one line, or the card with ⌃ (Fold.tsx) */
+  folded?: boolean
+  onToggle?: () => void
 }) {
   const v = useMemo(() => oneOffs(state, ledger, todayIso), [state, ledger, todayIso])
   const [info, setInfo] = useState(false)
@@ -62,13 +69,29 @@ export function OneOffsCard({ state, ledger, fmt, todayIso }: {
       </div>
     )
   }
+  if (folded && onToggle) {
+    const unpaid = v.groups.reduce((a, g) => a + g.items.filter((it) => it.state === 'unpaid').length, 0)
+    return (
+      <FoldedRow
+        title="One-offs & extras"
+        onOpen={onToggle}
+        summary={<>
+          {fmt(v.plannedTotal)} planned · {fmt(v.paidTotal)} paid
+          {unpaid > 0 && <> · <span className="whitespace-nowrap text-warn">{unpaid} not paid yet</span></>}
+        </>}
+      />
+    )
+  }
   return (
     <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-1.5 text-tx">
       <div className="flex items-center justify-between border-b border-ln py-2.5">
         <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">One-offs &amp; extras</span>
-        <button type="button" aria-label="What the two columns mean" aria-expanded={info} onClick={() => setInfo((v) => !v)} className="-my-2 flex size-11 items-center justify-center text-tx3">
-          <Info aria-hidden className="size-[18px]" />
-        </button>
+        <span className="flex items-center">
+          <button type="button" aria-label="What the two columns mean" aria-expanded={info} onClick={() => setInfo((v) => !v)} className="-my-2 flex size-11 items-center justify-center text-tx3">
+            <Info aria-hidden className="size-[18px]" />
+          </button>
+          {onToggle && <FoldButton label="One-offs and extras" onFold={onToggle} />}
+        </span>
       </div>
       {info && (
         <p className="border-b border-ln py-2.5 text-[13px] text-tx2">
