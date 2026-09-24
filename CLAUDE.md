@@ -43,7 +43,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
   #80 puts the Track spending switch right under the first card of both
   versions. Round 2, the cards that unlock as entries arrive, went live
   with #81 for journeys made after it (older ones keep every card). Round 3
-  goes out in three pull requests. 3a is #88: the Subscriptions question
+  goes out in three pull requests. 3a went live with #88 on 24 Sep: the Subscriptions question
   on the entry form, and subscription charges that add themselves on their
   date, each announced until tapped ("Cancelled it?"). Patrik decided the
   latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer, and

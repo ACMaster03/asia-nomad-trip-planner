@@ -108,6 +108,10 @@ Recorded on #37. It was built into #88, so only one version ships.
   - All entries lists both "· from Subscriptions", with an editable amount;
   - logging iCloud by hand offers to replace the written row;
   - Home announces the charge too.
+
+**Live with #88.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her test of the form on the phone is pending. The first charges the app writes by itself can
+appear from 25 Sep, on a declared subscription's charge day, and each one is announced.
 - In the dev preview:
   - a new "Netflix" shows Every month, "Next charge 24 Oct." and the reminder on, and adds a
     fifth subscription with no "today" pill;
