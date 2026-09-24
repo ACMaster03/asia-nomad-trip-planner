@@ -78,6 +78,9 @@ The label says where the row leads without any of that. **Petra chose the label*
 in grey, the same size as the rows' second lines. When no cap is set, the second line drops its
 "…, in Settings", which the label now says.
 
+**Live with #86.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her test on the phone is pending.
+
 ---
 
 ## 2026-09-23
