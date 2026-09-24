@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react'
 import { categoryLabel } from '@/lib/trips/categories'
 import { toBase, monthLabel } from '@/lib/trips/format'
 import { ledgerView } from '@/lib/trips/ledgerView'
+import { searchLedger } from '@/lib/trips/ledgerSearch'
 import type { LedgerEntry } from '@/lib/trips/types'
 
 // The ledger — one continuous list, newest first, on a screen of its own
@@ -25,13 +26,17 @@ import type { LedgerEntry } from '@/lib/trips/types'
 // pagination means moving the ledger into its own table and giving up
 // whole-document sync. Every total here is still computed over EVERY row; only
 // the rendering is cut.
+//
+// A search (Petra, 24 Sep) swaps the list for its matches, each row with its
+// date, under one line of what they cost together (lib/trips/ledgerSearch.ts).
+// No paging there: a search is how you reach an old row without paging.
 
 const dayLabel = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 const shortDay = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 const PAGE = 20
 
-export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, canEdit, onEdit, reveal }: {
+export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, canEdit, onEdit, reveal, query = '' }: {
   entries: LedgerEntry[]
   rates: Record<string, number>
   base: string
@@ -46,8 +51,11 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
    * rendered before it can be scrolled to.
    */
   reveal?: { date: string; n: number } | null
+  /** the search box's text; empty shows the whole list */
+  query?: string
 }) {
   const view = useMemo(() => ledgerView(entries, rates, todayIso, tripStart), [entries, rates, todayIso, tripStart])
+  const found = useMemo(() => searchLedger(entries, rates, query, todayIso), [entries, rates, query, todayIso])
   const { scheduled, scheduledSpend, past, byMonth, byDay, preCount, preTotal } = view
   const [openScheduled, setOpenScheduled] = useState(false)
   const [pages, setPages] = useState(1)
@@ -94,6 +102,32 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
           <span className={'block text-base font-semibold' + (isInc ? ' text-ac' : '')}>{(isInc ? '+' : '') + fmt(toBase(e.amount, e.currency, rates))}</span>
           {e.currency !== base && <span className="block text-[13px] text-tx2">{e.amount.toLocaleString('en-US')} {e.currency}</span>}
         </span>
+      </div>
+    )
+  }
+
+  if (found) {
+    const { past: hits, scheduled: soon, spent, received } = found
+    const total = hits.length + soon.length
+    return (
+      <div className="rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-1.5 text-tx">
+        {total === 0 ? (
+          <p role="status" className="py-3 text-base text-tx2">No entry has “{query.trim()}” in its name or category.</p>
+        ) : (
+          <p role="status" className="pb-2 pt-2.5 text-[14px] font-semibold text-tx2">
+            {total} {total === 1 ? 'entry' : 'entries'}
+            {hits.some((e) => e.type === 'expense') && <span className="font-medium"> · {fmt(spent)} spent</span>}
+            {hits.some((e) => e.type !== 'expense') && <span className="font-medium"> · {fmt(received)} received</span>}
+          </p>
+        )}
+        {hits.map((e) => <div key={e.id}>{row(e, shortDay(e.date))}</div>)}
+        {soon.length > 0 && (
+          <>
+            <div className="pb-0.5 pt-4 text-[12px] font-semibold uppercase tracking-[.09em] text-tx3">Scheduled</div>
+            {soon.map((e) => <div key={e.id}>{row(e, shortDay(e.date))}</div>)}
+            <p className="pt-1 text-[13px] text-tx3">Dated after today, so not counted as spent yet.</p>
+          </>
+        )}
       </div>
     )
   }

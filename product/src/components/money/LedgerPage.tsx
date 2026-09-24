@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, CircleX, Search } from 'lucide-react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
@@ -25,6 +25,12 @@ import { ChargeNotice } from './ChargeNotice'
 // Patrik wanted a plainer word than ledger, which she had not met before. Rows
 // edit exactly as they do on Money (EntryEditor). Adding stays on Money, next
 // to the page that shows what an entry changes.
+//
+// The search box sits right above the list it filters (Petra, 24 Sep). It is
+// not autofocused: on a phone the keyboard would cover the list it is there to
+// shorten, as it did in the category list (CategoryPicker, 13 Sep). Its clear
+// button is ours, not the browser's: Safari shows its own only while typing, so
+// after Search the full list would be two taps away, and Chrome draws it blue.
 export default function LedgerPage({ day }: { day?: string }) {
   const { fmt, base } = useMoney()
   const { trip } = useTripScreen()
@@ -33,6 +39,7 @@ export default function LedgerPage({ day }: { day?: string }) {
   const { canEdit } = useTripRole()
   const today = useToday()
   const [sheet, setSheet] = useState<{ entry: LedgerEntry } | null>(null)
+  const [q, setQ] = useState('')
   // Stable, so the list scrolls to the day once rather than after every edit.
   const reveal = useMemo(() => (day ? { date: day, n: 1 } : null), [day])
   usePlanSync(trip.data, canEdit, mut)
@@ -60,9 +67,36 @@ export default function LedgerPage({ day }: { day?: string }) {
         <SaveError show={mut.isError} error={mut.error} />
         <SaveError show={stateMut.isError} error={stateMut.error} />
       </div>
+      {n > 0 && (
+        <div className="relative">
+          <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-tx3" />
+          <input
+            type="search"
+            enterKeyHint="search"
+            aria-label="Search entries"
+            placeholder="Search by name or category"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            // Search on the phone's keyboard puts it away, so the matches are
+            // not left behind it.
+            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+            className="w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-sf py-3 pl-10 pr-11 text-base text-tx outline-none focus:border-ac [&::-webkit-search-cancel-button]:appearance-none"
+          />
+          {q && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => setQ('')}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-tx3"
+            >
+              <CircleX aria-hidden className="size-[18px]" />
+            </button>
+          )}
+        </div>
+      )}
       <LedgerList
         entries={trip.data.ledger} rates={s.rates} base={base} fmt={fmt} tripStart={s.meta.startDate || undefined}
-        todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal}
+        todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} reveal={reveal} query={q}
       />
       {sheet && (
         <EntryEditor
