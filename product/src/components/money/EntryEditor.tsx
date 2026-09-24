@@ -11,7 +11,7 @@ import { toBase } from '@/lib/trips/format'
 import type { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import type { useTripMutation } from '@/lib/trips/useTripMutation'
 import type { LedgerEntry, Trip } from '@/lib/trips/types'
-import { EntrySheet } from './EntrySheet'
+import { EntrySheet, type SubChange } from './EntrySheet'
 
 // The entry sheet with what saving and deleting mean, shared by Money and All
 // entries so a row edits the same way on both. The page owns whether the
@@ -50,13 +50,25 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
     base,
   })
 
-  function save(entry: LedgerEntry) {
+  function save(entry: LedgerEntry, change?: SubChange) {
     const isNew = !initial
     mut.mutate({ kind: 'upsert', entry })
+    // The Subscriptions question (EntrySheet): the charge declares the
+    // subscription, or corrects its cadence and reminder.
+    if (change?.kind === 'create') {
+      stateMut.mutate((cur) => ({ ...cur, subscriptions: [...(cur.subscriptions ?? []), change.sub] }))
+    } else if (change?.kind === 'update') {
+      stateMut.mutate((cur) => ({
+        ...cur,
+        subscriptions: (cur.subscriptions ?? []).map((x) => (x.id === change.id
+          ? { ...x, everyMonths: change.everyMonths, ...(change.remind ? { remind: true, leadDays: x.leadDays ?? 3 } : { remind: false }) }
+          : x)),
+      }))
+    }
     onClose()
     if (isNew) onAdded?.()
     // The two-second confirmation (mock 16 §3): what landed, so nobody scrolls to check.
-    toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}`)
+    toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}${change?.kind === 'create' ? ' · now a subscription' : ''}`)
   }
   async function del(entry: LedgerEntry) {
     const listedExtra = entry.source?.kind === 'extra' ? s.extras.find((x) => x.id === entry.source!.id) : undefined
@@ -101,6 +113,7 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
       initial={initial}
       ledger={ledger}
       rates={s.rates}
+      subs={s.subscriptions ?? []}
       defaultCur={entryCur}
       defaultCurWhere={hereCodes.includes(entryCur) ? current?.country : null}
       onSave={save}

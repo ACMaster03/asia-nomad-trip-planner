@@ -392,7 +392,7 @@ export default function MoneyPage() {
         fmt={fmt} todayIso={today} folded={!bookingsOpen} onToggle={toggleBookings}
       />
       <SubscriptionsCard
-        subs={subs} rates={s.rates} fmt={fmt} todayIso={today} tripEnd={tripEnd}
+        subs={subs} ledger={ledger} rates={s.rates} fmt={fmt} todayIso={today} tripEnd={tripEnd}
         subsAhead={projection.subsAhead} canEdit={canEdit}
         onAdd={() => setSubSheet({ sub: null })}
         onEdit={(sub) => setSubSheet({ sub })}

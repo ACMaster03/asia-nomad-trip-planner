@@ -7,6 +7,68 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-24
 
+### BUILT — Money stage 2, round 3a: the Subscriptions question on the entry form (mock 16 §7)
+
+Petra, 24 Sep: "let's do round 3!" Round 3 goes out in three pull requests, one at a time:
+- 3a, this one: the question on the entry form;
+- 3b: the one-time offer for entries already in the category (§8);
+- 3c: editing one-off costs on Money instead of on the Trip page.
+
+Pull request #88.
+
+**What changed.** With the Subscriptions category on the entry form (picked by hand, or
+suggested from a name like Netflix, Spotify or iCloud), a Repeats block appears:
+- **A new name:** Every month (preselected on a new entry), Every year, Other… (every 2 to 24
+  months), or Doesn't repeat. Under the choices: "Next charge 24 Oct.", and "Remind me before
+  each charge · 3 days before", on by default as in the mock. Saving declares the
+  subscription, anchored on the entry's date. There is no second form, and the toast adds
+  "· now a subscription".
+- **A name that is already a live subscription:** "iCloud 2 TB is one of your subscriptions. Is
+  this its 14 Sep charge?" (the nearest scheduled charge), with Yes / No. Yes links the entry
+  and fills an empty amount and an untouched currency from the subscription: in Bangkok the
+  currency box starts on THB, and a bill from home is HUF. No marks it a plain entry. Left
+  unanswered, it is a plain entry too, so a second charge never makes a second subscription.
+- **An entry that is a charge already:** the same block, set as its subscription is, so the
+  cadence and the reminder can be corrected where the charge is.
+- **An entry typed before round 3:** it opens with nothing preselected, so opening one to fix
+  its amount declares nothing.
+
+The link is one optional field on the entry, `subId`: the subscription's id, null once someone
+said it doesn't repeat, and unset when never asked. There is no migration, because the ledger
+is JSON.
+
+"Suggested from the name" went behind an ⓘ beside Category (Petra, mock 16 round 2: too much
+text).
+
+**Fixed on the way.** A subscription declared from today's entry showed "Netflix today" in amber
+on the Subscriptions line and card, as if the charge were still to come. The next charge now
+counts from the day after the latest logged charge (`nextChargeFrom`).
+
+**Decided in the build, open to change:**
+- Editing a charge's name or amount does not change its subscription; the card edits those.
+- Choosing Doesn't repeat on a charge unlinks it, and the subscription stays. It is cancelled
+  or deleted on the card.
+- The card's own "＋ Subscription" form still starts with the reminder off (#37). The question
+  starts with it on (the mock). They may want to agree.
+- Not built: "Lands in whichever journey is live". Subscriptions still belong to the journey.
+  Carrying them to the next one (#59: the subscription belongs to the person) needs them stored
+  per person, a database change: Patrik's call.
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); `next build`.
+- 127 node tests, four new: `subNamed` (the whole name, any case or spacing, never a cancelled
+  one), `nearestCharge`, `subFromEntry`, `nextChargeFrom`.
+- In the dev preview:
+  - a new "Netflix" shows Every month, "Next charge 24 Oct." and the reminder on, and adds a
+    fifth subscription with no "today" pill;
+  - a second "iCloud 2 TB" asks about its 14 Sep charge, and Yes adds no subscription and
+    fills 3290 HUF;
+  - a second "Netflix" is recognised the same way;
+  - Other… with 3 months gives "Next charge 24 Dec", and 40 greys out the button with "From 2
+    to 24 months.";
+  - an old iCloud entry opened from All entries asks, with nothing preselected;
+  - the ⓘ opens "Suggested from the name. Tap another to change it."
+
 ### BUILT — Money gets shorter, step 2: three cards fold to one line (Petra, 24 Sep)
 
 Petra, after step 1 (#82) on the phone: "it still feels long". She chose which cards fold:

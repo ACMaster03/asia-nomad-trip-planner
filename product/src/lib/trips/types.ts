@@ -175,6 +175,12 @@ export interface LedgerEntry {
   source?: { kind: 'stay' | 'transport' | 'extra'; id: string }
   // Booking vanished from the plan — row stays on the books, flagged.
   orphaned?: boolean
+  /**
+   * A charge in the Subscriptions category (mock 16 §7, round 3): the id of the
+   * subscription it is a charge of, or null once someone said it does not
+   * repeat. Unset: never asked (typed before round 3, or not a subscription).
+   */
+  subId?: string | null
 }
 export type Ledger = LedgerEntry[]
 
