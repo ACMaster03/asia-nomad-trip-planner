@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-24
 
-### BUILT — Money stage 2, round 3a: the Subscriptions question on the entry form (mock 16 §7)
+### BUILT — Money stage 2, round 3a: the Subscriptions question, and charges that add themselves (mock 16 §7)
 
 Petra, 24 Sep: "let's do round 3!" Round 3 goes out in three pull requests, one at a time:
 - 3a, this one: the question on the entry form;
@@ -54,10 +54,55 @@ counts from the day after the latest logged charge (`nextChargeFrom`).
   Carrying them to the next one (#59: the subscription belongs to the person) needs them stored
   per person, a database change: Patrik's call.
 
+**Then, before the merge: charges add themselves.** Petra, looking at #88: "if we add a
+subscription there and log when it will take the money off the card, can't it automatically
+add the expense in the ledger?" This reversed #37's "the ledger rows are what confirms each
+occurrence", so it went to Patrik. **Decided, Patrik, 24 Sep, relayed by Petra: yes.**
+Recorded on #37. It was built into #88, so only one version ships.
+- **The rule** (`subChargesDue`, `importCosts.ts`). Each subscription charge whose date has
+  come is written to All entries as "· from Subscriptions", the subscription's amount on the
+  charge date, linked by `subId`, with the source key `sub:<id>@<date>`.
+  - Never a future charge: the projection already counts those.
+  - Only inside the journey's dates, and only from `autoFrom`. That is the day after the entry
+    that declared it, or the day it was added on the card. Older subscriptions start at
+    `SUB_CHARGES_FROM` (25 Sep), so no month already logged by hand comes back. If the merge
+    slips past 24 Sep, that date moves to the day after the merge.
+  - Nothing is written where the charge is already logged: an entry linked to the
+    subscription, or one with its name in Subscriptions, within 15 days. An entry said not to
+    repeat does not count.
+  - A deleted charge stays deleted (skip record). A cancelled subscription stops.
+  - Written once, then the ledger's own: its amount and date can be corrected, and a price
+    change on the subscription does not rewrite past months. The booking sync never updates,
+    flags or removes these rows.
+  - The same sync runs on Money, on All entries and, new, on Home, where the app opens.
+- **Petra's safeguard** (`ChargeNotice.tsx`). Each charge written is announced in the toast's
+  dark pill, but it stays until tapped: "iCloud 2 TB · 3290 Ft added to All entries, charged
+  14 Oct." with "Cancelled it?" and "OK".
+  - "Cancelled it?" asks first. Then it removes the charge and marks the subscription
+    cancelled on that date, so a cancellation never told to the app shows up at the next
+    charge.
+  - One at a time, oldest first, the last 30 days only. Each is remembered as seen on the
+    device, so each traveller sees each charge once. Editors only.
+  - With the reminder before each charge, every charge gets a check before it and after it.
+- **The entry form:** logging a charge by hand whose row the app already wrote says "It was
+  added by itself on 14 Oct. Saving this replaces it." Saving swaps the written row for the
+  typed one. Nothing is doubled.
+
 **Checked.**
 - `tsc`; `eslint` (the same four old findings); `next build`.
-- 127 node tests, four new: `subNamed` (the whole name, any case or spacing, never a cancelled
-  one), `nearestCharge`, `subFromEntry`, `nextChargeFrom`.
+- 131 node tests, eight new:
+  - four for the question: `subNamed` (the whole name, any case or spacing, never a cancelled
+    one), `nearestCharge`, `subFromEntry`, `nextChargeFrom`;
+  - four for charges that add themselves: written once its date has come and from 25 Sep
+    only; not again when written, deleted, logged by hand under its name or linked, but yes
+    beside an entry said not to repeat; inside the journey, until a cancellation, from
+    `autoFrom`; left alone by the booking sync after a price rise or a deleted subscription.
+- In the dev preview with the clock on 20 Oct:
+  - Money writes iCloud (14 Oct) and Spotify (17 Oct) and announces them one at a time;
+  - "Cancelled it?" asks, removes Spotify's charge and leaves 3 active;
+  - All entries lists both "· from Subscriptions", with an editable amount;
+  - logging iCloud by hand offers to replace the written row;
+  - Home announces the charge too.
 - In the dev preview:
   - a new "Netflix" shows Every month, "Next charge 24 Oct." and the reminder on, and adds a
     fifth subscription with no "today" pill;

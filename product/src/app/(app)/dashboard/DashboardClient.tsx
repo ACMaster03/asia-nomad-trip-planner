@@ -12,6 +12,11 @@ import { useCheckIn } from '@/components/checkin/CheckInProvider'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { moneyUnlocks } from '@/lib/trips/unlocks'
+import { useTripRole } from '@/lib/trips/useTripRole'
+import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
+import { useTripMutation } from '@/lib/trips/useTripMutation'
+import { usePlanSync } from '@/lib/trips/usePlanSync'
+import { ChargeNotice } from '@/components/money/ChargeNotice'
 import { tripPhase } from '@/lib/trips/recap'
 import { tripRecap } from '@/lib/trips/recap'
 import { fetchTripEvents } from '@/lib/trips/events'
@@ -61,6 +66,13 @@ export default function DashboardClient({
   const { trip, cityIdx } = useTripScreen()
   const checkIn = useCheckIn()
   const { recordArrived } = useTripEvents()
+  // Home is where the app opens, so the plan → ledger sync runs here too:
+  // a subscription charge whose date has come lands, and ChargeNotice below
+  // announces it (Patrik and Petra, 24 Sep, #37).
+  const { canEdit } = useTripRole()
+  const ledgerMut = useLedgerMutation()
+  const stateMut = useTripMutation()
+  usePlanSync(trip.data, canEdit, ledgerMut)
   // Clock-dependent → client-only (SSR snapshot renders the pre layout, same
   // hydration rule the old dashboard followed, minus the setState-in-effect).
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
@@ -474,6 +486,7 @@ export default function DashboardClient({
           you follow (docs/SOCIAL-SCOPE.md §2). Keeps working — own rows only —
           when the social RPCs are not there yet. */}
       <HomeActivity own={events.data ?? []} ownPending={events.isPending} userId={userId} segments={s.segments} />
+      <ChargeNotice trip={trip.data} canEdit={canEdit} mut={ledgerMut} stateMut={stateMut} />
     </main>
   )
 }

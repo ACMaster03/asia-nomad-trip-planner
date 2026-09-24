@@ -31,6 +31,7 @@ import { OneOffsCard } from './OneOffsCard'
 import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntryEditor } from './EntryEditor'
+import { ChargeNotice } from './ChargeNotice'
 import { TrackQuestion } from './TrackQuestion'
 import { TrackSpendingRow } from './TrackSpendingRow'
 import { useFold } from './Fold'
@@ -470,6 +471,7 @@ export default function MoneyPage() {
           onClose={() => setSubSheet(null)}
         />
       )}
+      <ChargeNotice trip={trip.data} canEdit={canEdit} mut={mut} stateMut={stateMut} />
       {tracking === 'ask' && !questionClosed && (
         <TrackQuestion
           onAnswer={(yes) => setTrack.mutate(yes)}

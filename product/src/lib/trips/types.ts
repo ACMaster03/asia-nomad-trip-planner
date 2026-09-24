@@ -112,6 +112,13 @@ export interface Subscription {
    * every total it already fed.
    */
   cancelledOn?: string | null
+  /**
+   * The first date whose charge the app writes into the ledger by itself
+   * (Patrik, 24 Sep, #37). Set on every subscription declared since; unset on
+   * older ones, which start at SUB_CHARGES_FROM (importCosts.ts), so the
+   * months already logged by hand are never written again.
+   */
+  autoFrom?: string
 }
 export interface Extra {
   id: string
@@ -171,8 +178,9 @@ export interface LedgerEntry {
   amount: number
   currency: CurrencyCode
   note: string
-  // Auto-imported rows only (importCosts.ts): the booking this row mirrors.
-  source?: { kind: 'stay' | 'transport' | 'extra'; id: string }
+  // Auto-imported rows only (importCosts.ts): the booking this row mirrors, or
+  // for kind 'sub' the subscription charge it is ("<subId>@<date>").
+  source?: { kind: 'stay' | 'transport' | 'extra' | 'sub'; id: string }
   // Booking vanished from the plan — row stays on the books, flagged.
   orphaned?: boolean
   /**

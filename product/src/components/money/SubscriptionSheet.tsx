@@ -84,6 +84,9 @@ export function SubscriptionSheet({ initial, rates, todayIso, onSave, onDelete, 
       anchor,
       ...(remind ? { remind: true, leadDays } : { remind: false }),
       ...(cancelledOn ? { cancelledOn } : {}),
+      // The app writes its charges from the day it was added (importCosts.ts):
+      // a past anchor is a known charge, not one to write again.
+      ...(initial ? (initial.autoFrom ? { autoFrom: initial.autoFrom } : {}) : { autoFrom: todayIso || todayISO() }),
     })
   }
 

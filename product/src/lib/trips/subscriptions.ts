@@ -72,6 +72,13 @@ export function nextCharge(sub: Subscription, fromIso: string): string | null {
 // ---- the question on the entry form (mock 16 §7, round 3) -----------------
 
 const nameKey = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
+/** Two names for the same thing, whatever the case and spacing. */
+export const sameName = (a: string, b: string) => !!nameKey(a) && nameKey(a) === nameKey(b)
+/** The ISO day after `iso`. */
+export function dayAfter(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10)
+}
 
 /** The live subscription an entry's name belongs to, if one is called that. */
 export function subNamed(subs: Subscription[], name: string): Subscription | null {
@@ -101,7 +108,8 @@ export function nearestCharge(sub: Subscription, dateIso: string, withinDays = 2
 /**
  * The subscription an entry declares when its form says it repeats: the
  * charge is the subscription (#59), so the schedule hangs off the entry's date
- * and nothing else is asked.
+ * and nothing else is asked. The entry is its first charge, so the app writes
+ * the charges from the day after it (autoFrom).
  */
 export function subFromEntry(
   entry: { label: string; amount: number; cur: string; date: string },
@@ -116,6 +124,7 @@ export function subFromEntry(
     amount: entry.amount,
     everyMonths: Math.max(1, Math.round(everyMonths) || 1),
     anchor: entry.date,
+    autoFrom: dayAfter(entry.date),
     ...(remind ? { remind: true, leadDays: 3 } : { remind: false }),
   }
 }
@@ -132,9 +141,7 @@ export type LoggedCharge = { subId?: string | null; date: string }
 export function nextChargeFrom(sub: Subscription, todayIso: string, ledger: LoggedCharge[]): string {
   let last = ''
   for (const e of ledger) if (e.subId === sub.id && e.date > last) last = e.date
-  if (last < todayIso) return todayIso
-  const [y, m, d] = last.split('-').map(Number)
-  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10)
+  return last < todayIso ? todayIso : dayAfter(last)
 }
 
 /**

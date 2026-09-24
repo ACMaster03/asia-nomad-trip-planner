@@ -69,14 +69,17 @@ export function EntrySheet({
   defaultCur: string
   /** the country that chose it, when the choice came from today's stop */
   defaultCurWhere?: string | null
-  onSave: (e: LedgerEntry, sub?: SubChange) => void
+  /** replaceId: the charge the app wrote that this entry replaces */
+  onSave: (e: LedgerEntry, sub?: SubChange, replaceId?: string) => void
   onDelete?: (e: LedgerEntry) => void
   onClose: () => void
   /** one line right above the save button, for what saving does beyond saving */
   note?: string
 }) {
   const { base, fmt } = useMoney()
-  const imported = !!initial?.source
+  // A booking's row follows the Trip page. A subscription charge the app wrote
+  // is the ledger's own from then on: its amount and date can be corrected.
+  const imported = !!initial?.source && initial.source.kind !== 'sub'
   const [type, setType] = useState<CategoryKind>(initial?.type ?? 'expense')
   const [name, setName] = useState(initial?.note ?? '')
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '')
@@ -131,6 +134,11 @@ export function EntrySheet({
     )
     : null
   const matchCharge = match ? nearestCharge(match, date) : null
+  // The row the app already wrote for that charge, if it has.
+  const written = match
+    ? ledger.find((e) => e.source?.kind === 'sub' && e.subId === match.id && e.id !== initial?.id
+      && Math.abs(Date.parse(e.date) - Date.parse(date)) <= 15 * 86_400_000)
+    : undefined
   const badOther = repeat === 'other' && !otherOk && (mode === 'new' || mode === 'linked')
   const dated = (iso: string) => (iso.slice(0, 4) === todayISO().slice(0, 4) ? shortDate(iso) : `${shortDate(iso)} ${iso.slice(0, 4)}`)
 
@@ -165,7 +173,7 @@ export function EntrySheet({
       entry.subId = linked!.id
     } else if (mode === 'match' && isCharge !== null) entry.subId = isCharge ? match!.id : null
     else if (mode && initial?.subId !== undefined) entry.subId = initial.subId
-    onSave(entry, change)
+    onSave(entry, change, mode === 'match' && isCharge === true && written ? written.id : undefined)
   }
 
   return (
@@ -292,6 +300,9 @@ export function EntrySheet({
             </button>
             <button type="button" role="radio" aria-checked={isCharge === false} onClick={() => setIsCharge(false)} className={chip(isCharge === false)}>No</button>
           </div>
+          {isCharge === true && written && (
+            <p className="mt-2 text-[14px] text-tx2">It was added by itself on {dated(written.date)}. Saving this replaces it.</p>
+          )}
         </div>
       )}
       {(mode === 'new' || mode === 'linked') && (

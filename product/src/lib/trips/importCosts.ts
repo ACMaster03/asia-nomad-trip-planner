@@ -4,6 +4,8 @@ import type { Extra, LedgerEntry, Stay, TransportLeg, TripState } from './types'
 import { stayTotal } from './format.ts'
 import { isBookedStatus } from './commitment.ts'
 import { extraCategoryId, isPaidExtra } from './extras.ts'
+import { chargesBetween, sameName } from './subscriptions.ts'
+import { RECURRING_CATEGORY } from './categories.ts'
 
 // === Auto-import planned costs into the ledger (mock 04, ledger states) ===
 //
@@ -31,6 +33,21 @@ import { extraCategoryId, isPaidExtra } from './extras.ts'
 // than flagged — a flagged row would keep the money in "spent". Delete the
 // extra altogether and its row stays flagged like a booking's.
 //
+// A SUBSCRIPTION CHARGE (Patrik, 24 Sep, #37: "the way booked stays are")
+// lands on its charge date once that date has come, never before: a future
+// charge is a forecast, and the projection already counts it (subsAhead). The
+// row is written once and then belongs to the ledger: a price change on the
+// subscription does not rewrite last month, and a deleted or cancelled
+// subscription leaves its charges where they are. So these rows never take
+// part in the updates, orphan flags or removals below. Each one is announced
+// until tapped (ChargeNotice.tsx, Petra's safeguard: "Cancelled it?").
+// Nothing is written where a charge is already logged: an entry linked to the
+// subscription, or one with its name in the Subscriptions category, within
+// COVER_DAYS of the date. Only from `autoFrom` (the day after the entry that
+// declared it, or the day it was added on the card), or SUB_CHARGES_FROM for a
+// subscription from before this, so no month logged by hand comes back; and
+// only inside the journey's dates.
+//
 // `state.importSkip` lists source keys the user explicitly deleted from the
 // ledger; without it, reconcile would resurrect every deleted row.
 // `state.autoImport` — undefined or true: bookings land in the ledger on their
@@ -38,7 +55,11 @@ import { extraCategoryId, isPaidExtra } from './extras.ts'
 // ask-first card only delayed it). false = the opt-out: the Ledger shows the
 // import card whenever NEW unimported bookings appear.
 
-export type ImportSource = { kind: 'stay' | 'transport' | 'extra'; id: string }
+export type ImportSource = { kind: 'stay' | 'transport' | 'extra' | 'sub'; id: string }
+
+/** Subscriptions declared before automatic charges shipped start here. */
+export const SUB_CHARGES_FROM = '2026-09-25'
+const COVER_DAYS = 15
 
 export const sourceKey = (s: ImportSource) => `${s.kind}:${s.id}`
 
@@ -124,9 +145,47 @@ export interface ImportPlan {
   orphans: LedgerEntry[]
   /** an extra's row whose paid-on date was cleared while the extra is still listed — delete */
   removals: LedgerEntry[]
+  /** subscription charges whose date has come and that nothing covers yet — add */
+  subCharges: LedgerEntry[]
 }
 
-export function planImports(state: TripState, ledger: LedgerEntry[]): ImportPlan {
+const dayDist = (a: string, b: string) => Math.abs(Date.parse(a) - Date.parse(b)) / 86_400_000
+
+/** The subscription charges to write now (see the header). */
+export function subChargesDue(state: TripState, ledger: LedgerEntry[], todayIso: string): LedgerEntry[] {
+  if (!todayIso) return []
+  const skip = new Set(state.importSkip ?? [])
+  const written = new Set(ledger.filter((e) => e.source?.kind === 'sub').map((e) => sourceKey(e.source!)))
+  const start = state.meta.startDate || ''
+  const end = state.meta.endDate || ''
+  const out: LedgerEntry[] = []
+  for (const sub of state.subscriptions ?? []) {
+    const from = [sub.autoFrom || SUB_CHARGES_FROM, start].sort()[1]
+    const to = end && end < todayIso ? end : todayIso
+    for (const at of chargesBetween(sub, from, to)) {
+      const source: ImportSource = { kind: 'sub', id: `${sub.id}@${at}` }
+      const key = sourceKey(source)
+      if (written.has(key) || skip.has(key)) continue
+      const covered = ledger.some((e) => e.type === 'expense' && e.source?.kind !== 'sub' && dayDist(e.date, at) <= COVER_DAYS && (
+        e.subId === sub.id || (e.subId === undefined && e.category === RECURRING_CATEGORY && sameName(e.note, sub.label))))
+      if (covered) continue
+      out.push({
+        id: `le-sub-${sub.id}-${at}`,
+        date: at,
+        type: 'expense',
+        category: RECURRING_CATEGORY,
+        amount: cents(sub.amount),
+        currency: sub.cur,
+        note: sub.label,
+        source,
+        subId: sub.id,
+      })
+    }
+  }
+  return out
+}
+
+export function planImports(state: TripState, ledger: LedgerEntry[], todayIso = ''): ImportPlan {
   const wanted = new Map<string, Candidate>()
   for (const st of state.stays) {
     const c = stayCandidate(st, state)
@@ -147,8 +206,9 @@ export function planImports(state: TripState, ledger: LedgerEntry[]): ImportPlan
   const orphans: LedgerEntry[] = []
   const removals: LedgerEntry[] = []
 
+  // Subscription charges are written once and left alone (see the header).
   const imported = new Map<string, LedgerEntry>()
-  for (const e of ledger) if (e.source) imported.set(sourceKey(e.source), e)
+  for (const e of ledger) if (e.source && e.source.kind !== 'sub') imported.set(sourceKey(e.source), e)
 
   for (const [key, c] of wanted) {
     const existing = imported.get(key)
@@ -178,5 +238,5 @@ export function planImports(state: TripState, ledger: LedgerEntry[]): ImportPlan
     else if (!e.orphaned) orphans.push({ ...e, orphaned: true })
   }
 
-  return { candidates, updates, orphans, removals }
+  return { candidates, updates, orphans, removals, subCharges: subChargesDue(state, ledger, todayIso) }
 }

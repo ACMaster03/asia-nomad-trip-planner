@@ -50,9 +50,12 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
     base,
   })
 
-  function save(entry: LedgerEntry, change?: SubChange) {
+  function save(entry: LedgerEntry, change?: SubChange, replaceId?: string) {
     const isNew = !initial
     mut.mutate({ kind: 'upsert', entry })
+    // A charge logged by hand replaces the row the app wrote for it; with the
+    // entry linked, the sync sees the charge covered and writes nothing.
+    if (replaceId) mut.mutate({ kind: 'delete', id: replaceId })
     // The Subscriptions question (EntrySheet): the charge declares the
     // subscription, or corrects its cadence and reminder.
     if (change?.kind === 'create') {
@@ -86,6 +89,20 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
         ...cur,
         extras: cur.extras.map((x) => (x.id === listedExtra.id ? { ...x, paidOn: undefined } : x)),
       }))
+    } else if (entry.source?.kind === 'sub') {
+      // A charge the app wrote (importCosts.ts). The skip record keeps the
+      // sync from writing it again; the subscription itself stays.
+      const ok = await confirm({
+        title: 'Remove this charge?',
+        body: `${entry.note || 'The subscription'} stays on your subscriptions. This charge won’t be added again.`,
+        confirmLabel: 'Remove',
+      })
+      if (!ok) return
+      const key = sourceKey(entry.source)
+      stateMut.mutate(
+        (cur) => ({ ...cur, importSkip: [...new Set([...(cur.importSkip ?? []), key])] }),
+        { onSuccess: () => mut.mutate({ kind: 'delete', id: entry.id }) },
+      )
     } else if (entry.source) {
       // Without the skip record, reconcile would resurrect the row next visit.
       const ok = await confirm({

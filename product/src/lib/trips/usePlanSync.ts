@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo } from 'react'
 import { planImports, type ImportPlan } from './importCosts'
+import { useToday } from '../useToday'
 import type { useLedgerMutation } from './useLedgerMutation'
 import type { Trip } from './types'
 
@@ -10,12 +11,17 @@ import type { Trip } from './types'
 // every upsert is deterministic, so once the refetched document matches the
 // plan this returns three empty arrays and the effect below no-ops. The page
 // passes its ledger mutation, because its save-error banner watches it.
+//
+// It also writes the subscription charges whose date has come (Patrik,
+// 24 Sep, #37), whatever autoImport says: that switch is about bookings. Home
+// runs it as well, so a charge lands wherever the app is opened.
 export function usePlanSync(
   trip: Trip | null | undefined,
   canEdit: boolean,
   mut: ReturnType<typeof useLedgerMutation>,
 ): ImportPlan | null {
-  const imp = useMemo(() => (trip ? planImports(trip.state, trip.ledger) : null), [trip])
+  const today = useToday()
+  const imp = useMemo(() => (trip ? planImports(trip.state, trip.ledger, today) : null), [trip, today])
   const autoImport = trip?.state.autoImport
   useEffect(() => {
     if (!imp) return
@@ -27,7 +33,7 @@ export function usePlanSync(
     // cleared). NEW rows flow automatically too unless the user switched that
     // off: a booked stay with a charge date IS money spent (owner review
     // 2026-09-12). `false` is the only value that keeps the ask-first card.
-    const ops = [...imp.updates, ...imp.orphans, ...(autoImport !== false ? imp.candidates : [])]
+    const ops = [...imp.updates, ...imp.orphans, ...(autoImport !== false ? imp.candidates : []), ...imp.subCharges]
     ops.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
     imp.removals.forEach((entry) => mut.mutate({ kind: 'delete', id: entry.id }))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is stable; imp derives from trip

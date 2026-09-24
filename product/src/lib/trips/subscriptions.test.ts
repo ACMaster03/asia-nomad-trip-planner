@@ -143,9 +143,9 @@ test('nearestCharge: the scheduled charge an entry most likely is', () => {
   assert.equal(nearestCharge(CANON[3], '2026-09-20'), null, 'the domain is yearly, nothing near')
 })
 
-test('subFromEntry: the entry declares it, anchored on its date, the reminder three days before', () => {
+test('subFromEntry: the entry declares it, anchored on its date, charges written from the next day, the reminder three days before', () => {
   const s = subFromEntry({ label: ' Netflix ', amount: 4490, cur: 'HUF', date: '2026-09-22' }, 1, true, 'sub1')
-  assert.deepEqual(s, { id: 'sub1', label: 'Netflix', cur: 'HUF', amount: 4490, everyMonths: 1, anchor: '2026-09-22', remind: true, leadDays: 3 })
+  assert.deepEqual(s, { id: 'sub1', label: 'Netflix', cur: 'HUF', amount: 4490, everyMonths: 1, anchor: '2026-09-22', autoFrom: '2026-09-23', remind: true, leadDays: 3 })
   assert.equal(nextCharge(s, '2026-09-23'), '2026-10-22')
   assert.equal(subFromEntry({ label: '', amount: 1, cur: 'EUR', date: '2026-09-22' }, 3, false, 'x').label, 'Subscription')
 })
