@@ -11,6 +11,7 @@ import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
 import { useCheckIn } from '@/components/checkin/CheckInProvider'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
 import { moneyModel } from '@/lib/trips/moneyModel'
+import { moneyUnlocks } from '@/lib/trips/unlocks'
 import { tripPhase } from '@/lib/trips/recap'
 import { tripRecap } from '@/lib/trips/recap'
 import { fetchTripEvents } from '@/lib/trips/events'
@@ -297,6 +298,13 @@ export default function DashboardClient({
   const stay = current ? s.stays.find((st) => st.segId === current.id && st.include !== false) : undefined
   const recapMid = tripRecap(s, trip.data.ledger ?? [])
   const money = moneyModel(s, trip.data.ledger ?? [], cityIdx, todayIso)
+  // The projection waits for the same week of pace as on Money (Petra, 23 Sep;
+  // lib/trips/unlocks.ts), so the two screens never disagree. A journey from
+  // before round 2 keeps it from day one, as it always had.
+  const projected = moneyUnlocks({
+    ledger: trip.data.ledger ?? [], todayIso, tripStart: s.meta.startDate || undefined,
+    pace: money.pace, recorded: s.moneyUnlocked, createdAt: trip.data.created_at,
+  }).projection
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-3">
@@ -434,18 +442,28 @@ export default function DashboardClient({
 
       {/* Once live, the money card speaks the Money page's language: spent so
           far against the PROJECTED total (your measured pace), not the pre-trip
-          city-average estimate (round-two design, 2026-09-13). */}
+          city-average estimate (round-two design, 2026-09-13). Until the
+          projection has its week, only what is spent, and the daily figure
+          once Money's Per day has one. */}
       <Link href="/money" className={card + ' flex items-center justify-between'}>
         <span>
-          <span className="block text-base font-semibold">Spent {fmt(money.projection.spent)} of ≈ {fmt(money.projection.projected)} projected</span>
+          <span className="block text-base font-semibold">
+            {projected
+              ? <>Spent {fmt(money.projection.spent)} of ≈ {fmt(money.projection.projected)} projected</>
+              : <>Spent {fmt(money.projection.spent)} so far</>}
+          </span>
           <span className="block text-base text-tx2">
             {money.pace.perDay !== null ? (
               <>
                 {fmt(money.pace.perDay)}/day everyday{money.pace.scope === 'stop' && current ? ` in ${current.city}` : ''} ·{' '}
-                <span className="font-semibold text-ac2-deep">{money.projection.projected <= b.grand ? 'under the estimate' : 'over the estimate'}</span>
+                {projected
+                  ? <span className="font-semibold text-ac2-deep">{money.projection.projected <= b.grand ? 'under the estimate' : 'over the estimate'}</span>
+                  : 'a\u00a0projection after a week'}
               </>
-            ) : (
+            ) : projected ? (
               <>measuring your daily pace · {recapMid.spent > 0 ? `${fmt(recapMid.spent)} logged` : 'nothing logged yet'}</>
+            ) : (
+              <>measuring your daily pace</>
             )}
           </span>
         </span>
