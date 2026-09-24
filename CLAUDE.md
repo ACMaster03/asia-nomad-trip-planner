@@ -26,7 +26,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
 - He decides product questions. Record decisions in `docs/NOTES.md` and on the
   GitHub issue that holds the topic.
 
-## Where the work stands (23 Sep)
+## Where the work stands (24 Sep)
 
 - The Trip timeline (mock 15 §1, §4, §5, §6) is live: pull request #68 was
   merged with Petra on 23 Sep, then #71 and #72 with her findings from the
@@ -52,9 +52,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   payments fold into one line there, and month totals count only what is
   spent. It closed #38. Step 2, folding Bookings, Subscriptions, One-offs
   and Plan to one line each, gets decided once step 1 is on the phone.
-- Home's money card follows Money's projection rule, in #83 (Petra,
-  23 Sep). A new journey shows only what is spent until the projection
-  unlocks; older journeys keep what they show.
+- Home's money card follows Money's projection rule, live with #83 on
+  24 Sep (Petra's decision of 23 Sep). A new journey shows only what is
+  spent until the projection unlocks; older journeys keep what they show.
 - Decided by Patrik on 23 Sep: the Plan card's per-night line is gone (#78),
   and the globe question (#63, the timeline as a sheet over the globe) is
   Petra's to decide.
