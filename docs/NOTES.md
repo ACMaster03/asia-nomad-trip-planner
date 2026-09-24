@@ -46,9 +46,12 @@ Pull request #85.
   - with the clock on 21 Sep, the Subscriptions line names the internet bill "in 2 days";
   - the quiet page shows Bookings open, with no ⌃.
 
-**Offered to Petra, not built:** moving the three rows below Plan, so the page ends in one
-group of lines (Bookings, Subscriptions, One-offs, Budget cap, All entries) under the big
-cards. It was shown as a picture, with the cards moved in the browser only.
+**Then the rows moved below Plan (Petra's choice, 24 Sep).** Offered as a picture before the
+merge, with the cards moved in the browser only. The page now shows the big cards first:
+overview, Latest, the chart, Where it goes, Plan. It ends in one group of lines: Bookings,
+Subscriptions, One-offs & extras, Budget cap, All entries. On a new journey, before Plan
+unlocks, the rows follow Where it goes, and "More appears as you log" stays last. The
+preview checked both orders.
 
 ---
 
