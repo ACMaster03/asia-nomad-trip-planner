@@ -69,6 +69,23 @@ export function nextCharge(sub: Subscription, fromIso: string): string | null {
 }
 
 /** Every charge in [fromIso, toIso], inclusive. Empty once cancelled. */
+/**
+ * The live subscription that charges soonest, today included, within `days`
+ * days: what a folded Subscriptions line still has to show, so a charge due
+ * this week is never behind a tap (Money, 24 Sep).
+ */
+export function chargeSoon(subs: Subscription[], todayIso: string, days = 7): { sub: Subscription; inDays: number } | null {
+  let best: { sub: Subscription; inDays: number } | null = null
+  for (const sub of subs) {
+    const next = nextCharge(sub, todayIso)
+    if (!next) continue
+    const inDays = Math.round((Date.parse(next) - Date.parse(todayIso)) / 86_400_000)
+    if (inDays > days) continue
+    if (!best || inDays < best.inDays) best = { sub, inDays }
+  }
+  return best
+}
+
 export function chargesBetween(sub: Subscription, fromIso: string, toIso: string): string[] {
   const out: string[] = []
   if (!validIso(fromIso) || !validIso(toIso) || toIso < fromIso) return out

@@ -4,9 +4,10 @@ import { Bell, BellOff } from 'lucide-react'
 import { toBase } from '@/lib/trips/format'
 import { dayDiff } from '@/lib/trips/reminders'
 import {
-  cadenceLabel, isCancelled, leadLabel, monthlyRate, monthlyRunRate, nextCharge, scheduleLabel, shortDate,
+  cadenceLabel, chargeSoon, isCancelled, leadLabel, monthlyRate, monthlyRunRate, nextCharge, scheduleLabel, shortDate,
 } from '@/lib/trips/subscriptions'
 import type { Subscription } from '@/lib/trips/types'
+import { FoldButton, FoldedRow } from './Fold'
 
 // Subscriptions (#37) — the recurring costs from home, the one set of expenses
 // that keeps happening whether or not anyone opens the app.
@@ -20,8 +21,12 @@ import type { Subscription } from '@/lib/trips/types'
 // trip actually paid; cancelling keeps every past charge and stops the
 // prediction — the difference the card makes visible by not hiding them
 // outright.
+//
+// On Money it starts folded to one line (Fold.tsx): how many are active, the
+// monthly total, and the charge due this week if there is one, in the same
+// amber pill the open card uses.
 
-export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhead, canEdit, onAdd, onEdit, onToggleRemind }: {
+export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhead, canEdit, onAdd, onEdit, onToggleRemind, folded, onToggle }: {
   subs: Subscription[]
   rates: Record<string, number>
   fmt: (n: number) => string
@@ -33,6 +38,9 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhe
   onAdd: () => void
   onEdit: (sub: Subscription) => void
   onToggleRemind: (sub: Subscription) => void
+  /** with onToggle: one line, or the card with ⌃ (Fold.tsx) */
+  folded?: boolean
+  onToggle?: () => void
 }) {
   const [showCancelled, setShowCancelled] = useState(false)
   const live = subs.filter((s) => !isCancelled(s))
@@ -55,6 +63,22 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhe
           </button>
         )}
       </div>
+    )
+  }
+
+  const when = (days: number) => (days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`)
+  const pill = 'inline-block whitespace-nowrap rounded-full bg-warn-soft px-2 py-[1px] text-[12px] font-bold text-warn'
+  if (folded && onToggle) {
+    const soon = chargeSoon(subs, todayIso)
+    return (
+      <FoldedRow
+        title="Subscriptions"
+        onOpen={onToggle}
+        summary={<>
+          {live.length ? `${live.length} active · ≈ ${fmt(runRate)} a month` : 'none active'}
+          {soon && <> · {soon.sub.label} <b className={pill}>{when(soon.inDays)}</b></>}
+        </>}
+      />
     )
   }
 
@@ -101,9 +125,7 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhe
                   {scheduleLabel(sub, todayIso)}
                   {remind && ` · reminds ${leadLabel(sub.leadDays ?? 3)}`}
                   {soon !== null && soon <= 7 && (
-                    <b className="ml-1.5 inline-block whitespace-nowrap rounded-full bg-warn-soft px-2 py-[1px] text-[12px] font-bold text-warn">
-                      {soon === 0 ? 'today' : soon === 1 ? 'tomorrow' : `in ${soon} days`}
-                    </b>
+                    <b className={'ml-1.5 ' + pill}>{when(soon)}</b>
                   )}
                 </>
               )}
@@ -127,7 +149,10 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, tripEnd, subsAhe
     <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-1.5 text-tx">
       <div className="flex items-center justify-between border-b border-ln py-2.5">
         <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Subscriptions</span>
-        <span className="text-[13px] text-tx3">repeating costs</span>
+        <span className="flex items-center gap-1">
+          <span className="text-[13px] text-tx3">repeating costs</span>
+          {onToggle && <FoldButton label="Subscriptions" onFold={onToggle} />}
+        </span>
       </div>
       {live.map(row)}
       {showCancelled && dead.map(row)}
