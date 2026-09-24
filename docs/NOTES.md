@@ -35,6 +35,9 @@ a journey from before round 2, like Asia, shows what it always did. Before depar
   - day 9: ≈ 3 467 086 Ft, as on Money.
 - Asia today: unchanged.
 
+**Live with #83.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her check on the phone is pending.
+
 ### BUILT — Money gets shorter, step 1: the ledger on its own screen, All entries (Petra, 23 Sep)
 
 Petra, looking at the round 2 pictures before that merge, had two findings. First, the
@@ -106,7 +109,12 @@ use) or "History", Petra chose **All entries**. Recorded on #38.
 changes how he uses it every day too, and approved (above).
 
 **Live with #82.** Petra gave her go on 23 Sep, and the production build finished without errors.
-Her test on the phone is pending.
+Her test on the phone passed every step:
+- Money ends with the All entries row, with no long list;
+- the screen opens, and its Scheduled line opens and closes;
+- September's total looks right;
+- a tapped entry opens the edit form;
+- a chart bar's "Open in All entries" opens the screen at that day.
 
 **Step 2, not started.** If Money still feels long on the phone, Bookings, Subscriptions,
 One-offs and Plan become one-line summaries that open on tap, which could bring the page to
