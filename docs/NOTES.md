@@ -53,6 +53,31 @@ Subscriptions, One-offs & extras, Budget cap, All entries. On a new journey, bef
 unlocks, the rows follow Where it goes, and "More appears as you log" stays last. The
 preview checked both orders.
 
+**Live with #85.** Petra gave her go on 24 Sep, and the production build finished without errors.
+Her test on the phone passed every step:
+- the five rows sit below Plan;
+- the three folded rows show their summaries, with warnings in amber;
+- each opens, and ⌃ folds it again;
+- the open Bookings figures lead to the Trip page.
+
+**Then Budget cap went last (Petra, 24 Sep, after the phone test).** Her reason: it is the one
+row that takes you out of Money, to Settings. All entries also goes to another screen, so
+the rows now run from the three that open in place (⌄) to the two that go elsewhere (›):
+All entries, then Budget cap. Budget cap's second line also got the 14 px of the rows around
+it. Pull request #86.
+
+**Not built: recolouring the Budget cap row.** Petra asked for Claude's honest view of it. Two
+mock-ups were made in the browser only: the row in the Track spending switch's colours, and the
+same colour with a quiet "Settings" label before ›. Claude advised against the colour:
+- on this page colour carries meaning, the soft tag colours for the Track spending switch and
+  amber for a warning;
+- a coloured Budget cap row would look like a second switch or a notice;
+- it would pull the eye to the least-used row;
+- it would compete with the row's own amber, "at this pace the journey goes … over it".
+The label says where the row leads without any of that. **Petra chose the label**: "Settings ›"
+in grey, the same size as the rows' second lines. When no cap is set, the second line drops its
+"…, in Settings", which the label now says.
+
 ---
 
 ## 2026-09-23
