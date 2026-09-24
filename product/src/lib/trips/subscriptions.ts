@@ -71,7 +71,7 @@ export function nextCharge(sub: Subscription, fromIso: string): string | null {
 /** Every charge in [fromIso, toIso], inclusive. Empty once cancelled. */
 // ---- the question on the entry form (mock 16 §7, round 3) -----------------
 
-const nameKey = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
+export const nameKey = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
 /** Two names for the same thing, whatever the case and spacing. */
 export const sameName = (a: string, b: string) => !!nameKey(a) && nameKey(a) === nameKey(b)
 /** The ISO day after `iso`. */

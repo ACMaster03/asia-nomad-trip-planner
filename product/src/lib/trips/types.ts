@@ -169,6 +169,11 @@ export interface TripState {
   // Recurring costs from home (#37). Optional and migration-free, like
   // reminders: a document written before this feature simply has none.
   subscriptions?: Subscription[]
+  // The one-time offer for Subscriptions entries typed before round 3 (mock 16
+  // §8, lib/trips/subsOffer.ts): the day someone answered it, with Add or No
+  // thanks. It lives on the journey, so whoever answers first settles it for
+  // both travellers. Unset: not answered yet.
+  subsOfferDone?: string
 }
 export interface LedgerEntry {
   id: string

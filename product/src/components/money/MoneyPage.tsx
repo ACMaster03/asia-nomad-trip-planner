@@ -32,6 +32,8 @@ import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntryEditor } from './EntryEditor'
 import { ChargeNotice } from './ChargeNotice'
+import { SubsOffer } from './SubsOffer'
+import { subsOfferRows } from '@/lib/trips/subsOffer'
 import { TrackQuestion } from './TrackQuestion'
 import { TrackSpendingRow } from './TrackSpendingRow'
 import { useFold } from './Fold'
@@ -165,6 +167,9 @@ export default function MoneyPage() {
   const quiet = isQuiet(tracking, hasLoggedSpending(trip.data.ledger))
   const s = trip.data.state
   const ledger = trip.data.ledger
+  // The one-time offer (mock 16 §8): editors, on the full page, until someone
+  // answers it. Cheap enough to derive on every render.
+  const offer = canEdit && !quiet && !s.subsOfferDone ? subsOfferRows(ledger, s.subscriptions ?? []) : []
   const { current, pace, plan, bookings, projection, subs, beyond, tripEnd } = model
   const tripStart = s.meta.startDate || undefined
   const day = tripDay(s.meta, today)
@@ -359,6 +364,10 @@ export default function MoneyPage() {
       {/* Right under the first card, as on the quiet page. Hidden when the
           answer can't be read: a switch that cannot save would lie. */}
       {tracking !== 'unknown' && <TrackSpendingRow on onChange={(on) => setTrack.mutate(on)} className={wide} />}
+
+      {/* Under the first card, as in mock 16 §8, after the switch that has
+          sat there since #80. Once: gone for good when answered. */}
+      {offer.length > 0 && <SubsOffer rows={offer} todayIso={today} mut={mut} stateMut={stateMut} className={wide} />}
 
       <LatestStrip entries={ledger} rates={s.rates} fmt={fmt} todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} />
 
