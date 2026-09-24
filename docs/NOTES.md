@@ -7,6 +7,58 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-24
 
+### BUILT — Money stage 2, round 3b: the one-time offer (mock 16 §8)
+
+Petra, 24 Sep, after search (#90): "let's do 3b!" Pull request #91.
+
+**What changed.**
+- **One card on Money, once**, under the first card and the Track spending switch, for
+  editors on the full page. It lists the expenses in Subscriptions that were never asked
+  (typed before round 3a) and have a name, unless a subscription of that name exists, live or
+  cancelled (`subsOffer.ts`). There is one row per name, from its newest entry: "iCloud 2 TB ·
+  3290 Ft · 14 Sept · 2 entries". The title counts entries: "6 entries look like
+  subscriptions".
+- **Every row starts on Every month**, with a menu: Every 3 months, Every 6 months, Every year,
+  Doesn't repeat. Nothing is guessed from the dates.
+- **Add N subscriptions** declares each repeating row with its reminder on (3 days before) and
+  links the row's entries, so an entry's form then shows the cadence and the next charge. The
+  other rows' entries store Doesn't repeat. **No thanks** puts the card away and adds nothing;
+  each entry still gets the question when it is opened.
+- **The answer lives on the journey** (`subsOfferDone`): whoever answers first settles it for
+  both travellers (mock 16, round 1).
+
+**Decided in the build, open to change:**
+- **A row is a name, not a name and an amount** (the mock): a price rise would have made two
+  subscriptions of one thing.
+- **Charges are written from today, not from the day after the entry.** The entry form's rule
+  would have filled in the weeks since each entry at once. Home internet, last logged on 23 Aug,
+  would get a 23 Sep charge on Add. The mock's Netflix, cancelled on 6 Sep, would get a 20 Sep
+  charge that never happened. The card says "From today on, each charge is added to All entries
+  by itself." Whether the missed months should be filled in instead is Patrik's call (#37).
+- **"Not now" became "No thanks"**, because the card never comes back. It sits under the Add
+  button as text: side by side, "Add 4 subscriptions" broke onto two lines.
+- Entries without a name are not listed, because a subscription needs one. The entry form can
+  still declare them.
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); `next build`.
+- 143 node tests, seven new in `subsOffer.test.ts`: one row per name; what is left out; Add
+  with the reminders and the links, and Doesn't repeat stored as null; an answer that comes
+  second changes nothing; no name declared twice; charges from today only (`subChargesDue`); No
+  thanks.
+- In the dev preview with `?subs=offer` (mock 16 §8's five, undeclared), with the saves
+  answered by the script:
+  - five rows, and with Domain on Every year and Netflix on Doesn't repeat, "Add 4
+    subscriptions";
+  - Add saves four subscriptions from 24 Sep and links all six entries, Netflix to null; the
+    card goes, and no charge is made up;
+  - Spotify's form then shows Every month, "Next charge 17 Oct." and the reminder;
+  - No thanks settles it and writes nothing else;
+  - the quiet page has no card.
+
+**For the phone:** the card appears only if Asia has old Subscriptions entries that are not on
+the Subscriptions card. Answering it is for real, once, for both travellers.
+
 ### BUILT — Search on All entries (Petra, 24 Sep)
 
 Petra, testing #88 on the phone: "I had to swipe through the All entries to find the iCloud
@@ -47,7 +99,7 @@ entry also needed "Load 20 more" first. Pull request #90.
   - a match opens its form.
 
 **Live with #90.** Petra gave her go on 24 Sep, and the production build finished without errors.
-Her test on the phone is pending.
+Her test on the phone passed the same day.
 
 ### BUILT — Money's forms lose the ✕ (Petra, 24 Sep)
 
