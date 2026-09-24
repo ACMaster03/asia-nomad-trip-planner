@@ -28,6 +28,8 @@ import Preview from './Preview'
 // costs), no the quiet page, yes (the default) the full page; both carry the
 // Track spending switch under their first card. ?logged=0 drops the costs typed on Money
 // from the fixture, for a newcomer: the question then sits over the quiet page.
+// ?subs=offer declares no subscriptions and adds mock 16 §8's five as plain
+// entries, so Money shows the one-time offer.
 // ?day=N replays the journey as of its Nth day (day 1 = the start date), for
 // round 2's unlocks: the fixture is built for that date and keeps only the
 // costs typed by then (the plan's rows stay, like the plan). The page reads
@@ -35,7 +37,7 @@ import Preview from './Preview'
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; show?: string }>
+  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; show?: string; subs?: string }>
 }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   // ?slow=<ms> streams the page that long after the shell, the way the real
@@ -56,6 +58,20 @@ export default async function MoneyPreviewPage({
     fixture.created_at = '2026-12-01T00:00:00.000Z'
   }
   if (params.logged === '0') fixture.ledger = fixture.ledger.filter((e) => e.source)
+  // ?subs=offer replays mock 16 §8: the subscriptions were typed as entries
+  // before round 3 and never declared, so Money shows the one-time offer.
+  if (params.subs === 'offer') {
+    fixture.state.subscriptions = []
+    const sub = (id: string, date: string, amount: number, note: string) =>
+      ({ id, date, type: 'expense' as const, category: 'subscriptions', amount, currency: 'HUF', note })
+    fixture.ledger.push(
+      sub('sub-0', '2026-08-14', 3290, 'iCloud 2 TB'),
+      sub('sub-2', '2026-09-17', 2490, 'Spotify Duo'),
+      sub('sub-3', '2026-08-23', 7990, 'Home internet · Budapest flat'),
+      sub('sub-4', '2025-11-12', 18_000, 'Domain + hosting'),
+      sub('sub-5', '2026-08-20', 4490, 'Netflix'),
+    )
+  }
   qc.setQueryData(tk.trip('fixture'), fixture)
   qc.setQueryData(tk.trackSpending, params.track === 'ask' ? 'ask' : params.track === 'no' ? 'no' : 'yes')
   return (

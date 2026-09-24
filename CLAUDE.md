@@ -46,8 +46,10 @@ Petra is new to software work; Patrik is not. The product conventions are in
   goes out in three pull requests. 3a went live with #88 on 24 Sep: the Subscriptions question
   on the entry form, and subscription charges that add themselves on their
   date, each announced until tapped ("Cancelled it?"). Patrik decided the
-  latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer, and
-  3c, editing one-off costs on Money, follow. As built, every existing account is asked the
+  latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer for
+  Subscriptions entries typed before 3a, is #91: its charges start on the
+  day of the answer, not back-filled (open for Patrik). 3c, editing
+  one-off costs on Money, follows. As built, every existing account is asked the
   question once; Patrik can change that.
 - Money is getting shorter (Petra, 23 Sep: about seven phone screens, the
   ledger alone over a third of it). Step 1 went live with #82, approved by
@@ -63,7 +65,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
 - Money's forms (entry, subscription, category list) lost their ✕ with
   #89 on 24 Sep, like the Trip sheets on 23 Sep: the handle, the scrim
   and Escape close them. Search on All entries, by name or category,
-  with what the matches cost, is #90 (Petra's idea, 24 Sep).
+  with what the matches cost, went live with #90 (Petra's idea, 24 Sep).
 - Home's money card follows Money's projection rule, live with #83 on
   24 Sep (Petra's decision of 23 Sep). A new journey shows only what is
   spent until the projection unlocks; older journeys keep what they show.
