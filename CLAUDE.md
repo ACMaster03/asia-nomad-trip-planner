@@ -47,7 +47,8 @@ Petra is new to software work; Patrik is not. The product conventions are in
   on the entry form, and subscription charges that add themselves on their
   date, each announced until tapped ("Cancelled it?"). Patrik decided the
   latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer for
-  Subscriptions entries typed before 3a, went live with #91 on 24 Sep: its charges start on the
+  Subscriptions entries typed before 3a, went live with #91 on 24 Sep (Petra and
+  Patrik answered it on Asia on 25 Sep): its charges start on the
   day of the answer, not back-filled (open for Patrik). 3c, editing
   one-off costs on Money, follows. As built, every existing account is asked the
   question once; Patrik can change that.
