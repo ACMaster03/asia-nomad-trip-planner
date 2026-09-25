@@ -60,7 +60,8 @@ Petra, 24 Sep, after search (#90): "let's do 3b!" Pull request #91.
 the Subscriptions card. Answering it is for real, once, for both travellers.
 
 **Live with #91.** Petra gave her go on 24 Sep, and the production build finished without errors.
-Her test on the phone is pending.
+Her test on the phone, 25 Sep: the card showed up on Asia, and she added the subscriptions
+together with Patrik.
 
 ### BUILT — Search on All entries (Petra, 24 Sep)
 
