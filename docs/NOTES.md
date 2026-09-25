@@ -5,6 +5,49 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-25
+
+### BUILT — Money stage 2, round 3c: one-offs are changed on Money
+
+Petra, 25 Sep: "But one off costs are already in Money page!" They were, to look at. Changing one
+meant "Edit extras ›" at the bottom of the card, and that link left Money for the Extras screen
+under Trip. That screen's back link said "← Trip", it had another name and ticks instead of
+switches, and the card's empty text sent new users to the Trip page. Claude's honest take:
+the least urgent part of round 3, because one-offs are rarely edited during a trip, but the
+"← Trip" detour is a trap. Petra: "Yes, build 3c!" Pull request #92.
+
+**What changed.**
+- **An extra's line on the card opens its form** (`OneOffSheet.tsx`), like an entry or a
+  subscription. The form has: What is it?; amount and currency; category chips (the old form's
+  words, mapped by `extras.ts`); Not paid yet / Paid with a Paid on date (today by default);
+  Count it as planned (the old tick, as a switch); and Delete this one-off. **"＋ One-off"**
+  on the card adds one, and the empty card says "Add them here".
+- **Switched-off, unpaid one-offs are listed by name** under "One extra is switched off, …"
+  (`oneOffs().excludedItems`): no total counts them, and without the old screen the card is
+  the only place to open one again.
+- **The Extras screen is gone** (`ExtrasTab.tsx`, `ExtraForm.tsx`). `/itinerary?tab=extras`
+  redirects to `/money`.
+- **The same `Extra` is saved, so the sync is unchanged.** Paid writes the payment into All
+  entries on that date; Not paid yet takes it out; deleting a paid one leaves its payment
+  flagged "extra removed", which the delete dialog now says ("If it was never paid, choose Not
+  paid yet instead").
+- Fixed on the way: an extra saved with a lowercase word ("gear") opened with two Gear chips.
+  It now selects the Gear chip. A word outside the list keeps a chip of its own, so opening an
+  extra never changes its category by itself.
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); `next build`; 143 node tests, with
+  `extras.test.ts` also checking the switched-off phone by name.
+- In the dev preview at phone width, light and dark, with the saves answered by the script:
+  - Add "Vietnam e-visa", 25 USD, Visa: the button is disabled while empty and reads "Add
+    one-off cost · ≈ 8500 Ft"; the toast says "Added · 8500 Ft · Vietnam e-visa"; the card
+    lists it as not paid yet;
+  - Gear set to Paid today writes its payment row, dated 25 Sep;
+  - Insurance set back to Not paid yet deletes its row;
+  - Anna's phone switched on moves under Gear;
+  - deleting the paid Visas shows the dialog, and its payment stays as "logged 20 Aug".
+- Not tried: the redirect, because the preview sends every signed-out visit to `/login` first.
+
 ## 2026-09-24
 
 ### BUILT — Money stage 2, round 3b: the one-time offer (mock 16 §8)

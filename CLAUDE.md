@@ -49,8 +49,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer for
   Subscriptions entries typed before 3a, went live with #91 on 24 Sep (Petra and
   Patrik answered it on Asia on 25 Sep): its charges start on the
-  day of the answer, not back-filled (open for Patrik). 3c, editing
-  one-off costs on Money, follows. As built, every existing account is asked the
+  day of the answer, not back-filled (open for Patrik). 3c, adding and
+  changing one-off costs on Money's own card, is #92: the Extras screen
+  under Trip goes, and its old link redirects to Money. As built, every existing account is asked the
   question once; Patrik can change that.
 - Money is getting shorter (Petra, 23 Sep: about seven phone screens, the
   ledger alone over a third of it). Step 1 went live with #82, approved by
