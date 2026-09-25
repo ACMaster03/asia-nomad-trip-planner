@@ -19,7 +19,6 @@ import Preview from './Preview'
 // older, reload with ?slow=3000 and watch the console. ?screen=home renders
 // Home instead: Money paints "Loading…" until it knows today's date, Home
 // server-renders the trip document, so Home is where a mismatch shows.
-// ?screen=extras renders the Extras list (and its form) from the same fixture.
 // ?screen=entries renders All entries, the ledger's screen, and
 // &show=YYYY-MM-DD opens it at that day, the way a chart bar's "Open in All
 // entries" does.
@@ -77,7 +76,7 @@ export default async function MoneyPreviewPage({
   return (
     <HydrationBoundary state={dehydrate(qc)}>
       <Preview
-        screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : params.screen === 'entries' ? 'entries' : 'money'}
+        screen={params.screen === 'home' ? 'home' : params.screen === 'entries' ? 'entries' : 'money'}
         show={params.show}
       />
     </HydrationBoundary>

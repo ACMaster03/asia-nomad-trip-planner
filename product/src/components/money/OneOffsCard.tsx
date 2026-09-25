@@ -1,7 +1,6 @@
 'use client'
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
-import { ChevronRight, Info } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { categoryLabel } from '@/lib/trips/categories'
 import { oneOffs } from '@/lib/trips/extras'
 import { shortDate } from '@/lib/trips/timeline'
@@ -10,10 +9,10 @@ import { FoldButton, FoldedRow } from './Fold'
 
 // One-offs & extras (#39) — the fourth budget family, back on the Money page.
 //
-// ExtrasTab has been telling people "see {total} in Money" since the merge
-// (ExtrasTab.tsx) while `grep extras product/src/components/money/` returned
-// nothing. Visas, insurance and gear were inside the number the page compared
-// your spending against, with no way to see what they were.
+// The Extras screen under Trip told people "see {total} in Money" while
+// `grep extras product/src/components/money/` returned nothing. Visas,
+// insurance and gear were inside the number the page compared your spending
+// against, with no way to see what they were.
 //
 // TWO COLUMNS, NEVER ONE TOTAL. Planned is `state.extras` — a forecast. Paid is
 // the ledger rows in the one-off categories — money that actually moved. Add
@@ -48,8 +47,14 @@ import { FoldButton, FoldedRow } from './Fold'
 //
 // On Money it starts folded to one line (Fold.tsx): the two totals side by
 // side, never added, and how many extras are not paid yet, in amber.
+//
+// Round 3c (Petra, 25 Sep): the card is where one-offs are changed too. An
+// extra's line opens its form (OneOffSheet), "＋ One-off" adds one, and the
+// extras switched off and unpaid, which no total counts, are listed by name so
+// they can still be opened. The Extras screen under Trip, which "Edit extras ›"
+// used to leave Money for, is gone.
 
-export function OneOffsCard({ state, ledger, fmt, todayIso, folded, onToggle }: {
+export function OneOffsCard({ state, ledger, fmt, todayIso, folded, onToggle, canEdit = false, onAdd, onEdit }: {
   state: TripState
   ledger: LedgerEntry[]
   fmt: (n: number) => string
@@ -57,6 +62,10 @@ export function OneOffsCard({ state, ledger, fmt, todayIso, folded, onToggle }: 
   /** with onToggle: one line, or the card with ⌃ (Fold.tsx) */
   folded?: boolean
   onToggle?: () => void
+  canEdit?: boolean
+  onAdd?: () => void
+  /** an extra's id */
+  onEdit?: (id: string) => void
 }) {
   const v = useMemo(() => oneOffs(state, ledger, todayIso), [state, ledger, todayIso])
   const [info, setInfo] = useState(false)
@@ -65,10 +74,28 @@ export function OneOffsCard({ state, ledger, fmt, todayIso, folded, onToggle }: 
     return (
       <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] py-4 text-tx">
         <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">One-offs &amp; extras</div>
-        <p className="mt-1.5 text-base text-tx2">Visas, insurance, gear: the costs of the whole trip. Add them on the Trip page and they show here beside what you paid.</p>
+        <p className="mt-1.5 text-base text-tx2">
+          {canEdit ? 'Visas, insurance, gear: the costs of the whole trip. Add them here, and they show beside what you paid.' : 'No one-off costs yet.'}
+        </p>
+        {canEdit && onAdd && (
+          <button onClick={onAdd} className="mt-3 rounded-[var(--rCtl)] bg-ac2-soft px-[18px] py-2.5 text-base font-semibold text-ac2-deep">
+            ＋ One-off
+          </button>
+        )}
       </div>
     )
   }
+  // An extra's line: its form for an editor, plain text for a viewer.
+  const open = canEdit && onEdit ? onEdit : null
+  const line = (id: string, body: React.ReactNode) => (
+    <li key={id}>
+      {open ? (
+        <button type="button" onClick={() => open(id)} className="flex min-h-10 w-full items-center text-left">
+          <span>{body}</span>
+        </button>
+      ) : body}
+    </li>
+  )
   if (folded && onToggle) {
     const unpaid = v.groups.reduce((a, g) => a + g.items.filter((it) => it.state === 'unpaid').length, 0)
     return (
@@ -114,18 +141,16 @@ export function OneOffsCard({ state, ledger, fmt, todayIso, folded, onToggle }: 
           </div>
           {(g.items.length > 0 || g.logged) && (
             <ul className="mt-1 space-y-0.5 text-[13px] leading-snug text-tx2">
-              {g.items.map((it) => (
-                <li key={it.id}>
-                  {it.label}
-                  {' · '}
-                  {it.state === 'unpaid' ? (
-                    <span className="text-warn">not paid yet</span>
-                  ) : (
-                    `${it.state === 'paid' ? 'paid' : 'scheduled'} ${it.date ? shortDate(it.date) : ''}`
-                  )}
-                  {it.off && ' · switched off'}
-                </li>
-              ))}
+              {g.items.map((it) => line(it.id, <>
+                <span className={open ? 'font-medium text-tx' : ''}>{it.label}</span>
+                {' · '}
+                {it.state === 'unpaid' ? (
+                  <span className="text-warn">not paid yet</span>
+                ) : (
+                  `${it.state === 'paid' ? 'paid' : 'scheduled'} ${it.date ? shortDate(it.date) : ''}`
+                )}
+                {it.off && ' · switched off'}
+              </>))}
               {g.logged && (
                 <li>
                   {g.logged.more > 0
@@ -143,15 +168,23 @@ export function OneOffsCard({ state, ledger, fmt, todayIso, folded, onToggle }: 
         <b className="w-[78px] text-right text-base min-[380px]:w-[86px]">{fmt(v.paidTotal)}</b>
       </div>
       {v.excludedCount > 0 && (
-        <p className="border-t border-ln pt-2.5 text-[13px] text-tx2">
-          {v.excludedCount === 1 ? 'One extra is' : `${v.excludedCount} extras are`} switched off,
-          {' '}{fmt(v.excluded)} that no total here counts.
-        </p>
+        <div className="border-t border-ln py-2.5 text-[13px] text-tx2">
+          <p>
+            {v.excludedCount === 1 ? 'One extra is' : `${v.excludedCount} extras are`} switched off,
+            {' '}{fmt(v.excluded)} that no total here counts.
+          </p>
+          <ul className="mt-1 space-y-0.5 leading-snug">
+            {v.excludedItems.map((x) => line(x.id, <>
+              <span className={open ? 'font-medium text-tx' : ''}>{x.label}</span> · {fmt(x.amount)}
+            </>))}
+          </ul>
+        </div>
       )}
-      <Link href="/itinerary?tab=extras" className="flex items-center justify-between gap-3 border-t border-ln py-2.5">
-        <span className="text-base font-semibold text-ac2-deep">Edit extras</span>
-        <ChevronRight aria-hidden className="size-5 text-ac2" />
-      </Link>
+      {canEdit && onAdd && (
+        <button onClick={onAdd} className="mb-1.5 mt-1 rounded-[var(--rCtl)] bg-ac2-soft px-[18px] py-2.5 text-base font-semibold text-ac2-deep">
+          ＋ One-off
+        </button>
+      )}
     </div>
   )
 }

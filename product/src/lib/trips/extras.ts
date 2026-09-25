@@ -77,6 +77,11 @@ export interface OneOffs {
   /** unticked AND unpaid: the only extras no total on the card counts */
   excluded: number
   excludedCount: number
+  /**
+   * Those extras by name, in base currency. Since the One-offs editor moved
+   * onto Money (round 3c), the card is the only place to reach one again.
+   */
+  excludedItems: { id: string; label: string; amount: number }[]
 }
 
 export function oneOffs(state: TripState, ledger: LedgerEntry[], todayIso: string): OneOffs {
@@ -89,12 +94,14 @@ export function oneOffs(state: TripState, ledger: LedgerEntry[], todayIso: strin
   }
   let excluded = 0
   let excludedCount = 0
+  const excludedItems: OneOffs['excludedItems'] = []
   const listed = new Set<string>()
   for (const x of state.extras ?? []) {
     const off = x.include === false
     if (off && !x.paidOn) {
       excluded += toBase(x.amount, x.cur, rates)
       excludedCount++
+      excludedItems.push({ id: x.id, label: x.label, amount: toBase(x.amount, x.cur, rates) })
       continue
     }
     const g = group(extraCategoryId(x.category))
@@ -133,5 +140,6 @@ export function oneOffs(state: TripState, ledger: LedgerEntry[], todayIso: strin
     paidTotal: groups.reduce((a, g) => a + g.paid, 0),
     excluded,
     excludedCount,
+    excludedItems,
   }
 }

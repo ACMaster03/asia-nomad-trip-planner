@@ -18,7 +18,8 @@ import { moneyUnlocks, moreLine } from '@/lib/trips/unlocks'
 import { categoryLabel } from '@/lib/trips/categories'
 import { tripDay } from '@/lib/trips/progress'
 import { useConfirm } from '@/components/Confirm'
-import { nightsBetween } from '@/lib/trips/format'
+import { useToast } from '@/components/Toast'
+import { nightsBetween, toBase } from '@/lib/trips/format'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -28,6 +29,7 @@ import { BookingsCard } from './BookingsCard'
 import { SubscriptionsCard } from './SubscriptionsCard'
 import { SubscriptionSheet } from './SubscriptionSheet'
 import { OneOffsCard } from './OneOffsCard'
+import { OneOffSheet } from './OneOffSheet'
 import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntryEditor } from './EntryEditor'
@@ -37,7 +39,7 @@ import { subsOfferRows } from '@/lib/trips/subsOffer'
 import { TrackQuestion } from './TrackQuestion'
 import { TrackSpendingRow } from './TrackSpendingRow'
 import { useFold } from './Fold'
-import type { LedgerEntry, Subscription } from '@/lib/trips/types'
+import type { Extra, LedgerEntry, Subscription } from '@/lib/trips/types'
 
 // Money — ONE page (round-two design signed off 2026-09-13; round three
 // 2026-09-19). No tabs and no split: a Spending / Plan segmented control was
@@ -104,6 +106,7 @@ let questionClosedThisVisit = false
 export default function MoneyPage() {
   const { fmt } = useMoney()
   const confirm = useConfirm()
+  const toast = useToast()
   const router = useRouter()
   const { trip, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
@@ -120,6 +123,7 @@ export default function MoneyPage() {
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
   const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
+  const [oneOffSheet, setOneOffSheet] = useState<{ extra: Extra | null } | null>(null)
   const [range, setRange] = useState<Range>(14)
   const [end, setEnd] = useState<string | null>(null)
 
@@ -228,6 +232,30 @@ export default function MoneyPage() {
     if (!ok) return
     stateMut.mutate((cur) => ({ ...cur, subscriptions: (cur.subscriptions ?? []).filter((x) => x.id !== sub.id) }))
     setSubSheet(null)
+  }
+  // One-offs (round 3c): the same Extra the Trip page's Extras screen used to
+  // save, now from Money's own card (OneOffSheet).
+  function saveOneOff(x: Extra) {
+    const isNew = !s.extras.some((e) => e.id === x.id)
+    stateMut.mutate((cur) => ({
+      ...cur,
+      extras: cur.extras.some((e) => e.id === x.id) ? cur.extras.map((e) => (e.id === x.id ? x : e)) : [...cur.extras, x],
+    }))
+    setOneOffSheet(null)
+    toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(x.amount, x.cur, s.rates))} · ${x.label}`)
+  }
+  async function delOneOff(x: Extra) {
+    const ok = await confirm({
+      title: 'Delete this one-off?',
+      // What the sync does with its payment (importCosts.ts): kept, flagged.
+      body: x.paidOn
+        ? 'Its payment stays in All entries, marked “extra removed”. If it was never paid, choose Not paid yet instead.'
+        : undefined,
+      confirmLabel: 'Delete',
+    })
+    if (!ok) return
+    stateMut.mutate((cur) => ({ ...cur, extras: cur.extras.filter((e) => e.id !== x.id) }))
+    setOneOffSheet(null)
   }
   function toggleRemind(sub: Subscription) {
     stateMut.mutate((cur) => ({
@@ -408,7 +436,12 @@ export default function MoneyPage() {
         onEdit={(sub) => setSubSheet({ sub })}
         onToggleRemind={toggleRemind} folded={!subsOpen} onToggle={toggleSubs}
       />
-      <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} folded={!oneOffsOpen} onToggle={toggleOneOffs} />
+      <OneOffsCard
+        state={s} ledger={ledger} fmt={fmt} todayIso={today} folded={!oneOffsOpen} onToggle={toggleOneOffs}
+        canEdit={canEdit}
+        onAdd={() => setOneOffSheet({ extra: null })}
+        onEdit={(id) => { const x = s.extras.find((e) => e.id === id); if (x) setOneOffSheet({ extra: x }) }}
+      />
       {/* The ledger is a screen of its own, All entries (Petra, 23 Sep; the
           name is hers, Patrik wanted a plainer word than ledger): as the last
           card it was over a third of this page (#38). One row here, and
@@ -478,6 +511,16 @@ export default function MoneyPage() {
           onSave={saveSub}
           onDelete={subSheet.sub ? delSub : undefined}
           onClose={() => setSubSheet(null)}
+        />
+      )}
+      {oneOffSheet && (
+        <OneOffSheet
+          initial={oneOffSheet.extra}
+          rates={s.rates}
+          todayIso={today}
+          onSave={saveOneOff}
+          onDelete={oneOffSheet.extra ? delOneOff : undefined}
+          onClose={() => setOneOffSheet(null)}
         />
       )}
       <ChargeNotice trip={trip.data} canEdit={canEdit} mut={mut} stateMut={stateMut} />

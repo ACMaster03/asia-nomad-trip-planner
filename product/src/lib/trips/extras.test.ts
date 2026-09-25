@@ -99,6 +99,8 @@ test('each extra says where it stands: not paid, a date still ahead, or paid whi
   // only the phone is in no total: unticked and unpaid
   assert.equal(v.excludedCount, 1)
   assert.equal(v.excluded, 250_000)
+  // and listed by name, so the card can still open it (round 3c)
+  assert.deepEqual(v.excludedItems, [{ id: 'phone', label: 'Anna’s phone', amount: 250_000 }])
 })
 
 test('a payment left behind by a deleted extra stays paid and shows as a logged line', () => {
