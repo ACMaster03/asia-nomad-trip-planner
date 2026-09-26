@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronRight, Plus } from 'lucide-react'
@@ -144,14 +144,24 @@ export default function MoneyPage() {
   // Keeps any date already there: the first appearance is the one that counts.
   // A journey from before round 2 has nothing to record (it keeps everything,
   // lib/trips/unlocks.ts), so opening Money saves nothing to it.
+  // Each card is asked for once while its save is on the way: a refetch that
+  // lands before it (any ledger write refetches) would otherwise queue it again
+  // (the reload loop of 25 Sep, lib/trips/ledgerOps.ts). A failed save lets it
+  // be asked for again.
+  const recording = useRef(new Set<string>())
   useEffect(() => {
-    if (!canEdit || !unlocks || !today) return
-    const fresh = unlocks.toRecord
+    if (!canEdit || !unlocks || !today || !trip.data) return
+    const tripId = trip.data.id
+    const fresh = unlocks.toRecord.filter((k) => !recording.current.has(`${tripId}:${k}`))
     if (!fresh.length) return
-    stateMut.mutate((cur) => ({
-      ...cur,
-      moneyUnlocked: { ...Object.fromEntries(fresh.map((k) => [k, today])), ...cur.moneyUnlocked },
-    }))
+    fresh.forEach((k) => recording.current.add(`${tripId}:${k}`))
+    stateMut.mutate(
+      (cur) => ({
+        ...cur,
+        moneyUnlocked: { ...Object.fromEntries(fresh.map((k) => [k, today])), ...cur.moneyUnlocked },
+      }),
+      { onError: () => fresh.forEach((k) => recording.current.delete(`${tripId}:${k}`)) },
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stateMut is stable; unlocks derives from trip.data
   }, [unlocks, canEdit, today])
 

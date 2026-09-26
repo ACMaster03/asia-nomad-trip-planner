@@ -23,6 +23,17 @@ drained, which is why it "passed".
 **Fix.** Writes already queued are skipped (`lib/trips/ledgerOps.ts`, `notPending`). The same
 replay now writes each of the 13 once. Tests in `ledgerOps.test.ts`.
 
+**Live with #93** (Patrik's go, 26 Sep; production build READY).
+
+**Other paths checked, 26 Sep.** Every effect that saves or refetches on its own:
+- the plan sync on Money, All entries and Home: one hook, fixed by #93;
+- Money's unlock record (`moneyUnlocked`): the same shape, smaller (one extra whole-state
+  save per refetch during a ledger batch, not a multiplying queue). Now asked for once per card
+  while its save is on the way, like the new-country banner already did. Follow-up PR;
+- the new-country banner: already guarded by a ref;
+- the follow page and Journeys: a realtime ping only re-reads, it never writes;
+- the app-update reload: once per new version, unchanged since July.
+
 **Data.** Every repeated write carried the same entry under the same id, so it replaced a row
 with itself: no duplicates, and entries typed by hand are untouched. The one exposure is an
 automatic row (a booking, a one-off with a paid-on date, a subscription charge) edited or
