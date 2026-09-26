@@ -21,6 +21,19 @@ Pull request #96, the first of Patrik's two decisions below.
   - gear, insurance & visas and fees, which are out by default;
   - an entry already set against its category.
   It is stored only where it differs from the category.
+- **The entry form, reshaped (Patrik, 26 Sep, in #97):** "the keyboard messes it up every time
+  … the date is too big … what was it is secondary to cost."
+  - Amount and currency come first, then "What was it? · optional" with no description (it is
+    still the entry's name; empty, the category stands in).
+  - The Expense | Income row went: about 98% of entries are expenses. The title is the type,
+    "Add expense ⌄", and a tap makes it "Add income ⌄". Patrik suggested tapping the title;
+    Claude added the chevron, since nobody taps a bare heading.
+  - The date is a pill ("📅 Today", "📅 Wed, 23 Sep") beside the daily-average switch, with the
+    phone's own picker under it. It stays readable, which is why it was a full field: logging
+    yesterday's dinner the next morning is the normal case.
+  - The empty form went from about 790 to 596 px, so it fits a phone screen without scrolling.
+  - The keyboard itself is not fixed yet: the iOS behaviour cannot be reproduced in the dev
+    preview. Asked Patrik what exactly it does.
 - **A flat option, Patrik's (26 Sep, after #96):** "we might have stuff that we buy that's cheap
   but we don't want it counted." The switch is now on every expense typed by hand, and the 3×
   rule is gone. Stays, transport and subscriptions still never get it. Claude's note: one more
