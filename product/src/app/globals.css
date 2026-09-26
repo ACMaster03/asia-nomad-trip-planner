@@ -6,8 +6,10 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* ── LIVHOLD v1 token layer ──────────────────────────────────────────────
-   Source of truth: design/handoff-v1/All Screens.dc.html (data-dc-script).
+   Values come from design/handoff-v1/All Screens.dc.html; the file that holds
+   them now is design/tokens.json, which also generates the iOS palette.
    Radius LOCKED at 22px (cards/sheets 22, controls 20, pills/avatars round). */
+/* @generated:tokens start — edit design/tokens.json, then run `node tools/tokens.mjs` */
 :root {
   --canvas: #f0eee9;
   --pg: #e8f7ee;
@@ -90,6 +92,7 @@
   --washLight: url("/brand/livhold-login-bg-light-dark.png") bottom/cover no-repeat #161a18;
   --washInk: #d8e0e5;
 }
+/* @generated:tokens end */
 
 @theme inline {
   --color-canvas: var(--canvas);
