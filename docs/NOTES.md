@@ -68,6 +68,23 @@ should be normal entries with excluded on!"
   - With the journey write refused as a conflict: no banner, and no second try.
   - All entries: "Vaccines · Health · 25 Aug · not in daily average".
 
+**Live with #100 (26 Sep).**
+- Before the merge, Patrik checked the One-offs card: no unpaid one-offs, so nothing was lost.
+- On the phone after the merge:
+  - the One-offs row is gone;
+  - Spent so far, the per-day rate and the projected total match what they were;
+  - Home's line against the estimate did not change.
+- The list's removal from the data shows nowhere in the app. This read-only query shows it
+  (Supabase SQL editor). A journey whose editors have opened the app since reads `false`
+  and `0`:
+
+  ```sql
+  select name, state ? 'extras' as has_list,
+    (select count(*) from jsonb_array_elements(ledger) e
+      where e->'source'->>'kind' = 'extra') as one_off_rows
+  from trips;
+  ```
+
 ## 2026-09-26 (3)
 
 ### BUILT — an entry's own switch for the daily average (#36)

@@ -61,10 +61,11 @@ Petra is new to software work; Patrik is not. The product conventions are in
   subscriptions, which the projection adds on its own). Live with #96;
   shown on every expense since #97 (first only above 3× the daily
   pace). (2) Then One-offs and planned
-  one-offs (`state.extras`) are removed (#39), built in #100 (not merged
-  yet): paid ones become plain entries, out of the daily average; the
-  list, unpaid ones included, is deleted from the journey the first time
-  an editor opens Home, Money or All entries.
+  one-offs (`state.extras`) went (#39), live with #100 on 26 Sep and
+  tested by Patrik: paid ones became plain entries, out of the daily
+  average; the list, unpaid ones included (Asia had none), is deleted
+  from a journey the first time an editor opens Home, Money or All
+  entries.
 - Patrik fixed the Money reload loop of 25 Sep in another session
   (#93–#95, 26 Sep): the plan sync skips writes already queued, and a
   refetch no longer lands over writes still queued.
@@ -74,7 +75,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Patrik wanted a plainer word than ledger), at `/money/entries`. Scheduled
   payments fold into one line there, and month totals count only what is
   spent. It closed #38. Step 2 went live with #85 (Petra, 24 Sep):
-  Bookings, Subscriptions and One-offs & extras fold to one line each, with
+  Bookings and Subscriptions (and One-offs & extras, until #100) fold to one line each, with
   a summary that carries anything needing attention. Plan and the cards
   above it stay open. The rows sit below Plan, followed by All entries and,
   last, Budget cap with a grey "Settings ›" (#86, Petra's choice over a
