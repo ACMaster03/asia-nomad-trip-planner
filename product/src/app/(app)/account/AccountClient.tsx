@@ -3,8 +3,8 @@ import { useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { tripQueryOptions } from '@/lib/trips/tripQuery'
 import { humanAuthError } from '@/lib/auth/authError'
-import { fetchTrip } from '@/lib/trips/queries'
 import {
   createShareLink,
   fetchShares,
@@ -670,11 +670,7 @@ export default function AccountClient({
   // (SharingCard's default expiry). Cached under the same key every trip
   // screen uses, so this is usually free — and `enabled` keeps this page
   // rendering with zero trips, mid-onboarding, or after access was revoked.
-  const trip = useQuery({
-    queryKey: tk.trip(tripId ?? 'none'),
-    queryFn: () => fetchTrip(sb, tripId!),
-    enabled: tripId !== null,
-  })
+  const trip = useQuery({ ...tripQueryOptions(sb, tripId), enabled: tripId !== null })
 
   async function signOut() {
     setBusy(true)

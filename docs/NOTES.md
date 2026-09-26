@@ -5,6 +5,34 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-26 (2)
+
+### FIXED — quick edits to the trip could be lost without a warning
+
+Patrik, 26 Sep, after #94: "make sure there is no problem with trips and such as well."
+
+**Found.** The Trip side has no saves of its own, but it shares how `state` is saved, and that
+had a silent loss. Writes queue one behind another; each finished write refetches the trip. A
+refetch landing while later writes were queued replaced the cache with a document that had
+none of them, and the next queued write then SAVED that document: its own edit and the ones
+before it gone, under a revision that matched, so no conflict banner. Replayed with the real
+query library: four edits 50 ms apart, only the first kept, in three of five timings. Any two
+edits closer together than a save and a refetch could hit it (a quick double toggle, an edit
+while Money records an unlocked card or the new-country banner saves). It dates from the start
+of the rev-guarded saves, not from this week.
+
+**Fix.** Every reader of the trip document now uses the one query (`tripQuery.ts`; Settings,
+Account and the empty state had their own copy of it). While writes of a kind are pending, a
+refetch keeps the cached `state` or `ledger` with its revision, and takes the rest from the
+server (`pendingWrites.ts`). The write that settles last refetches with nothing pending. The
+same replay now keeps all four edits in every timing. The ledger is covered too, so #93's
+guard is now a second line.
+
+**Data.** Nothing to recover from the code side: an edit lost this way never reached the
+server. If something typed on the Trip page ever "did not stick", this is the likely reason.
+
+---
+
 ## 2026-09-26
 
 ### FIXED — Money reloaded itself on the iPhone app (25 Sep)

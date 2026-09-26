@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { writeState, isPermissionDenied } from './queries'
 import { shouldRetryWrite, writeRetryDelay, withFreshSession } from './writeRetry'
 import { tk } from './keys'
+import { STATE_SCOPE } from './pendingWrites'
 import { useTripScope } from './TripScope'
 import type { TripState, Trip } from './types'
 
@@ -24,7 +25,7 @@ export function useTripMutation() {
   const { tripId } = useTripScope()
   const key = tk.trip(tripId ?? 'none')
   return useMutation({
-    scope: { id: 'state-write' },
+    scope: { id: STATE_SCOPE },
     // Transient failures retry before the banner shows (see writeRetry.ts). A
     // rev conflict is excluded there: the cached document is stale, and only
     // the onSettled refetch can fix that.
