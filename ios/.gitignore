@@ -1,0 +1,16 @@
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+.bundle/
+vendor/bundle/
+# App Store Connect API key, if ever kept locally for a manual upload
+*.p8
