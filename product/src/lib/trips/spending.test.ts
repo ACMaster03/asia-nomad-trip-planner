@@ -282,3 +282,43 @@ test('a row the plan wrote is never everyday, whatever its category (a paid extr
   const beyond = beyondEveryday(rows, rates, '2026-09-03')
   assert.equal(beyond.rows.find((r) => r.category === 'health')?.amount, 3000 * 10)
 })
+
+// #36 (Patrik, 26 Sep): the 90 000 Ft concert ticket logged as Activities on
+// 3 Sep lifted the pace, and the projection multiplies the pace by every night
+// left. An entry's own switch now overrides its category, one rule for all.
+test('an entry’s own switch moves it in or out of the daily average, but never a booking or a subscription', () => {
+  const days = [
+    e('m1', '2026-09-01', 'food', 1500, 'HUF'),
+    e('m2', '2026-09-02', 'food', 1500, 'HUF'),
+    e('m3', '2026-09-03', 'food', 1500, 'HUF'),
+  ]
+  const concert = e('show', '2026-09-03', 'activities', 90_000, 'HUF', { note: 'Concert tickets' })
+  const rate = (rows: LedgerEntry[]) => burnRate(rows, rates, '2026-09-01', '2026-09-03').perDay
+  assert.equal(rate([...days, concert]), 31_500, 'unmarked, the ticket is a day of Bangkok')
+  assert.equal(rate([...days, { ...concert, everyday: false }]), 1500, 'left out by its own switch')
+  // gear is out by default, and in when the entry says so
+  assert.equal(rate([...days, e('bag', '2026-09-02', 'gear', 3000, 'HUF')]), 1500)
+  assert.equal(rate([...days, e('bag', '2026-09-02', 'gear', 3000, 'HUF', { everyday: true })]), 2500)
+  // the projection adds these on their own: counted in the pace too, they would count twice
+  for (const cat of ['stays', 'transport', 'subscriptions']) {
+    assert.equal(rate([...days, e('x', '2026-09-02', cat, 3000, 'HUF', { everyday: true })]), 1500, cat)
+  }
+  // a row the plan wrote is never day-to-day, whatever it says
+  assert.equal(rate([...days, e('p', '2026-09-02', 'food', 3000, 'HUF', { everyday: true, source: { kind: 'extra', id: 'x' } })]), 1500)
+  // the chart and Where it goes read the same rule
+  assert.deepEqual(everydayOnly([...days, { ...concert, everyday: false }]).map((r) => r.id), ['m1', 'm2', 'm3'])
+})
+
+test('beyondEveryday names an entry left out by its own switch, not its whole category', () => {
+  const rows = [
+    e('m1', '2026-09-01', 'food', 1500, 'HUF'),
+    e('show', '2026-09-03', 'activities', 90_000, 'HUF', { note: 'Concert tickets', everyday: false }),
+    e('bag', '2026-09-02', 'gear', 3000, 'HUF'),
+  ]
+  const b = beyondEveryday(rows, rates, '2026-09-03')
+  assert.equal(b.total, 93_000)
+  assert.deepEqual(b.rows, [
+    { category: 'activities', amount: 90_000, label: 'Concert tickets' },
+    { category: 'gear', amount: 3000 },
+  ])
+})

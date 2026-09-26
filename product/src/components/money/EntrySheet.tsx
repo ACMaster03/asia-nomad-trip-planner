@@ -5,9 +5,9 @@ import { Sheet } from '@/app/(app)/live/Sheet'
 import { CategoryPicker } from './CategoryPicker'
 import { useMoney } from '@/lib/trips/Money'
 import { toBase } from '@/lib/trips/format'
-import { addDays } from '@/lib/trips/spending'
+import { addDays, everydaySwitchable } from '@/lib/trips/spending'
 import {
-  categoriesFor,
+  categoriesFor, isEverydayCategory,
   categoryLabel, mostUsedCategories, suggestCategory, DEFAULT_CATEGORY, RECURRING_CATEGORY, type CategoryKind,
 } from '@/lib/trips/categories'
 import { nearestCharge, nextCharge, shortDate, subFromEntry, subNamed } from '@/lib/trips/subscriptions'
@@ -33,6 +33,13 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 //   is, so a cadence can be corrected where the charge is.
 // An entry typed before round 3 opens with nothing preselected: opening one to
 // fix its amount must not declare anything.
+//
+// "Counts in the daily average" (#36, Patrik, 26 Sep): the category decides,
+// and the form asks only when it matters, so a quick coffee stays one tap
+// shorter. It asks for an amount at least 3× the daily pace (the 90 000 Ft
+// concert ticket in Activities), for gear, insurance & visas and fees, which
+// are out by default, and wherever the entry already says otherwise. Never for
+// stays, transport or subscriptions: the projection adds those on its own.
 
 const newId = (p: string) => p + crypto.randomUUID()
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -58,7 +65,7 @@ const REPEATS: { id: Repeat; label: string }[] = [
 ]
 
 export function EntrySheet({
-  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose, note, subs = [],
+  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose, note, subs = [], pace,
 }: {
   initial: LedgerEntry | null
   ledger: LedgerEntry[]
@@ -75,6 +82,8 @@ export function EntrySheet({
   onClose: () => void
   /** one line right above the save button, for what saving does beyond saving */
   note?: string
+  /** the daily pace without this entry, in base currency: what "big" is measured against */
+  pace?: number | null
 }) {
   const { base, fmt } = useMoney()
   // A booking's row follows the Trip page. A subscription charge the app wrote
@@ -90,6 +99,8 @@ export function EntrySheet({
   const [date, setDate] = useState(initial?.date ?? todayISO())
   const [picker, setPicker] = useState(false)
   const [why, setWhy] = useState(false)
+  // Unset: the category decides (#36). Set only by the switch.
+  const [everyday, setEveryday] = useState<boolean | undefined>(initial?.everyday)
 
   // The Subscriptions question (see the header).
   const linked = initial?.subId ? subs.find((x) => x.id === initial.subId) ?? null : null
@@ -113,6 +124,19 @@ export function EntrySheet({
   const amt = parseFloat(amount)
   const valid = isFinite(amt) && amt > 0
   const preview = valid && cur !== base ? fmt(toBase(amt, cur, rates)) : null
+
+  // The daily-average switch (see the header).
+  const catId = effective ?? DEFAULT_CATEGORY[type]
+  const byCategory = isEverydayCategory(catId)
+  const counts = everyday ?? byCategory
+  const times = pace && pace > 0 && valid ? toBase(amt, cur, rates) / pace : 0
+  const askEveryday = type === 'expense' && !imported && everydaySwitchable(catId)
+    && (everyday !== undefined || !byCategory || times >= 3)
+  const everydayHint = !byCategory
+    ? (counts ? 'Counted in the per-day rate, like everyday spending.' : `${categoryLabel(catId)} is left out by default: a cost of the whole trip, not of a day.`)
+    : !counts ? 'Left out of the per-day rate. It still counts as spent.'
+      : times >= 3 ? `About ${Math.round(times)}× a usual day. Switch it off for a one-time cost, like a ticket for a show. It still counts as spent.`
+        : 'Counted in the per-day rate.'
   // Say WHY the box opened on this currency, but only while it is still the
   // app's guess: once it has been changed by hand the note would be a lie.
   const curNote =
@@ -159,6 +183,9 @@ export function EntrySheet({
       note: name.trim(),
       ...(initial?.source ? { source: initial.source } : {}),
       ...(initial?.orphaned ? { orphaned: initial.orphaned } : {}),
+      // Stored only where it differs from the category, so a later change of
+      // category still brings that category's default with it.
+      ...(askEveryday && everyday !== undefined && everyday !== byCategory ? { everyday } : {}),
     }
     // Out of the Subscriptions category, a charge is no longer one: no subId.
     let change: SubChange | undefined
@@ -345,6 +372,25 @@ export function EntrySheet({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {askEveryday && (
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          <span className="text-base">
+            Counts in the daily average
+            <span className="block text-[13px] text-tx3">{everydayHint}</span>
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={counts}
+            aria-label="Counts in the daily average"
+            onClick={() => setEveryday(!counts)}
+            className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (counts ? 'bg-ac' : 'bg-ln3')}
+          >
+            <span className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (counts ? 'left-[24px]' : 'left-[3px]')} />
+          </button>
         </div>
       )}
 

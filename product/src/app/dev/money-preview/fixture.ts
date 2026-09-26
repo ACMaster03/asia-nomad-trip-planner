@@ -72,6 +72,9 @@ export function fixtureTrip(today: string): Trip {
     e('s3c', '2026-09-03', 'food', 300, 'THB', '4 big meals'),
     e('s3d', '2026-09-03', 'clothes', 120, 'THB', 'Elephant pants'),
     e('s3e', '2026-09-03', 'accessories', 239, 'THB', 'Phone strap'),
+    // #36: bought in Bangkok for a show in Hong Kong in December. Left out of
+    // the daily average by its own switch, so it counts as spent, not as a day.
+    e('s3f', '2026-09-03', 'activities', 90_000, 'HUF', 'Concert tickets', { everyday: false }),
     e('s4a', '2026-09-04', 'souvenirs', 20, 'THB', 'Postcard from the grand palace'),
     e('s4b', '2026-09-04', 'local-transport', 200, 'THB', 'Tuk-tuk'),
     e('s4c', '2026-09-04', 'activities', 600, 'THB', 'Reclining Buddha'),
