@@ -59,10 +59,10 @@ export interface PerSeg {
 }
 export function computeBudget(state: TripState, cityIdx: Record<string, CityCost>) {
   const rates = state.rates
-  let accom = 0, live = 0, transport = 0, extras = 0
+  let accom = 0, live = 0, transport = 0
   // "Committed" view (2026-07-24 owner decision): the grand total must never
   // silently include guesses — it sums only CHOSEN accommodation + entered
-  // transport/extras, and reports which stops still lack a stay instead of
+  // transport, and reports which stops still lack a stay instead of
   // estimating them. The blended number lives on as `grand` = ESTIMATED total.
   //
   // 2026-09-15: "chosen" now means the STATUS, not merely the tick. A ticked
@@ -106,18 +106,19 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
     transport += v
     if (isBookedStatus(t.status)) committedTransport += v
   })
-  state.extras.forEach((e) => { if (e.include) extras += toBase(e.amount, e.cur, rates) })
-  const grand = accom + live + transport + extras
+  // The planned one-offs used to be added to both totals; they went with #39
+  // (Patrik, 26 Sep), and a paid one-off is a ledger entry like any other.
+  const grand = accom + live + transport
   const totalNights = state.segments
     .filter((s) => s.include !== false)
     .reduce((a, s) => a + segNights(s), 0)
   return {
-    accom, live, transport, extras, grand, perSeg, totalNights,
+    accom, live, transport, grand, perSeg, totalNights,
     perPerson: grand / (state.meta.travelers || 1),
     perDay: totalNights ? grand / totalNights : 0,
     // Committed view: your entered numbers only — no catalogue guesses, no
     // daily-living estimate. missingAccomStops says what the number lacks.
-    committed: committedAccom + committedTransport + extras,
+    committed: committedAccom + committedTransport,
     missingAccomStops,
   }
 }

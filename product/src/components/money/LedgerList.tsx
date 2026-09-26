@@ -93,12 +93,13 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
           <span className="block text-base font-semibold">{e.note?.trim() || categoryLabel(e.category)}</span>
           <span className="block text-[14px] text-tx2">
             {categoryLabel(e.category)}
-            {e.source && (e.source.kind === 'extra' ? ' · from Extras' : e.source.kind === 'sub' ? ' · from Subscriptions' : ' · from booking')}
+            {/* a paid one-off's row from before #39 reads as the plain entry the plan sync makes it */}
+            {e.source && e.source.kind !== 'extra' && (e.source.kind === 'sub' ? ' · from Subscriptions' : ' · from booking')}
             {sub && ` · ${sub}`}
             {/* the entry's own daily-average switch, where it differs from its category (#36) */}
             {e.everyday === false && isEverydayCategory(e.category) && ' · not in daily average'}
             {e.everyday === true && !isEverydayCategory(e.category) && ' · in daily average'}
-            {e.orphaned && <span className="text-warn">{e.source?.kind === 'extra' ? ' · extra removed' : ' · booking removed'}</span>}
+            {e.orphaned && e.source?.kind !== 'extra' && <span className="text-warn">{' · booking removed'}</span>}
           </span>
         </span>
         <span className="flex-none text-right">

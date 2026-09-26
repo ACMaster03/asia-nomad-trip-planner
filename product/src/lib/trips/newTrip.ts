@@ -45,7 +45,6 @@ export function makeNewTripState(input: NewTripInput): TripState {
     segments: [],
     stays: [],
     transport: [],
-    extras: [],
     notes: {},
   }
 }

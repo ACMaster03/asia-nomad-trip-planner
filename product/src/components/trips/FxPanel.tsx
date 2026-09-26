@@ -280,6 +280,5 @@ function countUses(s: TripState, code: string): number {
   let n = 0
   for (const x of s.stays ?? []) if (x.cur === code) n++
   for (const x of s.transport ?? []) if (x.cur === code) n++
-  for (const x of s.extras ?? []) if (x.cur === code) n++
   return n
 }
