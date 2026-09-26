@@ -61,8 +61,10 @@ Petra is new to software work; Patrik is not. The product conventions are in
   subscriptions, which the projection adds on its own). Live with #96;
   shown on every expense since #97 (first only above 3× the daily
   pace). (2) Then One-offs and planned
-  one-offs (`state.extras`) are removed (#39): paid ones stay as plain
-  entries, unpaid ones go.
+  one-offs (`state.extras`) are removed (#39), built in #100 (not merged
+  yet): paid ones become plain entries, out of the daily average; the
+  list, unpaid ones included, is deleted from the journey the first time
+  an editor opens Home, Money or All entries.
 - Patrik fixed the Money reload loop of 25 Sep in another session
   (#93–#95, 26 Sep): the plan sync skips writes already queued, and a
   refetch no longer lands over writes still queued.

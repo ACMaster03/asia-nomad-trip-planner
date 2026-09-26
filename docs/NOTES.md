@@ -5,6 +5,69 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-26 (4)
+
+### BUILT — One-offs removed (#39)
+
+Pull request #100, the second of Patrik's two decisions of 26 Sep (below). His go on the
+data: "rip them out on a data level from the app so it doesn't stay as noise … Paid one offs
+should be normal entries with excluded on!"
+
+**What changed.**
+- Money loses the One-offs & extras row. With it go:
+  - the planned list (`state.extras`);
+  - the Extras screen behind Trip and its form (an old `/itinerary?tab=extras` link opens
+    Money);
+  - the planned one-offs in `computeBudget`'s estimated and committed totals.
+- **A paid one-off's entry becomes a plain entry, once** (`plainFromExtra`, `importCosts.ts`).
+  - It loses its link to the list, and any "extra removed" flag: the payment happened.
+  - It stays out of the daily average. Insurance & visas, gear and fees are out by category.
+    One filed under an everyday category (a vaccine under Health) gets its own switch set to
+    excluded (`everyday: false`, #36).
+- **Then the list is deleted from the journey**, unpaid one-offs included (`usePlanSync`).
+  - This happens the first time an editor opens Home, Money or All entries, and only once no
+    entry is still linked to a one-off. A viewer never writes it.
+  - The write is the cleanup's own, not the page's. When both phones open at once, the second
+    write loses the race; the page's banner would have said "Please redo your edit" to someone
+    who made none. It fails quietly and runs again on the next open.
+- **Wording.**
+  - The category list's second group is "Not in the daily average" (was "Bookings & one-offs").
+  - The Plan card's "How it adds up" reads "transport, everything else".
+  - Under "beyond the everyday": "Counted in Spent so far" (was "Counted below", which
+    pointed at the One-offs card).
+  - The welcome flow says visa costs go on Money, under Insurance & visas.
+  - Delete this trip no longer lists extras.
+- **Unchanged on purpose.** The old spellings "one-off" and "extras" still fold into Gear:
+  migration 31 and `categories.test.ts` hold the registry to them.
+
+**What else moves.**
+- An unpaid one-off is deleted for good.
+- Home's live money card says "under the estimate" or "over the estimate": the projection
+  against the pre-trip estimate (`b.grand`). The estimate loses the planned one-offs; the
+  projection keeps the paid ones, as entries. If the margin is smaller than the one-offs
+  that were planned, it turns to "over". The two were never like for like: subscriptions
+  are in the projection and never were in the estimate.
+- Home's pre-trip Estimated total drops the planned one-offs too (accepted on 26 Sep).
+- A journey whose only entries were paid one-offs and bookings now counts as one that logs
+  spending (`hasLoggedSpending`). An account still on "ask" then sees the question over the
+  full page, not the quiet one.
+- A phone still running the old version when the list goes can show an error screen once:
+  the old code expects the list. It reloads itself into the new version when it comes back
+  to the foreground (`SWUpdate`, `app/error.tsx` keeps the layout alive).
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); `next build`.
+- 150 node tests. The four in `extras.test.ts` went with the file. The two extras tests in
+  `importCosts.test.ts` became two about the change.
+- In the dev preview, with `?oneoffs=legacy`: the practice journey as it was before #39,
+  plus a vaccine under Health.
+  - Money and Home each wrote the three entries as plain entries, the vaccine with
+    `everyday: false`. Each wrote the journey once without `extras`, everything else kept
+    (the five subscriptions included). Nothing more in 20 seconds.
+  - The current practice journey writes nothing.
+  - With the journey write refused as a conflict: no banner, and no second try.
+  - All entries: "Vaccines · Health · 25 Aug · not in daily average".
+
 ## 2026-09-26 (3)
 
 ### BUILT — an entry's own switch for the daily average (#36)
