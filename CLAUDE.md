@@ -26,7 +26,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
 - He decides product questions. Record decisions in `docs/NOTES.md` and on the
   GitHub issue that holds the topic.
 
-## Where the work stands (24 Sep)
+## Where the work stands (26 Sep)
 
 - The Trip timeline (mock 15 §1, §4, §5, §6) is live: pull request #68 was
   merged with Petra on 23 Sep, then #71 and #72 with her findings from the
@@ -49,9 +49,19 @@ Petra is new to software work; Patrik is not. The product conventions are in
   latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer for
   Subscriptions entries typed before 3a, went live with #91 on 24 Sep (Petra and
   Patrik answered it on Asia on 25 Sep): its charges start on the
-  day of the answer, not back-filled (open for Patrik). 3c, editing
-  one-off costs on Money, follows. As built, every existing account is asked the
-  question once; Patrik can change that.
+  day of the answer, not back-filled (open for Patrik). 3c (#92, editing
+  one-offs on Money) was closed unmerged on 26 Sep: see the next point. As
+  built, every existing account is asked the tracking question once;
+  Patrik can change that.
+- Decided by Patrik on 26 Sep, in this order: (1) a per-entry "Counts in
+  the daily average" switch (#36, reversing its 19 Sep "not building
+  this"): the category decides by default, the entry form shows the
+  switch for an amount at least 3× the daily pace or a category that is
+  out by default; (2) then One-offs and planned one-offs (`state.extras`)
+  are removed (#39): paid ones stay as plain entries, unpaid ones go.
+- Patrik fixed the Money reload loop of 25 Sep in another session
+  (#93–#95, 26 Sep): the plan sync skips writes already queued, and a
+  refetch no longer lands over writes still queued.
 - Money is getting shorter (Petra, 23 Sep: about seven phone screens, the
   ledger alone over a third of it). Step 1 went live with #82, approved by
   Patrik: the ledger has its own screen, named All entries (Petra's pick;

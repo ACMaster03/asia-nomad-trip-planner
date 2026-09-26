@@ -5,6 +5,44 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-26 (3)
+
+### DECIDED — Patrik, 26 Sep: a daily-average switch per entry, then One-offs goes
+
+Patrik, catching up after Petra's round 3: One-offs "is basically a category that doesn't need
+to exist". Then: "what about the 90,000 concert ticket that was marked as an activity on the
+3rd of September? It's the exact same thing. It screwed up our projections."
+
+- **The per-entry switch (#36), reversing the 19 Sep "not building this".** The per-day pace is
+  the current stop's everyday average once three days are behind it (`tripPace`). Every remaining
+  night of the trip is multiplied by it. So the ticket still inflates the projection: by an
+  estimated 3 600 Ft a day over about 216 nights, roughly 780 000 Ft today, and about 7 M Ft on
+  3 Sep. A category cannot tell a one-time ticket from a weekly concert habit (Patrik: "maybe
+  somebody is going on concerts regularly"), so the choice is per entry.
+  - **Counts in the daily average** is set per entry. Its default comes from the category, as
+    today: stays, transport, gear, insurance & visas, fees and subscriptions are out, and the
+    rest are in.
+  - The entry form shows the switch only when it matters: an amount at least 3× the current
+    daily pace, a category that is out by default, or an entry already set against its
+    category.
+  - A left-out entry still counts as spent and shows in "beyond the everyday".
+  - Boolean first, as #36 suggested. The data shape leaves room for attributing an entry to a
+    later stop.
+- **Counting gear and visas in the pace: no.** Patrik first thought they "do matter in our daily
+  averages". Claude disagreed: a 150 000 Ft phone on day 3 of a stop would lift the pace by
+  about 50 000 Ft and the projection by about 10 M Ft. The switch covers the exceptions.
+- **One-offs goes, and planned one-offs with it (#39).** Patrik: "unnecessary complexity... for a
+  travel app, I don't think they should exist."
+  - The One-offs card and `state.extras` are removed. Gear, insurance & visas and fees stay
+    ordinary categories.
+  - Paid one-offs keep their entries as plain entries. Unpaid planned ones are dropped.
+  - Home's pre-trip Estimated total no longer includes planned one-offs (accepted).
+- **Order:** the switch first, then the removal.
+- **3c (#92) closed unmerged.** Built with Petra on 25 Sep: one-offs edited on Money's card,
+  and the Extras screen under Trip removed. It became moot. The code stays on the closed pull
+  request.
+- Recorded on #36 and #39.
+
 ## 2026-09-26 (2)
 
 ### FIXED — quick edits to the trip could be lost without a warning
