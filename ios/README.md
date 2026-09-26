@@ -61,6 +61,10 @@ if the mark changes.
 - Certificates: the team's fastlane match repo `KeepYourHabits/apple-certificates`, shared
   with the habit tracker. The distribution certificate is reused; match adds Livhold's
   profiles next to the habit app's.
+- Ruby comes from `mise.toml` (3.3; macOS's own 2.6 is too old). First time:
+  `mise install && mise exec -- bundle config set --local path vendor/bundle && mise exec -- bundle install`.
+- The Matchfile's SSH URL is for CI (deploy key). On a Mac that reaches GitHub over HTTPS,
+  pass the HTTPS URL: `mise exec -- bundle exec fastlane match appstore --git_url https://github.com/KeepYourHabits/apple-certificates.git`.
 - `bundle exec fastlane beta` (from `ios/`) builds and uploads to TestFlight. It expects the
   same env as the habit tracker's deploy job: `APP_STORE_CONNECT_API_KEY_{KEY_ID,ISSUER_ID,KEY}`,
   `MATCH_PASSWORD`, and git access to the match repo.
