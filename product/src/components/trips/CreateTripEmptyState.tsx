@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { Compass, DoorClosed } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchTrip } from '@/lib/trips/queries'
-import { tk } from '@/lib/trips/keys'
+import { tripQueryOptions } from '@/lib/trips/tripQuery'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { OnboardingWizard } from './OnboardingWizard'
 
@@ -30,11 +29,7 @@ export default function CreateTripEmptyState() {
   const { tripId } = useTripScope()
   // Same key + fn as the screens above us, so this subscribes to the cached
   // document rather than firing a second request.
-  const trip = useQuery({
-    queryKey: tk.trip(tripId ?? 'none'),
-    queryFn: () => fetchTrip(sb, tripId!),
-    enabled: tripId !== null,
-  })
+  const trip = useQuery({ ...tripQueryOptions(sb, tripId), enabled: tripId !== null })
 
   if (tripId === null) return <NoTripScreen />
 

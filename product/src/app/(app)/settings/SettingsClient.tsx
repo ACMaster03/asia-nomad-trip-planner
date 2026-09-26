@@ -5,7 +5,8 @@ import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { useOnline } from '@/lib/useOnline'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { fetchTrip, isRevConflict, isPermissionDenied, createInvite } from '@/lib/trips/queries'
+import { tripQueryOptions } from '@/lib/trips/tripQuery'
+import { isRevConflict, isPermissionDenied, createInvite } from '@/lib/trips/queries'
 import { fetchSentInvites, revokeInvite } from '@/lib/trips/invites'
 import { tk } from '@/lib/trips/keys'
 import FxPanel from '@/components/trips/FxPanel'
@@ -148,11 +149,7 @@ function PeopleCard() {
 export default function SettingsClient() {
   const sb = createClient()
   const { tripId } = useTripScope()
-  const trip = useQuery({
-    queryKey: tk.trip(tripId ?? 'none'),
-    queryFn: () => fetchTrip(sb, tripId!),
-    enabled: tripId !== null,
-  })
+  const trip = useQuery({ ...tripQueryOptions(sb, tripId), enabled: tripId !== null })
   // This screen reads the RAW trip document on purpose: FxPanel edits the
   // watchlist itself and derives live values from the snapshot below, so the
   // merged view from useTripScreen would just be a detour.
