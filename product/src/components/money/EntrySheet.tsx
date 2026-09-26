@@ -34,12 +34,16 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // An entry typed before round 3 opens with nothing preselected: opening one to
 // fix its amount must not declare anything.
 //
-// "Counts in the daily average" (#36, Patrik, 26 Sep): the category decides,
-// and the form asks only when it matters, so a quick coffee stays one tap
+// The daily-average switch (#36, Patrik, 26 Sep): the category decides, and
+// the form asks only when it matters, so a quick coffee stays one tap
 // shorter. It asks for an amount at least 3× the daily pace (the 90 000 Ft
 // concert ticket in Activities), for gear, insurance & visas and fees, which
 // are out by default, and wherever the entry already says otherwise. Never for
 // stays, transport or subscriptions: the projection adds those on its own.
+// The switch names what differs from the category, so it always starts off:
+// "Exclude from the daily average" for an everyday category, "Include in the
+// daily average" for the other three. No description: Patrik, the label says
+// it (the overview's "beyond the everyday" shows it still counts as spent).
 
 const newId = (p: string) => p + crypto.randomUUID()
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -132,11 +136,7 @@ export function EntrySheet({
   const times = pace && pace > 0 && valid ? toBase(amt, cur, rates) / pace : 0
   const askEveryday = type === 'expense' && !imported && everydaySwitchable(catId)
     && (everyday !== undefined || !byCategory || times >= 3)
-  const everydayHint = !byCategory
-    ? (counts ? 'Counted in the per-day rate, like everyday spending.' : `${categoryLabel(catId)} is left out by default: a cost of the whole trip, not of a day.`)
-    : !counts ? 'Left out of the per-day rate. It still counts as spent.'
-      : times >= 3 ? `About ${Math.round(times)}× a usual day. Switch it off for a one-time cost, like a ticket for a show. It still counts as spent.`
-        : 'Counted in the per-day rate.'
+  const everydayLabel = byCategory ? 'Exclude from the daily average' : 'Include in the daily average'
   // Say WHY the box opened on this currency, but only while it is still the
   // app's guess: once it has been changed by hand the note would be a lie.
   const curNote =
@@ -377,19 +377,16 @@ export function EntrySheet({
 
       {askEveryday && (
         <div className="flex min-h-11 items-center justify-between gap-3">
-          <span className="text-base">
-            Counts in the daily average
-            <span className="block text-[13px] text-tx3">{everydayHint}</span>
-          </span>
+          <span className="text-base">{everydayLabel}</span>
           <button
             type="button"
             role="switch"
-            aria-checked={counts}
-            aria-label="Counts in the daily average"
+            aria-checked={counts !== byCategory}
+            aria-label={everydayLabel}
             onClick={() => setEveryday(!counts)}
-            className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (counts ? 'bg-ac' : 'bg-ln3')}
+            className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (counts !== byCategory ? 'bg-ac' : 'bg-ln3')}
           >
-            <span className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (counts ? 'left-[24px]' : 'left-[3px]')} />
+            <span className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (counts !== byCategory ? 'left-[24px]' : 'left-[3px]')} />
           </button>
         </div>
       )}

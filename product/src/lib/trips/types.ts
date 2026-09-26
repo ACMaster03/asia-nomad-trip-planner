@@ -195,8 +195,8 @@ export interface LedgerEntry {
    */
   subId?: string | null
   /**
-   * Counts in the daily average (#36, Patrik, 26 Sep), set on the entry form
-   * only where it differs from the category: false for a 90 000 Ft concert
+   * Whether it counts in the daily average (#36, Patrik, 26 Sep), set on the
+   * entry form only where it differs from the category: false for a 90 000 Ft concert
    * ticket in Activities, true for gear someone buys every week. Unset: the
    * category decides (isEverydayCategory). Never on stays, transport or
    * subscriptions, which the projection adds on their own (spending.ts).

@@ -16,13 +16,16 @@ Pull request #96, the first of Patrik's two decisions below.
   rule, `isEverydayRow`, now decides for the pace (`burnRate` filtered by category alone until
   now), the daily chart, Where it goes and the unlocks. `recap.ts` has no daily rate and is
   unchanged.
-- The entry form shows "Counts in the daily average" only when it matters:
-  - an amount at least 3× the daily pace, measured without the entry itself ("About 19× a
-    usual day. Switch it off for a one-time cost, like a ticket for a show. It still counts as
-    spent.");
+- The entry form shows the switch only when it matters:
+  - an amount at least 3× the daily pace, measured without the entry itself;
   - gear, insurance & visas and fees, which are out by default;
   - an entry already set against its category.
   It is stored only where it differs from the category.
+- **The label, Patrik's (26 Sep):** "Exclude from the daily average", off by default, with no
+  description: "isn't that more self-explanatory?" Gear, insurance & visas and fees are
+  excluded by default, so for them the same switch reads "Include in the daily average", also
+  off by default. The switch always names what differs from the category. The first version
+  said "Counts in the daily average", on, with a line of explanation under it.
 - **Never for stays, transport or subscriptions**, a refinement of the agreed design. The
   projection adds planned stays, legs still to pay and subscriptions ahead on its own, so one
   counted in the pace as well would be counted twice.
@@ -33,8 +36,9 @@ Pull request #96, the first of Patrik's two decisions below.
 - `tsc`; `eslint` (the same four old findings); `next build`.
 - 152 node tests, two new in `spending.test.ts`.
 - In the dev preview:
-  - a 300 Ft coffee and Stays get no switch; Gear gets it, off;
-  - the 90 000 Ft ticket gets it, on, with "About 19×", and saves `everyday: false` when off;
+  - a 300 Ft coffee and Stays get no switch;
+  - the 90 000 Ft ticket gets "Exclude from the daily average", off, and switched on it saves
+    `everyday: false`; Gear gets "Include in the daily average", off;
   - left on, the practice ticket takes the per-day rate from 4778 to 8239 Ft and the projection
     from 2 572 132 to 2 928 670 Ft. Switched off, the per-day rate stays at 4778 Ft and the
     projection rises only by the ticket's 90 000 Ft.
