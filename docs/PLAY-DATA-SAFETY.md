@@ -9,7 +9,8 @@ the repo, so a future change can be re-checked instead of re-guessed.
 commit.** Nothing here is collected for advertising, sold, or shared with a third
 party for its own purposes — every "shared" answer below is No.
 
-Last checked against the code: **2026-09-14**.
+Last checked against the code: **2026-09-26**. The App Store's version of the same
+answers is [`APP-STORE-PRIVACY.md`](APP-STORE-PRIVACY.md) (on the iOS branch until it merges).
 
 ## Required URLs
 
@@ -28,6 +29,7 @@ group and excluded from the proxy matcher in `src/proxy.ts`, so they do.
 | Personal info → **Email address** | App functionality, Account management | Required | `auth.users`; the only sign-in identifier |
 | Personal info → **Name** | App functionality | Optional | `user_metadata.first_name`, `profiles.display_name` |
 | Personal info → **User IDs** | App functionality, Account management | Required | `auth.users.id`, referenced by every table |
+| Location → **Approximate location** | App functionality | Optional | itinerary cities + check-ins = where the user is, at city level, and when; followers see check-ins. Also the sign-in IP in `auth.sessions` (below). |
 | Financial info → **Other financial info** | App functionality | Optional | `public.ledger` — date, type, category, amount, currency, note |
 | Photos and videos → **Photos** | App functionality | Optional | `trip-media` bucket, migration 12 |
 | Messages → **Other in-app messages** | App functionality | Optional | `check_ins.comment`, `notes.body`, the `notes` columns on stays/transport/segments |
@@ -50,7 +52,7 @@ is unusually short for a travel product.
 
 | Category | Why it is No | Evidence |
 |---|---|---|
-| **Location** (precise or approximate) | The app never asks the device where it is. A check-in is placed by the city the traveller picked from a list. | no `navigator.geolocation` anywhere in `product/src` |
+| **Precise location** | The app never asks the device where it is. A check-in is placed by the city the traveller picked from a list. *(Approximate location IS declared above, 2026-09-26: a city-level "I am here now" is the user's location whether or not GPS produced it. The old answer here said No to both.)* | no `navigator.geolocation` anywhere in `product/src` |
 | **Location, via photo metadata** | Photos are re-encoded through a canvas before upload, which drops all EXIF — GPS, camera, timestamp. What leaves the phone is pixels. | `lib/trips/media.ts` → `compressImage()`: `drawImage` then `canvas.toBlob('image/jpeg')` |
 | **App activity / analytics** | There is no analytics, attribution, or advertising SDK in the bundle. | no `@vercel/analytics`, Sentry, gtag, PostHog, Plausible in `package.json` or `src` |
 | **Financial → payment info** | The app takes no money. | no payment provider anywhere |
@@ -61,6 +63,15 @@ shape of `compressImage()`. If anyone ever adds an "upload original quality"
 path, or uploads a `File` straight to storage without going through that
 function, **this form becomes a false declaration** and Location starts being
 collected. Treat that function as a compliance boundary, not just a resizer.
+
+### Sign-in sessions and logs
+
+`auth.sessions` (Supabase Auth, built in) stores the **IP address and user-agent** of every
+signed-in device. Migration 42 deletes a session after 90 days without use (nightly
+`purge-idle-sessions`), which is the number `/privacy` states; the Auth setting that would do
+the same is Pro-only. `auth.audit_log_entries` is empty on staging. Platform request logs
+(Supabase, Vercel) are short-lived and operational. None of this adds a data type: an IP is
+at most approximate location, already declared.
 
 ## Security and handling
 
