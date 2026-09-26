@@ -45,7 +45,7 @@ Pull request #96, the first of Patrik's two decisions below.
   subscription, stay price, leg price and hours) are now text fields that open the same
   decimal pad and are read by `parseAmount` (`format.ts`): a comma or a dot, spaces ignored,
   anything else refused rather than guessed. The extras form goes with the One-offs removal and
-  was left alone. Pull request #98.
+  was left alone. Pull request #99.
 - **A flat option, Patrik's (26 Sep, after #96):** "we might have stuff that we buy that's cheap
   but we don't want it counted." The switch is now on every expense typed by hand, and the 3×
   rule is gone. Stays, transport and subscriptions still never get it. Claude's note: one more
