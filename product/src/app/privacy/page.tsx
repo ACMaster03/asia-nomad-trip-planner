@@ -119,7 +119,8 @@ export default function PrivacyPage() {
             by the city you picked, not by where your phone is.
           </li>
           <li>
-            <b className="font-semibold text-tx">Not the location in your photos.</b> Photos are
+            <b className="font-semibold text-tx">Not the location in your photos.</b>{' '}
+            Photos are
             re-encoded on your phone before upload, which discards the camera&apos;s embedded data
             (GPS coordinates, camera model, timestamp), so what leaves your device is the picture
             and nothing else.
