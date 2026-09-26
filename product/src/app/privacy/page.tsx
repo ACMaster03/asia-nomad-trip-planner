@@ -21,7 +21,13 @@ import { LEGAL } from '@/lib/legal/entity'
 //   supabase/functions/_shared/resend  transactional email leaves via Resend
 //   product/vercel.json                functions pinned to dub1 (Dublin)
 //   (absent) navigator.geolocation     the app never asks the device where it is
+//                                      — but itinerary cities + check-ins ARE the
+//                                      user's location at city level, and say so
+//   auth.sessions (Supabase Auth)      IP + user-agent per signed-in device;
+//                                      supabase/config.toml [auth.sessions] ends it
+//                                      after 90 days idle
 //   (absent) any analytics SDK         nothing measures the reader
+//   docs/APP-STORE-PRIVACY.md          the Apple labels; same facts as the Play form
 
 export const metadata: Metadata = {
   title: 'Privacy Policy · Livhold',
@@ -69,6 +75,12 @@ export default function PrivacyPage() {
           <li>Check-ins: the place, a rating, your comment, and when it happened.</li>
           <li>Photos you attach to a check-in.</li>
         </ul>
+        <p>
+          Put together, the cities in your itinerary and your check-ins say where you are, at the
+          level of a city, and when. That is your location in the ordinary sense, and we treat it
+          that way: it comes from what you chose to enter, never from your device, and followers
+          see only what you share with them.
+        </p>
         <p className="font-semibold text-tx">Sharing</p>
         <ul className="list-disc space-y-1 pl-5">
           <li>Who you invited to a trip and whether they can edit or only view.</li>
@@ -84,14 +96,27 @@ export default function PrivacyPage() {
             needed to encrypt a message to it. It identifies a browser on a device, not you.
           </li>
         </ul>
+        <p className="font-semibold text-tx">Signing in and security</p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            For each device you are signed in on, the IP address it signed in from and the kind of
+            browser or device it is. This is kept to keep your account secure, for example to spot a
+            sign-in you do not recognise, and for nothing else.
+          </li>
+          <li>
+            Our hosting providers keep short-lived request logs, which include IP addresses, to run
+            and debug the service. They are not used to follow what any one person does.
+          </li>
+        </ul>
       </Section>
 
       <Section id="what-we-dont" title="What we do not collect">
         <p>This list is as much the point as the one above it.</p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <b className="font-semibold text-tx">Not your location.</b> The app never asks your
-            device where it is. A check-in is placed by the city you picked, not by GPS.
+            <b className="font-semibold text-tx">Not your device&apos;s location.</b> The app never
+            asks your device where it is: no GPS, no Wi-Fi or cell positioning. A check-in is placed
+            by the city you picked, not by where your phone is.
           </li>
           <li>
             <b className="font-semibold text-tx">Not the location in your photos.</b> Photos are
@@ -179,6 +204,10 @@ export default function PrivacyPage() {
           Your content stays until you delete it. Delete a trip and its contents and photos go with
           it. Revoke a follow link and that address stops working immediately for everyone holding
           it.
+        </p>
+        <p>
+          A signed-in device, with its IP address, is forgotten when you sign out on it, or after
+          90 days without using the app on it, whichever comes first. You then simply sign in again.
         </p>
         <p>
           Deleting your account, from{' '}

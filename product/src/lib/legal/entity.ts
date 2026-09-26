@@ -65,7 +65,7 @@ export const LEGAL = {
    * Shown as "Last updated". Bump it whenever the substance changes — Play
    * reviewers and users both read this as the freshness signal.
    */
-  lastUpdated: '16 September 2026',
+  lastUpdated: '26 September 2026',
 } as const
 
 export function isUnset(value: string): boolean {
