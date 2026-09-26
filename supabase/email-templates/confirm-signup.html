@@ -1,7 +1,7 @@
 <!-- Livhold — CONFIRM SIGNUP. Supabase → Auth → Email Templates → "Confirm signup".
      This is the FIRST email anyone ever receives: signInWithOtp() creates the account,
      so a brand-new address gets this one, never the Magic Link template. -->
-<div style="display:none;font-size:1px;color:#f0eee9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Confirm your email and your journey begins. The link expires in an hour.</div>
+<div style="display:none;font-size:1px;color:#f0eee9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Confirm your email and your journey begins. The link and code expire in an hour.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0eee9;padding:32px 16px;">
   <tr>
     <td align="center">
@@ -24,15 +24,26 @@
               </tr>
             </table>
 
-            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px auto 0;width:100%;">
+            <!-- the code, for the iPhone app (2026-09-26): dashed so it reads as something to
+                 copy, not a second button. The web keeps working from the link as before. -->
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px auto 0;width:100%;">
               <tr>
-                <td style="background-color:#E4EEE6;border-radius:16px;padding:12px 16px;font-size:15px;line-height:1.5;color:#2B3A4A;" align="center">
-                  Next comes a 3-step setup, about a minute.<br />The link works once and expires in an hour.
+                <td align="center" style="border:1.5px dashed #b9c4ba;border-radius:16px;padding:12px 16px;">
+                  <div style="font-size:13px;line-height:1.4;color:#8a938c;">In the Livhold app? Type this code instead</div>
+                  <div style="margin-top:6px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:26px;font-weight:600;letter-spacing:0.14em;color:#1F2A24;">{{ .Token }}</div>
                 </td>
               </tr>
             </table>
 
-            <p style="margin:18px 0 0;font-size:14px;line-height:1.55;color:#8a938c;">Didn&rsquo;t sign up? Ignore this email: no account is created until the link is opened.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px auto 0;width:100%;">
+              <tr>
+                <td style="background-color:#E4EEE6;border-radius:16px;padding:12px 16px;font-size:15px;line-height:1.5;color:#2B3A4A;" align="center">
+                  Next comes a 3-step setup, about a minute.<br />The link and the code each work once and expire in an hour.
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:18px 0 0;font-size:14px;line-height:1.55;color:#8a938c;">Didn&rsquo;t sign up? Ignore this email: no account is created until the link or code is used.</p>
 
             <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#8a938c;">
               Button not working? Copy this link into your browser:<br />

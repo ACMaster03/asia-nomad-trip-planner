@@ -5,10 +5,13 @@ import SwiftUI
 struct Field: View {
     let placeholder: String
     @Binding var text: String
+    /// Dots instead of text — for passwords. Content type and keyboard come from the
+    /// caller (`.textContentType(.password)`), which reach the field through the environment.
+    var isSecure = false
     @FocusState private var focused: Bool
 
     var body: some View {
-        TextField(placeholder, text: $text)
+        input
             .font(.sans(16))
             .foregroundStyle(Palette.tx)
             .tint(Palette.ac)
@@ -27,5 +30,13 @@ struct Field: View {
                     .opacity(focused ? 1 : 0)
             )
             .animation(.easeOut(duration: 0.18), value: focused)
+    }
+
+    @ViewBuilder private var input: some View {
+        if isSecure {
+            SecureField(placeholder, text: $text)
+        } else {
+            TextField(placeholder, text: $text)
+        }
     }
 }

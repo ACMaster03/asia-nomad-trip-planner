@@ -89,7 +89,10 @@ refresh_token_reuse_interval = 10
 # docs written on 2026-09-14 claimed the opposite; they were wrong and are fixed.
 enable_signup = true
 enable_anonymous_sign_ins = false
-enable_manual_linking = false
+# On since 2026-09-26: the iOS app's Account → Sign-in methods attaches an Apple ID to
+# the signed-in account (linkIdentityWithIdToken). Without it, a web traveller who
+# taps "Continue with Apple" behind Hide My Email gets a second, empty account.
+enable_manual_linking = true
 minimum_password_length = 6
 password_requirements = ""
 
@@ -138,6 +141,16 @@ content_path = "./supabase/email-templates/confirm-signup.html"
 [auth.email.template.magic_link]
 subject = "Your Livhold sign-in link"
 content_path = "./supabase/email-templates/magic-link.html"
+
+[auth.external.apple]
+# NATIVE Sign in with Apple only (the iOS app, 2026-09-26). The app gets an
+# identity token from Apple and hands it to signInWithIdToken; Supabase checks
+# that the token's audience is one of these client ids. `secret` is for the web
+# OAuth redirect flow, which is not used, so it stays empty. Adding web Sign in
+# with Apple later needs a Services ID + key and is a separate change.
+enabled = true
+client_id = "com.livhold.app"
+secret = ""
 
 [auth.mfa]
 max_enrolled_factors = 10
