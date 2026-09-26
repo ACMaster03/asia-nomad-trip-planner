@@ -34,12 +34,12 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // An entry typed before round 3 opens with nothing preselected: opening one to
 // fix its amount must not declare anything.
 //
-// The daily-average switch (#36, Patrik, 26 Sep): the category decides, and
-// the form asks only when it matters, so a quick coffee stays one tap
-// shorter. It asks for an amount at least 3× the daily pace (the 90 000 Ft
-// concert ticket in Activities), for gear, insurance & visas and fees, which
-// are out by default, and wherever the entry already says otherwise. Never for
-// stays, transport or subscriptions: the projection adds those on its own.
+// The daily-average switch (#36, Patrik, 26 Sep): the category decides unless
+// the entry says otherwise. It is on every expense typed by hand. #96 showed
+// it only for an amount at least 3× the daily pace; Patrik, the same day: "a
+// flat option, we might have stuff that we buy that's cheap but we don't want
+// it counted". Never for stays, transport or subscriptions: the projection
+// adds those on its own, so counting them in the pace too would count twice.
 // The switch names what differs from the category, so it always starts off:
 // "Exclude from the daily average" for an everyday category, "Include in the
 // daily average" for the other three. No description: Patrik, the label says
@@ -69,7 +69,7 @@ const REPEATS: { id: Repeat; label: string }[] = [
 ]
 
 export function EntrySheet({
-  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose, note, subs = [], pace,
+  initial, ledger, rates, defaultCur, defaultCurWhere, onSave, onDelete, onClose, note, subs = [],
 }: {
   initial: LedgerEntry | null
   ledger: LedgerEntry[]
@@ -86,8 +86,6 @@ export function EntrySheet({
   onClose: () => void
   /** one line right above the save button, for what saving does beyond saving */
   note?: string
-  /** the daily pace without this entry, in base currency: what "big" is measured against */
-  pace?: number | null
 }) {
   const { base, fmt } = useMoney()
   // A booking's row follows the Trip page. A subscription charge the app wrote
@@ -133,9 +131,7 @@ export function EntrySheet({
   const catId = effective ?? DEFAULT_CATEGORY[type]
   const byCategory = isEverydayCategory(catId)
   const counts = everyday ?? byCategory
-  const times = pace && pace > 0 && valid ? toBase(amt, cur, rates) / pace : 0
   const askEveryday = type === 'expense' && !imported && everydaySwitchable(catId)
-    && (everyday !== undefined || !byCategory || times >= 3)
   const everydayLabel = byCategory ? 'Exclude from the daily average' : 'Include in the daily average'
   // Say WHY the box opened on this currency, but only while it is still the
   // app's guess: once it has been changed by hand the note would be a lie.

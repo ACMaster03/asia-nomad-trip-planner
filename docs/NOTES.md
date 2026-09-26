@@ -16,11 +16,16 @@ Pull request #96, the first of Patrik's two decisions below.
   rule, `isEverydayRow`, now decides for the pace (`burnRate` filtered by category alone until
   now), the daily chart, Where it goes and the unlocks. `recap.ts` has no daily rate and is
   unchanged.
-- The entry form shows the switch only when it matters:
+- As first merged (#96), the entry form showed the switch only when it mattered:
   - an amount at least 3× the daily pace, measured without the entry itself;
   - gear, insurance & visas and fees, which are out by default;
   - an entry already set against its category.
   It is stored only where it differs from the category.
+- **A flat option, Patrik's (26 Sep, after #96):** "we might have stuff that we buy that's cheap
+  but we don't want it counted." The switch is now on every expense typed by hand, and the 3×
+  rule is gone. Stays, transport and subscriptions still never get it. Claude's note: one more
+  row on every expense form, off almost every time; the cheap present for someone at home
+  outweighs it. Pull request #97.
 - **The label, Patrik's (26 Sep):** "Exclude from the daily average", off by default, with no
   description: "isn't that more self-explanatory?" Gear, insurance & visas and fees are
   excluded by default, so for them the same switch reads "Include in the daily average", also
