@@ -270,7 +270,7 @@ test('beyondEveryday says out loud what the per-day rate leaves out', () => {
   assert.equal(beyondEveryday([...mLedger, e('ahead', '2026-12-01', 'gear', 500, 'HUF')], rates, today).total, 72_290)
 })
 
-test('a row the plan wrote is never everyday, whatever its category (a paid extra filed under health)', () => {
+test('a row the plan wrote is never everyday, whatever its category (a paid one-off from before #39, under health)', () => {
   const vaccine = e('le-plan-extra-x9', '2026-09-02', 'health', 3000, 'THB', { source: { kind: 'extra', id: 'x9' } })
   const pharmacy = e('h1', '2026-09-02', 'health', 100)
   const rows = [...ledger, vaccine, pharmacy]

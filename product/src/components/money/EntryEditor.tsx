@@ -74,22 +74,7 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
     toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}${change?.kind === 'create' ? ' · now a subscription' : ''}`)
   }
   async function del(entry: LedgerEntry) {
-    const listedExtra = entry.source?.kind === 'extra' ? s.extras.find((x) => x.id === entry.source!.id) : undefined
-    if (listedExtra) {
-      // The paid-on date IS this row (importCosts.ts): clear the date and the
-      // plan sync (usePlanSync) deletes the row — one write, no skip record,
-      // and setting the date again brings the payment back.
-      const ok = await confirm({
-        title: 'Remove this payment?',
-        body: `“${listedExtra.label}” goes back to not paid on the Trip page. Give it a paid-on date again to bring the payment back.`,
-        confirmLabel: 'Remove',
-      })
-      if (!ok) return
-      stateMut.mutate((cur) => ({
-        ...cur,
-        extras: cur.extras.map((x) => (x.id === listedExtra.id ? { ...x, paidOn: undefined } : x)),
-      }))
-    } else if (entry.source?.kind === 'sub') {
+    if (entry.source?.kind === 'sub') {
       // A charge the app wrote (importCosts.ts). The skip record keeps the
       // sync from writing it again; the subscription itself stays.
       const ok = await confirm({
@@ -103,8 +88,10 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
         (cur) => ({ ...cur, importSkip: [...new Set([...(cur.importSkip ?? []), key])] }),
         { onSuccess: () => mut.mutate({ kind: 'delete', id: entry.id }) },
       )
-    } else if (entry.source) {
+    } else if (entry.source && entry.source.kind !== 'extra') {
       // Without the skip record, reconcile would resurrect the row next visit.
+      // (A paid one-off's row from before #39 is a plain entry: nothing
+      // imports it again.)
       const ok = await confirm({
         title: 'Remove this imported cost?',
         body: 'The booking stays on the Trip page, but it won’t be re-imported here.',

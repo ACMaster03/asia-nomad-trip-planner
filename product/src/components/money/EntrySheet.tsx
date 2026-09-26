@@ -93,8 +93,9 @@ export function EntrySheet({
 }) {
   const { base, fmt } = useMoney()
   // A booking's row follows the Trip page. A subscription charge the app wrote
-  // is the ledger's own from then on: its amount and date can be corrected.
-  const imported = !!initial?.source && initial.source.kind !== 'sub'
+  // is the ledger's own from then on: its amount and date can be corrected. A
+  // paid one-off's row from before #39 is a plain entry (importCosts.ts).
+  const imported = !!initial?.source && initial.source.kind !== 'sub' && initial.source.kind !== 'extra'
   const [type, setType] = useState<CategoryKind>(initial?.type ?? 'expense')
   const [name, setName] = useState(initial?.note ?? '')
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '')

@@ -14,7 +14,7 @@ import type { TripState } from '@/lib/trips/types'
 // your pace, the whole stay already paid, then "Together". The per-night
 // comparison that used to close the opened sum (owner review, 2026-09-19) was
 // dropped on 23 Sep: Patrik let it go after Petra found it confusing on the
-// phone. Transport, one-offs and the rest sit behind "How it adds up". The
+// phone. Transport and everything else sit behind "How it adds up". The
 // Add-the-next-stop row is the one forward nudge on the page and points at Trip.
 //
 // This card is a FORECAST, so a drafted stay still shapes it — a price
@@ -130,7 +130,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
           <span>
             <span className="block text-base font-semibold">How it adds up</span>
             <span className="block text-[14px] text-tx2">
-              transport, one-offs{unbooked > 0 && <> · <span className="text-warn">{unbooked} {unbooked === 1 ? 'leg' : 'legs'} to book</span></>}
+              transport, everything else{unbooked > 0 && <> · <span className="text-warn">{unbooked} {unbooked === 1 ? 'leg' : 'legs'} to book</span></>}
             </span>
           </span>
           <ChevronDown aria-hidden className={'mt-1 size-4 flex-none text-tx3 transition-transform duration-[180ms]' + (sum ? ' rotate-180' : '')} />

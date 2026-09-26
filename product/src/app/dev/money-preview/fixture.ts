@@ -26,18 +26,7 @@ export function fixtureTrip(today: string): Trip {
       { id: 't1', type: 'flight', from: 'Budapest', to: 'Bangkok', date: '2026-08-31', cur: 'HUF', price: 248_000, status: 'booked', include: true },
       { id: 't2', type: 'flight', from: 'Bangkok', to: 'Hanoi', date: '2026-09-30', cur: 'USD', price: 0, status: 'idea', include: true },
     ],
-    // One-offs (#39) and the recurring costs from home (#37) — the two cards
-    // that had no data to render before this round.
-    extras: [
-      // paid on the Trip page: the import writes its ledger row (imp-x1 below)
-      { id: 'x1', label: 'Insurance · 2 pax, 6 months', cur: 'HUF', amount: 340_000, category: 'Insurance', include: true, paidOn: '2026-08-12' },
-      { id: 'x2', label: 'Gear · backpacks, adapter, router', cur: 'HUF', amount: 205_000, category: 'gear', include: true },
-      // Petra's case on 23 Sep: insurance and visas share a heading on Money,
-      // and each must still show as its own line under it
-      { id: 'x3', label: 'Visas · TH ext, VN e-visa ×2', cur: 'HUF', amount: 84_000, category: 'Visa', include: true, paidOn: '2026-08-20' },
-      // switched off: listed as not counted, in neither total
-      { id: 'x4', label: 'Anna’s phone', cur: 'HUF', amount: 250_000, category: 'gear', include: false },
-    ],
+    // The recurring costs from home (#37).
     subscriptions: [
       { id: 'sub-icloud', label: 'iCloud 2 TB', cur: 'HUF', amount: 3290, everyMonths: 1, anchor: '2026-08-14' },
       { id: 'sub-spotify', label: 'Spotify Duo', cur: 'HUF', amount: 2490, everyMonths: 1, anchor: '2026-08-17' },
@@ -52,8 +41,9 @@ export function fixtureTrip(today: string): Trip {
   }
   const ledger: LedgerEntry[] = [
     e('imp-st1', '2026-07-09', 'stays', 977.59, 'USD', 'Bangkok - Home in Khet Huai Khwang', { source: { kind: 'stay', id: 'st1' } }),
-    e('le-plan-extra-x1', '2026-08-12', 'insurance', 340_000, 'HUF', 'Insurance · 2 pax, 6 months', { source: { kind: 'extra', id: 'x1' } }),
-    e('le-plan-extra-x3', '2026-08-20', 'insurance', 84_000, 'HUF', 'Visas · TH ext, VN e-visa ×2', { source: { kind: 'extra', id: 'x3' } }),
+    // two paid one-offs, plain entries since #39 (?oneoffs=legacy shows them as they were)
+    e('le-plan-extra-x1', '2026-08-12', 'insurance', 340_000, 'HUF', 'Insurance · 2 pax, 6 months'),
+    e('le-plan-extra-x3', '2026-08-20', 'insurance', 84_000, 'HUF', 'Visas · TH ext, VN e-visa ×2'),
     e('g1', '2026-08-20', 'gear', 64_900, 'HUF', 'Osprey backpack'),
     e('g2', '2026-08-30', 'connectivity', 10.99, 'USD', 'Saily E-sim 10 GB'),
     e('imp-t1', '2026-08-31', 'transport', 248_000, 'HUF', 'flight Budapest → Bangkok', { source: { kind: 'transport', id: 't1' } }),

@@ -433,11 +433,6 @@ export interface MonthOut {
  * catalogue city averages over the nights and summed to a number invented
  * before departure — the last planning figure left on the page after the
  * pre-trip estimate came off the overview (owner decision, 2026-09-19).
- *
- * `state.extras` are NOT here: planned one-offs are undated, they never
- * entered projection.projected either, and inventing a month for a visa fee to
- * land in would be exactly the kind of fiction this rebuild removes. The
- * One-offs card carries them, and the card footnotes what it is not counting.
  */
 // NOT ON ANY SCREEN since 2026-09-20, when the card that read it was cut, and
 // deliberately kept anyway: the test over this function is the tie-out that

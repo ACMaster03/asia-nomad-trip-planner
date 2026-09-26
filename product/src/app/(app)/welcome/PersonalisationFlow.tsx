@@ -428,7 +428,7 @@ export default function PersonalisationFlow() {
                 </button>
               </div>
               <div className="mt-3">
-                <Note lines={['Visa costs|land in Itinerary → Extras as you add them', 'Deadline alerts|cover visa windows automatically']} />
+                <Note lines={['Visa costs|go on Money, under Insurance & visas', 'Deadline alerts|cover visa windows automatically']} />
               </div>
             </div>
           </>
