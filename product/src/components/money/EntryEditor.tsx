@@ -6,6 +6,7 @@ import { sourceKey } from '@/lib/trips/importCosts'
 import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
 import { countryCurrencies } from '@/lib/catalogue/countryCurrencies'
 import { currentStop } from '@/lib/trips/moneyModel'
+import { tripPace } from '@/lib/trips/spending'
 import { categoryLabel } from '@/lib/trips/categories'
 import { toBase } from '@/lib/trips/format'
 import type { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
@@ -43,6 +44,9 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
   const current = currentStop(s, todayIso)
   const lastCur = ledger.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).find((e) => e.type === 'expense')?.currency ?? base
   const hereCodes = countryCurrencies(current?.country)
+  // What "a usual day" is for the daily-average switch (#36): the pace without
+  // this entry, so editing the concert ticket is not measured against itself.
+  const pace = tripPace(s, initial ? ledger.filter((e) => e.id !== initial.id) : ledger, todayIso, current).perDay
   const entryCur = pickEntryCurrency({
     hereCodes,
     watched: Object.keys(s.rates ?? {}),
@@ -137,6 +141,7 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
       onDelete={initial ? del : undefined}
       onClose={onClose}
       note={note}
+      pace={pace}
     />
   )
 }

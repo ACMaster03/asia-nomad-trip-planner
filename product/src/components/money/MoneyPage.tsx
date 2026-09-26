@@ -213,7 +213,7 @@ export default function MoneyPage() {
   // over a figure invented before departure. This one is a ceiling you set.
   const capPct = cap > 0 ? Math.round((projection.spent / cap) * 100) : 0
   const overCap = cap > 0 && projection.spent > cap
-  const beyondNames = beyond.rows.slice(0, 3).map((r) => categoryLabel(r.category).toLowerCase()).join(', ')
+  const beyondNames = beyond.rows.slice(0, 3).map((r) => r.label ?? categoryLabel(r.category).toLowerCase()).join(', ')
 
   function importNow() {
     if (!imp) return

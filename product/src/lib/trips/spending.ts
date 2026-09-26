@@ -1,6 +1,6 @@
 import type { LedgerEntry, Segment, TripState } from './types'
 import { toBase, nightsBetween, stayNights, stayTotal } from './format.ts'
-import { NON_DAILY_CATEGORIES, isEverydayCategory } from './categories.ts'
+import { BOOKING_CATEGORIES, RECURRING_CATEGORY, isEverydayCategory } from './categories.ts'
 import { isBookedStatus, isSettled } from './commitment.ts'
 import type { PerSeg } from './budget'
 
@@ -101,14 +101,14 @@ export function burnRate(
   rates: Record<string, number>,
   from: string,
   to: string,
-  exclude: ReadonlySet<string> = NON_DAILY_CATEGORIES,
 ): BurnRate {
   if (!from || !to || to < from) return { days: 0, total: 0, perDay: 0 }
   const days = nightsBetween(from, to) + 1
-  // Rows the plan wrote (a stay, a fare, a paid extra) are never day-to-day,
-  // whatever category they landed in: a vaccine planned on the Extras list
-  // files under health and would otherwise lift the rate of the week it was paid.
-  const total = dailySpend(ledger.filter((e) => !e.source), rates, { from, to, exclude }).reduce((a, d) => a + d.total, 0)
+  // The same rule as the chart and Where it goes (isEverydayRow): rows the plan
+  // wrote are never day-to-day, and an entry's own switch overrides its
+  // category. Until #36 this filtered by category alone, so a 90 000 Ft
+  // concert ticket in Activities lifted the rate of every night ahead.
+  const total = dailySpend(everydayOnly(ledger), rates, { from, to }).reduce((a, d) => a + d.total, 0)
   return { days, total, perDay: days ? total / days : 0 }
 }
 
@@ -284,8 +284,21 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
 export const nightsSpan = (start: string, iso: string) =>
   iso >= start ? nightsBetween(start, iso) + 1 : -nightsBetween(iso, start) + 1
 
-/** Everyday = an everyday category AND typed by hand; a row the plan wrote is a cost of the whole trip. */
-export const isEverydayRow = (e: LedgerEntry) => !e.source && isEverydayCategory(e.category)
+/**
+ * The categories an entry's own switch can move in or out of the daily average
+ * (#36): not stays, transport or subscriptions. The projection adds those on
+ * their own (planned stays, legs still to pay, subscriptions ahead), so one
+ * counted in the pace as well would be counted twice.
+ */
+export const everydaySwitchable = (category: string) => !BOOKING_CATEGORIES.has(category) && category !== RECURRING_CATEGORY
+
+/**
+ * Everyday = typed by hand, and an everyday category unless the entry says
+ * otherwise (#36): a row the plan wrote is a cost of the whole trip, and a
+ * one-time ticket in Activities can be left out, gear bought weekly counted in.
+ */
+export const isEverydayRow = (e: LedgerEntry) =>
+  !e.source && (everydaySwitchable(e.category) && e.everyday !== undefined ? e.everyday : isEverydayCategory(e.category))
 
 /** Everyday expenses only — the subset every "per day" figure is built from. */
 export const everydayOnly = (ledger: LedgerEntry[]) => ledger.filter(isEverydayRow)
@@ -356,8 +369,11 @@ export function projectFromPlan(
 export interface BeyondEveryday {
   /** settled spend that the per-day rate deliberately leaves out */
   total: number
-  /** the categories it is made of, biggest first */
-  rows: { category: string; amount: number }[]
+  /**
+   * the categories it is made of, biggest first; an entry left out by its own
+   * switch is a row of its own, labelled with its name (#36)
+   */
+  rows: { category: string; amount: number; label?: string }[]
 }
 
 /**
@@ -374,16 +390,20 @@ export interface BeyondEveryday {
 export function beyondEveryday(ledger: LedgerEntry[], rates: Record<string, number>, todayIso: string): BeyondEveryday {
   const settled = ledger.filter((e) => isExpense(e) && isSettled(e.date, todayIso))
   const sum = (rows: LedgerEntry[]) => rows.reduce((a, e) => a + toBase(e.amount, e.currency, rates), 0)
-  const by: Record<string, number> = {}
+  const by = new Map<string, { category: string; amount: number; label?: string }>()
   for (const e of settled) {
     if (isEverydayRow(e)) continue
-    by[e.category] = (by[e.category] ?? 0) + toBase(e.amount, e.currency, rates)
+    // An everyday category left out by the entry's own switch is named by the
+    // entry ("concert tickets"), not as the whole category (#36).
+    const own = e.everyday === false && isEverydayCategory(e.category)
+    const key = own ? `entry:${e.id}` : e.category
+    const row = by.get(key) ?? { category: e.category, amount: 0, ...(own && e.note?.trim() ? { label: e.note.trim() } : {}) }
+    row.amount += toBase(e.amount, e.currency, rates)
+    by.set(key, row)
   }
   return {
     total: sum(settled) - sum(everydayOnly(settled)),
-    rows: Object.entries(by)
-      .map(([category, amount]) => ({ category, amount }))
-      .sort((a, b) => b.amount - a.amount),
+    rows: [...by.values()].sort((a, b) => b.amount - a.amount),
   }
 }
 

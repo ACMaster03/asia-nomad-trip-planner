@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { categoryLabel } from '@/lib/trips/categories'
+import { categoryLabel, isEverydayCategory } from '@/lib/trips/categories'
 import { toBase, monthLabel } from '@/lib/trips/format'
 import { ledgerView } from '@/lib/trips/ledgerView'
 import { searchLedger } from '@/lib/trips/ledgerSearch'
@@ -95,6 +95,9 @@ export function LedgerList({ entries, rates, base, fmt, tripStart, todayIso, can
             {categoryLabel(e.category)}
             {e.source && (e.source.kind === 'extra' ? ' · from Extras' : e.source.kind === 'sub' ? ' · from Subscriptions' : ' · from booking')}
             {sub && ` · ${sub}`}
+            {/* the entry's own daily-average switch, where it differs from its category (#36) */}
+            {e.everyday === false && isEverydayCategory(e.category) && ' · not in daily average'}
+            {e.everyday === true && !isEverydayCategory(e.category) && ' · in daily average'}
             {e.orphaned && <span className="text-warn">{e.source?.kind === 'extra' ? ' · extra removed' : ' · booking removed'}</span>}
           </span>
         </span>
