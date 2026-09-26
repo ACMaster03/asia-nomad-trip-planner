@@ -1,0 +1,4 @@
+# fastlane needs a modern Ruby; macOS ships 2.6, which also wants sudo for gems.
+# Same version the habit tracker's CI uses (ruby/setup-ruby 3.3).
+[tools]
+ruby = "3.3"
