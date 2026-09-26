@@ -52,7 +52,12 @@ if the mark changes.
 
 ## Signing and TestFlight
 
-- Apple team: **Keep Your Habits** (`5325MP6M25`). Bundle id `com.keepyourhabits.livhold`.
+- Apple team: **Keep Your Habits** (`5325MP6M25`). Bundle id `com.livhold.app` — on livhold.com,
+  not the team's domain, so it stays right if the app ever moves to another team.
+- App ID registered with Sign in with Apple, Push Notifications and Associated Domains.
+- Push: the team's APNs auth key `TGF3564T9M` (shared with the habit tracker; the `.p8` is kept
+  outside the repo). Push is sent by a Supabase Edge Function, not Firebase/EAS. TestFlight and
+  App Store builds must use the **production** APNs endpoint, Xcode debug builds the sandbox one.
 - Certificates: the team's fastlane match repo `KeepYourHabits/apple-certificates`, shared
   with the habit tracker. The distribution certificate is reused; match adds Livhold's
   profiles next to the habit app's.
@@ -61,7 +66,5 @@ if the mark changes.
   `MATCH_PASSWORD`, and git access to the match repo.
 
 Not done yet (one-time, by hand):
-1. Register the App ID `com.keepyourhabits.livhold` (with Sign in with Apple + Push) and create
-   the app record in App Store Connect.
+1. The app record in App Store Connect (privacy policy URL: https://www.livhold.com/privacy).
 2. `bundle exec fastlane match appstore` once, non-readonly, to create the profiles.
-3. An APNs auth key (`.p8`) for push, if the team has none yet — it is team-wide.

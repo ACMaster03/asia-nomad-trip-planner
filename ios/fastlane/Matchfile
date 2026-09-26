@@ -4,4 +4,4 @@
 git_url("git@github.com:KeepYourHabits/apple-certificates.git")
 storage_mode("git")
 type("appstore")
-app_identifier(["com.keepyourhabits.livhold"])
+app_identifier(["com.livhold.app"])
