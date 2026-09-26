@@ -31,6 +31,18 @@ Emails or Text Messages · Audio · Gameplay · Customer Support · Browsing His
 Search History · Purchases · Usage Data (product interaction, advertising, other) ·
 Diagnostics (crash, performance, other) · Sensitive Info · Surroundings · Body · Other Data.
 
+## Logs (checked on staging, 2026-09-26)
+
+| Where | What it holds | Label impact |
+|---|---|---|
+| `auth.sessions` (Supabase Auth, built in) | **IP address and user-agent** of every signed-in session. No `timebox`/`inactivity_timeout` in `config.toml`, so a row lives until sign-out or account deletion (staging's oldest: 2026-07-22). | IP is location at city level at best → covered by **Coarse Location**; purpose App Functionality (Apple counts security and fraud prevention there). |
+| `auth.audit_log_entries` | empty — audit events are not written to the database | none |
+| `alert_log`, digest `confirm_sent_at` / `last_sent_at` | what the service sent, to which address, when (dedupe) | none beyond Email Address |
+| Supabase / Vercel platform logs | request logs with IP, short retention, operations only | none (not analysed per user) |
+
+⚠ **`/privacy` does not mention IP addresses, sessions or logs at all.** Under GDPR an IP
+address is personal data, so the policy needs a line on it regardless of the store labels.
+
 ## What would make these answers false on iOS
 
 - **Location.** The iOS app must not use CoreLocation, and **photo upload must re-encode the
