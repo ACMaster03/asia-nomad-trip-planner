@@ -5,6 +5,31 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-26
+
+### FIXED — Money reloaded itself on the iPhone app (25 Sep)
+
+Patrik and Petra, 25 Sep: on the iPhone app, Money flashed and reloaded by itself about ten
+times, then settled. No banner, no charge notice. Production logs show it from 10:08:25 to
+10:09:47 UTC: every link on Money requested again about every 3 seconds. No deploy was near it.
+
+**Cause.** The plan sync (`usePlanSync`) runs every time the trip document changes. With
+several automatic writes due at once, they queue one behind another; each finished write
+refetches the trip, and that document lacks the writes still queued, so the sync queued them
+again. Replayed with the real query library, 13 due writes grew to about 440 queued; the page
+re-renders for each, and iOS restarts a page that stops responding. It settled once the queue
+drained, which is why it "passed".
+
+**Fix.** Writes already queued are skipped (`lib/trips/ledgerOps.ts`, `notPending`). The same
+replay now writes each of the 13 once. Tests in `ledgerOps.test.ts`.
+
+**Data.** Every repeated write carried the same entry under the same id, so it replaced a row
+with itself: no duplicates, and entries typed by hand are untouched. The one exposure is an
+automatic row (a booking, a one-off with a paid-on date, a subscription charge) edited or
+deleted during those 90 seconds: a stale queued write could put it back.
+
+---
+
 ## 2026-09-24
 
 ### BUILT — Money stage 2, round 3b: the one-time offer (mock 16 §8)
