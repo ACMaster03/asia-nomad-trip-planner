@@ -44,6 +44,18 @@ export const fmtUSD = (n: number) => '$' + Math.round(Number(n) || 0)
 // Convert an amount in `cur` into the trip's BASE currency. rates are
 // base-per-unit (useTripScreen merges them from fx_rates), so this is already
 // base-correct — only the name used to say HUF.
+/**
+ * An amount as typed. In a region like Hungary the iPhone's decimal key types a
+ * comma, and a type="number" field threw "12,5" away (Patrik, 26 Sep), so the
+ * money fields are text fields that open the decimal pad and are read here:
+ * either separator, spaces ignored. NaN for anything else, so the form can
+ * refuse it instead of saving a guess.
+ */
+export function parseAmount(raw: string): number {
+  const s = raw.replace(/[\s\u00a0\u202f]/g, '').replace(',', '.')
+  return s === '' || !/^\d*\.?\d*$/.test(s) ? NaN : Number(s)
+}
+
 export const toBase = (amt: number, cur: string, rates: Record<string, number>) =>
   (Number(amt) || 0) * (rates[cur] || 0)
 

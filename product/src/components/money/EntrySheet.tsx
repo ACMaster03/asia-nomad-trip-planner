@@ -4,7 +4,7 @@ import { CalendarDays, ChevronDown, Info } from 'lucide-react'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { CategoryPicker } from './CategoryPicker'
 import { useMoney } from '@/lib/trips/Money'
-import { toBase } from '@/lib/trips/format'
+import { parseAmount, toBase } from '@/lib/trips/format'
 import { addDays, everydaySwitchable } from '@/lib/trips/spending'
 import {
   categoriesFor, isEverydayCategory,
@@ -127,7 +127,7 @@ export function EntrySheet({
     return row.slice(0, 6)
   }, [ledger, type, effective])
   const currencies = Object.keys(rates)
-  const amt = parseFloat(amount)
+  const amt = parseAmount(amount)
   const valid = isFinite(amt) && amt > 0
   const preview = valid && cur !== base ? fmt(toBase(amt, cur, rates)) : null
 
@@ -229,10 +229,9 @@ export function EntrySheet({
           <input
             aria-label="Amount"
             className={box + ' text-[24px] font-semibold'}
-            type="number"
+            type="text"
             inputMode="decimal"
-            min="0"
-            step="any"
+            autoComplete="off"
             placeholder="0"
             disabled={imported}
             value={amount}
