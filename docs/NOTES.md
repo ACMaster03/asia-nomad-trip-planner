@@ -7,6 +7,39 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-26 (3)
 
+### BUILT — an entry's own switch for the daily average (#36)
+
+Pull request #96, the first of Patrik's two decisions below.
+
+**What changed.**
+- `LedgerEntry.everyday?: boolean`. When it is unset, the category decides, as before. One
+  rule, `isEverydayRow`, now decides for the pace (`burnRate` filtered by category alone until
+  now), the daily chart, Where it goes and the unlocks. `recap.ts` has no daily rate and is
+  unchanged.
+- The entry form shows "Counts in the daily average" only when it matters:
+  - an amount at least 3× the daily pace, measured without the entry itself ("About 19× a
+    usual day. Switch it off for a one-time cost, like a ticket for a show. It still counts as
+    spent.");
+  - gear, insurance & visas and fees, which are out by default;
+  - an entry already set against its category.
+  It is stored only where it differs from the category.
+- **Never for stays, transport or subscriptions**, a refinement of the agreed design. The
+  projection adds planned stays, legs still to pay and subscriptions ahead on its own, so one
+  counted in the pace as well would be counted twice.
+- A left-out entry still counts as spent. In "beyond the everyday" it is a row of its own,
+  named by the entry. In All entries it says "· not in daily average".
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); `next build`.
+- 152 node tests, two new in `spending.test.ts`.
+- In the dev preview:
+  - a 300 Ft coffee and Stays get no switch; Gear gets it, off;
+  - the 90 000 Ft ticket gets it, on, with "About 19×", and saves `everyday: false` when off;
+  - left on, the practice ticket takes the per-day rate from 4778 to 8239 Ft and the projection
+    from 2 572 132 to 2 928 670 Ft. Switched off, the per-day rate stays at 4778 Ft and the
+    projection rises only by the ticket's 90 000 Ft.
+- The practice data now carries the ticket, left out.
+
 ### DECIDED — Patrik, 26 Sep: a daily-average switch per entry, then One-offs goes
 
 Patrik, catching up after Petra's round 3: One-offs "is basically a category that doesn't need
@@ -15,9 +48,10 @@ to exist". Then: "what about the 90,000 concert ticket that was marked as an act
 
 - **The per-entry switch (#36), reversing the 19 Sep "not building this".** The per-day pace is
   the current stop's everyday average once three days are behind it (`tripPace`). Every remaining
-  night of the trip is multiplied by it. So the ticket still inflates the projection: by an
-  estimated 3 600 Ft a day over about 216 nights, roughly 780 000 Ft today, and about 7 M Ft on
-  3 Sep. A category cannot tell a one-time ticket from a weekly concert habit (Patrik: "maybe
+  planned night, in every stop on the plan, is multiplied by it. So the ticket still inflates the
+  projection: by about 3 600 Ft a day over the planned nights ahead. That is roughly 780 000 Ft
+  if Asia's stops run to 30 April, and it was far more on 3 Sep. (Claude first said "every night
+  of the trip"; corrected on #36.) A category cannot tell a one-time ticket from a weekly concert habit (Patrik: "maybe
   somebody is going on concerts regularly"), so the choice is per entry.
   - **Counts in the daily average** is set per entry. Its default comes from the category, as
     today: stays, transport, gear, insurance & visas, fees and subscriptions are out, and the

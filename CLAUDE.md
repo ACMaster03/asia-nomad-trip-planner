@@ -56,9 +56,11 @@ Petra is new to software work; Patrik is not. The product conventions are in
 - Decided by Patrik on 26 Sep, in this order: (1) a per-entry "Counts in
   the daily average" switch (#36, reversing its 19 Sep "not building
   this"): the category decides by default, the entry form shows the
-  switch for an amount at least 3× the daily pace or a category that is
-  out by default; (2) then One-offs and planned one-offs (`state.extras`)
-  are removed (#39): paid ones stay as plain entries, unpaid ones go.
+  switch for an amount at least 3× the daily pace or for gear, insurance
+  & visas and fees (never stays, transport or subscriptions, which the
+  projection adds on its own). It is #96. (2) Then One-offs and planned
+  one-offs (`state.extras`) are removed (#39): paid ones stay as plain
+  entries, unpaid ones go.
 - Patrik fixed the Money reload loop of 25 Sep in another session
   (#93–#95, 26 Sep): the plan sync skips writes already queued, and a
   refetch no longer lands over writes still queued.
