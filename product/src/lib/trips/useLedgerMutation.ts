@@ -5,13 +5,13 @@ import { ledgerUpsertEntry, ledgerDeleteEntry, isPermissionDenied } from './quer
 import { shouldRetryWrite, writeRetryDelay, withFreshSession } from './writeRetry'
 import { tk } from './keys'
 import { useTripScope } from './TripScope'
-import type { Ledger, LedgerEntry, Trip } from './types'
+import { LEDGER_SCOPE, type LedgerOp } from './ledgerOps'
+import type { Ledger, Trip } from './types'
 
-// A ledger mutation is a single-entry operation, mirrored 1:1 by the merge RPCs
-// (migration 06): upsert replaces/appends ONE entry by id, delete removes ONE.
-// Whole-array writes are gone, so two devices editing money at the same time can
-// no longer wipe each other's entries.
-export type LedgerOp = { kind: 'upsert'; entry: LedgerEntry } | { kind: 'delete'; id: string }
+// A ledger mutation is a single-entry operation (ledgerOps.ts). Whole-array
+// writes are gone, so two devices editing money at the same time can no longer
+// wipe each other's entries.
+export type { LedgerOp }
 
 // Same op applied locally for the optimistic cache update.
 function applyOp(ledger: Ledger, op: LedgerOp): Ledger {
@@ -28,7 +28,7 @@ export function useLedgerMutation() {
   const { tripId } = useTripScope()
   const key = tk.trip(tripId ?? 'none')
   return useMutation({
-    scope: { id: 'ledger-write' },
+    scope: { id: LEDGER_SCOPE },
     // Transient failures (a connection iOS tore down while the app slept, a
     // token that expired in the background) retry before the banner shows.
     retry: shouldRetryWrite,
