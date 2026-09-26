@@ -39,9 +39,16 @@ of them is stale. Token names are the CSS names: `--ac2Soft` is `Palette.ac2Soft
 
 ### Fonts
 
-Lora (headings) and Work Sans (everything else) are open-licence (OFL). Drop the variable
-`.ttf` files into `ios/Livhold/Fonts/` and they are registered at launch — no Info.plist edit.
-Until then the app falls back to New York / SF Pro and the gallery shows a notice.
+Lora (headings) and Work Sans (everything else), the variable `.ttf` files from
+`google/fonts`, live in `ios/Livhold/Fonts/` with their OFL licences. Every font file in the
+bundle is registered at launch — no Info.plist edit. If one is missing the app falls back to
+New York / SF Pro and the gallery says so.
+
+### App icon
+
+Built from `product/public/brand/livhold-mark.png` by `tools/ios-app-icon.swift`: light (paper
+background), dark (transparent — iOS draws the dark backdrop) and tinted (greyscale). Re-run it
+if the mark changes.
 
 ## Signing and TestFlight
 

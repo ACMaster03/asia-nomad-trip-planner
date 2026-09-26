@@ -32,18 +32,19 @@ extension Font {
         return .system(size: size, weight: weight, design: .serif)
     }
 
-    /// Work Sans — body, controls, labels.
+    /// Work Sans — body, controls, labels. Figures tabular, as on the web.
+    /// Only here: `monospacedDigit` on Lora also widens its word spaces.
     static func sans(_ size: CGFloat = 16, weight: Font.Weight = .regular, relativeTo style: Font.TextStyle = .body) -> Font {
         if Typography.isAvailable(FontFamily.sans) {
-            return .custom(FontFamily.sans, size: size, relativeTo: style).weight(weight)
+            return .custom(FontFamily.sans, size: size, relativeTo: style).weight(weight).monospacedDigit()
         }
-        return .system(size: size, weight: weight)
+        return .system(size: size, weight: weight).monospacedDigit()
     }
 }
 
 extension View {
     /// Body defaults, mirroring `body { font-family: sans; font-variant-numeric: tabular-nums }`.
     func livholdText() -> some View {
-        font(.sans()).monospacedDigit().foregroundStyle(Palette.tx)
+        font(.sans()).foregroundStyle(Palette.tx)
     }
 }
