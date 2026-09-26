@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { useMoney } from '@/lib/trips/Money'
-import { nightsBetween, toBase } from '@/lib/trips/format'
+import { nightsBetween, parseAmount, toBase } from '@/lib/trips/format'
 import { addDays, stateOf, stayRange, type NightRange } from '@/lib/trips/timeline'
 import type { Segment, Stay } from '@/lib/trips/types'
 import { Chips, StateChips, Toggle, addLink, chipCls, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
@@ -60,7 +60,7 @@ export function StaySheet({
   const [count, setCount] = useState(!legacyUncounted)
 
   const nights = nightsBetween(checkIn, checkOut)
-  const price = Number(ppn) || 0
+  const price = parseAmount(ppn) || 0
   const perNight = toBase(price, cur, rates)
   const remindRow = state === 'booked' && !!cancelUntil && !noFreeCancel
 
@@ -124,7 +124,7 @@ export function StaySheet({
         <div className="grid grid-cols-[1fr_96px] gap-3">
           <label className={label}>
             Per night
-            <input type="number" inputMode="decimal" step="any" min="0" className={input + ' text-[22px] font-semibold'} placeholder="0" value={ppn} onChange={(e) => setPpn(e.target.value)} />
+            <input type="text" inputMode="decimal" autoComplete="off" className={input + ' text-[22px] font-semibold'} placeholder="0" value={ppn} onChange={(e) => setPpn(e.target.value)} />
           </label>
           <label className={label}>
             Currency

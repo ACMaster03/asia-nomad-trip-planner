@@ -32,8 +32,20 @@ Pull request #96, the first of Patrik's two decisions below.
     phone's own picker under it. It stays readable, which is why it was a full field: logging
     yesterday's dinner the next morning is the normal case.
   - The empty form went from about 790 to 596 px, so it fits a phone screen without scrolling.
-  - The keyboard itself is not fixed yet: the iOS behaviour cannot be reproduced in the dev
-    preview. Asked Patrik what exactly it does.
+  - The keyboard itself was not changed: the iOS behaviour cannot be reproduced in the dev
+    preview.
+  - **Live with #97** (Patrik's go, 26 Sep; production build READY). His test on the iPhone the
+    same day: the date pill opens the phone's date wheel, "the keyboard seems fine" with the
+    new layout, the switch works, and the title switches to income. The concert ticket had
+    already been excluded, so there are no before and after numbers.
+- **Decimal amounts on the iPhone (Patrik, 26 Sep, after #97):** "we can't enter fractionals …
+  the iOS number pad has a decimal column but the input doesn't accept it." Likely cause, since
+  the iPhone keypad cannot be reproduced here: in a Hungarian region the decimal key types a
+  comma, and a `type="number"` field treats "12,5" as invalid. The money fields (entry,
+  subscription, stay price, leg price and hours) are now text fields that open the same
+  decimal pad and are read by `parseAmount` (`format.ts`): a comma or a dot, spaces ignored,
+  anything else refused rather than guessed. The extras form goes with the One-offs removal and
+  was left alone. Pull request #98.
 - **A flat option, Patrik's (26 Sep, after #96):** "we might have stuff that we buy that's cheap
   but we don't want it counted." The switch is now on every expense typed by hand, and the 3×
   rule is gone. Stays, transport and subscriptions still never get it. Claude's note: one more

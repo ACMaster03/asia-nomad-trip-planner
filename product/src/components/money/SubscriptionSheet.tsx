@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { useMoney } from '@/lib/trips/Money'
-import { toBase } from '@/lib/trips/format'
+import { parseAmount, toBase } from '@/lib/trips/format'
 import { dayDiff } from '@/lib/trips/reminders'
 import { LEAD_CHOICES, cadenceLabel, chargesBetween, leadLabel, nextCharge, ordinalDay, shiftMonths } from '@/lib/trips/subscriptions'
 import type { Subscription } from '@/lib/trips/types'
@@ -53,7 +53,7 @@ export function SubscriptionSheet({ initial, rates, todayIso, onSave, onDelete, 
   const [cancelledOn, setCancelledOn] = useState(initial?.cancelledOn ?? null)
 
   const currencies = Object.keys(rates)
-  const amt = parseFloat(amount)
+  const amt = parseAmount(amount)
   const valid = isFinite(amt) && amt > 0 && !!anchor && !!name.trim()
   const cancelled = !!cancelledOn
 
@@ -111,10 +111,9 @@ export function SubscriptionSheet({ initial, rates, todayIso, onSave, onDelete, 
           <input
             aria-label="Amount"
             className={box + ' text-[24px] font-semibold'}
-            type="number"
+            type="text"
             inputMode="decimal"
-            min="0"
-            step="any"
+            autoComplete="off"
             placeholder="0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
