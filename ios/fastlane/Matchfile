@@ -1,7 +1,9 @@
 # The Keep Your Habits team's match repo, shared with the habit tracker. The
 # distribution certificate is team-wide and reused; match adds Livhold's own
 # provisioning profiles next to the habit app's.
-git_url("git@github.com:KeepYourHabits/apple-certificates.git")
+# HTTPS, not SSH: this Mac reaches GitHub over HTTPS only (ios/README.md), and
+# the beta lane reads this file, so an SSH URL here fails before the build.
+git_url("https://github.com/KeepYourHabits/apple-certificates.git")
 storage_mode("git")
 type("appstore")
 app_identifier(["com.livhold.app"])
