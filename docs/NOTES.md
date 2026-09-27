@@ -7,6 +7,28 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-27
 
+### DECIDED — Patrik, 27 Sep: Money on iOS (from mock round 1, artifact MWKt6NpVmvgHHpURmgpRMF)
+
+- **Tracking moves to Settings → Money** (switch, budget cap, base currency, rates). The page no
+  longer carries the switch or the **Budget cap row**; the cap is reached from the top card's bar.
+  The first-visit question stays (asked once, `profiles.track_spending`); off by default shows the
+  committed money plus an invitation at the bottom. Invitation copy stays generic.
+- **Kept as the web has it:** Latest (the door to the ledger), Daily spend (7/14/30/90, stacked by
+  family, average line, tap a bar), Where it goes (donut, sentence, table, everyday total), Plan by
+  stop with each row opening to its sum, plus an ⓘ explainer. Mauve card titles return.
+- **Top card:** large amounts rounded (1.33 M Ft); the bar carries no text of its own; "beyond the
+  everyday" becomes one line that opens All entries filtered. Which layout is open (mock round 2
+  shows four: A spent leads, B sentence, C ring, D today first).
+- **Every category gets its own colour**, a shade inside its family, on a solid icon tile.
+- **All entries** as mocked (filters, Coming up, swipe actions incl. Log again, source badges),
+  opened with a zoom and kept on the phone so it opens instantly.
+- Over-cap wording as a daily amount, amber, never red.
+- **Swift now:** Swift Charts, rolling numbers, swipe actions, pull to search. **Later:** quick add
+  and widget (#112), receipt scanning with line items (#110). Open questions as issues, not
+  blockers: count the days after the last planned stop (#111), an in & out card (#113).
+- The add-expense sheet is redrawn in round 2 (big amount, currency menu, top-4 category tiles,
+  system number pad).
+
 ### DECIDED — Patrik, 27 Sep: editing the Trip on iOS, and the rows after the last stop
 
 From the mock "Trip editing on iOS" (artifact QdrtgiADdvE6LbFALdaoZS), approved from his phone.
