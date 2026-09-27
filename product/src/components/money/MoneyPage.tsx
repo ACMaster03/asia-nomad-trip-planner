@@ -27,7 +27,6 @@ import { WhereItGoes } from './WhereItGoes'
 import { BookingsCard } from './BookingsCard'
 import { SubscriptionsCard } from './SubscriptionsCard'
 import { SubscriptionSheet } from './SubscriptionSheet'
-import { OneOffsCard } from './OneOffsCard'
 import { LatestStrip } from './LatestStrip'
 import { PlanCard } from './PlanCard'
 import { EntryEditor } from './EntryEditor'
@@ -46,7 +45,7 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 //
 // Order is tense: what we spent, then what is coming, then the receipts.
 //   overview → latest → daily spend → where it goes → bookings →
-//   subscriptions → one-offs → plan by stop → budget cap → ledger
+//   subscriptions → plan by stop → budget cap → ledger
 //
 // Stage 1 of mock 16 (2026-09-23, Petra's rounds): the page gets calmer
 // before it gets quieter. The Latest strip and a save toast, the budget line
@@ -69,6 +68,12 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // switch with 14; Where it goes with 3 colour families; the projected total and
 // the Plan with 7 days of pace. Until then the last line says what is coming.
 // Once a card has appeared it stays (lib/trips/unlocks.ts).
+//
+// One-offs & extras is gone (#39, Patrik, 26 Sep), with the planned list
+// behind it: "unnecessary complexity... for a travel app". A visa or a
+// backpack is an entry like any other, out of the daily average by its
+// category or by its own switch (#36). The plan sync turned the paid ones into
+// plain entries and deleted the list (usePlanSync).
 //
 // A ninth card sat between the plan and the cap and is gone (2026-09-20). It
 // answered "what do we need to earn a month", first as projected outflow in
@@ -113,17 +118,16 @@ export default function MoneyPage() {
   const track = useTrackSpending()
   const setTrack = useSetTrackSpending()
   const [questionClosed, setQuestionClosed] = useState(() => questionClosedThisVisit)
-  // Step 2 of a shorter Money (Petra, 24 Sep): three cards start as one line.
+  // Step 2 of a shorter Money (Petra, 24 Sep): the cards start as one line.
   const [bookingsOpen, toggleBookings] = useFold('bookings')
   const [subsOpen, toggleSubs] = useFold('subscriptions')
-  const [oneOffsOpen, toggleOneOffs] = useFold('one-offs')
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
   const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
   const [range, setRange] = useState<Range>(14)
   const [end, setEnd] = useState<string | null>(null)
 
-  // Plan → ledger sync, shared with All entries (usePlanSync).
+  // Plan → ledger sync, shared with All entries and Home (usePlanSync).
   const imp = usePlanSync(trip.data, canEdit, mut)
 
   const model = useMemo(
@@ -364,7 +368,7 @@ export default function MoneyPage() {
           <div className="mt-3.5 rounded-[var(--rCtl)] bg-inp px-3.5 py-3">
             <div className="text-base font-semibold">+ {fmt(beyond.total)} beyond the everyday</div>
             <div className="mt-0.5 text-[13px] text-tx2">
-              {beyondNames ? beyondNames[0].toUpperCase() + beyondNames.slice(1) + '. ' : ''}Counted below, not in the per-day rate.
+              {beyondNames ? beyondNames[0].toUpperCase() + beyondNames.slice(1) + '. ' : ''}Counted in Spent so far, not in the per-day rate.
             </div>
           </div>
         )}
@@ -384,7 +388,7 @@ export default function MoneyPage() {
       {canEdit && imp && imp.candidates.length > 0 && s.autoImport === false && (
         <div className={'lv-enter rounded-[var(--r)] bg-sf p-4 ' + wide}>
           <div className="text-base font-semibold">Import {imp.candidates.length} cost{imp.candidates.length > 1 ? 's' : ''} from the Trip page?</div>
-          <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date, and extras with a paid-on date, can be added to All entries and kept in sync with the Trip page.</p>
+          <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date can be added to All entries and kept in sync with the Trip page.</p>
           <button onClick={importNow} disabled={mut.isPending} className="mt-3 rounded-[var(--rCtl)] bg-ac px-[18px] py-2.5 text-base font-semibold text-on disabled:opacity-50">
             Import and keep importing
           </button>
@@ -403,7 +407,7 @@ export default function MoneyPage() {
         <PlanCard plan={plan} transport={bookings.transport} projection={projection} state={s} fmt={fmt} todayIso={today} unbooked={bookings.unbooked} paceKnown={pace.perDay !== null} />
       )}
       {/* Below the big cards, one group of one-line rows (Petra, 24 Sep): the
-          three that open in place (⌄), then the two that go elsewhere (›),
+          two that open in place (⌄), then the two that go elsewhere (›),
           All entries and, last, the Budget cap. */}
       <BookingsCard
         stays={bookings.stays} transport={bookings.transport}
@@ -418,7 +422,6 @@ export default function MoneyPage() {
         onEdit={(sub) => setSubSheet({ sub })}
         onToggleRemind={toggleRemind} folded={!subsOpen} onToggle={toggleSubs}
       />
-      <OneOffsCard state={s} ledger={ledger} fmt={fmt} todayIso={today} folded={!oneOffsOpen} onToggle={toggleOneOffs} />
       {/* The ledger is a screen of its own, All entries (Petra, 23 Sep; the
           name is hers, Patrik wanted a plainer word than ledger): as the last
           card it was over a third of this page (#38). One row here, and

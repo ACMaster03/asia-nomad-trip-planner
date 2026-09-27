@@ -2,10 +2,10 @@
 import { useState, type ReactNode } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
-// Folded cards: step 2 of a shorter Money (Petra, 24 Sep). Bookings,
-// Subscriptions and One-offs & extras show as one line each: a title, a
-// summary that carries anything needing attention (a stay not booked, a charge
-// due this week, an extra not paid), and ⌄. Tapped, the full card opens in
+// Folded cards: step 2 of a shorter Money (Petra, 24 Sep). Bookings and
+// Subscriptions show as one line each (One-offs & extras was the third, until
+// #39): a title, a summary that carries anything needing attention (a stay not
+// booked, a charge due this week), and ⌄. Tapped, the full card opens in
 // place with ⌃ at its top to fold it again. ⌄ opens here, › goes to another
 // screen, so the two never look alike.
 //

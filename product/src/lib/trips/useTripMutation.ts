@@ -10,7 +10,7 @@ import type { TripState, Trip } from './types'
 
 type StateUpdater = (cur: TripState) => TripState
 
-// Generic editor for the trip `state` document (segments/stays/transport/extras/
+// Generic editor for the trip `state` document (segments/stays/transport/subscriptions/
 // meta/rates). Applies an updater against the freshest cached state, persists ONLY
 // the state column, optimistically updates, and serializes writes so rapid edits
 // can't clobber each other. Mirrors useLedgerMutation.

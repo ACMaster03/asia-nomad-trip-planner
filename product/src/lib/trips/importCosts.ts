@@ -1,11 +1,10 @@
-import type { Extra, LedgerEntry, Stay, TransportLeg, TripState } from './types'
+import type { LedgerEntry, Stay, TransportLeg, TripState } from './types'
 // Straight from format.ts, not the budget.ts re-export: budget.ts pulls in the
 // catalogue path aliases, which the node tests cannot resolve.
 import { stayTotal } from './format.ts'
 import { isBookedStatus } from './commitment.ts'
-import { extraCategoryId, isPaidExtra } from './extras.ts'
 import { chargesBetween, sameName } from './subscriptions.ts'
-import { RECURRING_CATEGORY } from './categories.ts'
+import { RECURRING_CATEGORY, isEverydayCategory } from './categories.ts'
 
 // === Auto-import planned costs into the ledger (mock 04, ledger states) ===
 //
@@ -15,10 +14,10 @@ import { RECURRING_CATEGORY } from './categories.ts'
 // chargeDate when set, else the travel date — fares are committed money once
 // booked). A draft (idea/shortlist) never imports: nothing has been charged.
 //
-// An EXTRA (the one-offs list: visas, insurance, gear) imports the moment it
-// has a paid-on date (2026-09-23, Petra's finding: a one-off had to be typed
-// twice, once as a plan and once as a payment). The tick on the extra is about
-// the forecast only; a date is a fact about money, so it imports ticked or not.
+// The planned one-offs (extras: visas, insurance, gear) used to import here
+// the moment they had a paid-on date. They were removed with the One-offs card
+// (#39, Patrik, 26 Sep: "unnecessary complexity... for a travel app"). The
+// row a paid one-off wrote becomes a plain entry, once (see plainFromExtra).
 //
 // The date matters beyond ordering: the Money page reads rows dated after
 // today as SCHEDULED rather than spent, so a fare paid months in advance
@@ -27,11 +26,7 @@ import { RECURRING_CATEGORY } from './categories.ts'
 // Imported entries carry `source` ("⤵ from plan" badge) and keep syncing:
 // amount/date/currency/note follow the plan until the booking disappears, at
 // which point the row STAYS and is flagged `orphaned` (decided in the gap
-// review — money already spent doesn't vanish from the books). An extra's row
-// is the one exception: while the extra itself is still on the list, clearing
-// its paid-on date means "not paid after all", and the row is REMOVED rather
-// than flagged — a flagged row would keep the money in "spent". Delete the
-// extra altogether and its row stays flagged like a booking's.
+// review — money already spent doesn't vanish from the books).
 //
 // A SUBSCRIPTION CHARGE (Patrik, 24 Sep, #37: "the way booked stays are")
 // lands on its charge date once that date has come, never before: a future
@@ -39,7 +34,7 @@ import { RECURRING_CATEGORY } from './categories.ts'
 // row is written once and then belongs to the ledger: a price change on the
 // subscription does not rewrite last month, and a deleted or cancelled
 // subscription leaves its charges where they are. So these rows never take
-// part in the updates, orphan flags or removals below. Each one is announced
+// part in the updates or orphan flags below. Each one is announced
 // until tapped (ChargeNotice.tsx, Petra's safeguard: "Cancelled it?").
 // Nothing is written where a charge is already logged: an entry linked to the
 // subscription, or one with its name in the Subscriptions category, within
@@ -111,16 +106,18 @@ function transportCandidate(t: TransportLeg): Candidate | null {
   }
 }
 
-function extraCandidate(x: Extra): Candidate | null {
-  if (!isPaidExtra(x)) return null
-  return {
-    source: { kind: 'extra', id: x.id },
-    date: x.paidOn!,
-    category: extraCategoryId(x.category),
-    amount: cents(x.amount),
-    currency: x.cur,
-    note: x.label,
-  }
+/**
+ * A paid one-off's row, from before #39, as the entry it now is: typed by hand
+ * as far as the app is concerned, and still out of the daily average, as it
+ * always was. Gear, insurance & visas and fees are out by category; anything
+ * filed under an everyday category (a vaccine under Health, an eSIM) says so
+ * itself (#36). "extra removed" goes with the source: the payment happened.
+ */
+export function plainFromExtra(e: LedgerEntry): LedgerEntry {
+  const plain: LedgerEntry = { ...e, ...(isEverydayCategory(e.category) ? { everyday: false } : {}) }
+  delete plain.source
+  delete plain.orphaned
+  return plain
 }
 
 function toEntry(c: Candidate, id: string): LedgerEntry {
@@ -139,12 +136,13 @@ function toEntry(c: Candidate, id: string): LedgerEntry {
 export interface ImportPlan {
   /** bookings not yet in the ledger (and not skipped) — the import card's N */
   candidates: LedgerEntry[]
-  /** already-imported rows whose booking changed — bring them in line */
+  /**
+   * already-imported rows whose booking changed — bring them in line; and a
+   * paid one-off's row from before #39, as a plain entry (plainFromExtra)
+   */
   updates: LedgerEntry[]
   /** already-imported rows whose booking is gone — flag, never delete */
   orphans: LedgerEntry[]
-  /** an extra's row whose paid-on date was cleared while the extra is still listed — delete */
-  removals: LedgerEntry[]
   /** subscription charges whose date has come and that nothing covers yet — add */
   subCharges: LedgerEntry[]
 }
@@ -195,20 +193,19 @@ export function planImports(state: TripState, ledger: LedgerEntry[], todayIso = 
     const c = transportCandidate(t)
     if (c) wanted.set(sourceKey(c.source), c)
   }
-  for (const x of state.extras ?? []) {
-    const c = extraCandidate(x)
-    if (c) wanted.set(sourceKey(c.source), c)
-  }
 
   const skip = new Set(state.importSkip ?? [])
   const candidates: LedgerEntry[] = []
   const updates: LedgerEntry[] = []
   const orphans: LedgerEntry[] = []
-  const removals: LedgerEntry[] = []
 
-  // Subscription charges are written once and left alone (see the header).
+  // Subscription charges are written once and left alone (see the header). A
+  // paid one-off's row is no booking any more: it becomes a plain entry, once.
   const imported = new Map<string, LedgerEntry>()
-  for (const e of ledger) if (e.source && e.source.kind !== 'sub') imported.set(sourceKey(e.source), e)
+  for (const e of ledger) {
+    if (e.source?.kind === 'extra') updates.push(plainFromExtra(e))
+    else if (e.source && e.source.kind !== 'sub') imported.set(sourceKey(e.source), e)
+  }
 
   for (const [key, c] of wanted) {
     const existing = imported.get(key)
@@ -231,12 +228,10 @@ export function planImports(state: TripState, ledger: LedgerEntry[], todayIso = 
     }
   }
 
-  const listedExtras = new Set((state.extras ?? []).map((x) => x.id))
   for (const [key, e] of imported) {
     if (wanted.has(key)) continue
-    if (e.source!.kind === 'extra' && listedExtras.has(e.source!.id)) removals.push(e)
-    else if (!e.orphaned) orphans.push({ ...e, orphaned: true })
+    if (!e.orphaned) orphans.push({ ...e, orphaned: true })
   }
 
-  return { candidates, updates, orphans, removals, subCharges: subChargesDue(state, ledger, todayIso) }
+  return { candidates, updates, orphans, subCharges: subChargesDue(state, ledger, todayIso) }
 }

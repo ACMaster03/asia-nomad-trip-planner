@@ -114,22 +114,19 @@ export const categoryLabel = (id: string): string => byId.get(id)?.label ?? id
 export const categoriesFor = (kind: CategoryKind): readonly CategoryDef[] =>
   CATEGORIES.filter((c) => c.kind === kind)
 
-// Categories that are not day-to-day living: bookings and one-offs (gear,
-// insurance, the monthly subscriptions from home, bank fees). The
+// Categories that are not day-to-day living: bookings, the monthly
+// subscriptions from home, and costs of the whole trip (gear, insurance and
+// visas, bank fees). The
 // spending analytics exclude them when measuring a daily burn rate, because a
 // 248 000 Ft flight on 31 Aug says nothing about what a day in Bangkok costs.
 export const NON_DAILY_CATEGORIES: ReadonlySet<string> = new Set(['stays', 'transport', 'gear', 'insurance', 'subscriptions', 'fees'])
 
 // Of those six, two are bookings (the Bookings card counts them from the plan)
-// and one recurs (the Subscriptions card, #37). The rest are the one-offs and
-// fixed costs the One-offs card reports (#35, #39). DERIVED from the set above
-// rather than re-listed, so adding a seventh non-daily category gives it a home
-// on the Money page automatically instead of losing it the way `fees` was lost.
+// and one recurs (the Subscriptions card, #37). The other three have had no
+// card of their own since One-offs went (#39, 26 Sep): the overview's line
+// "beyond the everyday" names them (#35).
 export const BOOKING_CATEGORIES: ReadonlySet<string> = new Set(['stays', 'transport'])
 export const RECURRING_CATEGORY = 'subscriptions'
-export const ONE_OFF_CATEGORIES: ReadonlySet<string> = new Set(
-  [...NON_DAILY_CATEGORIES].filter((id) => !BOOKING_CATEGORIES.has(id) && id !== RECURRING_CATEGORY),
-)
 
 // ---- groups: the five colour families the charts use ----------------------
 // Twenty categories are too many colours for a phone-width bar; the chart

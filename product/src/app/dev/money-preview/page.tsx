@@ -19,7 +19,6 @@ import Preview from './Preview'
 // older, reload with ?slow=3000 and watch the console. ?screen=home renders
 // Home instead: Money paints "Loading…" until it knows today's date, Home
 // server-renders the trip document, so Home is where a mismatch shows.
-// ?screen=extras renders the Extras list (and its form) from the same fixture.
 // ?screen=entries renders All entries, the ledger's screen, and
 // &show=YYYY-MM-DD opens it at that day, the way a chart bar's "Open in All
 // entries" does.
@@ -30,6 +29,9 @@ import Preview from './Preview'
 // from the fixture, for a newcomer: the question then sits over the quiet page.
 // ?subs=offer declares no subscriptions and adds mock 16 §8's five as plain
 // entries, so Money shows the one-time offer.
+// ?oneoffs=legacy replays a journey from before #39: the planned one-offs
+// list, and the paid ones' rows as the plan wrote them. An editor opening it
+// sees the plan sync turn the rows into plain entries and delete the list.
 // ?day=N replays the journey as of its Nth day (day 1 = the start date), for
 // round 2's unlocks: the fixture is built for that date and keeps only the
 // costs typed by then (the plan's rows stay, like the plan). The page reads
@@ -37,7 +39,7 @@ import Preview from './Preview'
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; show?: string; subs?: string }>
+  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; show?: string; subs?: string; oneoffs?: string }>
 }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   // ?slow=<ms> streams the page that long after the shell, the way the real
@@ -72,12 +74,26 @@ export default async function MoneyPreviewPage({
       sub('sub-5', '2026-08-20', 4490, 'Netflix'),
     )
   }
+  if (params.oneoffs === 'legacy') {
+    fixture.state.extras = [
+      { id: 'x1', label: 'Insurance · 2 pax, 6 months', cur: 'HUF', amount: 340_000, category: 'Insurance', include: true, paidOn: '2026-08-12' },
+      { id: 'x2', label: 'Gear · backpacks, adapter, router', cur: 'HUF', amount: 205_000, category: 'gear', include: true },
+      { id: 'x3', label: 'Visas · TH ext, VN e-visa ×2', cur: 'HUF', amount: 84_000, category: 'Visa', include: true, paidOn: '2026-08-20' },
+      { id: 'x5', label: 'Vaccines', cur: 'HUF', amount: 60_000, category: 'health', include: true, paidOn: '2026-08-25' },
+    ]
+    fixture.ledger = fixture.ledger.map((e) =>
+      e.id.startsWith('le-plan-extra-') ? { ...e, source: { kind: 'extra' as const, id: e.id.slice('le-plan-extra-'.length) } } : e)
+    fixture.ledger.push({
+      id: 'le-plan-extra-x5', date: '2026-08-25', type: 'expense', category: 'health', amount: 60_000, currency: 'HUF',
+      note: 'Vaccines', source: { kind: 'extra', id: 'x5' },
+    })
+  }
   qc.setQueryData(tk.trip('fixture'), fixture)
   qc.setQueryData(tk.trackSpending, params.track === 'ask' ? 'ask' : params.track === 'no' ? 'no' : 'yes')
   return (
     <HydrationBoundary state={dehydrate(qc)}>
       <Preview
-        screen={params.screen === 'home' ? 'home' : params.screen === 'extras' ? 'extras' : params.screen === 'entries' ? 'entries' : 'money'}
+        screen={params.screen === 'home' ? 'home' : params.screen === 'entries' ? 'entries' : 'money'}
         show={params.show}
       />
     </HydrationBoundary>

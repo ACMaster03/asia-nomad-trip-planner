@@ -46,67 +46,39 @@ test('a fare imports on its charge date when there is one, else on the travel da
   assert.deepEqual(planImports(undated, []).candidates, [])
 })
 
-// ---- extras: a paid-on date is the payment (2026-09-23) ----------------------
+// ---- one-offs removed (#39, Patrik, 26 Sep) ------------------------------------
 
-const extra = (over: Record<string, unknown> = {}) => ({
-  id: 'x1', label: 'Insurance', category: 'Insurance', cur: 'HUF', amount: 274_000, include: true, ...over,
+const extraRow = (over: Partial<LedgerEntry> = {}): LedgerEntry => ({
+  id: 'le-plan-extra-x1', date: '2026-08-12', type: 'expense', category: 'insurance', amount: 274_000,
+  currency: 'HUF', note: 'Insurance', source: { kind: 'extra', id: 'x1' }, ...over,
 })
 
-test('an extra imports the day it is paid, under the ledger id its word maps to', () => {
-  const planned = { ...base, extras: [extra()] } as unknown as TripState
-  assert.deepEqual(planImports(planned, []).candidates, [], 'no date, no payment')
-
-  const paid = { ...base, extras: [extra({ paidOn: '2026-08-12' })] } as unknown as TripState
-  const [row] = planImports(paid, []).candidates
-  assert.equal(row.id, 'le-plan-extra-x1')
-  assert.equal(row.date, '2026-08-12')
-  assert.equal(row.category, 'insurance')
-  assert.equal(row.amount, 274_000)
-  assert.equal(row.currency, 'HUF')
-  assert.equal(row.note, 'Insurance')
-  assert.deepEqual(row.source, { kind: 'extra', id: 'x1' })
-
-  // the tick is about the forecast; the date is a fact about money
-  const unticked = { ...base, extras: [extra({ paidOn: '2026-08-12', include: false })] } as unknown as TripState
-  assert.equal(planImports(unticked, []).candidates.length, 1)
-
-  // a visa is filed with insurance, the form's other words land where the ledger keeps them
-  const visa = { ...base, extras: [extra({ id: 'x2', label: 'e-visas', category: 'Visa', paidOn: '2026-08-20' })] } as unknown as TripState
-  assert.equal(planImports(visa, []).candidates[0].category, 'insurance')
+test('a paid one-off’s row becomes a plain entry, still out of the daily average', () => {
+  const insurance = extraRow()
+  const vaccine = extraRow({ id: 'le-plan-extra-x2', category: 'health', note: 'Vaccines', source: { kind: 'extra', id: 'x2' } })
+  const orphan = extraRow({ id: 'le-plan-extra-x3', note: 'Old visa', orphaned: true, source: { kind: 'extra', id: 'x3' } })
+  // the planned list no longer imports anything, whatever it holds
+  const legacy = { ...base, extras: [{ id: 'x9', label: 'Gear', cur: 'HUF', amount: 5000, include: true, paidOn: '2026-08-20' }] } as unknown as TripState
+  const plan = planImports(legacy, [insurance, vaccine, orphan])
+  assert.deepEqual(plan.candidates, [])
+  assert.deepEqual(plan.orphans, [], 'a one-off’s row is never flagged "extra removed"')
+  const [a, b, c] = plan.updates
+  assert.deepEqual(a, { id: 'le-plan-extra-x1', date: '2026-08-12', type: 'expense', category: 'insurance', amount: 274_000, currency: 'HUF', note: 'Insurance' },
+    'insurance is out of the daily average by its category: no flag needed')
+  assert.equal(b.everyday, false, 'a vaccine under Health says so itself')
+  assert.equal(b.source, undefined)
+  assert.equal(c.orphaned, undefined, 'the payment happened: no "extra removed"')
+  // once plain, there is nothing left to do
+  assert.deepEqual(planImports(legacy, plan.updates).updates, [])
 })
 
-test('an extra’s row follows the extra, and goes when the date is cleared but stays flagged when the extra is deleted', () => {
-  const paid = { ...base, extras: [extra({ paidOn: '2026-08-12' })] } as unknown as TripState
-  const [row] = planImports(paid, []).candidates
-
-  // amount edited on the Trip page → the row is brought in line
-  const cheaper = { ...base, extras: [extra({ paidOn: '2026-08-12', amount: 250_000 })] } as unknown as TripState
-  const sync = planImports(cheaper, [row])
-  assert.equal(sync.updates.length, 1)
-  assert.equal(sync.updates[0].amount, 250_000)
-  assert.deepEqual(sync.removals, [])
-
-  // "not paid after all": the extra is still listed, its date is gone → delete, never flag
-  const unpaid = { ...base, extras: [extra()] } as unknown as TripState
-  const cleared = planImports(unpaid, [row])
-  assert.deepEqual(cleared.removals.map((e) => e.id), ['le-plan-extra-x1'])
-  assert.deepEqual(cleared.orphans, [])
-  assert.deepEqual(cleared.candidates, [])
-
-  // the extra itself deleted → money already spent stays on the books, flagged
-  const gone = { ...base, extras: [] } as unknown as TripState
-  const orphaned = planImports(gone, [row])
-  assert.deepEqual(orphaned.removals, [])
-  assert.equal(orphaned.orphans.length, 1)
-  assert.equal(orphaned.orphans[0].orphaned, true)
-
-  // a booking's row is never "removed", whatever happens to the booking
+test('a booking’s row is still flagged, never removed, when the booking goes', () => {
   const bookedStay = { ...base, stays: [stay('booked')] } as TripState
   const [stayRow] = planImports(bookedStay, []).candidates
   const stayDrafted = { ...base, stays: [stay('idea')] } as TripState
   const back = planImports(stayDrafted, [stayRow])
-  assert.deepEqual(back.removals, [])
   assert.equal(back.orphans.length, 1)
+  assert.equal(back.orphans[0].orphaned, true)
 })
 
 // ---- subscription charges, written by themselves (Patrik, 24 Sep, #37) ----
@@ -147,9 +119,9 @@ test('subscription charges stay inside the journey, stop at a cancellation and s
   assert.deepEqual(subChargesDue(withSubs([declared]), [], '2026-11-10').map((e) => e.date), ['2026-11-05'], 'its own entry was the 5 Oct charge')
 })
 
-test('the booking sync leaves subscription charges alone: no updates, flags or removals', () => {
+test('the booking sync leaves subscription charges alone: no updates or flags', () => {
   const [row] = subChargesDue(withSubs([netflix]), [], '2026-10-22')
   const pricier = planImports(withSubs([{ ...netflix, amount: 5490 }]), [row], '2026-10-22')
-  assert.deepEqual([pricier.updates, pricier.orphans, pricier.removals, pricier.subCharges], [[], [], [], []], 'a price rise does not rewrite October')
+  assert.deepEqual([pricier.updates, pricier.orphans, pricier.subCharges], [[], [], []], 'a price rise does not rewrite October')
   assert.deepEqual(planImports(withSubs([]), [row], '2026-10-22').orphans, [], 'a deleted subscription leaves its charges')
 })

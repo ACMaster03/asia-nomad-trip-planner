@@ -91,8 +91,8 @@ export interface TransportLeg {
 //
 // Deliberately NOT a ledger entry: a predicted charge is a forecast, and
 // writing it to the ledger would double-count against projection.spent and
-// pollute the daily chart. This is the recurring sibling of Extra, and it lives
-// beside the plan for the same reason UserReminder does.
+// pollute the daily chart. It lives beside the plan for the same reason
+// UserReminder does.
 export interface Subscription {
   id: string
   label: string
@@ -120,19 +120,6 @@ export interface Subscription {
    */
   autoFrom?: string
 }
-export interface Extra {
-  id: string
-  label: string
-  cur: CurrencyCode
-  amount: number
-  /** the extras form's own word (Visa, Insurance, …); lib/trips/extras.ts maps it onto a ledger id */
-  category?: string
-  include?: boolean
-  // ISO date the card was hit. Set, the import writes the payment into the
-  // ledger itself (importCosts.ts, 2026-09-23); cleared, that row goes again.
-  // Blank = planned, not paid yet. Optional and migration-free.
-  paidOn?: string
-}
 // A reminder the user typed (handoff frames 25–26). Lives on the state JSON —
 // optional and migration-free, like autoImport/importSkip. Money deadlines
 // (free-cancel / card-charged) are NOT stored: reminders.ts derives them from
@@ -146,7 +133,7 @@ export interface UserReminder {
 export interface TripState {
   meta: TripMeta
   // The trip's WATCHLIST: keys are the currencies this trip uses (also the
-  // currency picker list in Stays/Transport/Extras/Ledger). Values are the last
+  // currency picker list in Stays/Transport/Ledger). Values are the last
   // known rate in baseCurrency per 1 unit, refreshed from fx_rates on every load
   // (useTripScreen) and cached here purely so an offline launch still totals.
   // Nobody types them — migration 19.
@@ -154,7 +141,13 @@ export interface TripState {
   segments: Segment[]
   stays: Stay[]
   transport: TransportLeg[]
-  extras: Extra[]
+  /**
+   * The planned one-offs, removed with the One-offs card (#39, Patrik,
+   * 26 Sep). Read by nothing: older documents still carry the list until an
+   * editor opens Money, which deletes it once every paid one-off's row has
+   * become a plain entry (importCosts.ts).
+   */
+  extras?: unknown
   notes: Record<string, string>
   // Ledger auto-import (importCosts.ts). undefined = user never asked yet.
   autoImport?: boolean
@@ -184,7 +177,9 @@ export interface LedgerEntry {
   currency: CurrencyCode
   note: string
   // Auto-imported rows only (importCosts.ts): the booking this row mirrors, or
-  // for kind 'sub' the subscription charge it is ("<subId>@<date>").
+  // for kind 'sub' the subscription charge it is ("<subId>@<date>"). Kind
+  // 'extra' is a paid one-off's row from before #39: the plan sync turns it
+  // into a plain entry the first time an editor opens the app.
   source?: { kind: 'stay' | 'transport' | 'extra' | 'sub'; id: string }
   // Booking vanished from the plan — row stays on the books, flagged.
   orphaned?: boolean

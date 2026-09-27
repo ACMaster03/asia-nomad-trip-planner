@@ -47,6 +47,86 @@ From the mock "Trip editing on iOS" (artifact QdrtgiADdvE6LbFALdaoZS), approved 
   (the web still says "card charged on …" for a future date, open); a stay name that starts with
   its city drops the city.
 
+## 2026-09-26 (4)
+
+### BUILT — One-offs removed (#39)
+
+Pull request #100, the second of Patrik's two decisions of 26 Sep (below). His go on the
+data: "rip them out on a data level from the app so it doesn't stay as noise … Paid one offs
+should be normal entries with excluded on!"
+
+**What changed.**
+- Money loses the One-offs & extras row. With it go:
+  - the planned list (`state.extras`);
+  - the Extras screen behind Trip and its form (an old `/itinerary?tab=extras` link opens
+    Money);
+  - the planned one-offs in `computeBudget`'s estimated and committed totals.
+- **A paid one-off's entry becomes a plain entry, once** (`plainFromExtra`, `importCosts.ts`).
+  - It loses its link to the list, and any "extra removed" flag: the payment happened.
+  - It stays out of the daily average. Insurance & visas, gear and fees are out by category.
+    One filed under an everyday category (a vaccine under Health) gets its own switch set to
+    excluded (`everyday: false`, #36).
+- **Then the list is deleted from the journey**, unpaid one-offs included (`usePlanSync`).
+  - This happens the first time an editor opens Home, Money or All entries, and only once no
+    entry is still linked to a one-off. A viewer never writes it.
+  - The write is the cleanup's own, not the page's. When both phones open at once, the second
+    write loses the race; the page's banner would have said "Please redo your edit" to someone
+    who made none. It fails quietly and runs again on the next open.
+- **Wording.**
+  - The category list's second group is "Not in the daily average" (was "Bookings & one-offs").
+  - The Plan card's "How it adds up" reads "transport, everything else".
+  - Under "beyond the everyday": "Counted in Spent so far" (was "Counted below", which
+    pointed at the One-offs card).
+  - The welcome flow says visa costs go on Money, under Insurance & visas.
+  - Delete this trip no longer lists extras.
+- **Unchanged on purpose.** The old spellings "one-off" and "extras" still fold into Gear:
+  migration 31 and `categories.test.ts` hold the registry to them.
+
+**What else moves.**
+- An unpaid one-off is deleted for good.
+- Home's live money card says "under the estimate" or "over the estimate": the projection
+  against the pre-trip estimate (`b.grand`). The estimate loses the planned one-offs; the
+  projection keeps the paid ones, as entries. If the margin is smaller than the one-offs
+  that were planned, it turns to "over". The two were never like for like: subscriptions
+  are in the projection and never were in the estimate.
+- Home's pre-trip Estimated total drops the planned one-offs too (accepted on 26 Sep).
+- A journey whose only entries were paid one-offs and bookings now counts as one that logs
+  spending (`hasLoggedSpending`). An account still on "ask" then sees the question over the
+  full page, not the quiet one.
+- A phone still running the old version when the list goes can show an error screen once:
+  the old code expects the list. It reloads itself into the new version when it comes back
+  to the foreground (`SWUpdate`, `app/error.tsx` keeps the layout alive).
+
+**Checked.**
+- `tsc`; `eslint` (the same four old findings); `next build`.
+- 150 node tests. The four in `extras.test.ts` went with the file. The two extras tests in
+  `importCosts.test.ts` became two about the change.
+- In the dev preview, with `?oneoffs=legacy`: the practice journey as it was before #39,
+  plus a vaccine under Health.
+  - Money and Home each wrote the three entries as plain entries, the vaccine with
+    `everyday: false`. Each wrote the journey once without `extras`, everything else kept
+    (the five subscriptions included). Nothing more in 20 seconds.
+  - The current practice journey writes nothing.
+  - With the journey write refused as a conflict: no banner, and no second try.
+  - All entries: "Vaccines · Health · 25 Aug · not in daily average".
+
+**Live with #100 (26 Sep).**
+- Before the merge, Patrik checked the One-offs card: no unpaid one-offs, so nothing was lost.
+- On the phone after the merge:
+  - the One-offs row is gone;
+  - Spent so far, the per-day rate and the projected total match what they were;
+  - Home's line against the estimate did not change.
+- The list's removal from the data shows nowhere in the app. This read-only query shows it
+  (Supabase SQL editor). A journey whose editors have opened the app since reads `false`
+  and `0`:
+
+  ```sql
+  select name, state ? 'extras' as has_list,
+    (select count(*) from jsonb_array_elements(ledger) e
+      where e->'source'->>'kind' = 'extra') as one_off_rows
+  from trips;
+  ```
+
 ## 2026-09-26 (3)
 
 ### BUILT — an entry's own switch for the daily average (#36)
@@ -58,11 +138,41 @@ Pull request #96, the first of Patrik's two decisions below.
   rule, `isEverydayRow`, now decides for the pace (`burnRate` filtered by category alone until
   now), the daily chart, Where it goes and the unlocks. `recap.ts` has no daily rate and is
   unchanged.
-- The entry form shows the switch only when it matters:
+- As first merged (#96), the entry form showed the switch only when it mattered:
   - an amount at least 3× the daily pace, measured without the entry itself;
   - gear, insurance & visas and fees, which are out by default;
   - an entry already set against its category.
   It is stored only where it differs from the category.
+- **The entry form, reshaped (Patrik, 26 Sep, in #97):** "the keyboard messes it up every time
+  … the date is too big … what was it is secondary to cost."
+  - Amount and currency come first, then "What was it? · optional" with no description (it is
+    still the entry's name; empty, the category stands in).
+  - The Expense | Income row went: about 98% of entries are expenses. The title is the type,
+    "Add expense ⌄", and a tap makes it "Add income ⌄". Patrik suggested tapping the title;
+    Claude added the chevron, since nobody taps a bare heading.
+  - The date is a pill ("📅 Today", "📅 Wed, 23 Sep") beside the daily-average switch, with the
+    phone's own picker under it. It stays readable, which is why it was a full field: logging
+    yesterday's dinner the next morning is the normal case.
+  - The empty form went from about 790 to 596 px, so it fits a phone screen without scrolling.
+  - The keyboard itself was not changed: the iOS behaviour cannot be reproduced in the dev
+    preview.
+  - **Live with #97** (Patrik's go, 26 Sep; production build READY). His test on the iPhone the
+    same day: the date pill opens the phone's date wheel, "the keyboard seems fine" with the
+    new layout, the switch works, and the title switches to income. The concert ticket had
+    already been excluded, so there are no before and after numbers.
+- **Decimal amounts on the iPhone (Patrik, 26 Sep, after #97):** "we can't enter fractionals …
+  the iOS number pad has a decimal column but the input doesn't accept it." Likely cause, since
+  the iPhone keypad cannot be reproduced here: in a Hungarian region the decimal key types a
+  comma, and a `type="number"` field treats "12,5" as invalid. The money fields (entry,
+  subscription, stay price, leg price and hours) are now text fields that open the same
+  decimal pad and are read by `parseAmount` (`format.ts`): a comma or a dot, spaces ignored,
+  anything else refused rather than guessed. The extras form goes with the One-offs removal and
+  was left alone. Pull request #99.
+- **A flat option, Patrik's (26 Sep, after #96):** "we might have stuff that we buy that's cheap
+  but we don't want it counted." The switch is now on every expense typed by hand, and the 3×
+  rule is gone. Stays, transport and subscriptions still never get it. Claude's note: one more
+  row on every expense form, off almost every time; the cheap present for someone at home
+  outweighs it. Pull request #97.
 - **The label, Patrik's (26 Sep):** "Exclude from the daily average", off by default, with no
   description: "isn't that more self-explanatory?" Gear, insurance & visas and fees are
   excluded by default, so for them the same switch reads "Include in the daily average", also

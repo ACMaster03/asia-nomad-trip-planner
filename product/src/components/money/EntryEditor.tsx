@@ -6,7 +6,6 @@ import { sourceKey } from '@/lib/trips/importCosts'
 import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
 import { countryCurrencies } from '@/lib/catalogue/countryCurrencies'
 import { currentStop } from '@/lib/trips/moneyModel'
-import { tripPace } from '@/lib/trips/spending'
 import { categoryLabel } from '@/lib/trips/categories'
 import { toBase } from '@/lib/trips/format'
 import type { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
@@ -44,9 +43,6 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
   const current = currentStop(s, todayIso)
   const lastCur = ledger.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).find((e) => e.type === 'expense')?.currency ?? base
   const hereCodes = countryCurrencies(current?.country)
-  // What "a usual day" is for the daily-average switch (#36): the pace without
-  // this entry, so editing the concert ticket is not measured against itself.
-  const pace = tripPace(s, initial ? ledger.filter((e) => e.id !== initial.id) : ledger, todayIso, current).perDay
   const entryCur = pickEntryCurrency({
     hereCodes,
     watched: Object.keys(s.rates ?? {}),
@@ -78,22 +74,7 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
     toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}${change?.kind === 'create' ? ' · now a subscription' : ''}`)
   }
   async function del(entry: LedgerEntry) {
-    const listedExtra = entry.source?.kind === 'extra' ? s.extras.find((x) => x.id === entry.source!.id) : undefined
-    if (listedExtra) {
-      // The paid-on date IS this row (importCosts.ts): clear the date and the
-      // plan sync (usePlanSync) deletes the row — one write, no skip record,
-      // and setting the date again brings the payment back.
-      const ok = await confirm({
-        title: 'Remove this payment?',
-        body: `“${listedExtra.label}” goes back to not paid on the Trip page. Give it a paid-on date again to bring the payment back.`,
-        confirmLabel: 'Remove',
-      })
-      if (!ok) return
-      stateMut.mutate((cur) => ({
-        ...cur,
-        extras: cur.extras.map((x) => (x.id === listedExtra.id ? { ...x, paidOn: undefined } : x)),
-      }))
-    } else if (entry.source?.kind === 'sub') {
+    if (entry.source?.kind === 'sub') {
       // A charge the app wrote (importCosts.ts). The skip record keeps the
       // sync from writing it again; the subscription itself stays.
       const ok = await confirm({
@@ -107,8 +88,10 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
         (cur) => ({ ...cur, importSkip: [...new Set([...(cur.importSkip ?? []), key])] }),
         { onSuccess: () => mut.mutate({ kind: 'delete', id: entry.id }) },
       )
-    } else if (entry.source) {
+    } else if (entry.source && entry.source.kind !== 'extra') {
       // Without the skip record, reconcile would resurrect the row next visit.
+      // (A paid one-off's row from before #39 is a plain entry: nothing
+      // imports it again.)
       const ok = await confirm({
         title: 'Remove this imported cost?',
         body: 'The booking stays on the Trip page, but it won’t be re-imported here.',
@@ -141,7 +124,6 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
       onDelete={initial ? del : undefined}
       onClose={onClose}
       note={note}
-      pace={pace}
     />
   )
 }

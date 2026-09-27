@@ -6,7 +6,6 @@ import { ToastProvider } from '@/components/Toast'
 import MoneyPage from '@/components/money/MoneyPage'
 import LedgerPage from '@/components/money/LedgerPage'
 import DashboardClient from '@/app/(app)/dashboard/DashboardClient'
-import { ExtrasTab } from '@/components/trips/ExtrasTab'
 
 // The (app) layout's providers, minus auth. The query client is the root
 // Providers' one (see page.tsx), so the fixture trip is read from the same
@@ -16,7 +15,7 @@ import { ExtrasTab } from '@/components/trips/ExtrasTab'
 // CLOSED, so without it every destructive action in this preview silently
 // declined and looked like a dead button. A harness that cannot test a delete
 // is not the harness for the screen with the deletes on it.
-export default function Preview({ screen, show }: { screen: 'money' | 'home' | 'extras' | 'entries'; show?: string }) {
+export default function Preview({ screen, show }: { screen: 'money' | 'home' | 'entries'; show?: string }) {
   return (
     <TripScopeProvider initialTripId="fixture" initialRole="owner">
       <MoneyProvider initialBase="HUF">
@@ -24,9 +23,8 @@ export default function Preview({ screen, show }: { screen: 'money' | 'home' | '
           <ToastProvider>
             <div className="pb-20">
               {screen === 'home' ? <DashboardClient userEmail="dev@example.com" userName="Dev" />
-                : screen === 'extras' ? <ExtrasTab />
-                  : screen === 'entries' ? <LedgerPage day={show} />
-                    : <MoneyPage />}
+                : screen === 'entries' ? <LedgerPage day={show} />
+                  : <MoneyPage />}
             </div>
           </ToastProvider>
         </ConfirmProvider>

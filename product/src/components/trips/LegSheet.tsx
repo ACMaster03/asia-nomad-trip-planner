@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Bus, Plane, Ship, TrainFront } from 'lucide-react'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { useMoney } from '@/lib/trips/Money'
-import { toBase } from '@/lib/trips/format'
+import { parseAmount, toBase } from '@/lib/trips/format'
 import { shortDate, stateOf, type Leg } from '@/lib/trips/timeline'
 import type { TransportLeg } from '@/lib/trips/types'
 import { Chips, StateChips, addLink, dangerBtn, hint, input, label, primaryBtn, uid } from './sheetKit'
@@ -78,7 +78,7 @@ export function LegSheet({
   const [showLink, setShowLink] = useState(!!initial?.url)
   const [state, setState] = useState<'idea' | 'booked'>(initial ? stateOf(initial.status) : 'idea')
   const [chargeDate, setChargeDate] = useState(initial?.chargeDate ?? '')
-  const amount = Number(price) || 0
+  const amount = parseAmount(price) || 0
   const isFlight = type === 'Flight'
 
   function submit() {
@@ -92,7 +92,7 @@ export function LegSheet({
       date,
       time,
       via: isFlight && showVia ? via.trim() : '',
-      hours: isFlight && showVia && hours !== '' ? Number(hours) : undefined,
+      hours: isFlight && showVia && isFinite(parseAmount(hours)) ? parseAmount(hours) : undefined,
       url,
       cur,
       price: amount,
@@ -165,7 +165,7 @@ export function LegSheet({
           </label>
           <label className={label}>
             Hours
-            <input type="number" inputMode="decimal" step="0.25" min="0" className={input} placeholder="14.5" value={hours} onChange={(e) => setHours(e.target.value)} />
+            <input type="text" inputMode="decimal" autoComplete="off" className={input} placeholder="14.5" value={hours} onChange={(e) => setHours(e.target.value)} />
           </label>
         </div>
       )}
@@ -173,7 +173,7 @@ export function LegSheet({
         <div className="grid grid-cols-[1fr_96px] gap-3">
           <label className={label}>
             Price
-            <input type="number" inputMode="decimal" step="any" min="0" className={input + ' text-[22px] font-semibold'} placeholder="for everyone" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <input type="text" inputMode="decimal" autoComplete="off" className={input + ' text-[22px] font-semibold'} placeholder="for everyone" value={price} onChange={(e) => setPrice(e.target.value)} />
           </label>
           <label className={label}>
             Currency

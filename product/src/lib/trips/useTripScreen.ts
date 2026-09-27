@@ -48,7 +48,7 @@ export function useTripScreen() {
   const cityIdx = useMemo(() => buildCityIndex(tripCities.data ?? []), [tripCities.data])
 
   // THE MERGE. state.rates does double duty: Object.keys() is the currency
-  // picker list in Stays/Transport/Extras/Stops/Ledger, while the values feed
+  // picker list in Stays/Transport/Stops/Ledger, while the values feed
   // every total. So the trip document keeps owning WHICH currencies it watches
   // and the feed supplies only the VALUES — which means all ~15 consumers
   // (budget.ts, format.ts, every tab, MapClient, CountryPanel) need no change.

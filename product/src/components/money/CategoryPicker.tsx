@@ -5,7 +5,7 @@ import { categoriesFor, isEverydayCategory, mostUsedCategories, categoryDef, typ
 import type { LedgerEntry } from '@/lib/trips/types'
 
 // "All 19…" — the full registry as a searchable, grouped list. Grouped the way
-// the analytics think (everyday vs bookings & one-offs), the trip's most-used
+// the analytics think (everyday vs not in the daily average), the trip's most-used
 // on top. Search matches label, hint and every alias, so "grab" finds
 // Getting around. No "create your own": the enum stays code-owned.
 
@@ -38,7 +38,7 @@ export function CategoryPicker({
       ? [
           ['Most used here', top],
           ['Everyday', all.filter((c) => isEverydayCategory(c.id)).map((c) => c.id).filter(matches)],
-          ['Bookings & one-offs', all.filter((c) => !isEverydayCategory(c.id)).map((c) => c.id).filter(matches)],
+          ['Not in the daily average', all.filter((c) => !isEverydayCategory(c.id)).map((c) => c.id).filter(matches)],
         ]
       : [['Income', all.map((c) => c.id).filter(matches)]]
   const empty = groups.every(([, ids]) => ids.length === 0)
