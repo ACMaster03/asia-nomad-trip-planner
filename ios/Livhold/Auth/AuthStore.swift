@@ -106,7 +106,12 @@ final class AuthStore {
     /// Signs out THIS device only; the traveller's other devices stay signed in.
     func signOut() async {
         try? await auth.signOut(scope: .local)
+        // Nothing of a journey stays on the phone after signing out.
+        TripCache.clearAll()
     }
+
+    /// The signed-in user's id as the database writes it (lowercase uuid).
+    var userId: String? { session?.user.id.uuidString.lowercased() }
 
     var email: String? { session?.user.email }
 

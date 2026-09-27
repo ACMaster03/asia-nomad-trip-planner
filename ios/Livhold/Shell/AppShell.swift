@@ -8,7 +8,10 @@ import SwiftUI
 /// on TestFlight: iOS's Liquid Glass, the web's layout, a raised pin in the middle.
 struct AppShell: View {
     @State private var router = TabRouter()
+    @State private var trips = TripStore()
     @Namespace private var checkInZoom
+    @Environment(AuthStore.self) private var auth
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         // All four stacks stay alive underneath; only the selected one is shown. That
@@ -22,14 +25,36 @@ struct AppShell: View {
                     .accessibilityHidden(!on)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        // The bar floats over the stacks. An inset set out here doesn't reach the
+        // scroll views inside the navigation stacks (the last card ended under the
+        // bar), so each screen keeps the room itself: see `reservesTabBar()`.
+        .overlay(alignment: .bottom) {
             GlassTabBar(selection: router.selectionBinding) { router.checkInOpen = true }
         }
         .environment(router)
+        .environment(trips)
         .environment(\.checkInZoom, checkInZoom)
+        // The saved journey shows at once; the server's copy follows, and again
+        // every time the app comes back to the front (the web refetches on focus).
+        .task(id: auth.userId) {
+            if let id = auth.userId { await trips.start(userId: id) }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await trips.refresh() } }
+        }
         .sheet(isPresented: $router.checkInOpen) {
             CheckInSheet()
                 .modifier(ZoomDestination(id: "checkin", namespace: checkInZoom))
+        }
+    }
+}
+
+private extension View {
+    /// Keeps the floating tab bar's height free at the bottom of a screen, so the
+    /// last thing on it can scroll clear of the bar.
+    func reservesTabBar() -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: GlassTabBar.reservedHeight)
         }
     }
 }
@@ -45,7 +70,10 @@ private struct TabStack: View {
     var body: some View {
         NavigationStack(path: router.path(tab)) {
             root
-                .navigationDestination(for: Route.self, destination: destination)
+                .reservesTabBar()
+                .navigationDestination(for: Route.self) { route in
+                    destination(route).reservesTabBar()
+                }
         }
         .environment(\.tabZoom, zoom)
     }
@@ -67,8 +95,8 @@ private struct TabStack: View {
             GalleryView(appearance: $appearance)
                 .navigationTitle("Design gallery")
                 .navigationBarTitleDisplayMode(.inline)
-        case .stop(let name):
-            StopScreen(name: name)
+        case .stop(let segmentId):
+            StopScreen(segmentId: segmentId)
                 .modifier(ZoomDestination(id: route, namespace: zoom))
         case .tripSettings: TripSettingsScreen()
         }

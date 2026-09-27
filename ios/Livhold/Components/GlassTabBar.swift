@@ -13,6 +13,9 @@ struct GlassTabBar: View {
     @Environment(\.checkInZoom) private var zoom
 
     private let circle: CGFloat = 56
+    /// Room a screen keeps free under its content for the bar: the capsule, its
+    /// bottom padding, and the part of the pin circle that rises above it.
+    static let reservedHeight: CGFloat = 80
 
     var body: some View {
         HStack(spacing: 0) {
