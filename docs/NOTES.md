@@ -30,7 +30,7 @@ Patrik's machine was out of reach on 27 Sep. Three jobs wait for it, best done t
 
 ### BUILT — tonight's bed on Home, a stop out of the plan, deadline emails (#58, #105, #60)
 
-Patrik, 27 Sep: fix the Home and Trip bugs first (above). Pull request #PRNUM.
+Patrik, 27 Sep: fix the Home and Trip bugs first (above). Pull request #108.
 - **Home's top card names tonight's stay (#58).** It took the stop's first counted stay
   and always said "booked", an Idea included, and not tonight's when a stop holds
   several. Now `stayForNight` (`timeline.ts`) picks the stay covering tonight by the
