@@ -98,6 +98,13 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Trip now, Money next. Web bugs on Home and Trip go first, and every web
   change to behaviour gets an "iOS:" line in its `docs/NOTES.md` entry (the
   rule and its file), because that agent reads `main`, not this chat.
+- Decided by Patrik on 27 Sep (#58, #60, #62, #65):
+  - home moves to the person (`profiles.home_base`, migration 43, since #101 takes 42; not
+    built yet);
+  - Home keeps a Reminders row when nothing is due;
+  - the Subscriptions card gets no unlock rule;
+  - next come #106 (the check-in as a sheet, `/live` goes), then the #65 wording pass on
+    Home only. Trip was redone in the iOS app, and the web may take features back from it.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
