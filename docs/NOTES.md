@@ -7,6 +7,23 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-27
 
+### DECIDED + BUILT — Patrik, 27 Sep evening: iOS rounds after build 9 (TestFlight 10–12)
+
+- **Money top card:** two tabs, the stop (its city; "This stop" over 12 letters) and Journey;
+  Today removed. Journey shows the cap as a ring on the right (spent solid, where it lands
+  pale, % spent in the middle); "beyond the everyday" only on Journey. The stop's bar has a
+  segment a night, "today" above, arrival/departure under it; "stay included" under its total.
+- **Daily spend:** hold then drag runs the callout day by day. **Menus** redraw at their new
+  width after a pick (they fade out instead of flowing back into the chip); All entries' chips
+  sit in a bar above the list.
+- **Subscriptions** are edited on the phone (form, bell, cancel/resume, delete), proven on
+  staging incl. a concurrent web edit; charges are still written by the web. **Bookings**
+  rows open the Trip tab. Notifications for them: later (Patrik).
+- **Languages:** English + Hungarian (Localizable.xcstrings, build 12). Hungarian was chosen
+  to test long words and because we can check its grammar. Open: transport types stored
+  as English words ("bus") show as typed; category matching in Hungarian uses the Hungarian
+  labels plus the English aliases; one flight title truncates with Hungarian dates.
+
 ### DECIDED — Patrik, 27 Sep: Money on iOS (from mock round 1, artifact MWKt6NpVmvgHHpURmgpRMF)
 
 - **Tracking moves to Settings → Money** (switch, budget cap, base currency, rates). The page no
