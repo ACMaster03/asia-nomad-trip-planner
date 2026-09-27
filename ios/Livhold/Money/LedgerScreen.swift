@@ -180,17 +180,20 @@ struct LedgerScreen: View {
             }
             .buttonStyle(.plain)
             if comingOpen {
-                Text("Dated after today, so not counted as spent yet.")
-                    .font(.sans(12.5)).foregroundStyle(Palette.tx3)
-                ForEach(coming) { e in
-                    Button { open(e) } label: {
-                        HStack(spacing: 10) {
-                            Text(Days.short(e.date)).font(.sans(12.5, weight: .medium)).foregroundStyle(Palette.tx3).frame(width: 46, alignment: .leading)
-                            EntryRow(entry: e, model: model)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Dated after today, so not counted as spent yet.")
+                        .font(.sans(12.5)).foregroundStyle(Palette.tx3)
+                    ForEach(coming) { e in
+                        Button { open(e) } label: {
+                            HStack(spacing: 10) {
+                                Text(Days.short(e.date)).font(.sans(12.5, weight: .medium)).foregroundStyle(Palette.tx3).frame(width: 46, alignment: .leading)
+                                EntryRow(entry: e, model: model)
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
+                .expands()
             }
         }
         .padding(.horizontal, 14)

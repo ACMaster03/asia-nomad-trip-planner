@@ -544,18 +544,21 @@ private struct DailySpendCard: View {
                     pager("chevron.right", enabled: window.to < model.today) { page(1, window) }
                 }
             }
+            // Days on a real date axis: one bar per calendar day, labels only where
+            // `labels` puts them. (A text axis labelled every day on some phones.)
             Chart {
                 ForEach(days) { day in
+                    let x = Self.day(day.date)
                     if day.total == 0 {
                         // Every day keeps its slot on the axis, spent or not.
-                        BarMark(x: .value("Day", day.date), y: .value("Spent", 0))
+                        BarMark(x: .value("Day", x, unit: .day), y: .value("Spent", 0))
                     } else if day.date < start {
-                        BarMark(x: .value("Day", day.date), y: .value("Spent", day.total))
+                        BarMark(x: .value("Day", x, unit: .day), y: .value("Spent", day.total))
                             .foregroundStyle(Palette.tr)
                     } else {
                         ForEach(Family.allCases) { f in
                             if let v = day.byFamily[f], v > 0 {
-                                BarMark(x: .value("Day", day.date), y: .value("Spent", v))
+                                BarMark(x: .value("Day", x, unit: .day), y: .value("Spent", v))
                                     .foregroundStyle(f.color)
                             }
                         }
@@ -570,9 +573,9 @@ private struct DailySpendCard: View {
                         }
                 }
                 if let selected {
-                    RuleMark(x: .value("Day", selected))
-                        .foregroundStyle(Palette.tx.opacity(0.08))
-                        .lineStyle(StrokeStyle(lineWidth: range <= 14 ? 20 : 8))
+                    RectangleMark(x: .value("Day", Self.day(selected), unit: .day))
+                        .foregroundStyle(Palette.tx.opacity(0.07))
+                        .zIndex(-1)
                 }
             }
             // A tap picks a day, a second tap on it closes the callout. (The built-in
@@ -583,16 +586,20 @@ private struct DailySpendCard: View {
                         .gesture(SpatialTapGesture().onEnded { tap in
                             guard let plot = proxy.plotFrame else { return }
                             let x = tap.location.x - geo[plot].origin.x
-                            guard let day: String = proxy.value(atX: x) else { return }
+                            guard let date: Date = proxy.value(atX: x) else { return }
+                            let day = EntrySheet.iso(date)
+                            guard days.contains(where: { $0.date == day }) else { return }
                             withAnimation(Motion.quick) { selected = selected == day ? nil : day }
                         })
                 }
             }
             .chartYAxis(.hidden)
+            .chartXScale(domain: Self.day(window.from)...Self.day(Days.add(window.to, 1)))
             .chartXAxis {
-                AxisMarks(values: labels(days.map(\.date))) { v in
-                    AxisValueLabel(collisionResolution: .disabled) {
-                        if let d = v.as(String.self) {
+                AxisMarks(values: labels(days.map(\.date)).map { Self.day($0).addingTimeInterval(12 * 3600) }) { v in
+                    AxisValueLabel(anchor: .top, collisionResolution: .disabled) {
+                        if let date = v.as(Date.self) {
+                            let d = EntrySheet.iso(date)
                             Text(d == model.today ? "today" : axisLabel(d))
                                 .font(.sans(10.5, weight: d == model.today ? .semibold : .regular))
                                 .foregroundStyle(d == model.today ? Palette.ac2 : Palette.tx3)
@@ -611,6 +618,14 @@ private struct DailySpendCard: View {
         }
         .padding(16)
         .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
+    }
+
+    /// A ledger day as the start of that day on the phone's calendar, which is
+    /// what the chart's day bins use.
+    static func day(_ iso: String) -> Date {
+        let p = iso.split(separator: "-").compactMap { Int($0) }
+        guard p.count == 3 else { return .now }
+        return Calendar.current.date(from: DateComponents(year: p[0], month: p[1], day: p[2])) ?? .now
     }
 
     private func pager(_ symbol: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
@@ -917,7 +932,7 @@ struct PlanCard: View {
                 .padding(.vertical, 4)
                 .background(Palette.canvas, in: .rect(cornerRadius: 12))
                 .padding(.bottom, 10)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .expands()
             }
         }
     }
@@ -980,7 +995,7 @@ struct PlanCard: View {
                 .padding(.vertical, 4)
                 .background(Palette.canvas, in: .rect(cornerRadius: 12))
                 .padding(.bottom, 8)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .expands()
             }
         }
     }
@@ -1039,7 +1054,7 @@ private struct Fold<Content: View>: View {
             if open {
                 content
                     .padding(.bottom, 10)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .expands()
             }
         }
         .padding(.horizontal, 16)
