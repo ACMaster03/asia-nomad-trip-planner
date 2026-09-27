@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { createTrip, createInvite, writeState, setSelectedTripId } from '@/lib/trips/queries'
+import { useHomeBase, useSetHomeBase } from '@/lib/trips/useHomeBase'
 import { tk } from '@/lib/trips/keys'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { TripMetaForm } from './TripMetaForm'
@@ -56,7 +57,12 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
   const { setTripId } = useTripScope()
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [trip, setTrip] = useState<Trip | null>(null)
-  const [homeBase, setHomeBase] = useState('')
+  // Home is the person's (#58, migration 43): prefilled from the profile, so a
+  // second journey starts from it in one tap, and saved back to it.
+  const profileHome = useHomeBase().data
+  const setProfileHome = useSetHomeBase()
+  const [typedHome, setTypedHome] = useState<string | null>(null)
+  const homeBase = typedHome ?? profileHome ?? ''
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteSent, setInviteSent] = useState(false)
 
@@ -84,7 +90,9 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
     },
   })
 
-  // Step 2 — writes meta.homeBase through the rev-guarded writeState.
+  // Step 2 — writes meta.homeBase through the rev-guarded writeState, the
+  // journey's own copy (the fallback for anyone without a home of their own,
+  // and what the iOS app reads until it reads the profile), then the profile.
   const saveHome = useMutation({
     mutationFn: async () => {
       if (!trip) throw new Error('No trip yet')
@@ -94,7 +102,10 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
       setTrip(updated)
       qc.setQueryData(tk.trip(trip.id), updated)
     },
-    onSuccess: () => setStep(3),
+    onSuccess: () => {
+      if (homeBase.trim() !== (profileHome ?? '').trim()) setProfileHome.mutate(homeBase)
+      setStep(3)
+    },
   })
 
   // Step 3 — records a co-editor invite (migration 02/06 RLS keeps it role-safe).
@@ -149,14 +160,14 @@ export function OnboardingWizard({ onDone }: { onDone?: () => void }) {
         {step === 2 && (
           <div className={card}>
             <h2 className="mb-1 font-serif text-[19px] font-semibold">
-              Home base <span className="font-sans text-base font-normal text-tx3">- optional</span>
+              Home <span className="font-sans text-base font-normal text-tx3">- optional</span>
             </h2>
-            <p className="mb-3 text-base leading-normal text-tx2">Where the trip starts from - sets your departure default and home context.</p>
+            <p className="mb-3 text-base leading-normal text-tx2">Where you live. Every journey starts and ends there.</p>
             <label className="block text-base font-medium text-tx2">
               City, country
-              <input className={input} value={homeBase} onChange={(e) => setHomeBase(e.target.value)} placeholder="Budapest, Hungary" autoFocus />
+              <input className={input} value={homeBase} onChange={(e) => setTypedHome(e.target.value)} placeholder="Budapest, Hungary" autoFocus />
             </label>
-            {saveHome.isError && <p className={warn}>Could not save. You can set this later in Settings.</p>}
+            {saveHome.isError && <p className={warn}>Could not save. You can set this later in Account.</p>}
             <div className="mt-4 flex items-center gap-3.5">
               <button
                 onClick={() => (homeBase.trim() ? saveHome.mutate() : setStep(3))}

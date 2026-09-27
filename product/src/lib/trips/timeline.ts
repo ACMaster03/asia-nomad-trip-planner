@@ -34,7 +34,15 @@ export function shortDate(iso: string): string {
 }
 
 /** "Budapest, Hungary" → "Budapest". */
-export const homeCity = (homeBase?: string) => (homeBase ?? '').split(',')[0].trim()
+export const homeCity = (homeBase?: string | null) => (homeBase ?? '').split(',')[0].trim()
+
+/**
+ * The home a journey starts and ends at, for the person looking at it (#58):
+ * their own, from the profile (migration 43), else the one the journey was
+ * created with. On a shared journey each traveller sees their own.
+ */
+export const homeFor = (profileHome: string | null | undefined, meta: { homeBase?: string }) =>
+  profileHome?.trim() || meta.homeBase?.trim() || ''
 
 /** A stay counts in the plan — the same flag budget.ts sums. */
 export const stayCounts = (st: Stay) => !!st.include
@@ -142,8 +150,9 @@ export function legFor(legs: Leg[], t: Pick<TransportLeg, 'from' | 'to'>): Leg |
   return legs.find((l) => sameCity(l.from.city, t.from) && sameCity(l.to.city, t.to))
 }
 
-export function buildTimeline(state: TripState): Timeline {
-  const home = homeCity(state.meta.homeBase)
+/** `homeBase`: the viewer's home through homeFor; the journey's own when not given. */
+export function buildTimeline(state: TripState, homeBase: string = state.meta.homeBase ?? ''): Timeline {
+  const home = homeCity(homeBase)
   const stops = state.segments.filter((s) => s.include !== false).slice().sort(byArrive)
   const ends: LegEnd[] = []
   if (home) ends.push({ kind: 'home', city: home })

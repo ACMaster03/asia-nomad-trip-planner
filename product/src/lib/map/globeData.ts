@@ -110,14 +110,8 @@ export function cityInfoRows(c: City | undefined, k: CityCost | undefined): Info
   return rows
 }
 
-export function detectOrigin(stops: RouteNode[], transport: TransportLeg[], cities: City[]): RouteNode | null {
-  if (!stops.length) return null
-  const seen = new Set(stops.map((s) => normCity(s.city)))
-  const inbound = transport
-    .filter((t) => t.include !== false)
-    .find((t) => normCity(t.to) === normCity(stops[0].city) && !seen.has(normCity(t.from)))
-  if (!inbound) return null
-  const name = String(inbound.from).split(' (')[0].trim()
+/** A home node for `name`, when the globe knows where it is: a known home, or a catalogue city. */
+function homePlace(name: string, cities: City[]): RouteNode | null {
   const hp = HOME_PLACES[name]
   const c = cities.find((x) => x.city === name && x.lat != null)
   const p = hp ?? (c ? { lat: c.lat!, lng: c.lng!, country: c.country } : null)
@@ -125,7 +119,22 @@ export function detectOrigin(stops: RouteNode[], transport: TransportLeg[], citi
   return { city: name, country: p.country ?? '', lat: p.lat, lng: p.lng, r: null, home: true, arrive: '' }
 }
 
-export function buildRoute(segments: Segment[], cities: City[], cityIdx: Record<string, CityCost>, transport: TransportLeg[]) {
+export function detectOrigin(stops: RouteNode[], transport: TransportLeg[], cities: City[]): RouteNode | null {
+  if (!stops.length) return null
+  const seen = new Set(stops.map((s) => normCity(s.city)))
+  const inbound = transport
+    .filter((t) => t.include !== false)
+    .find((t) => normCity(t.to) === normCity(stops[0].city) && !seen.has(normCity(t.from)))
+  if (!inbound) return null
+  return homePlace(String(inbound.from).split(' (')[0].trim(), cities)
+}
+
+/**
+ * `home` (#58): the viewer's home, through homeFor, "Budapest, Hungary". When
+ * the globe can place it, the route starts there; otherwise, or without one,
+ * it starts where the first flight in comes from, as before.
+ */
+export function buildRoute(segments: Segment[], cities: City[], cityIdx: Record<string, CityCost>, transport: TransportLeg[], home?: string) {
   const stops: RouteNode[] = segments
     .filter((s) => s.include !== false)
     .map((s) => {
@@ -138,7 +147,8 @@ export function buildRoute(segments: Segment[], cities: City[], cityIdx: Record<
     })
     .filter((x): x is RouteNode => x != null)
     .sort((a, b) => (a.arrive < b.arrive ? -1 : a.arrive > b.arrive ? 1 : 0))
-  const origin = detectOrigin(stops, transport, cities)
+  const homeName = (home ?? '').split(',')[0].trim()
+  const origin = (stops.length && homeName ? homePlace(homeName, cities) : null) ?? detectOrigin(stops, transport, cities)
   const route = origin ? [origin, ...stops] : [...stops]
   let n = 0
   route.forEach((nd) => {
