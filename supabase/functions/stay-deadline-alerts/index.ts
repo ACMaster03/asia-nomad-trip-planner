@@ -49,6 +49,9 @@ const CHARGE_OFFSETS: Record<string, number> = { 'charge-1': 1 }
 // endpoints, not on every ping
 const PUSH_KINDS = new Set(['cancel-7', 'cancel-1', 'charge-1'])
 
+// commitment.ts's isBookedStatus: legacy 'chosen' reads as Booked.
+const isBooked = (status?: string) => ['booked', 'chosen'].includes((status ?? '').toLowerCase())
+
 function daysUntil(iso: string, today: Date): number {
   const target = new Date(iso + 'T00:00:00Z')
   return Math.round((target.getTime() - today.getTime()) / 86_400_000)
@@ -74,7 +77,12 @@ Deno.serve(async (req) => {
     const due: { stay: Stay; kind: string; date: string; label: string }[] = []
 
     for (const stay of stays) {
-      if (stay.include === false) continue // out-of-plan stays don't alert
+      // The same stays the app lists under Reminders (product/src/lib/trips/
+      // reminders.ts): counted in the plan AND booked. An Idea with a
+      // cancel-by date is a price someone found, not a booking to cancel; the
+      // email used to go out for it anyway (#60, found 27 Sep).
+      if (!stay.include) continue
+      if (!isBooked(stay.status)) continue
       if (stay.cancelUntil && stay.remind !== false) {
         const d = daysUntil(stay.cancelUntil, today)
         for (const [kind, offset] of Object.entries(CANCEL_OFFSETS)) {

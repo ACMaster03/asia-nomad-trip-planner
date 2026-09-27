@@ -49,7 +49,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
   latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer for
   Subscriptions entries typed before 3a, went live with #91 on 24 Sep (Petra and
   Patrik answered it on Asia on 25 Sep): its charges start on the
-  day of the answer, not back-filled (open for Patrik). 3c (#92, editing
+  day of the answer, not back-filled (Patrik kept it, 26 Sep). 3c (#92, editing
   one-offs on Money) was closed unmerged on 26 Sep: see the next point. As
   built, every existing account is asked the tracking question once;
   Patrik can change that.
@@ -94,6 +94,13 @@ Petra is new to software work; Patrik is not. The product conventions are in
   changes and what could go wrong, get a "go", merge, watch the Vercel build,
   test on livhold.com, record.
 - No hourly check-ins on pull requests unless someone asks for them.
+- Since 27 Sep another agent builds the iOS app (`ios/`) on Patrik's machine:
+  Trip now, Money next. Web bugs on Home and Trip go first, and every web
+  change to behaviour gets an "iOS:" line in its `docs/NOTES.md` entry (the
+  rule and its file), because that agent reads `main`, not this chat.
+- Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
+  "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
+  `stay-deadline-alerts` redeploy, and the JWT secret rotation.
 
 ## Running the checks
 

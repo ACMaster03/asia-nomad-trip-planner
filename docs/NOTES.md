@@ -5,6 +5,74 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-27
+
+### WORKING IN PARALLEL — the iOS agent (Patrik, 27 Sep)
+
+Another agent builds the iOS app (`ios/`) on Patrik's machine: Trip now, Money next, the
+two screens most finished on the web. Patrik: "we shouldn't be building an iOS application
+on code that is buggy on the web." So web bugs on Home and Trip go first, and **every web
+change to behaviour carries an "iOS:" line in its entry here**: the rule that changed and
+the file it lives in, so the port copies the fixed rule, not the old one. That agent reads
+`main`, not this chat.
+
+### NEXT MACHINE SESSION (Patrik) — the Supabase jobs that need the CLI
+
+Patrik's machine was out of reach on 27 Sep. Three jobs wait for it, best done together:
+1. **Subscription alerts:** is `subscription-alerts` deployed on production, and is its cron
+   job scheduled? Nothing records it since "TO DEPLOY" of 20 Sep (below). Production →
+   Edge Functions, and `supabase/checks/cron-jobs.sql` in the SQL editor, answer it. If not:
+   the steps in that entry, function first, cron second.
+2. **Redeploy `stay-deadline-alerts`** (27 Sep fix below: booked stays only). No redeploy
+   is recorded since the switch of 22 Sep either.
+3. **Rotate the JWT secret** (OPEN since 18 Sep, below). [Likely] It replaces the anon key,
+   so Vercel's environment and the iOS app (#98) need the new one in the same sitting.
+
+### BUILT — tonight's bed on Home, a stop out of the plan, deadline emails (#58, #105, #60)
+
+Patrik, 27 Sep: fix the Home and Trip bugs first (above). Pull request #108.
+- **Home's top card names tonight's stay (#58).** It took the stop's first counted stay
+  and always said "booked", an Idea included, and not tonight's when a stop holds
+  several. Now `stayForNight` (`timeline.ts`) picks the stay covering tonight by the
+  timeline's own rule (counted stays, a booked one first when two claim the night).
+  - Booked: "<name> · booked".
+  - An Idea: "<name> · not booked", amber.
+  - A night no stay covers: "No bed tonight", amber, the timeline's "No bed" row.
+  - A stop with no stay: "No stay yet", amber.
+  - **iOS:** Home's top card uses `stayForNight` and these four lines.
+- **A stop out of the plan (#105).** Its drafts left the forecast but stayed in Bookings'
+  "not booked yet"; its booked stays counted with nothing saying why.
+  - `bookingsSummary`: a draft at a stop out of the plan, or at a deleted stop, is gone
+    from Bookings. A booked one still counts, owed until cancelled, and is marked
+    `outOfPlan`.
+  - Money's Bookings card, opened: "· 1 not in the plan" in amber under Stays.
+  - Trip: the left-out stop's booked stay says "· still in Bookings" in amber.
+  - `computeBudget`'s "Actually committed" (Home before the trip) counts those booked stays
+    too, as Bookings does.
+  - **iOS:** Bookings and the stop card follow `bookingsSummary` (`spending.ts`) and the
+    marker in `Timeline.tsx`.
+- **Deadline emails for booked stays only (#60).** `stay-deadline-alerts` skipped only
+  stays switched off, so an Idea with a cancel-by date got the email, while the app's
+  Reminders list (`reminders.ts`) shows booked stays only. Same rule now. **Not live until
+  the function is redeployed** (machine session, above).
+- **Checked:** `tsc`; `eslint` (the four old findings); `next build`; node tests, 3 new
+  (`stayForNight`, a stop out of the plan in `bookingsSummary`). In the dev previews:
+  `?screen=home&stay=idea|gap|none` shows each Home line; `/dev/trip-preview?maybe=dad` and
+  `/dev/money-preview?maybe=han` show the two markers.
+
+### DECIDED — Patrik: the calls made in the builds stand
+
+Patrik on 26 Sep, catching up on Petra's rounds: "The decided entries are fine I think."
+These three stay as built:
+- **3b's charges start on the day of the answer, not back-filled** (#91, `subsOffer.ts`).
+  Back-filling would have made up charges for services that may already have been
+  cancelled, like the mock's Netflix, cancelled on 6 Sep and then charged on 20 Sep.
+- **3b makes one row per name, not per name and amount**, so a price rise never makes a
+  second subscription of the same thing. "Not now" became "No thanks", because the card never
+  comes back.
+- **Search on All entries matches the category as well as the name** (#90). An entry with no
+  name shows only its category.
+
 ## 2026-09-26 (4)
 
 ### BUILT — One-offs removed (#39)
@@ -125,7 +193,7 @@ Pull request #96, the first of Patrik's two decisions below.
   subscription, stay price, leg price and hours) are now text fields that open the same
   decimal pad and are read by `parseAmount` (`format.ts`): a comma or a dot, spaces ignored,
   anything else refused rather than guessed. The extras form goes with the One-offs removal and
-  was left alone. Pull request #99.
+  was left alone. Pull request #99. Tested on the iPhone by Patrik, 27 Sep: "12,5 saves fine".
 - **A flat option, Patrik's (26 Sep, after #96):** "we might have stuff that we buy that's cheap
   but we don't want it counted." The switch is now on every expense typed by hand, and the 3×
   rule is gone. Stays, transport and subscriptions still never get it. Claude's note: one more
@@ -1728,7 +1796,10 @@ they are passed as `"$CHECKS/…"`. `run()` now absolutises before dispatching.
 
 ## 2026-09-14
 
-### OPEN — turn password sign-in on in the Supabase dashboard (Patrik)
+### RESOLVED — turn password sign-in on in the Supabase dashboard (Patrik)
+
+Patrik, 27 Sep: "password sign-in works for quite a while now". The switch was turned on
+at some point without a note here. Kept below as the record of why it was needed.
 
 **The code is merged and does nothing until this is done.** Password sign-in is
 on the login screen and in Account → Password, but the Supabase project still

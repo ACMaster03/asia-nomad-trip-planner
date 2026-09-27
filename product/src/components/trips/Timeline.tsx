@@ -247,6 +247,8 @@ function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onToggle,
                 <span className="block truncate text-base font-medium">{stay.name || 'Stay'}</span>
                 <span className="block text-[13px] text-tx2">
                   {fmtDay(range.from)} – {fmtDay(range.to)} · {range.nights} {range.nights === 1 ? 'night' : 'nights'} · <span className={TONE[money.tone]}>{money.label}</span>
+                  {/* A stop out of the plan still owes its booked stays (#105): Money counts them until cancelled. */}
+                  {!inPlan && isBookedStatus(stay.status) && <span className="text-warn"> · still in Bookings</span>}
                 </span>
               </span>
               {total > 0 && <span className="flex-none text-base font-semibold tabular-nums">{fmt(total)}</span>}

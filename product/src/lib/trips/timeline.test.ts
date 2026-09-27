@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTimeline, stopCoverage, stayRange, stayMoneyState, legMoneyState, deadlinesMissing, shiftDepartures, homeCity } from './timeline.ts'
+import { buildTimeline, stopCoverage, stayRange, stayMoneyState, legMoneyState, deadlinesMissing, shiftDepartures, homeCity, stayForNight } from './timeline.ts'
 import { stayNights } from './format.ts'
 import type { Segment, Stay, TransportLeg, TripState } from './types'
 
@@ -67,6 +67,24 @@ test('stopCoverage ignores stays that do not count', () => {
   const c = stopCoverage(s, [stay('a', 'dad', { include: false, checkIn: '2026-11-13', checkOut: '2026-11-20' })])
   assert.equal(c.covered.length, 0)
   assert.deepEqual(c.gaps, [])
+})
+
+test('stayForNight: the stay that covers the night, booked first, none on a gap night', () => {
+  const bkk = seg('bkk', 'Bangkok', '2026-09-01', '2026-09-11')
+  const flat = stay('flat', 'bkk', { status: 'booked', checkIn: '2026-09-01', checkOut: '2026-09-05' })
+  const idea = stay('idea', 'bkk', { checkIn: '2026-09-07', checkOut: '2026-09-11' })
+  const stays = [idea, flat, stay('elsewhere', 'han', { status: 'booked' })]
+  assert.equal(stayForNight(bkk, stays, '2026-09-01')?.id, 'flat', 'arrival night')
+  assert.equal(stayForNight(bkk, stays, '2026-09-04')?.id, 'flat')
+  assert.equal(stayForNight(bkk, stays, '2026-09-05'), null, 'check-out morning: the flat is over, nothing claims the 5th')
+  assert.equal(stayForNight(bkk, stays, '2026-09-08')?.id, 'idea', 'an Idea is tonight’s stay, just not a booked one')
+  // two claim the same nights: the booked one is where you sleep
+  const hotel = stay('hotel', 'bkk', { status: 'booked', checkIn: '2026-09-07', checkOut: '2026-09-09' })
+  assert.equal(stayForNight(bkk, [idea, hotel], '2026-09-08')?.id, 'hotel')
+  // a stay that does not count is an old option, never tonight's
+  assert.equal(stayForNight(bkk, [stay('old', 'bkk', { include: false, status: 'booked' })], '2026-09-03'), null)
+  // a stay from before the timeline build spans its stop
+  assert.equal(stayForNight(bkk, [stay('legacy', 'bkk', { status: 'chosen' })], '2026-09-10')?.id, 'legacy')
 })
 
 test('buildTimeline: home, the legs between stops, the way home, transport on its leg, orphans apart', () => {

@@ -100,6 +100,14 @@ export function computeBudget(state: TripState, cityIdx: Record<string, CityCost
       } else missingAccomStops.push(s.city)
       perSeg.push({ seg: s, nights: nn, tier, accom: aHUF, accomSrc: aSrc, live: lHUF, total: aHUF + lHUF, kb: k })
     })
+  // A booked stay at a stop taken out of the plan is committed money until it
+  // is cancelled, as on Money's Bookings row (#105). The estimate above leaves
+  // the stop out; this does not.
+  const planned = new Set(state.segments.filter((s) => s.include !== false).map((s) => s.id))
+  for (const st of state.stays) {
+    if (!st.include || planned.has(st.segId) || !isBookedStatus(st.status)) continue
+    committedAccom += toBase(stayTotal(st, state.segments.find((s) => s.id === st.segId)), st.cur, rates)
+  }
   state.transport.forEach((t) => {
     if (!t.include) return
     const v = toBase(t.price, t.cur, rates)

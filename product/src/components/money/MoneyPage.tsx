@@ -295,7 +295,7 @@ export default function MoneyPage() {
           <BookingsCard
             stays={bookings.stays} transport={bookings.transport}
             paid={bookings.paid} toPay={bookings.toPay}
-            draftedStays={bookings.draftedStays} draftStays={bookings.draftStays}
+            draftedStays={bookings.draftedStays} draftStays={bookings.draftStays} offPlanStays={bookings.offPlanStays}
             fmt={fmt} todayIso={today}
           />
           <TrackSpendingRow on={false} onChange={(on) => setTrack.mutate(on)} className={wide} />
@@ -412,7 +412,7 @@ export default function MoneyPage() {
       <BookingsCard
         stays={bookings.stays} transport={bookings.transport}
         paid={bookings.paid} toPay={bookings.toPay}
-        draftedStays={bookings.draftedStays} draftStays={bookings.draftStays}
+        draftedStays={bookings.draftedStays} draftStays={bookings.draftStays} offPlanStays={bookings.offPlanStays}
         fmt={fmt} todayIso={today} folded={!bookingsOpen} onToggle={toggleBookings}
       />
       <SubscriptionsCard
