@@ -110,6 +110,12 @@ final class AuthStore {
 
     var email: String? { session?.user.email }
 
+    /// The name the web shows to people you plan with (`user_metadata.first_name`).
+    var firstName: String? {
+        if case let .string(name)? = session?.user.userMetadata["first_name"], !name.isEmpty { return name }
+        return nil
+    }
+
     func identities() async throws -> [UserIdentity] {
         try await auth.userIdentities()
     }

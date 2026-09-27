@@ -24,6 +24,12 @@ struct GalleryView: View {
                     Notice(text: "Free cancellation ends tomorrow at 12:00.", kind: .warn)
                 }
                 section("Input") { Field(placeholder: "Add a note", text: $note) }
+                section("Tab bar") {
+                    // A sample only: the real bar belongs to the app shell (Shell/AppShell.swift).
+                    TabBar(selection: $tab) { toast = "Checked in to Da Lat" }
+                        .padding(.top, 28)
+                        .clipShape(.rect(cornerRadius: Radius.r))
+                }
                 section("Wash") { washSample }
                 section("Colours") { swatches }
             }
@@ -32,14 +38,7 @@ struct GalleryView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Palette.canvas)
-        // Keeps scrolled content from running under the status bar.
-        .safeAreaInset(edge: .top, spacing: 0) {
-            Color.clear.frame(height: 0).background(Palette.canvas)
-        }
         .livholdText()
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            TabBar(selection: $tab) { toast = "Checked in to Da Lat" }
-        }
         .toast($toast)
         .sheet(isPresented: $sheetOpen) { sampleSheet }
     }
