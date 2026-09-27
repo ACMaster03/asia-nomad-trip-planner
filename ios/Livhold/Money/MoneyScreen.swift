@@ -219,7 +219,7 @@ private struct TopCard: View {
     var body: some SwiftUI.View {
         VStack(alignment: .leading, spacing: 12) {
             Picker("Show", selection: $view.animation(Motion.settle)) {
-                ForEach(View.allCases) { Text($0.rawValue).tag($0) }
+                ForEach(View.allCases) { Text(title($0)).tag($0) }
             }
             .pickerStyle(.segmented)
             Group {
@@ -247,6 +247,14 @@ private struct TopCard: View {
         .padding(16)
         .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
         .sensoryFeedback(.selection, trigger: view)
+    }
+
+    /// The middle tab is the stop's city (Patrik, 27 Sep); a name too long for a
+    /// third of the control, or no stop today, reads "This stop".
+    private func title(_ v: View) -> String {
+        guard v == .here else { return v.rawValue }
+        guard let city = model.currentPlan?.seg.city, city.count <= 12 else { return "This stop" }
+        return city
     }
 
     private func big(_ text: String, value: Double) -> some SwiftUI.View {
@@ -405,9 +413,7 @@ private struct TopCard: View {
                     tile("The stop comes to", MoneyText.approx(row.projected, model.base), PlanCard.includedWords(row.stayLabel),
                          tone: row.stayLabel == .draft || row.stayLabel == .none ? Palette.warn : Palette.tx2)
                 }
-                ProgressTrack(value: row.nights > 0 ? Double(row.nightsIn) / Double(row.nights) : 0)
-                Text(row.remaining > 0 ? "\(row.remaining) night\(row.remaining == 1 ? "" : "s") left here" : "Last night here")
-                    .font(.sans(13)).foregroundStyle(Palette.tx2)
+                StopBar(row: row)
             }
         } else {
             VStack(alignment: .leading, spacing: 6) {
@@ -416,6 +422,57 @@ private struct TopCard: View {
                 Text("The stop view comes back when you arrive somewhere on the plan.")
                     .font(.sans(13)).foregroundStyle(Palette.tx2)
             }
+        }
+    }
+}
+
+/// The stop's nights: today above the bar where it stands, arrival and
+/// departure under its ends (Patrik, 27 Sep: the bar had no words).
+private struct StopBar: View {
+    let row: MoneyModel.PlanRow
+
+    var body: some View {
+        let nights = max(1, row.nights)
+        let done = min(row.nightsIn, nights)
+        VStack(alignment: .leading, spacing: 5) {
+            GeometryReader { geo in
+                let w = geo.size.width
+                // Over the middle of tonight's night, kept inside the card.
+                let x = done > 0 ? w * (Double(done) - 0.5) / Double(nights) : 0
+                Text("today")
+                    .font(.sans(12, weight: .semibold)).foregroundStyle(Palette.ac2)
+                    .fixedSize()
+                    .alignmentGuide(.leading) { d in -min(max(0, x - d.width / 2), w - d.width) }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(height: 15)
+            bar(nights: nights, done: done)
+            HStack(alignment: .firstTextBaseline) {
+                Text("in \(Days.short(row.seg.arrive))")
+                Spacer()
+                Text(row.remaining > 0
+                     ? "\(row.remaining) night\(row.remaining == 1 ? "" : "s") left · out \(Days.short(row.seg.depart))"
+                     : "last night · out \(Days.short(row.seg.depart))")
+            }
+            .font(.sans(12.5)).foregroundStyle(Palette.tx2)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// One segment a night while they fit; a plain bar for long stays.
+    @ViewBuilder private func bar(nights: Int, done: Int) -> some View {
+        if nights <= 31 {
+            HStack(spacing: 2) {
+                ForEach(0..<nights, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 2.5)
+                        .fill(i < done ? Palette.ac : Palette.tr)
+                        .opacity(i == done - 1 ? 1 : (i < done ? 0.75 : 1))
+                }
+            }
+            .frame(height: 10)
+            .animation(Motion.settle, value: done)
+        } else {
+            ProgressTrack(value: Double(done) / Double(nights))
         }
     }
 }
@@ -578,19 +635,30 @@ private struct DailySpendCard: View {
                         .zIndex(-1)
                 }
             }
-            // A tap picks a day, a second tap on it closes the callout. (The built-in
-            // selection needs a press-and-drag, which fights the page's scrolling.)
+            // A tap picks a day, a second tap on it closes the callout. Hold, then drag,
+            // and the callout follows the finger day by day, with a tick on each
+            // (Patrik, 27 Sep). The hold keeps a plain swipe for the page's scrolling.
             .chartOverlay { proxy in
                 GeometryReader { geo in
+                    let dayAt = { (x: CGFloat) -> String? in
+                        guard let plot = proxy.plotFrame,
+                              let date: Date = proxy.value(atX: x - geo[plot].origin.x) else { return nil }
+                        return min(max(EntrySheet.iso(date), window.from), window.to)
+                    }
                     Rectangle().fill(.clear).contentShape(.rect)
-                        .gesture(SpatialTapGesture().onEnded { tap in
-                            guard let plot = proxy.plotFrame else { return }
-                            let x = tap.location.x - geo[plot].origin.x
-                            guard let date: Date = proxy.value(atX: x) else { return }
-                            let day = EntrySheet.iso(date)
-                            guard days.contains(where: { $0.date == day }) else { return }
-                            withAnimation(Motion.quick) { selected = selected == day ? nil : day }
-                        })
+                        .gesture(
+                            LongPressGesture(minimumDuration: 0.2)
+                                .sequenced(before: DragGesture(minimumDistance: 0))
+                                .onChanged { value in
+                                    guard case .second(true, let drag?) = value,
+                                          let day = dayAt(drag.location.x), day != selected else { return }
+                                    selected = day
+                                }
+                                .exclusively(before: SpatialTapGesture().onEnded { tap in
+                                    guard let day = dayAt(tap.location.x) else { return }
+                                    withAnimation(Motion.quick) { selected = selected == day ? nil : day }
+                                })
+                        )
                 }
             }
             .chartYAxis(.hidden)
@@ -869,10 +937,10 @@ struct PlanCard: View {
     /// Under a stop's total: what the total holds of the stay (Patrik, 27 Sep).
     static func includedWords(_ label: MoneyModel.PlanRow.StayLabel) -> String {
         switch label {
-        case .booked: "the stay included, paid"
-        case .unpaid: "the stay included, to pay"
-        case .draft: "the stay included, not booked yet"
-        case .estimate: "a stay at the city average included"
+        case .booked: "stay included"
+        case .unpaid: "stay included, to pay"
+        case .draft: "stay included, not booked yet"
+        case .estimate: "stay at the city average included"
         case .none: "no stay yet"
         }
     }
