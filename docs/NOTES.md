@@ -5,6 +5,21 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-27
+
+### DECIDED — Patrik: the calls made in the builds stand
+
+Patrik on 26 Sep, catching up on Petra's rounds: "The decided entries are fine I think."
+These three stay as built:
+- **3b's charges start on the day of the answer, not back-filled** (#91, `subsOffer.ts`).
+  Back-filling would have made up charges for services that may already have been
+  cancelled, like the mock's Netflix, cancelled on 6 Sep and then charged on 20 Sep.
+- **3b makes one row per name, not per name and amount**, so a price rise never makes a
+  second subscription of the same thing. "Not now" became "No thanks", because the card never
+  comes back.
+- **Search on All entries matches the category as well as the name** (#90). An entry with no
+  name shows only its category.
+
 ## 2026-09-26 (4)
 
 ### BUILT — One-offs removed (#39)
@@ -125,7 +140,7 @@ Pull request #96, the first of Patrik's two decisions below.
   subscription, stay price, leg price and hours) are now text fields that open the same
   decimal pad and are read by `parseAmount` (`format.ts`): a comma or a dot, spaces ignored,
   anything else refused rather than guessed. The extras form goes with the One-offs removal and
-  was left alone. Pull request #99.
+  was left alone. Pull request #99. Tested on the iPhone by Patrik, 27 Sep: "12,5 saves fine".
 - **A flat option, Patrik's (26 Sep, after #96):** "we might have stuff that we buy that's cheap
   but we don't want it counted." The switch is now on every expense typed by hand, and the 3×
   rule is gone. Stays, transport and subscriptions still never get it. Claude's note: one more
