@@ -12,6 +12,7 @@ struct CodeEntryView: View {
 
     @State private var code = ""
     @State private var busy = false
+    @State private var busySince: Date?
     @State private var error: String?
     @State private var resendAt = Date.now.addingTimeInterval(Self.resendWait)
     @State private var sent: String?
@@ -42,6 +43,10 @@ struct CodeEntryView: View {
             .labelStyle(.titleAndIcon)
             .frame(maxWidth: .infinity)
 
+            if busy {
+                TravelLoader().frame(maxWidth: .infinity).padding(.vertical, 4)
+            }
+            if let busySince { WaitingNote(since: busySince) }
             if let error { Notice(text: error, kind: .warn) }
 
             Spacer()
@@ -110,10 +115,16 @@ struct CodeEntryView: View {
         if digits != code { code = digits }
         guard digits.count == Self.length, !busy else { return }
         busy = true
+        busySince = .now
         error = nil
         Task {
-            defer { busy = false }
+            defer {
+                busy = false
+                busySince = nil
+            }
             do {
+                // Offline: hold the typed code and verify the moment the connection is back.
+                try await Connectivity.shared.waitUntilOnline()
                 try await store.verify(code: digits, email: email)
                 // Signed in: AuthStore's phase flips and the root swaps this whole stack out.
             } catch {
@@ -126,10 +137,15 @@ struct CodeEntryView: View {
 
     private func resend() {
         busy = true
+        busySince = .now
         error = nil
         Task {
-            defer { busy = false }
+            defer {
+                busy = false
+                busySince = nil
+            }
             do {
+                try await Connectivity.shared.waitUntilOnline()
                 try await store.sendCode(to: email)
                 resendAt = .now.addingTimeInterval(Self.resendWait)
                 sent = "New code sent"

@@ -1,18 +1,22 @@
 import SwiftUI
 
-/// Which bottom bar the app draws. Both are built so Patrik and Petra can choose by
-/// feel on their phones (spine mock, question A/B); the loser goes once they answer.
+/// Which bottom bar the app draws. All three are on trial so Patrik and Petra can
+/// choose by feel on their phones; the ones not chosen go afterwards.
 enum TabBarStyle: String, CaseIterable, Identifiable {
     /// The web's bar, drawn natively: solid, with the raised Check in circle.
     case livhold
-    /// iOS's own tab bar: Liquid Glass on iOS 26+, Check in as the bottom accessory.
+    /// iOS's own bar (Liquid Glass on 26+) with a slim "Check in" strip above it.
+    /// Raw value kept from build 2, where it was the only iOS option.
     case system
+    /// iOS's own bar with Check in as a separate round glass ＋ beside the tabs.
+    case systemButton
 
     var id: Self { self }
     var title: String {
         switch self {
         case .livhold: "Livhold"
-        case .system: "iOS"
+        case .system: "iOS · strip"
+        case .systemButton: "iOS · ＋"
         }
     }
 }
@@ -22,17 +26,26 @@ enum TabBarStyle: String, CaseIterable, Identifiable {
 struct AppShell: View {
     @AppStorage("tabBarStyle") private var style: TabBarStyle = .livhold
     @State private var router = TabRouter()
+    @Namespace private var checkInZoom
 
     var body: some View {
         Group {
             switch style {
             case .livhold: LivholdTabs()
-            case .system: SystemTabs()
+            case .system: SystemTabs(checkIn: .strip)
+            case .systemButton: SystemTabs(checkIn: .button)
             }
         }
         .environment(router)
+        .environment(\.checkInZoom, checkInZoom)
         .sheet(isPresented: $router.checkInOpen) {
             CheckInSheet()
+                // The ＋ lives in the system bar, which can't be a zoom source.
+                .modifier(ZoomDestination(id: "checkin", namespace: style == .systemButton ? nil : checkInZoom))
+        }
+        // A firm tap as Check in opens (the Livhold bar's circle makes its own).
+        .sensoryFeedback(.impact(weight: .medium), trigger: router.checkInOpen) { _, open in
+            open && style != .livhold
         }
     }
 }
@@ -62,76 +75,97 @@ private struct LivholdTabs: View {
 
 // MARK: - B · iOS's own bar
 
+private enum CheckInPlacement { case strip, button }
+
+/// A tab or the Check in slot beside them — the ＋ variant puts Check in inside
+/// the system bar, where selecting it must open the sheet rather than a tab.
+private enum Slot: Hashable {
+    case tab(AppTab)
+    case checkIn
+}
+
 private struct SystemTabs: View {
+    let checkIn: CheckInPlacement
     @Environment(TabRouter.self) private var router
-    /// On iOS 17–25 there is no bottom accessory, so Check in is a fifth tab
-    /// that opens the sheet instead of being selected.
-    @State private var fallbackSelection: String = AppTab.home.rawValue
 
     var body: some View {
-        if #available(iOS 26, *) {
-            TabView(selection: router.selectionBinding) {
+        Group {
+            if #available(iOS 26, *) {
+                modern
+            } else {
+                legacy
+            }
+        }
+        .sensoryFeedback(.selection, trigger: router.selection)
+    }
+
+    /// iOS 26+: the Liquid Glass bar. All four tabs stay visible while scrolling
+    /// (Patrik, 2026-09-27: hiding them is not worth it).
+    @available(iOS 26, *)
+    @ViewBuilder private var modern: some View {
+        switch checkIn {
+        case .strip:
+            TabView(selection: slotBinding) {
                 ForEach(AppTab.allCases) { tab in
-                    TabStack(tab: tab)
-                        .tabItem { Label(tab.title, systemImage: tab.symbol) }
-                        .tag(tab)
+                    Tab(tab.title, systemImage: tab.symbol, value: Slot.tab(tab)) { TabStack(tab: tab) }
                 }
             }
-            .tabBarMinimizeBehavior(.onScrollDown)
             .tabViewBottomAccessory {
-                CheckInAccessory { router.checkInOpen = true }
+                CheckInStrip { router.checkInOpen = true }
             }
-        } else {
-            TabView(selection: fallbackBinding) {
+        case .button:
+            TabView(selection: slotBinding) {
                 ForEach(AppTab.allCases) { tab in
-                    TabStack(tab: tab)
-                        .tabItem { Label(tab.title, systemImage: tab.symbol) }
-                        .tag(tab.rawValue)
+                    Tab(tab.title, systemImage: tab.symbol, value: Slot.tab(tab)) { TabStack(tab: tab) }
                 }
-                Color.clear
-                    .tabItem { Label("Check in", systemImage: "mappin.and.ellipse") }
-                    .tag("checkin")
+                // The separate round slot at the bar's end. iOS reserves it for
+                // search; Map's search can move into its own screen if this wins.
+                Tab("Check in", systemImage: "plus", value: Slot.checkIn, role: .search) {
+                    Color.clear
+                }
             }
         }
     }
 
-    private var fallbackBinding: Binding<String> {
-        Binding { router.selection.rawValue } set: { value in
-            if let tab = AppTab(rawValue: value) {
-                router.select(tab)
-            } else {
-                router.checkInOpen = true
+    /// iOS 17–25: the plain system bar, Check in as a fifth tab.
+    private var legacy: some View {
+        TabView(selection: slotBinding) {
+            ForEach(AppTab.allCases) { tab in
+                TabStack(tab: tab)
+                    .tabItem { Label(tab.title, systemImage: tab.symbol) }
+                    .tag(Slot.tab(tab))
+            }
+            Color.clear
+                .tabItem { Label("Check in", systemImage: "plus.circle") }
+                .tag(Slot.checkIn)
+        }
+    }
+
+    private var slotBinding: Binding<Slot> {
+        Binding { .tab(router.selection) } set: { slot in
+            switch slot {
+            case .tab(let tab): router.select(tab)
+            case .checkIn: router.checkInOpen = true
             }
         }
     }
 }
 
-/// The glass strip above the iOS bar: where you are, one tap to check in again.
-private struct CheckInAccessory: View {
+/// The slim glass strip above the iOS bar: just the action, nothing else.
+private struct CheckInStrip: View {
     let open: () -> Void
+    @Environment(\.checkInZoom) private var zoom
 
     var body: some View {
         Button(action: open) {
-            HStack(spacing: 10) {
-                Image(systemName: "mappin.and.ellipse")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Palette.on)
-                    .frame(width: 28, height: 28)
-                    .background(Palette.ac, in: .circle)
-                (Text("Da Lat").fontWeight(.semibold) + Text(" · this morning"))
-                    .font(.sans(14))
-                    .foregroundStyle(Palette.tx)
-                    .lineLimit(1)
-                Spacer(minLength: 8)
-                Text("Check in")
-                    .font(.sans(14, weight: .semibold))
-                    .foregroundStyle(Palette.ac)
-            }
-            .padding(.horizontal, 12)
-            .contentShape(.rect)
+            Label("Check in", systemImage: "plus")
+                .font(.sans(16, weight: .semibold))
+                .foregroundStyle(Palette.ac)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Check in. Last: Da Lat, this morning.")
+        .modifier(ZoomSource(id: "checkin", namespace: zoom))
     }
 }
 
@@ -143,12 +177,14 @@ private struct TabStack: View {
     let tab: AppTab
     @Environment(TabRouter.self) private var router
     @AppStorage("appearance") private var appearance: Appearance = .system
+    @Namespace private var zoom
 
     var body: some View {
         NavigationStack(path: router.path(tab)) {
             root
                 .navigationDestination(for: Route.self, destination: destination)
         }
+        .environment(\.tabZoom, zoom)
     }
 
     @ViewBuilder private var root: some View {
@@ -168,7 +204,9 @@ private struct TabStack: View {
             GalleryView(appearance: $appearance)
                 .navigationTitle("Design gallery")
                 .navigationBarTitleDisplayMode(.inline)
-        case .stop(let name): StopScreen(name: name)
+        case .stop(let name):
+            StopScreen(name: name)
+                .modifier(ZoomDestination(id: route, namespace: zoom))
         case .tripSettings: TripSettingsScreen()
         }
     }

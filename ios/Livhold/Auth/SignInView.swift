@@ -15,6 +15,8 @@ struct SignInView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var busy = false
+    @State private var busySince: Date?
+    @State private var work: Task<Void, Never>?
     @State private var error: String?
     @State private var notice: String?
     @State private var codeSentTo: String?
@@ -36,6 +38,7 @@ struct SignInView: View {
                     VStack(spacing: 14) {
                         if mode == .code { appleButton; or }
                         form
+                        if let busySince { WaitingNote(since: busySince, onCancel: cancel) }
                         if let error { Notice(text: error, kind: .warn) }
                         if let notice { Notice(text: notice) }
                     }
@@ -115,12 +118,20 @@ struct SignInView: View {
             }
         }
 
-        Button(mode == .code ? "Email me a code" : "Sign in") {
+        Button {
             mode == .code ? sendCode() : signInWithPassword()
+        } label: {
+            // While waiting, the button carries the travelling dot instead of a spinner.
+            // It stays at full strength (not disabled) so the dot reads clearly;
+            // the actions ignore taps while busy.
+            if busy {
+                TravelLoader(color: Palette.on).frame(height: 21)
+            } else {
+                Text(mode == .code ? "Email me a code" : "Sign in")
+            }
         }
         .buttonStyle(.primary)
-        .disabled(busy || !looksLikeEmail || (mode == .password && password.isEmpty))
-        .overlay { if busy { ProgressView().tint(Palette.on) } }
+        .disabled(!busy && (!looksLikeEmail || (mode == .password && password.isEmpty)))
 
         if mode == .code {
             LinkButton("Use a password instead") { switchTo(.password) }
@@ -177,14 +188,33 @@ struct SignInView: View {
         }
     }
 
-    private func run(_ work: @escaping @MainActor () async throws -> Void) {
+    /// Every request goes through here: offline, it waits for the connection instead
+    /// of failing; slow, the note under the form says so after a few seconds.
+    private func run(_ request: @escaping @MainActor () async throws -> Void) {
+        guard !busy else { return }
         busy = true
+        busySince = .now
         error = nil
         notice = nil
-        Task {
-            defer { busy = false }
-            do { try await work() } catch { self.error = AuthStore.message(for: error) }
+        work = Task {
+            defer {
+                busy = false
+                busySince = nil
+            }
+            do {
+                try await Connectivity.shared.waitUntilOnline()
+                try await request()
+            } catch {
+                self.error = AuthStore.message(for: error)
+            }
         }
+    }
+
+    private func cancel() {
+        work?.cancel()
+        work = nil
+        busy = false
+        busySince = nil
     }
 }
 

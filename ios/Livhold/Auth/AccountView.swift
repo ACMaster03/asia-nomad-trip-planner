@@ -25,7 +25,7 @@ struct AccountView: View {
             } header: {
                 Text("Look")
             } footer: {
-                Text("The tab bar is on trial: try both, then answer on the spine mock. The other one goes.")
+                Text("The tab bar is on trial: try each, then say which stays. The others go.")
             }
             Section {
                 Button("Sign out", role: .destructive) {

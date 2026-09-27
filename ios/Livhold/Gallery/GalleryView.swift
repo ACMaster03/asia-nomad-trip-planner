@@ -30,6 +30,16 @@ struct GalleryView: View {
                         .padding(.top, 28)
                         .clipShape(.rect(cornerRadius: Radius.r))
                 }
+                section("Waiting on the network") {
+                    HStack(spacing: 20) {
+                        TravelLoader()
+                        TravelLoader(color: Palette.on)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 18)
+                            .background(Palette.ac, in: .rect(cornerRadius: Radius.rCtl))
+                    }
+                    WaitingNote(since: .now.addingTimeInterval(-10)) {}
+                }
                 section("Wash") { washSample }
                 section("Colours") { swatches }
             }

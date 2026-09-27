@@ -33,6 +33,8 @@ struct TabBar: View {
     var showCheckIn = true
     var onCheckIn: () -> Void = {}
     @State private var checkInTaps = 0
+    /// Set by the app shell so the Check in sheet can grow out of the circle.
+    @Environment(\.checkInZoom) private var zoom
 
     var body: some View {
         HStack(spacing: 0) {
@@ -86,6 +88,7 @@ struct TabBar: View {
                     .background(Palette.ac, in: .circle)
                     .overlay(Circle().strokeBorder(Palette.sf, lineWidth: 4).padding(-4))
                     .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
+                    .modifier(ZoomSource(id: "checkin", namespace: zoom))
                 Text("Check in")
                     .font(.sans(12, weight: .semibold, relativeTo: .caption2))
                     .foregroundStyle(Palette.ac)

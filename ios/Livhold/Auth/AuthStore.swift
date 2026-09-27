@@ -190,7 +190,18 @@ extension AuthStore {
             default: break
             }
         }
-        if (error as? URLError) != nil { return "No connection. Check your internet and try again." }
+        if error is CancellationError { return nil }
+        if let url = error as? URLError {
+            switch url.code {
+            case .cancelled: return nil
+            case .timedOut:
+                return "The connection is too slow to get through right now. Try again in a moment, or from Wi-Fi."
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
+                return "No connection. Livhold will sign you in once you’re back online — try again then."
+            default:
+                return "We couldn’t reach Livhold. Check your connection and try again."
+            }
+        }
         return "Something went wrong signing in. Please try again in a moment."
     }
 }

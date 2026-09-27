@@ -53,6 +53,7 @@ private struct StandInCard: View {
                 Text(detail).font(.sans(15)).foregroundStyle(Palette.tx2)
             }
         }
+        .settlesOnScroll()
     }
 }
 
@@ -94,6 +95,8 @@ struct HomeScreen: View {
 // MARK: - Trip
 
 struct TripScreen: View {
+    @Environment(\.tabZoom) private var zoom
+
     private let stops: [(String, String)] = [
         ("Ho Chi Minh City", "18 → 22 Sep · 4 nights"),
         ("Mũi Né", "22 → 25 Sep · 3 nights"),
@@ -130,8 +133,11 @@ struct TripScreen: View {
                     .padding(.horizontal, 18)
                     .padding(.vertical, 14)
                     .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
+                    // The card grows into the stop's screen and shrinks back on the way out.
+                    .modifier(ZoomSource(id: Route.stop(stop.0), namespace: zoom))
                 }
                 .buttonStyle(.plain)
+                .settlesOnScroll()
             }
         }
     }
@@ -223,6 +229,7 @@ struct MapScreen: View {
 struct CheckInSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var choice = "Da Lat"
+    @State private var done = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -246,8 +253,25 @@ struct CheckInSheet: View {
                 .buttonStyle(.plain)
             }
             Spacer()
-            Button("Check in") { dismiss() }
-                .buttonStyle(.primary)
+            // The one small celebration in the app: the button becomes the result,
+            // a success tap, a beat to see it, then the sheet goes by itself.
+            Button {
+                guard !done else { return }
+                withAnimation(Motion.settle) { done = true }
+                Task {
+                    try? await Task.sleep(for: .milliseconds(900))
+                    dismiss()
+                }
+            } label: {
+                if done {
+                    Label("Checked in to \(choice)", systemImage: "checkmark")
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                } else {
+                    Text("Check in")
+                }
+            }
+            .buttonStyle(.primary)
+            .sensoryFeedback(.success, trigger: done) { _, now in now }
         }
         .padding(20)
         .padding(.top, 8)
