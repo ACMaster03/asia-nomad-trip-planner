@@ -97,7 +97,9 @@ struct HomeScreen: View {
 struct TripScreen: View {
     @Environment(\.tabZoom) private var zoom
 
-    private let stops: [(String, String)] = [
+    private var stops: [(String, String)] { Self.stops }
+
+    static let stops: [(String, String)] = [
         ("Ho Chi Minh City", "18 → 22 Sep · 4 nights"),
         ("Mũi Né", "22 → 25 Sep · 3 nights"),
         ("Da Lat", "25 Sep → 4 Oct · now"),
@@ -143,21 +145,64 @@ struct TripScreen: View {
     }
 }
 
+/// A stop opens as a place, not another list: a landscape header with the name large
+/// over it, so the card visibly grows into a scene (2026-09-27, "it blends together").
+/// The wash stands in for a photo of the place.
 struct StopScreen: View {
     let name: String
+
+    private var dates: String {
+        TripScreen.stops.first { $0.0 == name }?.1 ?? ""
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                StandInCard(kicker: "Stay", title: "Nest Homestay", detail: "5 nights")
-                StandInCard(kicker: "Plans", title: "Langbiang at sunrise", detail: "Thu · with Petra")
-                StandInCard(kicker: "Notes", title: "Night market", detail: "Try the bánh tráng nướng")
+                hero
+                VStack(alignment: .leading, spacing: 12) {
+                    StandInCard(kicker: "Stay", title: "Nest Homestay", detail: "5 nights")
+                    StandInCard(kicker: "Plans", title: "Langbiang at sunrise", detail: "Thu · with Petra")
+                    StandInCard(kicker: "Notes", title: "Night market", detail: "Try the bánh tráng nướng")
+                    StandInCard(kicker: "Money here", title: "€212 so far", detail: "stays, food, the jeep to Langbiang")
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
-            .padding(16)
         }
+        .ignoresSafeArea(edges: .top)
         .background(Palette.canvas.ignoresSafeArea())
-        .navigationTitle(name)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var hero: some View {
+        ZStack(alignment: .bottomLeading) {
+            Wash.light.base
+            Image(Wash.light.image)
+                .resizable()
+                .scaledToFill()
+                .frame(height: 340, alignment: .bottom)
+                .clipped()
+            // Fades the picture into the page so the cards below belong to it.
+            LinearGradient(
+                colors: [Palette.canvas.opacity(0), Palette.canvas.opacity(0.85), Palette.canvas],
+                startPoint: .init(x: 0.5, y: 0.45),
+                endPoint: .bottom
+            )
+            VStack(alignment: .leading, spacing: 4) {
+                Text(name)
+                    .font(.serif(44, weight: .medium, relativeTo: .largeTitle))
+                    .foregroundStyle(Palette.tx)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                Text(dates)
+                    .font(.sans(16, weight: .medium))
+                    .foregroundStyle(Palette.tx2)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+        }
+        .frame(height: 340)
     }
 }
 

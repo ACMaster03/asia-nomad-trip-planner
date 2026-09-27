@@ -26,7 +26,7 @@ struct GalleryView: View {
                 section("Input") { Field(placeholder: "Add a note", text: $note) }
                 section("Tab bar") {
                     // A sample only: the real bar belongs to the app shell (Shell/AppShell.swift).
-                    TabBar(selection: $tab) { toast = "Checked in to Da Lat" }
+                    GlassTabBar(selection: $tab) { toast = "Checked in to Da Lat" }
                         .padding(.top, 28)
                         .clipShape(.rect(cornerRadius: Radius.r))
                 }

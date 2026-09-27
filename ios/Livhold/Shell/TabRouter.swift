@@ -39,6 +39,34 @@ final class TabRouter {
     }
 }
 
+/// The four tabs, as on the web's `AppNav`. Check in is not a tab: it is an action
+/// in the middle of the bar that opens a sheet.
+///
+/// Icons are SF Symbols stand-ins for the web's Lucide set (House, Route, Wallet,
+/// Map) until the Lucide-vs-SF-Symbols decision is made.
+enum AppTab: String, CaseIterable, Identifiable {
+    case home, trip, money, map
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .home: "Home"
+        case .trip: "Trip"
+        case .money: "Money"
+        case .map: "Map"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .home: "house"
+        case .trip: "point.topleft.down.to.point.bottomright.curvepath"
+        case .money: "wallet.bifold"
+        case .map: "map"
+        }
+    }
+}
+
 /// Every screen a tab can push. Pushing by value keeps each tab's stack a plain list.
 enum Route: Hashable {
     case account

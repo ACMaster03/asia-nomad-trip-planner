@@ -6,7 +6,6 @@ import SwiftUI
 struct AccountView: View {
     @Environment(AuthStore.self) private var store
     @AppStorage("appearance") private var appearance: Appearance = .system
-    @AppStorage("tabBarStyle") private var tabBarStyle: TabBarStyle = .livhold
 
     var body: some View {
         List {
@@ -18,14 +17,9 @@ struct AccountView: View {
                 Picker("Appearance", selection: $appearance) {
                     ForEach(Appearance.allCases) { Text($0.title).tag($0) }
                 }
-                Picker("Tab bar", selection: $tabBarStyle) {
-                    ForEach(TabBarStyle.allCases) { Text($0.title).tag($0) }
-                }
                 NavigationLink("Design gallery", value: Route.gallery)
             } header: {
                 Text("Look")
-            } footer: {
-                Text("The tab bar is on trial: try each, then say which stays. The others go.")
             }
             Section {
                 Button("Sign out", role: .destructive) {
