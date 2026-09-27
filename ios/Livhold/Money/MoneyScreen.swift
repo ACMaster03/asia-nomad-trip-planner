@@ -212,7 +212,8 @@ extension String {
 private struct TopCard: View {
     let model: MoneyModel
 
-    enum View: String, CaseIterable, Identifiable { case today = "Today", here = "Here", journey = "Journey"; var id: Self { self } }
+    /// The stop and the whole journey; Today went on 27 Sep (Patrik).
+    enum View: String, CaseIterable, Identifiable { case here = "Here", journey = "Journey"; var id: Self { self } }
     @AppStorage("money.topView") private var view: View = .journey
     @Environment(TabRouter.self) private var router
 
@@ -224,25 +225,11 @@ private struct TopCard: View {
             .pickerStyle(.segmented)
             Group {
                 switch view {
-                case .today: today
                 case .here: here
                 case .journey: journey
                 }
             }
             .transition(.opacity)
-            if model.unlocks.beyond, model.beyondTotal > 0 {
-                Divider().overlay(Palette.ln)
-                NavigationLink(value: Route.moneyEntries("beyond")) {
-                    HStack {
-                        Text("+ \(MoneyText.short(model.beyondTotal, model.base)) beyond the everyday")
-                            .font(.sans(13.5)).foregroundStyle(Palette.tx2)
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.tx3)
-                    }
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-            }
         }
         .padding(16)
         .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
@@ -282,13 +269,18 @@ private struct TopCard: View {
     private var journey: some SwiftUI.View {
         let p = model.projection
         return VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                CardLabel(spentLabel)
-                big(MoneyText.short(p.spent, model.base), value: p.spent)
-                if p.scheduled > 0 {
-                    Text("+ \(MoneyText.approx(p.scheduled, model.base)) scheduled, not spent yet")
-                        .font(.sans(13)).foregroundStyle(Palette.tx2)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    CardLabel(spentLabel)
+                    big(MoneyText.short(p.spent, model.base), value: p.spent)
+                    if p.scheduled > 0 {
+                        Text("+ \(MoneyText.approx(p.scheduled, model.base)) scheduled, not spent yet")
+                            .font(.sans(13)).foregroundStyle(Palette.tx2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                ring(p)
             }
             HStack(alignment: .top, spacing: 12) {
                 paceTile
@@ -296,10 +288,66 @@ private struct TopCard: View {
                     tile("Lands near", MoneyText.approx(p.projected, model.base), capLine(p.projected), tone: over(p.projected) ? Palette.warn : Palette.tx2)
                 }
             }
-            if let cap = model.cap { capBar(spent: p.spent, projected: model.unlocks.projection ? p.projected : nil, cap: cap) }
             if model.unlocks.projection, let lessLine = lessPerDay(p) {
                 Text(lessLine).font(.sans(13)).foregroundStyle(Palette.warn)
             }
+            if model.unlocks.beyond, model.beyondTotal > 0 {
+                Divider().overlay(Palette.ln)
+                NavigationLink(value: Route.moneyEntries("beyond")) {
+                    HStack {
+                        Text("+ \(MoneyText.short(model.beyondTotal, model.base)) beyond the everyday")
+                            .font(.sans(13.5)).foregroundStyle(Palette.tx2)
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.tx3)
+                    }
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    /// The cap as a ring (Patrik, 27 Sep, instead of a bar with no words): the
+    /// solid arc is spent, the pale one where the journey lands, the full circle
+    /// the cap; the middle says how much is spent. With no cap it measures the
+    /// spend against where the journey lands. A tap opens the cap in Settings → Money.
+    @ViewBuilder private func ring(_ p: MoneyModel.Projection) -> some SwiftUI.View {
+        let projected = model.unlocks.projection ? p.projected : nil
+        if let whole = model.cap ?? projected, whole > 0 {
+            let isOver = (projected ?? p.spent) > whole
+            let tint = isOver ? Palette.warn : Palette.ac
+            Button { router.paths[.money, default: []].append(.moneySettings) } label: {
+                VStack(spacing: 5) {
+                    ZStack {
+                        Circle().stroke(Palette.tr, lineWidth: 9)
+                        if let projected, model.cap != nil {
+                            Circle().trim(from: 0, to: min(1, projected / whole))
+                                .stroke(tint.opacity(0.3), style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                                .rotationEffect(.degrees(-90))
+                        }
+                        Circle().trim(from: 0, to: min(1, p.spent / whole))
+                            .stroke(tint, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                        VStack(spacing: 0) {
+                            Text("\(Int((p.spent / whole * 100).rounded()))%")
+                                .font(.sans(19, weight: .semibold)).foregroundStyle(Palette.tx)
+                                .contentTransition(.numericText())
+                            Text("spent").font(.sans(11)).foregroundStyle(Palette.tx2)
+                        }
+                    }
+                    .frame(width: 88, height: 88)
+                    .animation(Motion.settle, value: p.spent)
+                    Text(model.cap != nil ? "of your cap" : "of where it lands")
+                        .font(.sans(11.5)).foregroundStyle(Palette.tx2)
+                        .fixedSize()
+                }
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(model.cap.map { "Budget cap \(MoneyText.full($0, model.base)), \(Int((p.spent / $0 * 100).rounded()))% spent" }
+                                ?? "\(Int((p.spent / whole * 100).rounded()))% of where the journey lands")
+            .accessibilityHint("Opens Money settings")
         }
     }
 
@@ -334,67 +382,6 @@ private struct TopCard: View {
         guard let cap = model.cap, p.projected > cap, p.remainingNights > 0 else { return nil }
         let less = (p.projected - cap) / Double(p.remainingNights)
         return "About \(MoneyText.full((less / 50).rounded(.up) * 50, model.base)) a day less gets you there."
-    }
-
-    /// No words on the bar: dark is spent, light is still to come, the end is the cap.
-    /// Tapping it opens the cap in Settings → Money.
-    private func capBar(spent: Double, projected: Double?, cap: Double) -> some SwiftUI.View {
-        let isOver = (projected ?? spent) > cap
-        let tint = isOver ? Palette.warn : Palette.ac
-        return Button { router.paths[.money, default: []].append(.moneySettings) } label: {
-            GeometryReader { geo in
-                let w = geo.size.width
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Palette.tr)
-                    if let projected {
-                        Capsule().fill(tint.opacity(0.28)).frame(width: w * min(1, projected / cap))
-                    }
-                    Capsule().fill(tint).frame(width: w * min(1, spent / cap))
-                }
-            }
-            .frame(height: 8)
-            .contentShape(.rect.inset(by: -10))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Budget cap \(MoneyText.full(cap, model.base)), \(Int((spent / cap * 100).rounded()))% spent")
-        .accessibilityHint("Opens Money settings")
-    }
-
-    // MARK: today
-
-    private var today: some SwiftUI.View {
-        let spent = model.todaySpent
-        let usual = model.pace.perDay
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 3) {
-                    CardLabel("Today · \(MoneyText.weekday(model.today))")
-                    big(MoneyText.full(spent, model.base), value: spent)
-                }
-                Spacer()
-                if let usual {
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text("a usual day here").font(.sans(12.5)).foregroundStyle(Palette.tx2)
-                        Text(MoneyText.full(usual, model.base)).font(.sans(16, weight: .semibold)).foregroundStyle(Palette.tx)
-                    }
-                }
-            }
-            if let usual, usual > 0 {
-                ProgressTrack(value: min(1, spent / usual), tint: spent > usual ? Palette.warn : Palette.ac)
-            }
-            if model.todayOther > 0 {
-                Text("+ \(MoneyText.full(model.todayOther, model.base)) outside the daily pace today")
-                    .font(.sans(13)).foregroundStyle(Palette.tx2)
-            }
-            Divider().overlay(Palette.ln)
-            HStack(alignment: .top, spacing: 12) {
-                tile(model.tripDay.map { "Spent · \($0) days" } ?? "Spent", MoneyText.short(model.projection.spent, model.base), nil)
-                if model.unlocks.projection {
-                    tile("Lands near", MoneyText.approx(model.projection.projected, model.base), capLine(model.projection.projected),
-                         tone: over(model.projection.projected) ? Palette.warn : Palette.tx2)
-                }
-            }
-        }
     }
 
     // MARK: here
