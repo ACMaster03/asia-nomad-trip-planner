@@ -1,7 +1,8 @@
 import Foundation
 
 // The trip as the web stores it: ONE jsonb document in `trips.state`
-// (product/src/lib/trips/types.ts). Read-only on iOS for now.
+// (product/src/lib/trips/types.ts). The typed structs below are for reading;
+// saves edit `TripRow.rawState`, the document exactly as stored (JSONValue.swift).
 //
 // Decoding is deliberately forgiving. The web's types are "migration-free":
 // older journeys simply lack newer fields, and a number can arrive as a string
@@ -10,11 +11,13 @@ import Foundation
 // it can't read instead of failing.
 
 /// A row of `public.trips`, the columns iOS reads.
-struct TripRow: Decodable, Sendable {
+struct TripRow: Codable, Sendable {
     let id: String
     let owner: String?
     let name: String?
     let state: TripState
+    /// `state` exactly as stored, every field kept: what a save edits and sends back.
+    let rawState: JSONValue
     let updatedAt: String?
     let stateRev: Int?
 
@@ -24,11 +27,43 @@ struct TripRow: Decodable, Sendable {
         case stateRev = "state_rev"
     }
 
+    init(id: String, owner: String?, name: String?, rawState: JSONValue, updatedAt: String?, stateRev: Int?) throws {
+        self.id = id
+        self.owner = owner
+        self.name = name
+        self.rawState = rawState
+        self.state = try JSONDecoder().decode(TripState.self, from: JSONEncoder().encode(rawState))
+        self.updatedAt = updatedAt
+        self.stateRev = stateRev
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        owner = c.str(.owner)
+        name = c.str(.name)
+        state = try c.decode(TripState.self, forKey: .state)
+        rawState = (try? c.decode(JSONValue.self, forKey: .state)) ?? .object([:])
+        updatedAt = c.str(.updatedAt)
+        stateRev = c.num(.stateRev).map { Int($0) }
+    }
+
+    /// For the copy saved on the phone: the raw document, never the typed one.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encodeIfPresent(owner, forKey: .owner)
+        try c.encodeIfPresent(name, forKey: .name)
+        try c.encode(rawState, forKey: .state)
+        try c.encodeIfPresent(updatedAt, forKey: .updatedAt)
+        try c.encodeIfPresent(stateRev, forKey: .stateRev)
+    }
+
     /// The columns to select — the web's TRIP_COLS minus the ledger, which Money will add.
     static let columns = "id,owner,name,state,updated_at,state_rev"
 }
 
-struct TripState: Decodable, Sendable {
+struct TripState: Codable, Sendable {
     var meta: TripMeta
     /// Base currency per one unit of each currency.
     var rates: [String: Double]
@@ -56,7 +91,7 @@ struct TripState: Decodable, Sendable {
     }
 }
 
-struct TripMeta: Decodable, Sendable {
+struct TripMeta: Codable, Sendable {
     var tripName: String?
     var travelers: Double?
     var baseCurrency: String = "HUF"
@@ -92,7 +127,7 @@ struct TripMeta: Decodable, Sendable {
 }
 
 /// A stop.
-struct Segment: Decodable, Sendable, Identifiable, Hashable {
+struct Segment: Codable, Sendable, Identifiable, Hashable {
     var id: String
     var country: String = ""
     var city: String = ""
@@ -104,6 +139,8 @@ struct Segment: Decodable, Sendable, Identifiable, Hashable {
     /// false = a "maybe" stop; missing or true = in the plan.
     var include: Bool?
     var notes: String?
+    /// Comfort: 0 budget, 1 mid, 2 comfort.
+    var tier: Double?
 
     var inPlan: Bool { include != false }
 
@@ -117,7 +154,7 @@ struct Segment: Decodable, Sendable, Identifiable, Hashable {
         self.include = include
     }
 
-    enum CodingKeys: String, CodingKey { case id, country, city, arrive, depart, nights, include, notes }
+    enum CodingKeys: String, CodingKey { case id, country, city, arrive, depart, nights, include, notes, tier }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -129,10 +166,11 @@ struct Segment: Decodable, Sendable, Identifiable, Hashable {
         nights = c.num(.nights)
         include = c.bool(.include)
         notes = c.str(.notes)
+        tier = c.num(.tier)
     }
 }
 
-struct Stay: Decodable, Sendable, Identifiable, Hashable {
+struct Stay: Codable, Sendable, Identifiable, Hashable {
     var id: String
     var segId: String = ""
     var name: String = ""
@@ -149,6 +187,13 @@ struct Stay: Decodable, Sendable, Identifiable, Hashable {
     /// Exclusive.
     var checkOut: String?
     var chargeAtCheckIn: Bool?
+    var url: String?
+    /// Free cancellation until; "" when there is none.
+    var cancelUntil: String?
+    var noFreeCancel: Bool?
+    /// Remind before it turns non-refundable; missing means on.
+    var remind: Bool?
+    var notes: String?
 
     init(id: String, segId: String, name: String, platform: String? = nil, cur: String, ppn: Double,
          nights: Double? = nil, status: String? = nil, include: Bool? = nil, chargeDate: String? = nil,
@@ -170,6 +215,7 @@ struct Stay: Decodable, Sendable, Identifiable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id, segId, name, platform, cur, ppn, nights, status, include, chargeDate, checkIn, checkOut, chargeAtCheckIn
+        case url, cancelUntil, noFreeCancel, remind, notes
     }
 
     init(from decoder: Decoder) throws {
@@ -187,10 +233,15 @@ struct Stay: Decodable, Sendable, Identifiable, Hashable {
         checkIn = c.date(.checkIn)
         checkOut = c.date(.checkOut)
         chargeAtCheckIn = c.bool(.chargeAtCheckIn)
+        url = c.str(.url)
+        cancelUntil = c.date(.cancelUntil)
+        noFreeCancel = c.bool(.noFreeCancel)
+        remind = c.bool(.remind)
+        notes = c.str(.notes)
     }
 }
 
-struct TransportLeg: Decodable, Sendable, Identifiable, Hashable {
+struct TransportLeg: Codable, Sendable, Identifiable, Hashable {
     var id: String
     /// flight, train, bus, ferry, or anything typed.
     var type: String = ""
@@ -208,6 +259,8 @@ struct TransportLeg: Decodable, Sendable, Identifiable, Hashable {
     var via: String?
     /// Total travel time.
     var hours: Double?
+    var url: String?
+    var notes: String?
 
     init(id: String, type: String, from: String, to: String, date: String? = nil, cur: String, price: Double,
          status: String? = nil, chargeDate: String? = nil, time: String? = nil, via: String? = nil, hours: Double? = nil) {
@@ -225,7 +278,7 @@ struct TransportLeg: Decodable, Sendable, Identifiable, Hashable {
         self.hours = hours
     }
 
-    enum CodingKeys: String, CodingKey { case id, type, from, to, date, provider, cur, price, status, chargeDate, time, via, hours }
+    enum CodingKeys: String, CodingKey { case id, type, from, to, date, provider, cur, price, status, chargeDate, time, via, hours, url, notes }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -242,6 +295,8 @@ struct TransportLeg: Decodable, Sendable, Identifiable, Hashable {
         time = c.str(.time)
         via = c.str(.via)
         hours = c.num(.hours)
+        url = c.str(.url)
+        notes = c.str(.notes)
     }
 }
 

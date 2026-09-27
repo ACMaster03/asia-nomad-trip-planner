@@ -39,7 +39,9 @@ enum TripFixture {
                              price: 258, status: "booked", chargeDate: "2026-09-15"),
             ]
         )
-        return TripRow(id: "fixture", owner: nil, name: "Asia", state: state, updatedAt: nil, stateRev: 0)
+        // Through JSON, so the fixture has a raw document that edits can change.
+        let raw = (try? JSONDecoder().decode(JSONValue.self, from: JSONEncoder().encode(state))) ?? .object([:])
+        return try! TripRow(id: "fixture", owner: nil, name: "Asia", rawState: raw, updatedAt: nil, stateRev: 0)
     }
 }
 #endif

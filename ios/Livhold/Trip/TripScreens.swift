@@ -71,6 +71,7 @@ private struct TripTimeline: View {
 
     var body: some View {
         let tl = Journey.timeline(state)
+        let onward = Journey.onward(state, tl)
         VStack(alignment: .leading, spacing: 0) {
             header
             if let error = store.error {
@@ -79,12 +80,21 @@ private struct TripTimeline: View {
                     .font(.sans(13)).foregroundStyle(Palette.tx3)
                     .padding(.bottom, 8)
             }
+            if let notice = store.saveNotice {
+                Button { store.saveNotice = nil } label: {
+                    Notice(text: notice, kind: .warn)
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 8)
+                .accessibilityHint("Dismiss")
+            }
             ForEach(Journey.rows(tl)) { row in
                 switch row {
                 case .home(let start):
-                    HomeRow(start: start, home: tl.home, endDate: state.meta.endDate)
+                    HomeRow(start: start, home: tl.home, endDate: state.meta.endDate, onward: onward)
                 case .leg(let leg):
-                    LegRow(leg: leg, state: state, today: today)
+                    if leg.wayHome, store.canEdit { AddStopRow() }
+                    LegRow(leg: leg, state: state, today: today, onward: onward)
                 case .stop(let seg, let maybe):
                     NavigationLink(value: Route.stop(seg.id)) {
                         StopRow(seg: seg, maybe: maybe, state: state, today: today)
@@ -92,6 +102,7 @@ private struct TripTimeline: View {
                     .buttonStyle(.plain)
                 }
             }
+            if store.canEdit, !tl.legs.contains(where: \.wayHome) { AddStopRow() }
             footer(tl)
             orphans(tl)
         }
@@ -152,7 +163,9 @@ private struct TripTimeline: View {
                 Text("These go to or from a city that is not a stop yet.")
                     .font(.sans(13)).foregroundStyle(Palette.tx2)
                 ForEach(tl.orphans) { t in
-                    LegStrip(entry: t, leg: nil, state: state, today: today)
+                    EditTap(target: .transport(t, from: t.from, to: t.to, date: t.date ?? "")) {
+                        LegStrip(entry: t, leg: nil, state: state, today: today)
+                    }
                 }
             }
             .padding(.top, 20)
@@ -213,10 +226,36 @@ private struct Rail: View {
     }
 }
 
+/// "+ Add stop", where the web puts it: after the last stop, before the way on.
+private struct AddStopRow: View {
+    @Environment(TripEditor.self) private var editor
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Rail(line: .solid)
+            Button { editor.open(.addStop) } label: {
+                Label("Add stop", systemImage: "plus")
+                    .font(.sans(16, weight: .semibold))
+                    .foregroundStyle(Palette.ac)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .padding(.horizontal, 14)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Radius.r - 6)
+                            .strokeBorder(Palette.acLine, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                    )
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .padding(.vertical, 6)
+        }
+    }
+}
+
 private struct HomeRow: View {
     let start: Bool
     let home: String
     let endDate: String?
+    let onward: Bool
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -232,7 +271,7 @@ private struct HomeRow: View {
 
     private var label: String {
         if start { return home.isEmpty ? "Home · set where you live in Trip settings" : "Home · \(home)" }
-        return "Home again · " + (endDate.map { Days.short($0) } ?? "no date yet")
+        return (onward ? "Journey ends · " : "Home · ") + (endDate.map { Days.short($0) } ?? "no date yet")
     }
 }
 
@@ -242,30 +281,49 @@ private struct LegRow: View {
     let leg: Journey.Leg
     let state: TripState
     let today: String
+    let onward: Bool
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Rail(line: leg.booked != nil ? .booked : .dashed)
-            VStack(spacing: 6) {
-                if leg.transport.isEmpty {
-                    EmptyLegStrip(leg: leg)
-                } else {
-                    ForEach(leg.transport) { entry in
+            LegEntries(leg: leg, state: state, today: today, onward: onward)
+                .padding(.vertical, 6)
+        }
+    }
+}
+
+/// A leg's transport, each entry opening its editor; an empty leg opens Add.
+private struct LegEntries: View {
+    let leg: Journey.Leg
+    let state: TripState
+    let today: String
+    let onward: Bool
+
+    var body: some View {
+        VStack(spacing: 6) {
+            if leg.transport.isEmpty {
+                EditTap(target: .transport(nil, from: leg.from.city, to: leg.to.city, date: leg.date)) {
+                    EmptyLegStrip(leg: leg, onward: onward)
+                }
+            } else {
+                ForEach(leg.transport) { entry in
+                    EditTap(target: .transport(entry, from: leg.from.city, to: leg.to.city, date: leg.date)) {
                         LegStrip(entry: entry, leg: leg, state: state, today: today)
                     }
                 }
             }
-            .padding(.vertical, 6)
         }
     }
 }
 
 private struct EmptyLegStrip: View {
     let leg: Journey.Leg
+    let onward: Bool
+    @Environment(TripStore.self) private var store
 
     var body: some View {
         HStack {
-            Text(leg.wayHome ? "Home · not planned yet" : "No transport yet")
+            Text(leg.wayHome ? (onward ? "Onward" : "Going home") : "No transport yet")
                 .font(.sans(16, weight: .semibold))
                 .foregroundStyle(leg.wayHome ? Palette.tx2 : Palette.ac2)
                 .lineLimit(1)
@@ -273,6 +331,8 @@ private struct EmptyLegStrip: View {
             if !leg.wayHome {
                 Text("\(leg.from.city) → \(leg.to.city)")
                     .font(.sans(13)).foregroundStyle(Palette.tx3).lineLimit(1)
+            } else if store.canEdit {
+                Text("+ Add").font(.sans(15, weight: .semibold)).foregroundStyle(Palette.ac)
             }
         }
         .padding(.horizontal, 14)
@@ -379,6 +439,9 @@ private struct StopRow: View {
     let today: String
 
     @Environment(\.tabZoom) private var zoom
+    @Environment(TripStore.self) private var store
+    @Environment(TripEditor.self) private var editor
+    @State private var confirmDelete = false
 
     var body: some View {
         let current = !maybe && Journey.isCurrent(seg, today: today)
@@ -386,9 +449,45 @@ private struct StopRow: View {
             Rail(line: .solid, node: maybe ? .maybe : current ? .current : .stop, nodeTop: 36)
             StopCard(seg: seg, maybe: maybe, current: current, state: state, today: today)
                 .modifier(ZoomSource(id: Route.stop(seg.id), namespace: zoom))
+                .contextMenu { if store.canEdit { menu } }
                 .padding(.vertical, 6)
         }
         .settlesOnScroll()
+        .confirmationDialog("Delete \(seg.city.isEmpty ? "this stop" : seg.city)?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { quick { $0.remove("segments", id: seg.id) } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Its stays and transport stay on the trip; the legs on either side become one.")
+        }
+    }
+
+    /// Quick jumps into the same sheets the stop page opens (mock, 27 Sep).
+    @ViewBuilder private var menu: some View {
+        Button("Edit stop", systemImage: "pencil") { editor.open(.stop(seg)) }
+        Button("Add stay", systemImage: "bed.double") {
+            let cov = Journey.coverage(seg, state.stays.filter { $0.segId == seg.id })
+            editor.open(.stay(nil, seg: seg, range: cov.covered.isEmpty ? nil : cov.gaps.first))
+        }
+        if !maybe, let leg = Journey.timeline(state).legs.first(where: { $0.from.seg?.id == seg.id }) {
+            Button(leg.wayHome ? "Add transport home" : "Add transport to \(leg.to.city)", systemImage: "airplane") {
+                editor.open(.transport(nil, from: leg.from.city, to: leg.to.city, date: leg.date))
+            }
+        }
+        Button(seg.inPlan ? "Leave out of the plan" : "Put in the plan", systemImage: seg.inPlan ? "circle.dashed" : "checkmark.circle") {
+            let include = !seg.inPlan
+            quick { $0.upsert("segments", id: seg.id, ["include": .bool(include)]) }
+        }
+        Divider()
+        Button("Delete \(seg.city.isEmpty ? "stop" : seg.city)", systemImage: "trash", role: .destructive) { confirmDelete = true }
+    }
+
+    /// Saves a one-tap edit; if it can't, the timeline says why.
+    private func quick(_ change: @escaping (inout JSONValue) -> Void) {
+        Task {
+            do { try await store.save(change) }
+            catch is CancellationError {}
+            catch { store.saveNotice = error.localizedDescription }
+        }
     }
 }
 
@@ -464,13 +563,45 @@ struct StayList: View {
         return out
     }
 
+    @Environment(TripStore.self) private var store
+
     var body: some View {
         let items = items
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.element) { i, item in
                 if i > 0 { Divider().overlay(Palette.ln) }
-                view(item).padding(.vertical, 10)
+                // On the stop page every row opens what it's about; on the
+                // timeline the whole card opens the stop instead.
+                if detailed, let target = target(item) {
+                    EditTap(target: target) { view(item).padding(.vertical, 10) }
+                } else {
+                    view(item).padding(.vertical, 10)
+                }
             }
+            if detailed, store.canEdit, !stays.isEmpty {
+                Divider().overlay(Palette.ln)
+                EditTap(target: .stay(nil, seg: seg, range: addRange)) {
+                    Label("Add stay", systemImage: "plus")
+                        .font(.sans(16, weight: .semibold))
+                        .foregroundStyle(Palette.ac)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }
+            }
+        }
+    }
+
+    /// Web: the first gap once the stop has stays, else the stop's own dates.
+    private var addRange: Journey.NightRange? {
+        let cov = Journey.coverage(seg, stays)
+        return cov.covered.isEmpty ? nil : cov.gaps.first
+    }
+
+    private func target(_ item: Item) -> EditTarget? {
+        switch item {
+        case .stay(let stay, _), .old(let stay): .stay(stay, seg: seg, range: nil)
+        case .gap(let g): .stay(nil, seg: seg, range: g)
+        case .none: .stay(nil, seg: seg, range: nil)
+        case .overlap: nil
         }
     }
 
@@ -494,6 +625,10 @@ struct StayList: View {
                 if total > 0 {
                     Text(Journey.money(total, state.meta.baseCurrency))
                         .font(.sans(16, weight: .semibold)).monospacedDigit().foregroundStyle(Palette.tx)
+                }
+                if detailed, store.canEdit {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.tx3)
                 }
             }
         case .old(let stay):
@@ -529,6 +664,7 @@ struct StayList: View {
 struct StopScreen: View {
     let segmentId: String
     @Environment(TripStore.self) private var store
+    @Environment(TabRouter.self) private var router
 
     var body: some View {
         if let state = store.trip?.state, let seg = state.segments.first(where: { $0.id == segmentId }) {
@@ -538,6 +674,11 @@ struct StopScreen: View {
                 .font(.sans(16)).foregroundStyle(Palette.tx2)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Palette.canvas.ignoresSafeArea())
+                .task {
+                    // Deleted (here or on the web): go back to the timeline.
+                    try? await Task.sleep(for: .milliseconds(400))
+                    if router.paths[.trip]?.last == .stop(segmentId) { router.paths[.trip]?.removeLast() }
+                }
         }
     }
 }
@@ -546,9 +687,12 @@ private struct StopPage: View {
     let seg: Segment
     let state: TripState
     private var today: String { Days.today() }
+    @Environment(TripStore.self) private var store
+    @Environment(TripEditor.self) private var editor
 
     var body: some View {
         let tl = Journey.timeline(state)
+        let onward = Journey.onward(state, tl)
         let arriving = tl.legs.first { $0.to.seg?.id == seg.id }
         let leaving = tl.legs.first { $0.from.seg?.id == seg.id }
         let current = Journey.isCurrent(seg, today: today)
@@ -562,8 +706,10 @@ private struct StopPage: View {
                             .padding(.vertical, 4)
                             .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
                     }
-                    if let arriving { legSection("Getting here", arriving) }
-                    if let leaving { legSection(leaving.wayHome ? "Going home" : "Leaving for \(leaving.to.city)", leaving) }
+                    if let arriving { legSection("Getting here", arriving, onward: onward) }
+                    if let leaving {
+                        legSection(leaving.wayHome ? (onward ? "Onward" : "Going home") : "Leaving for \(leaving.to.city)", leaving, onward: onward)
+                    }
                     if let notes = seg.notes, !notes.isEmpty {
                         section("Notes") {
                             Text(notes).font(.sans(16)).foregroundStyle(Palette.tx)
@@ -581,6 +727,13 @@ private struct StopPage: View {
         .background(Palette.canvas.ignoresSafeArea())
         .toolbarBackground(.hidden, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if store.canEdit {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Edit") { editor.open(.stop(seg)) }.fontWeight(.semibold)
+                }
+            }
+        }
     }
 
     private func hero(current: Bool) -> some View {
@@ -628,15 +781,9 @@ private struct StopPage: View {
         }
     }
 
-    private func legSection(_ title: String, _ leg: Journey.Leg) -> some View {
+    private func legSection(_ title: String, _ leg: Journey.Leg, onward: Bool) -> some View {
         section(title) {
-            VStack(spacing: 6) {
-                if leg.transport.isEmpty {
-                    EmptyLegStrip(leg: leg)
-                } else {
-                    ForEach(leg.transport) { LegStrip(entry: $0, leg: leg, state: state, today: today) }
-                }
-            }
+            LegEntries(leg: leg, state: state, today: today, onward: onward)
         }
     }
 }

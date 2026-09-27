@@ -322,6 +322,15 @@ enum Journey {
         return Timeline(home: home, stops: stops, legs: legs, orphans: orphans, maybes: maybes)
     }
 
+    /// Patrik, 27 Sep: while the plan stops before the journey's end date, what
+    /// follows the last stop is "Onward" and the end reads "Journey ends"; once a
+    /// stop reaches the end date it turns into "Going home" and "Home". Without an
+    /// end date nothing reaches it, so it stays onward.
+    static func onward(_ state: TripState, _ tl: Timeline) -> Bool {
+        guard let end = state.meta.endDate, let last = tl.stops.last else { return true }
+        return last.depart < end
+    }
+
     /// The rail top to bottom (Timeline.tsx railRows, without the editor's "+ Add stop").
     enum Row: Identifiable {
         case home(start: Bool)

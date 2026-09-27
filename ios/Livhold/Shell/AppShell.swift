@@ -9,6 +9,7 @@ import SwiftUI
 struct AppShell: View {
     @State private var router = TabRouter()
     @State private var trips = TripStore()
+    @State private var editor = TripEditor()
     @Namespace private var checkInZoom
     @Environment(AuthStore.self) private var auth
     @Environment(\.scenePhase) private var scenePhase
@@ -33,6 +34,7 @@ struct AppShell: View {
         }
         .environment(router)
         .environment(trips)
+        .environment(editor)
         .environment(\.checkInZoom, checkInZoom)
         // The saved journey shows at once; the server's copy follows, and again
         // every time the app comes back to the front (the web refetches on focus).
@@ -45,6 +47,12 @@ struct AppShell: View {
         .sheet(isPresented: $router.checkInOpen) {
             CheckInSheet()
                 .modifier(ZoomDestination(id: "checkin", namespace: checkInZoom))
+        }
+        // Trip's edit forms (Trip/TripEditing.swift), opened from any Trip screen.
+        .sheet(item: $editor.target) { target in
+            EditSheet(target: target)
+                .environment(trips)
+                .environment(editor)
         }
     }
 }

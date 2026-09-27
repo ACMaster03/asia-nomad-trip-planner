@@ -5,6 +5,48 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-27
+
+### DECIDED — Patrik, 27 Sep: editing the Trip on iOS, and the rows after the last stop
+
+From the mock "Trip editing on iOS" (artifact QdrtgiADdvE6LbFALdaoZS), approved from his phone.
+
+- **Look first, then edit (Apple Calendar's model).** The stop page is where you look. **Edit**
+  in its corner and every stay or transport row open a form sheet with **Cancel** and **Save**;
+  an amber row ("No bed …", "No transport yet") opens Add with its dates filled in. A long press
+  on a timeline card gives quick actions (Edit stop, Add stay, Add transport, Leave out of the
+  plan, Delete). Reason: an iPhone sheet without Save commits on a swipe, easy to do by accident.
+  The web keeps tap-to-edit for now; moving it to Cancel/Save is open.
+- **Dates:** one row that opens an inline calendar in Apple's style; pick Arrive or Leave, tap a day.
+- **The rows after the last stop (mock options C and D).** While the last stop leaves before the
+  journey's end date, the way on reads **"Onward"** and the end **"Journey ends · 30 Apr"**
+  (Patrik: as nomads it speaks to the user; Hong Kong is the last known stop with about five
+  months to go). Once a stop reaches the end date it turns into **"Going home"** and
+  **"Home · 30 Apr"**. No end date: it stays onward. The end date stays in Trip settings, needed
+  for the estimate. The web still says "Home · not planned yet" / "Home again"; iOS only so far.
+- The other wording is to be reviewed before release.
+
+### BUILT — iOS: the Trip can be edited (branch feat/ios-foundation, TestFlight build 6)
+
+- Stop (dates, comfort, in the plan, note; Add stop with city and country), stay and transport
+  forms with the web's fields, defaults and save rules (StopSheet/StaySheet/LegSheet,
+  `Timeline.tsx` saveStop/saveStay/saveLeg). Moving a stop's Leave moves the leg after it, as on
+  the web (`shiftDepartures`).
+- **Saves go through `write_state` with the trip's `state_rev`**, like the web. The phone edits
+  the stored document field by field (`ios/Livhold/Trip/JSONValue.swift`), so fields it doesn't
+  know (reminders, subscriptions, extras, weather, …) are sent back untouched.
+- A conflict shows the web's message, loads the latest copy and keeps the sheet open; tapping
+  Save again saves on top. Viewers get no edit controls (owner or `trip_members.role =
+  'editor'`, failing open like `useTripRole`).
+- **Checked on staging with a throwaway trip, deleted afterwards:** an added flight landed with
+  the web's exact shape; rev 0 → 1; an unknown `reminders` entry and a stop's `weather` survived.
+  A simulated web edit (rev → 2) made the next phone save refuse with the conflict message; the
+  retry saved (rev 3) and kept the web's note.
+- Also in this round (builds 4–5): the timeline reads the real journey; lines only between stay
+  rows; payment lines moved to the stop page; a future charge reads "will be charged on …"
+  (the web still says "card charged on …" for a future date, open); a stay name that starts with
+  its city drops the city.
+
 ## 2026-09-26 (3)
 
 ### BUILT — an entry's own switch for the daily average (#36)
