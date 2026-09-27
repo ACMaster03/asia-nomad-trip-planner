@@ -402,7 +402,7 @@ private struct TopCard: View {
                 }
                 HStack(alignment: .top, spacing: 12) {
                     tile("Per day here", MoneyText.full(local.perDay, model.base), "over \(local.days) day\(local.days == 1 ? "" : "s")")
-                    tile("The stop comes to", MoneyText.approx(row.projected, model.base), PlanCard.stayWords(row.stayLabel),
+                    tile("The stop comes to", MoneyText.approx(row.projected, model.base), PlanCard.includedWords(row.stayLabel),
                          tone: row.stayLabel == .draft || row.stayLabel == .none ? Palette.warn : Palette.tx2)
                 }
                 ProgressTrack(value: row.nights > 0 ? Double(row.nightsIn) / Double(row.nights) : 0)
@@ -665,22 +665,36 @@ private struct DailySpendCard: View {
     private func callout(_ date: String) -> some View {
         let entries = model.entries(on: date)
         let total = entries.reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, model.rates) }
-        let top = entries.prefix(3).map { e in
-            "\(e.note.isEmpty ? Categories.label(e.category) : e.note) \(MoneyText.number(Journey.toBase(e.amount, e.currency, model.rates), model.base))"
-        }
-        return VStack(alignment: .leading, spacing: 3) {
+        // The day's things as a list, full amounts (Patrik, 27 Sep: "6081 · 895" in one
+        // line saved room but didn't read). The five largest; the rest are one tap away.
+        let shown = entries.prefix(5)
+        return VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(MoneyText.weekday(date)).font(.sans(13, weight: .semibold))
+                Text(MoneyText.weekday(date))
                 Spacer()
-                Text(MoneyText.full(total, model.base)).font(.sans(13, weight: .semibold))
+                Text(MoneyText.full(total, model.base))
             }
+            .font(.sans(14, weight: .semibold))
             .foregroundStyle(Palette.tx)
-            Text(top.isEmpty ? "Nothing logged." : top.joined(separator: " · "))
-                .font(.sans(12.5)).foregroundStyle(Palette.tx2).lineLimit(2)
+            if entries.isEmpty {
+                Text("Nothing logged.").font(.sans(14)).foregroundStyle(Palette.tx2)
+            }
+            ForEach(shown) { e in
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 3).fill(Categories.color(e.category)).frame(width: 9, height: 9)
+                    Text(e.note.isEmpty ? Categories.label(e.category) : e.note).lineLimit(1)
+                    Spacer(minLength: 8)
+                    Text(MoneyText.full(Journey.toBase(e.amount, e.currency, model.rates), model.base))
+                }
+                .font(.sans(14))
+                .foregroundStyle(Palette.tx2)
+            }
             if !entries.isEmpty {
                 NavigationLink(value: Route.moneyEntries(date)) {
-                    Text("Open in All entries ›").font(.sans(12.5, weight: .medium)).foregroundStyle(Palette.ac)
+                    Text(entries.count > shown.count ? "\(entries.count - shown.count) more in All entries ›" : "Open in All entries ›")
+                        .font(.sans(13.5, weight: .medium)).foregroundStyle(Palette.ac)
                 }
+                .padding(.top, 2)
             }
         }
         .padding(10)
@@ -774,18 +788,25 @@ private struct WhereItGoesCard: View {
             }
             .padding(.vertical, 4)
             VStack(spacing: 0) {
-                let shown = showAll ? cats : Array(cats.prefix(8))
+                // "1 more…" hides as much as it saves: fold only two or more.
+                let folds = cats.count > 9 && !showAll
+                let shown = folds ? Array(cats.prefix(8)) : cats
                 ForEach(shown) { c in
                     Divider().overlay(Palette.ln)
-                    HStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 3).fill(Categories.color(c.category)).frame(width: 10, height: 10)
-                        Text(Categories.label(c.category)).font(.sans(14.5)).foregroundStyle(Palette.tx)
-                        Spacer()
-                        Text(MoneyText.full(c.total, model.base)).font(.sans(14.5, weight: .medium)).foregroundStyle(Palette.tx)
+                    NavigationLink(value: Route.moneyEntries("cat:\(c.category)")) {
+                        HStack(spacing: 10) {
+                            RoundedRectangle(cornerRadius: 3).fill(Categories.color(c.category)).frame(width: 10, height: 10)
+                            Text(Categories.label(c.category)).font(.sans(14.5)).foregroundStyle(Palette.tx)
+                            Spacer()
+                            Text(MoneyText.full(c.total, model.base)).font(.sans(14.5, weight: .medium)).foregroundStyle(Palette.tx)
+                            Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.tx3)
+                        }
+                        .padding(.vertical, 8)
+                        .contentShape(.rect)
                     }
-                    .padding(.vertical, 8)
+                    .buttonStyle(.plain)
                 }
-                if cats.count > 8, !showAll {
+                if folds {
                     let rest = cats.dropFirst(8).reduce(0) { $0 + $1.total }
                     Divider().overlay(Palette.ln)
                     Button { withAnimation(Motion.settle) { showAll = true } } label: {
@@ -841,6 +862,17 @@ struct PlanCard: View {
         case .unpaid: "stay booked, to pay"
         case .draft: "stay not booked"
         case .estimate: "stay estimated"
+        case .none: "no stay yet"
+        }
+    }
+
+    /// Under a stop's total: what the total holds of the stay (Patrik, 27 Sep).
+    static func includedWords(_ label: MoneyModel.PlanRow.StayLabel) -> String {
+        switch label {
+        case .booked: "the stay included, paid"
+        case .unpaid: "the stay included, to pay"
+        case .draft: "the stay included, not booked yet"
+        case .estimate: "a stay at the city average included"
         case .none: "no stay yet"
         }
     }

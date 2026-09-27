@@ -19,6 +19,8 @@ struct LedgerScreen: View {
     @Environment(TripStore.self) private var store
     @Environment(MoneyEditor.self) private var editor
     @State private var filter: Filter = .all
+    /// One category, on top of the filter (from Where it goes, or the Category chip).
+    @State private var category: String?
     @State private var query = ""
     @State private var comingOpen = false
     @State private var didFocus = false
@@ -28,12 +30,12 @@ struct LedgerScreen: View {
             if let trip = store.trip {
                 let model = MoneyModel(trip: trip, ledger: trip.ledger, cities: store.cityCosts, today: Days.today())
                 list(model)
+                    .navigationTitle(category.map(Categories.label) ?? "All entries")
             } else {
                 Color.clear
             }
         }
         .background(Palette.canvas.ignoresSafeArea())
-        .navigationTitle("All entries")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Name or category")
         .toolbar {
@@ -48,6 +50,7 @@ struct LedgerScreen: View {
             guard !didFocus else { return }
             didFocus = true
             if focus == "beyond" { filter = .beyond }
+            if let focus, focus.hasPrefix("cat:") { category = String(focus.dropFirst(4)) }
         }
     }
 
@@ -65,8 +68,8 @@ struct LedgerScreen: View {
         return ScrollViewReader { proxy in
             List {
                 Section {
-                    filters
-                    if !query.trimmed.isEmpty || filter != .all { summary(past, model) }
+                    filters(model)
+                    if !query.trimmed.isEmpty || filter != .all || category != nil { summary(past, model) }
                     if !coming.isEmpty { comingUp(coming, model) }
                 }
                 .listRowBackground(Color.clear)
@@ -106,6 +109,7 @@ struct LedgerScreen: View {
     private func matching(_ model: MoneyModel) -> [LedgerEntry] {
         let words = Self.fold(query).split(separator: " ").map(String.init)
         return model.ledger.filter { e in
+            if let category, e.category != category { return false }
             switch filter {
             case .all: break
             case .everyday: guard e.isExpense && isEverydayRow(e) else { return false }
@@ -129,9 +133,39 @@ struct LedgerScreen: View {
 
     // MARK: parts
 
-    private var filters: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+    private func filters(_ model: MoneyModel) -> some View {
+        // The categories this journey has used, most used first.
+        var counts: [String: Int] = [:]
+        for e in model.ledger { counts[e.category, default: 0] += 1 }
+        let used = counts.sorted { $0.value > $1.value || ($0.value == $1.value && $0.key < $1.key) }.map(\.key)
+        return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
+                Menu {
+                    if category != nil {
+                        Button("All categories", systemImage: "xmark") { withAnimation(Motion.quick) { category = nil } }
+                    }
+                    ForEach(used, id: \.self) { id in
+                        Button {
+                            withAnimation(Motion.quick) { category = id }
+                        } label: {
+                            Label("\(Categories.label(id)) · \(counts[id] ?? 0)", systemImage: Categories.symbol(id))
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 5) {
+                        if let category {
+                            RoundedRectangle(cornerRadius: 3).fill(Categories.color(category)).frame(width: 9, height: 9)
+                        }
+                        Text(category.map(Categories.label) ?? "Category")
+                        Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
+                    }
+                    .font(.sans(13, weight: category != nil ? .semibold : .regular))
+                    .foregroundStyle(category != nil ? Palette.ac : Palette.tx2)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(category != nil ? Palette.acSoft : Palette.fill, in: .capsule)
+                    .overlay(Capsule().strokeBorder(category != nil ? Palette.acLine : .clear, lineWidth: 1))
+                }
                 ForEach(Filter.allCases) { f in
                     let on = filter == f
                     Button { withAnimation(Motion.quick) { filter = f } } label: {
