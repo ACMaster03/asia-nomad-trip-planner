@@ -12,8 +12,10 @@ when a decision needs to survive the conversation it was made in.
 `profiles.home_base`, with its backfill (#58).
 - Staging: 43, then `43-TESTPLAN.sql`, which ended in "Success".
 - Production: 43, the migration only.
-- Production afterwards: 13 profiles, 2 of them with a home from the backfill. That is one
-  for each person who owns a journey with a home typed in; Patrik's comes from Asia.
+- Production afterwards: 13 profiles, 2 of them with a home from the backfill: Patrik and
+  Petra, each from a journey they own. Asia is Petra's, and Patrik is its co-traveller, so
+  his home came from a journey of his own. The other 11 are empty and see the journey's
+  home.
 - Before either, both files ran on a local Postgres 16 with the real profile policies of 03
   and 06:
   - 43 applies twice cleanly;
