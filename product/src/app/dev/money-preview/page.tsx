@@ -32,6 +32,11 @@ import Preview from './Preview'
 // ?oneoffs=legacy replays a journey from before #39: the planned one-offs
 // list, and the paid ones' rows as the plan wrote them. An editor opening it
 // sees the plan sync turn the rows into plain entries and delete the list.
+// ?maybe=<stop id> (bkk, han, dad) takes that stop out of the plan (#105): a
+// booked stay there still counts in Bookings, in amber; a draft drops out.
+// ?stay=idea | gap | none replays Home's top card for tonight's bed (#58):
+// every stay an Idea, every stay ending after its first night (so tonight is
+// a "No bed" night), or no stays at all. Pair with ?screen=home.
 // ?day=N replays the journey as of its Nth day (day 1 = the start date), for
 // round 2's unlocks: the fixture is built for that date and keeps only the
 // costs typed by then (the plan's rows stay, like the plan). The page reads
@@ -39,7 +44,7 @@ import Preview from './Preview'
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; show?: string; subs?: string; oneoffs?: string }>
+  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; show?: string; subs?: string; oneoffs?: string; stay?: string; maybe?: string }>
 }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   // ?slow=<ms> streams the page that long after the shell, the way the real
@@ -74,6 +79,15 @@ export default async function MoneyPreviewPage({
       sub('sub-5', '2026-08-20', 4490, 'Netflix'),
     )
   }
+  if (params.maybe) fixture.state.segments = fixture.state.segments.map((s) => (s.id === params.maybe ? { ...s, include: false } : s))
+  if (params.stay === 'idea') fixture.state.stays = fixture.state.stays.map((st) => ({ ...st, status: 'idea' }))
+  if (params.stay === 'gap') {
+    fixture.state.stays = fixture.state.stays.map((st) => {
+      const seg = fixture.state.segments.find((x) => x.id === st.segId)
+      return seg ? { ...st, checkIn: seg.arrive, checkOut: addDays(seg.arrive, 1) } : st
+    })
+  }
+  if (params.stay === 'none') fixture.state.stays = []
   if (params.oneoffs === 'legacy') {
     fixture.state.extras = [
       { id: 'x1', label: 'Insurance · 2 pax, 6 months', cur: 'HUF', amount: 340_000, category: 'Insurance', include: true, paidOn: '2026-08-12' },

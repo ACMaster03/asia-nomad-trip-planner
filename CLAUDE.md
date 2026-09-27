@@ -94,6 +94,13 @@ Petra is new to software work; Patrik is not. The product conventions are in
   changes and what could go wrong, get a "go", merge, watch the Vercel build,
   test on livhold.com, record.
 - No hourly check-ins on pull requests unless someone asks for them.
+- Since 27 Sep another agent builds the iOS app (`ios/`) on Patrik's machine:
+  Trip now, Money next. Web bugs on Home and Trip go first, and every web
+  change to behaviour gets an "iOS:" line in its `docs/NOTES.md` entry (the
+  rule and its file), because that agent reads `main`, not this chat.
+- Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
+  "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
+  `stay-deadline-alerts` redeploy, and the JWT secret rotation.
 
 ## Running the checks
 

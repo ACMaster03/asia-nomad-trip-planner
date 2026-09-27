@@ -162,6 +162,27 @@ test('a ticked but unbooked stay is a draft: listed, forecast, never owed', () =
   assert.equal(planByStop(chosen, [], lisPerSeg(chosen), '2026-09-15', null)[0].stayLabel, 'unpaid')
 })
 
+// #105: a stop taken out of the plan kept its stays in Bookings, drafts and all.
+test('a stop out of the plan: its drafts leave Bookings, a booked stay stays and is marked', () => {
+  const base = draftState('booked')
+  const state = {
+    ...base,
+    segments: [...base.segments, { id: 'opo', country: 'Portugal', city: 'Porto', arrive: '2026-10-11', depart: '2026-10-14', include: false }],
+    stays: [
+      ...base.stays,
+      { id: 'maybe-draft', segId: 'opo', name: 'Ribeira room', cur: 'USD', ppn: 40, nights: 3, include: true, status: 'idea' },
+      { id: 'maybe-booked', segId: 'opo', name: 'Porto hostel', cur: 'USD', ppn: 20, nights: 3, include: true, status: 'booked' },
+      // its stop was deleted; the booking was not
+      { id: 'gone', segId: 'deleted', name: 'Sintra B&B', cur: 'USD', ppn: 60, nights: 1, include: true, status: 'booked' },
+    ],
+  } as TripState
+  const bk = bookingsSummary(state, [])
+  assert.deepEqual(bk.stays.map((r) => [r.id, !!r.outOfPlan]).sort(), [['gone', true], ['maybe-booked', true], ['st', false]])
+  assert.equal(bk.draftStays, 0, 'a draft for a stop you dropped nags nobody')
+  assert.equal(bk.toPay, 170_000 + 20 * 3 * 340 + 60 * 340, 'booked is owed until cancelled')
+  assert.equal(bk.offPlanStays, 2)
+})
+
 test('expenses dated after today are scheduled, not spent', () => {
   const state = draftState('chosen')
   const led: LedgerEntry[] = [

@@ -91,6 +91,20 @@ export function stopCoverage(seg: Segment, stays: Stay[]): StopCoverage {
   return { covered, gaps, overlaps }
 }
 
+/**
+ * The stay a traveller sleeps in on the night of `dayIso`, by the timeline's
+ * own rule (stopCoverage): counted stays only, and a booked one first when two
+ * claim the night. Null on a "No bed" night and at a stop with no counted stay.
+ * Home's top card reads it (#58): a stop can hold several stays since the
+ * timeline build, so "the stop's first stay" is not tonight's, and a stay is
+ * only called booked when it is (an Idea counts in the plan too).
+ */
+export function stayForNight(seg: Segment, stays: Stay[], dayIso: string): Stay | null {
+  const claims = stopCoverage(seg, stays.filter((st) => st.segId === seg.id)).covered
+    .filter(({ range: r }) => r.from <= dayIso && dayIso < r.to)
+  return (claims.find(({ stay }) => isBookedStatus(stay.status)) ?? claims[0])?.stay ?? null
+}
+
 export interface LegEnd {
   kind: 'home' | 'stop'
   city: string

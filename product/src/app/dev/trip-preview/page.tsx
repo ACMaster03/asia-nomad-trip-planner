@@ -13,8 +13,11 @@ import Preview from './Preview'
 // legs mock 15 shows: a Da Nang stay that leaves a gap, a booked flight with
 // a connection, an idea flight with no price, nothing yet on the last two
 // legs, and one old option that never counted. 404s outside development.
-export default async function TripPreviewPage() {
+// ?maybe=<stop id> (bkk, han, dad) takes that stop out of the plan, for #105:
+// its booked stay says "still in Bookings".
+export default async function TripPreviewPage({ searchParams }: { searchParams: Promise<{ maybe?: string }> }) {
   if (process.env.NODE_ENV !== 'development') notFound()
+  const { maybe } = await searchParams
   const today = new Date().toISOString().slice(0, 10)
   const base = fixtureTrip(today)
   const trip: Trip = {
@@ -35,6 +38,7 @@ export default async function TripPreviewPage() {
       ],
     },
   }
+  if (maybe) trip.state.segments = trip.state.segments.map((s) => (s.id === maybe ? { ...s, include: false } : s))
   const qc = new QueryClient()
   qc.setQueryData(tk.trip('fixture'), trip)
   qc.setQueryData(qk.citiesLite, cities.map((c) => ({ id: c.id, country: c.country, city: c.city, region: c.region, region_name: c.region_name, lat: c.lat, lng: c.lng, daily_living_mid: c.daily_living_mid, accom_mid: c.accom_mid })))

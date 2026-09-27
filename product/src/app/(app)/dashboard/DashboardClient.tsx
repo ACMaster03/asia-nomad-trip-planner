@@ -8,6 +8,8 @@ import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
 import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
+import { stayCounts, stayForNight } from '@/lib/trips/timeline'
+import { isBookedStatus } from '@/lib/trips/commitment'
 import { useCheckIn } from '@/components/checkin/CheckInProvider'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
 import { moneyModel } from '@/lib/trips/moneyModel'
@@ -307,7 +309,11 @@ export default function DashboardClient({
   const prog = current ? stopProgress(current, todayIso) : null
   const night = prog?.night ?? null
   const nightsHere = prog?.nights ?? null
-  const stay = current ? s.stays.find((st) => st.segId === current.id && st.include !== false) : undefined
+  // Tonight's bed, by the Trip timeline's rule (#58): a stop can hold several
+  // stays, and one only reads "booked" when it is. It used to be the stop's
+  // first counted stay, always "booked", an Idea included.
+  const stay = current ? stayForNight(current, s.stays, todayIso) : null
+  const stopHasStay = !!current && s.stays.some((st) => st.segId === current.id && stayCounts(st))
   const recapMid = tripRecap(s, trip.data.ledger ?? [])
   const money = moneyModel(s, trip.data.ledger ?? [], cityIdx, todayIso)
   // The projection waits for the same week of pace as on Money (Petra, 23 Sep;
@@ -375,7 +381,16 @@ export default function DashboardClient({
           {phase === 'off'
             ? 'Not a stop in the plan · no stay logged'
             : current
-              ? `${stay ? `${stay.name || 'Stay'} · booked` : 'not booked'}${phase === 'arrive' ? ` · ${nightsHere} nights planned` : ` · leave ${new Date(current.depart).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}`
+              ? <>
+                  {/* Amber for what still needs doing, as on Money's Plan card and
+                      the timeline's "No bed" rows. */}
+                  {stay
+                    ? isBookedStatus(stay.status)
+                      ? `${stay.name || 'Stay'} · booked`
+                      : <>{stay.name || 'Stay'} · <span className="text-warn">not booked</span></>
+                    : <span className="text-warn">{stopHasStay ? 'No bed tonight' : 'No stay yet'}</span>}
+                  {phase === 'arrive' ? ` · ${nightsHere} nights planned` : ` · leave ${new Date(current.depart).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                </>
               : ''}
         </div>
         {phase === 'live' && current && night && nightsHere && (
