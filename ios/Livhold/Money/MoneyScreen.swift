@@ -163,16 +163,23 @@ private struct MoneyPage: View {
 
 /// A card's small uppercase title; mauve on the cards the web titles in mauve.
 struct CardLabel: View {
-    let text: String
+    let text: Text
     var mauve = false
 
+    init(_ key: LocalizedStringKey, mauve: Bool = false) {
+        self.text = Text(key)
+        self.mauve = mauve
+    }
+
+    /// Words already made in code (String(localized:), a city).
+    @_disfavoredOverload
     init(_ text: String, mauve: Bool = false) {
-        self.text = text
+        self.text = Text(verbatim: text)
         self.mauve = mauve
     }
 
     var body: some View {
-        Text(text)
+        text
             .font(.sans(11.5, weight: .semibold, relativeTo: .caption))
             .textCase(.uppercase)
             .tracking(1.3)
@@ -711,8 +718,7 @@ private struct DailySpendCard: View {
 
     private func axisLabel(_ d: String) -> String {
         if range >= 90 && model.unlocks.range {
-            let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-            return months[(Int(d.dropFirst(5).prefix(2)) ?? 1) - 1]
+            return Days.monthShort(d)
         }
         return Days.short(d)
     }

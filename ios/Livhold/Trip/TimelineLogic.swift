@@ -49,18 +49,41 @@ enum Days {
     }
 
     /// "24 Nov" (timeline.ts shortDate); "—" when missing (sheetKit fmtDay).
+    /// In another language the phone's own form, "nov. 24.".
     static func short(_ iso: String?) -> String {
         guard let iso, let d = date(iso) else { return "—" }
+        guard L10n.isEnglish else { return d.formatted(style.month(.abbreviated).day()) }
         let c = calendar.dateComponents([.day, .month], from: d)
         let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         return "\(c.day ?? 0) \(months[(c.month ?? 1) - 1])"
+    }
+
+    /// "Nov", or the month's short name in the app's language.
+    static func monthShort(_ iso: String) -> String {
+        guard let d = date(iso) else { return "" }
+        guard L10n.isEnglish else { return d.formatted(style.month(.abbreviated)) }
+        let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        return months[(calendar.component(.month, from: d)) - 1]
+    }
+
+    /// "Sun 20 Sep"; "szept. 20., V" in Hungarian.
+    static func weekday(_ iso: String) -> String {
+        guard let d = date(iso) else { return iso }
+        guard L10n.isEnglish else { return d.formatted(style.weekday(.abbreviated).month(.abbreviated).day()) }
+        let names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        return "\(names[calendar.component(.weekday, from: d) - 1]) \(short(iso))"
+    }
+
+    /// Dates are calendar days: formatted in UTC, in the app's language.
+    private static var style: Date.FormatStyle {
+        Date.FormatStyle(locale: L10n.locale, calendar: calendar, timeZone: calendar.timeZone)
     }
 
     /// 14.58 → "14 h 35" (sheetKit fmtHours).
     static func hours(_ h: Double) -> String {
         let whole = Int(h.rounded(.down))
         let mins = Int(((h - Double(whole)) * 60).rounded())
-        return mins > 0 ? "\(whole) h \(String(format: "%02d", mins))" : "\(whole) h"
+        return mins > 0 ? String(localized: "\(whole) h \(String(format: "%02d", mins))") : String(localized: "\(whole) h")
     }
 }
 
@@ -143,7 +166,8 @@ enum Journey {
 
     /// "1 234 567 Ft", "$1,234", "€1,234" — whole units, narrow symbols (format.ts fmtMoney).
     static func money(_ n: Double, _ currency: String) -> String {
-        let locale = Locale(identifier: currency == "HUF" ? "hu_HU" : "en_US")
+        // Forint the Hungarian way everywhere; the rest as the app's language writes them.
+        let locale = currency == "HUF" ? Locale(identifier: "hu_HU") : (L10n.isEnglish ? Locale(identifier: "en_US") : L10n.locale)
         return n.rounded().formatted(
             .currency(code: currency).presentation(.narrow).precision(.fractionLength(0)).locale(locale)
         )

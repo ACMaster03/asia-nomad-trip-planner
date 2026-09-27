@@ -1039,9 +1039,9 @@ extension Days {
     static func monthTitle(_ iso: String) -> String {
         guard let d = date(iso) else { return "" }
         let f = DateFormatter()
-        f.locale = Locale(identifier: "en_GB")
+        f.locale = L10n.isEnglish ? Locale(identifier: "en_GB") : L10n.locale
         f.timeZone = utc
-        f.dateFormat = "LLLL yyyy"
+        f.setLocalizedDateFormatFromTemplate("LLLLyyyy")
         return f.string(from: d)
     }
 

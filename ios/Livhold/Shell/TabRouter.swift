@@ -50,10 +50,10 @@ enum AppTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .home: "Home"
-        case .trip: "Trip"
-        case .money: "Money"
-        case .map: "Map"
+        case .home: String(localized: "Home")
+        case .trip: String(localized: "Trip")
+        case .money: String(localized: "Money")
+        case .map: String(localized: "Map")
         }
     }
 

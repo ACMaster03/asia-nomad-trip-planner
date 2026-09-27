@@ -409,8 +409,9 @@ enum MoneyText {
         guard abs(n) >= 1_000_000 else { return full(n, cur) }
         let m = n / 1_000_000
         let digits = abs(m) >= 100 ? 0 : (abs(m) >= 10 ? 1 : 2)
-        var num = m.formatted(.number.precision(.fractionLength(min(1, digits)...digits)).locale(Locale(identifier: "en_US")))
-        num = num.replacingOccurrences(of: ",", with: " ")
+        // "1.33" in English, "1,33" in Hungarian; groups with a space in both.
+        var num = m.formatted(.number.precision(.fractionLength(min(1, digits)...digits)).locale(L10n.isEnglish ? Locale(identifier: "en_US") : L10n.locale))
+        if L10n.isEnglish { num = num.replacingOccurrences(of: ",", with: " ") }
         let sym = symbol(cur)
         return cur == "HUF" || sym.count > 1 ? "\(num) M \(sym)" : "\(sym)\(num) M"
     }
@@ -430,23 +431,17 @@ enum MoneyText {
 
     /// "12 000 THB" — an entry's own amount, when it isn't in the base currency.
     static func original(_ e: LedgerEntry) -> String {
-        let n = e.amount.formatted(.number.precision(.fractionLength(0...2)).locale(Locale(identifier: "en_US")))
+        let n = e.amount.formatted(.number.precision(.fractionLength(0...2)).locale(L10n.isEnglish ? Locale(identifier: "en_US") : L10n.locale))
         return "\(n) \(e.currency)"
     }
 
     /// "today", "yesterday", "12 Sep" (LatestStrip.tsx).
     static func day(_ iso: String, today: String) -> String {
-        if iso == today { return "today" }
-        if iso == Days.add(today, -1) { return "yesterday" }
+        if iso == today { return String(localized: "today") }
+        if iso == Days.add(today, -1) { return String(localized: "yesterday") }
         return Days.short(iso)
     }
 
     /// "Sun 20 Sep".
-    static func weekday(_ iso: String) -> String {
-        guard let d = Days.date(iso) else { return iso }
-        var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = TimeZone(identifier: "UTC")!
-        let names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        return "\(names[cal.component(.weekday, from: d) - 1]) \(Days.short(iso))"
-    }
+    static func weekday(_ iso: String) -> String { Days.weekday(iso) }
 }

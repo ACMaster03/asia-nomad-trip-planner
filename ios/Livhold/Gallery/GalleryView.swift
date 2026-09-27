@@ -128,7 +128,7 @@ struct GalleryView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 ForEach(["Stays", "Transport", "Daily"], id: \.self) { name in
-                    Chip(title: name, selected: chip == name) { chip = name }
+                    Chip(title: LocalizedStringKey(name), selected: chip == name) { chip = name }
                 }
             }
             HStack(spacing: 8) {
@@ -174,7 +174,7 @@ struct GalleryView: View {
             SectionTitle("Add an expense", size: 21)
             HStack(spacing: 8) {
                 ForEach(["Stays", "Transport", "Daily"], id: \.self) { name in
-                    Chip(title: name, selected: chip == name) { chip = name }
+                    Chip(title: LocalizedStringKey(name), selected: chip == name) { chip = name }
                 }
             }
             Field(placeholder: "Amount", text: $note)

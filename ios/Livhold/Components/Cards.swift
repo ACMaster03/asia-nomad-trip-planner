@@ -19,11 +19,23 @@ struct Card<Content: View>: View {
 struct Notice: View {
     enum Kind { case info, warn }
 
-    let text: String
+    let text: Text
     var kind: Kind = .info
 
+    init(text: LocalizedStringKey, kind: Kind = .info) {
+        self.text = Text(text)
+        self.kind = kind
+    }
+
+    /// A message made in code or from the server, shown as it is.
+    @_disfavoredOverload
+    init(text: String, kind: Kind = .info) {
+        self.text = Text(verbatim: text)
+        self.kind = kind
+    }
+
     var body: some View {
-        Text(text)
+        text
             .font(.sans(16, weight: kind == .info ? .medium : .regular))
             .foregroundStyle(kind == .info ? Palette.tagInk : Palette.warn)
             .frame(maxWidth: .infinity, alignment: .leading)
