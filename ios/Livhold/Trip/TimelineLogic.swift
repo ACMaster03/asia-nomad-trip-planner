@@ -154,7 +154,7 @@ enum Journey {
         guard let date = t.chargeDate ?? t.date else { return MoneyState(label: "booked", tone: .ok) }
         return date <= today
             ? MoneyState(label: "paid \(Days.short(date))", tone: .ok)
-            : MoneyState(label: "card charged on \(Days.short(date))", tone: .warn)
+            : MoneyState(label: "will be charged on \(Days.short(date))", tone: .warn)
     }
 
     /// The money line under a stay row (timeline.ts stayMoneyState).
@@ -163,13 +163,27 @@ enum Journey {
         if let charge = st.chargeDate {
             return charge <= today
                 ? MoneyState(label: "paid \(Days.short(charge))", tone: .ok)
-                : MoneyState(label: "card charged on \(Days.short(charge))", tone: .warn)
+                : MoneyState(label: "will be charged on \(Days.short(charge))", tone: .warn)
         }
-        if st.chargeAtCheckIn == true { return MoneyState(label: "card charged at check-in", tone: .warn) }
+        if st.chargeAtCheckIn == true { return MoneyState(label: "will be charged at check-in", tone: .warn) }
         return MoneyState(label: "deadlines not set", tone: .warn)
     }
 
     // MARK: stays
+
+    /// A stay's name without the stop's city in front ("Bangkok – Home in Khet
+    /// Huai Khwang" under Bangkok reads "Home in Khet Huai Khwang").
+    static func stayName(_ st: Stay, in seg: Segment) -> String {
+        let name = st.name.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return "Stay" }
+        let city = seg.city.trimmingCharacters(in: .whitespaces)
+        guard !city.isEmpty, name.lowercased().hasPrefix(city.lowercased()) else { return name }
+        let rest = name.dropFirst(city.count)
+        let separators = CharacterSet(charactersIn: " -–—:,·|/")
+        guard let first = rest.unicodeScalars.first, separators.contains(first) else { return name }
+        let trimmed = rest.trimmingCharacters(in: separators)
+        return trimmed.isEmpty ? name : trimmed
+    }
 
     struct NightRange: Hashable { let from: String; let to: String; let nights: Int }
 

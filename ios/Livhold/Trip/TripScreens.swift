@@ -434,78 +434,90 @@ struct StopCard: View {
     }
 }
 
-/// A stop's stays and its warnings. Shared by the card and the stop screen.
+/// A stop's stays and its warnings. Shared by the card and the stop screen: the
+/// card keeps it short (name, nights, price); the stop screen adds how each stay
+/// is paid. Lines sit only between rows, never above the first or under the last.
 struct StayList: View {
     let seg: Segment
     let stays: [Stay]
     let inPlan: Bool
     let state: TripState
     let today: String
+    /// The stop screen's version, with the payment line under each stay.
+    var detailed = false
+
+    private enum Item: Hashable {
+        case stay(Stay, Journey.NightRange)
+        case old(Stay)
+        case gap(Journey.NightRange)
+        case overlap(Journey.NightRange)
+        case none
+    }
+
+    private var items: [Item] {
+        let cov = Journey.coverage(seg, stays)
+        var out: [Item] = cov.covered.map { .stay($0.stay, $0.range) }
+        out += stays.filter { $0.include != true }.map { .old($0) }
+        if inPlan { out += cov.gaps.map { .gap($0) } }
+        out += cov.overlaps.map { .overlap($0) }
+        if stays.isEmpty { out.append(.none) }
+        return out
+    }
 
     var body: some View {
-        let cov = Journey.coverage(seg, stays)
-        let uncounted = stays.filter { $0.include != true }
+        let items = items
         VStack(alignment: .leading, spacing: 0) {
-            Divider().overlay(Palette.ln)
-            ForEach(cov.covered, id: \.stay.id) { item in
-                let money = Journey.stayMoney(item.stay, today: today)
-                let total = Journey.toBase(Journey.stayTotal(item.stay, seg), item.stay.cur, state.rates)
-                row {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.stay.name.isEmpty ? "Stay" : item.stay.name)
-                            .font(.sans(16, weight: .medium)).foregroundStyle(Palette.tx).lineLimit(1)
-                        Text("\(Days.short(item.range.from)) – \(Days.short(item.range.to)) · \(item.range.nights) \(item.range.nights == 1 ? "night" : "nights")")
-                            .font(.sans(13)).foregroundStyle(Palette.tx2).lineLimit(1)
-                        Text(money.label)
-                            .font(.sans(13)).foregroundStyle(money.tone.color).lineLimit(1)
-                    }
-                    Spacer(minLength: 8)
-                    if total > 0 {
-                        Text(Journey.money(total, state.meta.baseCurrency))
-                            .font(.sans(16, weight: .semibold)).monospacedDigit().foregroundStyle(Palette.tx)
-                    }
-                }
-            }
-            ForEach(uncounted) { stay in
-                row {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(stay.name.isEmpty ? "Stay" : stay.name)
-                            .font(.sans(16, weight: .medium)).foregroundStyle(Palette.tx).lineLimit(1)
-                        Text("old option · not counted").font(.sans(13)).foregroundStyle(Palette.tx2)
-                    }
-                    Spacer()
-                }
-                .opacity(0.55)
-            }
-            if inPlan {
-                ForEach(cov.gaps, id: \.self) { g in
-                    row {
-                        Text("No bed \(Days.short(g.from)) → \(Days.short(g.to))").font(.sans(16, weight: .medium))
-                        Spacer()
-                        Text("\(g.nights) \(g.nights == 1 ? "night" : "nights")").font(.sans(13))
-                    }
-                    .foregroundStyle(Palette.warn)
-                }
-            }
-            ForEach(cov.overlaps, id: \.self) { o in
-                Text("Two stays overlap \(Days.short(o.from)) – \(Days.short(o.to)) · \(o.nights) \(o.nights == 1 ? "night" : "nights") counted twice")
-                    .font(.sans(13, weight: .medium)).foregroundStyle(Palette.warn)
-                    .padding(.vertical, 8)
-            }
-            if stays.isEmpty {
-                Text(inPlan ? "No stay yet" : "Nights not counted")
-                    .font(.sans(16, weight: .medium))
-                    .foregroundStyle(inPlan ? Palette.warn : Palette.tx3)
-                    .padding(.vertical, 10)
+            ForEach(Array(items.enumerated()), id: \.element) { i, item in
+                if i > 0 { Divider().overlay(Palette.ln) }
+                view(item).padding(.vertical, 10)
             }
         }
     }
 
-    private func row<C: View>(@ViewBuilder _ content: () -> C) -> some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 12) { content() }
-                .padding(.vertical, 10)
-            Divider().overlay(Palette.ln)
+    @ViewBuilder private func view(_ item: Item) -> some View {
+        switch item {
+        case .stay(let stay, let range):
+            let total = Journey.toBase(Journey.stayTotal(stay, seg), stay.cur, state.rates)
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Journey.stayName(stay, in: seg))
+                        .font(.sans(16, weight: .medium)).foregroundStyle(Palette.tx).lineLimit(1)
+                    Text("\(Days.short(range.from)) – \(Days.short(range.to)) · \(range.nights) \(range.nights == 1 ? "night" : "nights")")
+                        .font(.sans(13)).foregroundStyle(Palette.tx2).lineLimit(1)
+                    if detailed {
+                        let money = Journey.stayMoney(stay, today: today)
+                        Text(money.label.prefix(1).uppercased() + money.label.dropFirst())
+                            .font(.sans(13, weight: .medium)).foregroundStyle(money.tone.color)
+                    }
+                }
+                Spacer(minLength: 8)
+                if total > 0 {
+                    Text(Journey.money(total, state.meta.baseCurrency))
+                        .font(.sans(16, weight: .semibold)).monospacedDigit().foregroundStyle(Palette.tx)
+                }
+            }
+        case .old(let stay):
+            VStack(alignment: .leading, spacing: 2) {
+                Text(Journey.stayName(stay, in: seg))
+                    .font(.sans(16, weight: .medium)).foregroundStyle(Palette.tx).lineLimit(1)
+                Text("old option · not counted").font(.sans(13)).foregroundStyle(Palette.tx2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(0.55)
+        case .gap(let g):
+            HStack {
+                Text("No bed \(Days.short(g.from)) → \(Days.short(g.to))").font(.sans(16, weight: .medium))
+                Spacer()
+                Text("\(g.nights) \(g.nights == 1 ? "night" : "nights")").font(.sans(13))
+            }
+            .foregroundStyle(Palette.warn)
+        case .overlap(let o):
+            Text("Two stays overlap \(Days.short(o.from)) – \(Days.short(o.to)) · \(o.nights) \(o.nights == 1 ? "night" : "nights") counted twice")
+                .font(.sans(13, weight: .medium)).foregroundStyle(Palette.warn)
+        case .none:
+            Text(inPlan ? "No stay yet" : "Nights not counted")
+                .font(.sans(16, weight: .medium))
+                .foregroundStyle(inPlan ? Palette.warn : Palette.tx3)
         }
     }
 }
@@ -545,9 +557,9 @@ private struct StopPage: View {
                 hero(current: current)
                 VStack(alignment: .leading, spacing: 16) {
                     section("Stays") {
-                        StayList(seg: seg, stays: state.stays.filter { $0.segId == seg.id }, inPlan: seg.inPlan, state: state, today: today)
+                        StayList(seg: seg, stays: state.stays.filter { $0.segId == seg.id }, inPlan: seg.inPlan, state: state, today: today, detailed: true)
                             .padding(.horizontal, 18)
-                            .padding(.bottom, 4)
+                            .padding(.vertical, 4)
                             .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
                     }
                     if let arriving { legSection("Getting here", arriving) }
