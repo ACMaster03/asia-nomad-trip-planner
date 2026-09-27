@@ -344,7 +344,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     const g = instRef.current
     if (!g) return
     const { route } = buildRoute(segments, cities, cityIdx, transport, home)
-    const routeSet = new Set(route.filter((n) => !n.home).map((n) => n.city))
+    const routeSet = new Set(route.filter((n) => !n.home).map((n) => n.catalogue ?? n.city))
     const points: GlobePoint[] = cities
       .filter((c) => c.lat != null && c.lng != null)
       .map((c) => {
