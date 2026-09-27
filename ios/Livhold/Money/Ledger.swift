@@ -94,6 +94,9 @@ struct Subscription: Identifiable, Sendable {
     let everyMonths: Int
     let anchor: String
     let cancelledOn: String?
+    /// A heads-up before it charges, `leadDays` ahead (by email for now).
+    let remind: Bool
+    let leadDays: Int
 
     init?(raw: JSONValue) {
         guard let id = raw["id"]?.text else { return nil }
@@ -105,6 +108,8 @@ struct Subscription: Identifiable, Sendable {
         anchor = String((raw["anchor"]?.text ?? "").prefix(10))
         let c = raw["cancelledOn"]?.text ?? ""
         cancelledOn = Subscriptions.valid(c) ? c : nil
+        remind = raw["remind"]?.boolValue ?? false
+        leadDays = Int((raw["leadDays"]?.numberValue ?? 3).rounded())
     }
 
     var isCancelled: Bool { cancelledOn != nil }

@@ -23,6 +23,8 @@ enum EntryTarget: Identifiable, Hashable {
 @Observable
 final class MoneyEditor {
     var target: EntryTarget?
+    /// The subscription form (SubscriptionForm.swift): nil for a new one.
+    var sub: SubTarget?
     var toast: String?
 }
 
@@ -304,7 +306,7 @@ struct EntrySheet: View {
 
     private var footnote: String? {
         if imported { return "Amount and date follow the booking on the Trip page." }
-        if category == "subscriptions", editing == nil { return "How often it repeats is set on livhold.com for now." }
+        if category == "subscriptions", editing == nil { return "For one that repeats, add it under Subscriptions on Money." }
         if editing == nil, store.tracking == .no || store.tracking == .ask { return "Saving this turns on spending tracking." }
         return nil
     }

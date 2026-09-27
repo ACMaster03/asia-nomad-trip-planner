@@ -71,7 +71,7 @@ struct EditTap<Content: View>: View {
 // MARK: - the sheet around every form
 
 /// The red button at the bottom of a form and the question it asks first.
-private struct EditDelete {
+struct EditDelete {
     let label: String
     let question: String
     var message: String?
@@ -82,7 +82,7 @@ private struct EditDelete {
 /// Cancel and Save in the bar, Save grey until there's something to save,
 /// "Discard changes?" instead of losing an edit to a swipe, the travel loader
 /// while it saves, and the reason in amber if it couldn't.
-private struct EditForm<Content: View>: View {
+struct EditForm<Content: View>: View {
     let title: String
     let canSave: Bool
     let dirty: Bool
@@ -739,7 +739,7 @@ enum Price {
     }
 }
 
-private struct PriceRow: View {
+struct PriceRow: View {
     let label: String
     @Binding var amount: String
     @Binding var cur: String

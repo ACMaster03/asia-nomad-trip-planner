@@ -64,6 +64,11 @@ struct AppShell: View {
                 .environment(trips)
                 .environment(money)
         }
+        .sheet(item: $money.sub) { target in
+            SubscriptionForm(sub: target.sub)
+                .environment(trips)
+                .environment(money)
+        }
         .toast($money.toast)
     }
 }
