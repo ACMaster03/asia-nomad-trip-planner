@@ -43,6 +43,8 @@ interface GlobeProps {
   /** local ISO date — splits a followed route into visited / now / upcoming */
   today?: string
   onPickPeople?: (g: PeopleAtCity) => void
+  /** the viewer's home (#58), "Budapest, Hungary": the route's ⌂ when the globe can place it */
+  home?: string
 }
 // globe.gl's HTML layer is untyped in its .d.ts; this is the slice we use.
 interface HtmlLayer {
@@ -130,7 +132,7 @@ function hazLabel(d: Hazard) {
   return box(`<b style="color:#D9A85C">Heavy rain / monsoon</b><br><span style="${MUTED}">${esc(d.city)} · ~${d.rain}mm this month</span><br><span style="color:#D08795">tap for details</span>`)
 }
 
-export default function GlobeView({ cities, countries, cityIdx, segments, transport, rates, onPickCity, people = NO_PEOPLE, theirRoute = null, today = '', onPickPeople }: GlobeProps) {
+export default function GlobeView({ cities, countries, cityIdx, segments, transport, rates, onPickCity, people = NO_PEOPLE, theirRoute = null, today = '', onPickPeople, home = '' }: GlobeProps) {
   const { fmt } = useMoney()
   const boxRef = useRef<HTMLDivElement>(null)
   const instRef = useRef<Inst | null>(null)
@@ -341,7 +343,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
   useEffect(() => {
     const g = instRef.current
     if (!g) return
-    const { route } = buildRoute(segments, cities, cityIdx, transport)
+    const { route } = buildRoute(segments, cities, cityIdx, transport, home)
     const routeSet = new Set(route.filter((n) => !n.home).map((n) => n.city))
     const points: GlobePoint[] = cities
       .filter((c) => c.lat != null && c.lng != null)
@@ -363,7 +365,7 @@ export default function GlobeView({ cities, countries, cityIdx, segments, transp
     seasonalRef.current = seasonalHazards(segments, cities)
     g.labelsData(route as object[])
     paint()
-  }, [cities, cityIdx, segments, transport]) // NOT rates — read via ratesRef so an FX edit doesn't repaint
+  }, [cities, cityIdx, segments, transport, home]) // NOT rates — read via ratesRef so an FX edit doesn't repaint
 
   // ===== PATCH effects — the people layer (issue #9) =====
   useEffect(() => {

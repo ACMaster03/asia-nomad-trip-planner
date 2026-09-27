@@ -6,6 +6,7 @@ import NewCountryBanner from './NewCountryBanner'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
+import { useHomeBase } from '@/lib/trips/useHomeBase'
 import { useMoney } from '@/lib/trips/Money'
 import { useConfirm } from '@/components/Confirm'
 import { localISODate, nightsBetween, segNights, stayTotal, toBase } from '@/lib/trips/format'
@@ -13,7 +14,7 @@ import { isBookedStatus } from '@/lib/trips/commitment'
 import { stopProgress, tripDay } from '@/lib/trips/progress'
 import { stopsAround } from '@/lib/trips/whereAmI'
 import {
-  buildTimeline, legMoneyState, shiftDepartures, stayCounts, stayMoneyState, stopCoverage,
+  buildTimeline, homeFor, legMoneyState, shiftDepartures, stayCounts, stayMoneyState, stopCoverage,
   type Leg, type NightRange, type Timeline as TimelineModel, type Tone,
 } from '@/lib/trips/timeline'
 import type { Segment, Stay, TransportLeg, TripState } from '@/lib/trips/types'
@@ -298,7 +299,9 @@ export function Timeline() {
   const [sheet, setSheet] = useState<SheetState>(null)
   const todayIso = localISODate()
   const state = trip.data?.state
-  const tl = useMemo(() => (state ? buildTimeline(state) : null), [state])
+  // Home is the viewer's own (#58, migration 43), else the journey's.
+  const profileHome = useHomeBase().data
+  const tl = useMemo(() => (state ? buildTimeline(state, homeFor(profileHome, state.meta)) : null), [state, profileHome])
   const maybes = useMemo(
     () => (state ? state.segments.filter((x) => x.include === false).slice().sort((a, b) => a.arrive.localeCompare(b.arrive)) : []),
     [state],

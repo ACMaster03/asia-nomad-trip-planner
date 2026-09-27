@@ -45,4 +45,6 @@ export const tk = {
   // read as a Tracking state (lib/trips/tracking.ts). Account-scoped: sign-out
   // clears the whole cache, so one key serves whoever is signed in.
   trackSpending: ['track-spending'] as const,
+  /** where the signed-in person lives (#58, migration 43), from their profile */
+  homeBase: ['home-base'] as const,
 }

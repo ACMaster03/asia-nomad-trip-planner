@@ -7,6 +7,43 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-27
 
+### APPLIED — migration 43 on staging and production (Patrik, 27 Sep)
+
+`profiles.home_base`, with its backfill (#58).
+- Staging: 43, then `43-TESTPLAN.sql`, which ended in "Success".
+- Production: 43, the migration only.
+- Production afterwards: 13 profiles, 2 of them with a home from the backfill. That is one
+  for each person who owns a journey with a home typed in; Patrik's comes from Asia.
+- Before either, both files ran on a local Postgres 16 with the real profile policies of 03
+  and 06:
+  - 43 applies twice cleanly;
+  - the test plan passes 3/3;
+  - it fails as it should when `profiles_update` is opened to everyone, or when the co-member
+    read is dropped.
+
+### BUILT — home on the person (#58)
+
+Pull request #PRNUM. The app reads `profiles.home_base` first. `homeFor` (`timeline.ts`) falls
+back to the journey's `meta.homeBase`, so a failed read, or a person who never set a home,
+sees the home the journey was created with.
+- **Trip:** the timeline starts and ends at the viewer's home. On a shared journey each
+  traveller sees their own.
+- **Account:** a "Home" card, "Every journey starts and ends here.", sets it. Emptied and
+  saved, it clears, and the journey's home shows again.
+- **New journey:** the wizard's step 2 is "Home", prefilled from the profile, so a second
+  journey takes one tap. It saves to the journey, as the fallback, and to the profile.
+- **Map:** the globe's ⌂ is the viewer's home when the globe can place it (a known home or a
+  catalogue city). Otherwise the route starts where the first flight in comes from, as
+  before.
+- **What moves:** a flight from somewhere other than the viewer's home now sits under
+  "Transport not on a leg", as any flight that matches no leg does.
+- **iOS:** read `profiles.home_base` first, then `meta.homeBase`; that is `homeFor` in
+  `timeline.ts`. `TimelineLogic.swift`'s `homeCity(state.meta.homeBase)` becomes
+  `homeCity(homeFor(profile, meta))`. A journey the iOS app creates should write both.
+- **Checked:** `tsc`; `eslint` (the four old findings); `next build`; 154 node tests, 2 new
+  (`homeFor`, a timeline from a given home). `/dev/trip-preview?home=Vienna,%20Austria` shows
+  "Home · Vienna" at both ends, with the Budapest flight not on a leg.
+
 ### DECIDED — Patrik, 27 Sep: home on the person, a way into Reminders, the order
 
 Patrik: "yes to everything". Recorded on #58, #60, #62 and #65.
@@ -14,8 +51,7 @@ Patrik: "yes to everything". Recorded on #58, #60, #62 and #65.
   - It moves to `profiles.home_base`, migration 43, because #101 takes 42.
   - On a shared journey each traveller sees their own home.
   - The journey's `meta.homeBase` stays as the fallback.
-  - Not built yet. **iOS:** `TimelineLogic.swift` reads `meta.homeBase`. It should read the
-    profile's home first once 43 lands.
+  - Built on the same day (below).
 - **A way into Reminders (#60).** Home's "Coming up" card never leaves during the trip. With
   nothing due it is one row, "Nothing coming up · All reminders ›". No "Deadlines" row in
   Trip settings.
