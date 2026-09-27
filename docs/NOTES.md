@@ -89,6 +89,12 @@ Patrik, 27 Sep: fix the Home and Trip bugs first (above). Pull request #108.
   (`stayForNight`, a stop out of the plan in `bookingsSummary`). In the dev previews:
   `?screen=home&stay=idea|gap|none` shows each Home line; `/dev/trip-preview?maybe=dad` and
   `/dev/money-preview?maybe=han` show the two markers.
+- **Live with #108 (27 Sep), tested by Patrik on the phone:**
+  - Home's line reads right for Bangkok.
+  - Unticking a stop with a booked stay showed "· still in Bookings" on Trip and "· 1 not in
+    the plan" on Money's Bookings; ticking it back restored both.
+  - Money's sums and estimates are unchanged.
+  - The emails wait for the redeploy.
 
 ### DECIDED — Patrik: the calls made in the builds stand
 
