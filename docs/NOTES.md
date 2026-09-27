@@ -23,7 +23,7 @@ when a decision needs to survive the conversation it was made in.
 
 ### BUILT — home on the person (#58)
 
-Pull request #PRNUM. The app reads `profiles.home_base` first. `homeFor` (`timeline.ts`) falls
+Pull request #116. The app reads `profiles.home_base` first. `homeFor` (`timeline.ts`) falls
 back to the journey's `meta.homeBase`, so a failed read, or a person who never set a home,
 sees the home the journey was created with.
 - **Trip:** the timeline starts and ends at the viewer's home. On a shared journey each
