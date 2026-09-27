@@ -7,6 +7,36 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-27
 
+### DECIDED — Patrik, 27 Sep: home on the person, a way into Reminders, the order
+
+Patrik: "yes to everything". Recorded on #58, #60, #62 and #65.
+- **Home belongs to the person (#58).**
+  - It moves to `profiles.home_base`, migration 43, because #101 takes 42.
+  - On a shared journey each traveller sees their own home.
+  - The journey's `meta.homeBase` stays as the fallback.
+  - Not built yet. **iOS:** `TimelineLogic.swift` reads `meta.homeBase`. It should read the
+    profile's home first once 43 lands.
+- **A way into Reminders (#60).** Home's "Coming up" card never leaves during the trip. With
+  nothing due it is one row, "Nothing coming up · All reminders ›". No "Deadlines" row in
+  Trip settings.
+- **No unlock rule for the Subscriptions card (#62).** It is one folded line since #85.
+- **The order after that:**
+  1. #106: the check-in becomes a sheet and `/live` goes, before the iOS agent reaches Home.
+  2. The #65 wording pass, on Home only. Patrik: Trip was redone in the iOS app and "they
+     did a great job", so features may come back to the web from there instead of the web
+     adding its own.
+  3. Vias drawn on the globe.
+  4. #107, one vocabulary, last.
+
+### BUILT — Reminders reachable from Home whatever is due (#60)
+
+`ComingUp` (`HomeReminders.tsx`) returned nothing when no reminder was due, and then Home had
+no way into `/reminders` during the trip. Now the card shrinks to one row, "Nothing coming
+up · All reminders ›", the same row Home shows before departure.
+- **iOS:** Home's "Coming up" card never disappears; with nothing due it is that one row.
+- **Checked:** `/dev/money-preview?screen=home&stay=none` shows the row; with a charge due
+  the card is as before.
+
 ### WORKING IN PARALLEL — the iOS agent (Patrik, 27 Sep)
 
 Another agent builds the iOS app (`ios/`) on Patrik's machine: Trip now, Money next, the
@@ -59,6 +89,12 @@ Patrik, 27 Sep: fix the Home and Trip bugs first (above). Pull request #108.
   (`stayForNight`, a stop out of the plan in `bookingsSummary`). In the dev previews:
   `?screen=home&stay=idea|gap|none` shows each Home line; `/dev/trip-preview?maybe=dad` and
   `/dev/money-preview?maybe=han` show the two markers.
+- **Live with #108 (27 Sep), tested by Patrik on the phone:**
+  - Home's line reads right for Bangkok.
+  - Unticking a stop with a booked stay showed "· still in Bookings" on Trip and "· 1 not in
+    the plan" on Money's Bookings; ticking it back restored both.
+  - Money's sums and estimates are unchanged.
+  - The emails wait for the redeploy.
 
 ### DECIDED — Patrik: the calls made in the builds stand
 

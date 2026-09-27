@@ -132,7 +132,18 @@ export function ComingUp({ state, todayIso }: { state: TripState; todayIso: stri
   const flash = useToast()
 
   const rows = comingUp(deriveReminders(state, todayIso), todayIso).slice(0, 2)
-  if (rows.length === 0) return null
+  // The way into Reminders during the trip (#60, Patrik, 27 Sep): with nothing
+  // due, the card shrinks to one row instead of leaving, so the door never
+  // depends on there being a reminder. Before departure, BeforeYouFly always
+  // carries its "All reminders" row; this is the same row.
+  if (rows.length === 0) {
+    return (
+      <Link href="/reminders" className="lv-enter flex items-center gap-3 rounded-[var(--r)] bg-sf p-4 text-tx">
+        <span className="flex-1 text-base font-medium text-tx2">Nothing coming up · All reminders</span>
+        <ChevronRight aria-hidden className="size-5 text-ac2" />
+      </Link>
+    )
+  }
 
   return (
     <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
