@@ -24,6 +24,12 @@ const city = (
 })
 
 export const cities: City[] = [
+  // In the catalogue as "Hong Kong"; Asia's stop is "Hong Kong Island" (?hk=1).
+  city('Hong Kong', 'Hong Kong', 'ea', 22.3193, 114.1694, {
+    costs: costs(70, 125, 260, 60, 85, 130), internet: 'Fast (100+ Mbps)',
+    landmarks: ['Victoria Peak', 'Star Ferry'],
+    weather: { hazard: 'Typhoon season Jul–Oct', months: months([25, 50, 75, 160, 290, 400, 380, 450, 330, 100, 40, 25]) },
+  }, 2500),
   city('Thailand', 'Bangkok', 'sea', 13.7563, 100.5018, {
     costs: costs(18, 34, 70, 30, 45, 80), internet: 'Fast (100+ Mbps)',
     landmarks: ['Wat Pho', 'Grand Palace', 'Chatuchak'],

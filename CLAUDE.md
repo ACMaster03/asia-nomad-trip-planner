@@ -104,8 +104,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
     back to the journey's home;
   - Home keeps a Reminders row when nothing is due;
   - the Subscriptions card gets no unlock rule;
-  - next come #106 (the check-in as a sheet, `/live` goes), then the #65 wording pass on
-    Home only. Trip was redone in the iOS app, and the web may take features back from it.
+  - next comes the #65 wording pass on Home only (#106, the check-in as a sheet, turned out
+    done since 20 Sep). Trip was redone in the iOS app, and the web may take features back
+    from it.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.

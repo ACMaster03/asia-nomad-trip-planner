@@ -13,6 +13,7 @@ import type { Segment, TransportLeg } from '@/lib/trips/types'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useHomeBase } from '@/lib/trips/useHomeBase'
 import { homeFor } from '@/lib/trips/timeline'
+import { catalogueCity } from '@/lib/map/norm'
 import { tk } from '@/lib/trips/keys'
 import { fetchMyFollowing } from '@/lib/follow/follows'
 import { useFollowedRoutes } from '@/lib/follow/useFollowedRoutes'
@@ -81,7 +82,7 @@ export default function MapClient() {
     sorted[0]
   const stopNo = stop ? sorted.indexOf(stop) + 1 : 0
   const nights = stop ? Math.max(1, Math.round((+new Date(stop.depart) - +new Date(stop.arrive)) / 86400000)) : 0
-  const stopCity = stop ? (cities.data ?? []).find((c) => c.city === stop.city) : undefined
+  const stopCity = stop ? catalogueCity(stop.city, cities.data ?? [], false) : undefined
   const wifiRaw = getAtJsonPath(stopCity?.attributes, 'internet')
   const wifi = typeof wifiRaw === 'string' || typeof wifiRaw === 'number' ? String(wifiRaw) : null
 

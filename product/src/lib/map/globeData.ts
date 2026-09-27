@@ -19,7 +19,7 @@ export function loadMapOpts(): MapOpts {
 }
 export function saveMapOpts(o: MapOpts) { try { localStorage.setItem(LS, JSON.stringify(o)) } catch {} }
 
-import { normCity, sameCity } from './norm'
+import { catalogueCity, normCity, sameCity } from './norm'
 export { normCity }
 export const isBooked = (t?: TransportLeg | null) => !!(t && (t.status === 'booked' || t.status === 'chosen'))
 
@@ -38,6 +38,8 @@ export interface RouteNode {
   city: string; country: string; r: string | null
   lat: number; lng: number; arrive: string
   home?: boolean; num?: number; label?: string
+  /** the catalogue city the stop was placed by, when its name is spelt differently ("Hong Kong Island" → "Hong Kong") */
+  catalogue?: string
 }
 export interface GlobePoint {
   lat: number; lng: number; city: string; country: string; r: string | null
@@ -113,7 +115,7 @@ export function cityInfoRows(c: City | undefined, k: CityCost | undefined): Info
 /** A home node for `name`, when the globe knows where it is: a known home, or a catalogue city. */
 function homePlace(name: string, cities: City[]): RouteNode | null {
   const hp = HOME_PLACES[name]
-  const c = cities.find((x) => x.city === name && x.lat != null)
+  const c = catalogueCity(name, cities)
   const p = hp ?? (c ? { lat: c.lat!, lng: c.lng!, country: c.country } : null)
   if (!p) return null
   return { city: name, country: p.country ?? '', lat: p.lat, lng: p.lng, r: null, home: true, arrive: '' }
@@ -138,11 +140,11 @@ export function buildRoute(segments: Segment[], cities: City[], cityIdx: Record<
   const stops: RouteNode[] = segments
     .filter((s) => s.include !== false)
     .map((s) => {
-      const c = cities.find((x) => x.city === s.city)
+      const c = catalogueCity(s.city, cities)
       if (!c || c.lat == null || c.lng == null) return null
       return {
-        city: s.city, country: s.country, r: cityIdx[s.city]?.r ?? c.region ?? null,
-        lat: c.lat, lng: c.lng!, arrive: s.arrive || '',
+        city: s.city, country: s.country, r: cityIdx[s.city]?.r ?? cityIdx[c.city]?.r ?? c.region ?? null,
+        lat: c.lat, lng: c.lng!, arrive: s.arrive || '', catalogue: c.city,
       } as RouteNode
     })
     .filter((x): x is RouteNode => x != null)
@@ -180,7 +182,7 @@ export function seasonalHazards(segments: Segment[], cities: City[]): Hazard[] {
   const mi = new Date().getMonth(), seen = new Set<string>(), out: Hazard[] = []
   for (const s of segments.filter((x) => x.include !== false)) {
     if (seen.has(s.city)) continue
-    const c = cities.find((x) => x.city === s.city)
+    const c = catalogueCity(s.city, cities)
     if (!c || c.lat == null || c.lng == null) continue
     const months = getAtJsonPath(c.attributes, 'weather.months') as Array<{ rain?: number }> | undefined
     const m = Array.isArray(months) ? months[mi] : undefined

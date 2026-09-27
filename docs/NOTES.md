@@ -7,6 +7,39 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-27
 
+### FIXED — Hong Kong missing from the globe (Patrik, 27 Sep)
+
+Patrik: "why Hong Kong (confirmed leg of the journey in December) is not on the map as a
+3rd step?"
+
+**The cause.** Asia's stop is spelt "Hong Kong Island" (Petra, 23 Sep, below); the catalogue
+calls the place "Hong Kong". The timeline had matched the two since 23 Sep (`sameCity`,
+`lib/map/norm.ts`). Three other places looked a stop up by its exact name:
+- the globe's route (`buildRoute`), which dropped the stop, with no node and no arc;
+- the Map's bottom card, which lost its wifi line;
+- Money's city averages (`useTripScreen` fetched the route's catalogue rows by exact name), so
+  the stop had no city estimate, and the pre-trip estimate behind Home's "under/over the
+  estimate" missed its daily living.
+
+**The fix.** `catalogueCity` (`norm.ts`) is the one lookup: the exact name first, else the
+same place under another spelling.
+- `useTripScreen` fetches each stop under the catalogue's spelling and indexes it under the
+  stop's own name too, so `cityIdx[s.city]` finds it wherever it is read.
+- The globe highlights the catalogue city the stop was placed by.
+
+**iOS:** match a stop to the catalogue with `catalogueCity`, for the map and the city
+averages, never by exact name.
+
+**Checked.**
+- A new test in `norm.test.ts`; 155 node tests; `tsc`; `eslint` (the four old findings);
+  `next build`.
+- `/dev/map-preview?hk=1` (Asia's spelling) shows "4. Hong Kong Island" with its booked flight
+  from Da Nang. The same preview on the old code shows only the catalogue's dot.
+
+### LIVE — home on the person, tested by Patrik (27 Sep)
+
+Merged as #116. Account → Home shows "Budapest, Hungary", and Trip starts and ends there.
+
 ### APPLIED — migration 43 on staging and production (Patrik, 27 Sep)
 
 `profiles.home_base`, with its backfill (#58).
@@ -59,7 +92,8 @@ Patrik: "yes to everything". Recorded on #58, #60, #62 and #65.
   Trip settings.
 - **No unlock rule for the Subscriptions card (#62).** It is one folded line since #85.
 - **The order after that:**
-  1. #106: the check-in becomes a sheet and `/live` goes, before the iOS agent reaches Home.
+  1. #106: the check-in becomes a sheet and `/live` goes. It turned out done since 20 Sep;
+     see the 19 Sep entry, now marked FIXED.
   2. The #65 wording pass, on Home only. Patrik: Trip was redone in the iOS app and "they
      did a great job", so features may come back to the web from there instead of the web
      adding its own.
@@ -1521,7 +1555,16 @@ provider stack, and NO `NODE_ENV` guard so it survives a production build, is
 the way to actually look at a change before shipping it. Everything in this
 round was checked that way.
 
-### FIXED (symptom) / OPEN (cause) — Check in went to a page, not to a check-in
+### FIXED — Check in went to a page, not to a check-in
+
+**The cause was fixed on 20 Sep too; this entry was not updated until 27 Sep.** The work
+merged with #46:
+- a711344: the sheet lives in the layout (`CheckInProvider`).
+- e289807: Note is a mode of it, and Arrived is a real button on Home.
+- 9c7b8fe: `/live` redirects to `/dashboard`.
+
+On 27 Sep Claude opened #106 from this entry without checking the code, then closed it as
+done. What stays open is the wording, #107.
 
 Reported 2026-09-19 as "the check in button doesn't work, it loads a page that
 shouldn't be there, with another look". Screenshots of both screens settled it,
