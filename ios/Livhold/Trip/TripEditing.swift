@@ -423,6 +423,7 @@ private struct StayForm: View {
                     ForEach(Self.platforms, id: \.self) { Text($0).tag($0) }
                 }
                 .pickerStyle(.menu)
+                .menuSettles(on: platform)
                 if platform == "Other" {
                     TextField("The hotel’s site, a friend, …", text: $platformOther)
                 }
@@ -473,6 +474,7 @@ private struct StayForm: View {
                         Text("At check-in").tag(true)
                     }
                     .pickerStyle(.menu)
+                    .menuSettles(on: chargeAtCheckIn)
                     if !chargeAtCheckIn {
                         OptionalDateRow(label: "Charged on", iso: $chargeDate, suggested: Days.today())
                     }
@@ -758,6 +760,7 @@ private struct PriceRow: View {
             .pickerStyle(.menu)
             .labelsHidden()
             .fixedSize()
+            .menuSettles(on: cur)
         }
     }
 }

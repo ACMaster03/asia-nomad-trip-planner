@@ -183,7 +183,9 @@ struct EntrySheet: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .background(Palette.fill, in: .rect(cornerRadius: 9))
+                    .contentShape(.contextMenuPreview, .rect(cornerRadius: 9))
                 }
+                .menuSettles(on: currency)
                 .disabled(imported)
             }
             .frame(maxWidth: .infinity)
@@ -260,6 +262,7 @@ struct EntrySheet: View {
                     }
                     .foregroundStyle(Palette.tx)
                 }
+                .menuSettles(on: type)
             } else {
                 Text(type == .expense ? "Expense" : "Income").font(.sans(16, weight: .semibold))
             }

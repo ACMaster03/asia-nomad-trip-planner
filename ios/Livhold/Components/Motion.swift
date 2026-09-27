@@ -65,3 +65,14 @@ extension View {
         }
     }
 }
+
+extension View {
+    /// For a Menu (or a menu Picker) whose label changes with the pick. On iOS 26 the
+    /// menu closes back into its label, and a label that changed width meanwhile was
+    /// drawn in the old frame, clipped and square, for about a second before it
+    /// snapped (Patrik, 27 Sep). A new identity per value lets the menu fade out and
+    /// the new label lay out at its own width at once.
+    func menuSettles<V: Hashable>(on value: V) -> some View {
+        id(value)
+    }
+}

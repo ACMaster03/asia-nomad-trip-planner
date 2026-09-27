@@ -68,7 +68,6 @@ struct LedgerScreen: View {
         return ScrollViewReader { proxy in
             List {
                 Section {
-                    filters(model)
                     if !query.trimmed.isEmpty || filter != .all || category != nil { summary(past, model) }
                     if !coming.isEmpty { comingUp(coming, model) }
                 }
@@ -98,6 +97,13 @@ struct LedgerScreen: View {
             .listSectionSpacing(6)
             .scrollContentBackground(.hidden)
             .environment(\.defaultMinListRowHeight, 44)
+            // The chips sit above the list, not in it: a Menu opens by shrinking its chip
+            // and growing out of it, and inside a row the rows below drew over that.
+            .safeAreaInset(edge: .top, spacing: 0) {
+                filters(model)
+                    .padding(.vertical, 6)
+                    .background(Palette.canvas)
+            }
             .onAppear {
                 if let focus, focus.count == 10, focus.first?.isNumber == true {
                     DispatchQueue.main.async { proxy.scrollTo(focus, anchor: .top) }
@@ -165,7 +171,9 @@ struct LedgerScreen: View {
                     .padding(.vertical, 7)
                     .background(category != nil ? Palette.acSoft : Palette.fill, in: .capsule)
                     .overlay(Capsule().strokeBorder(category != nil ? Palette.acLine : .clear, lineWidth: 1))
+                    .contentShape(.contextMenuPreview, Capsule())
                 }
+                .menuSettles(on: category)
                 ForEach(Filter.allCases) { f in
                     let on = filter == f
                     Button { withAnimation(Motion.quick) { filter = f } } label: {
@@ -182,6 +190,8 @@ struct LedgerScreen: View {
             }
             .padding(.horizontal, 20)
         }
+        // The menu grows out of the chip; unclipped, it isn't cut to the row's height.
+        .scrollClipDisabled()
         .sensoryFeedback(.selection, trigger: filter)
     }
 
