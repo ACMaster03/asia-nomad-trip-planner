@@ -59,7 +59,8 @@ Patrik: "yes to everything". Recorded on #58, #60, #62 and #65.
   Trip settings.
 - **No unlock rule for the Subscriptions card (#62).** It is one folded line since #85.
 - **The order after that:**
-  1. #106: the check-in becomes a sheet and `/live` goes, before the iOS agent reaches Home.
+  1. #106: the check-in becomes a sheet and `/live` goes. It turned out done since 20 Sep;
+     see the 19 Sep entry, now marked FIXED.
   2. The #65 wording pass, on Home only. Patrik: Trip was redone in the iOS app and "they
      did a great job", so features may come back to the web from there instead of the web
      adding its own.
@@ -1521,7 +1522,16 @@ provider stack, and NO `NODE_ENV` guard so it survives a production build, is
 the way to actually look at a change before shipping it. Everything in this
 round was checked that way.
 
-### FIXED (symptom) / OPEN (cause) — Check in went to a page, not to a check-in
+### FIXED — Check in went to a page, not to a check-in
+
+**The cause was fixed on 20 Sep too; this entry was not updated until 27 Sep.** The work
+merged with #46:
+- a711344: the sheet lives in the layout (`CheckInProvider`).
+- e289807: Note is a mode of it, and Arrived is a real button on Home.
+- 9c7b8fe: `/live` redirects to `/dashboard`.
+
+On 27 Sep Claude opened #106 from this entry without checking the code, then closed it as
+done. What stays open is the wording, #107.
 
 Reported 2026-09-19 as "the check in button doesn't work, it loads a page that
 shouldn't be there, with another look". Screenshots of both screens settled it,
