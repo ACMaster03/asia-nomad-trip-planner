@@ -29,6 +29,38 @@ when a decision needs to survive the conversation it was made in.
 - The add-expense sheet is redrawn in round 2 (big amount, currency menu, top-4 category tiles,
   system number pad).
 
+### DECIDED — Patrik, 27 Sep: Money round 2 comments, then "build it, holes as issues"
+
+- Top card still open (#114): iOS ships a **Today / Here / Journey** switch on the card
+  (Journey = mock version A) to try on the phone before one is picked.
+- "Lands near" is out of tone; kept for now, options in #115.
+- The daily-average switch is one row: "In the daily average". Activities uses binoculars
+  (outline), Convenience store a storefront. Bookings and Subscriptions keep plain titles.
+
+### BUILT — iOS: Money (branch feat/ios-foundation)
+
+- `ios/Livhold/Money/`: the web's maths ported one to one (`MoneyModel.swift`: burnRate,
+  tripPace, planByStop, bookingsSummary, projectFromPlan, beyondEveryday, unlocks, dailySpend,
+  spendByCategory), the category registry with a colour and SF Symbol per category
+  (`Categories.swift`), the page, All entries, the entry sheet and Settings → Money.
+- **Checked against the web's own code:** `moneyModel.ts` run under node on the iOS fixture gave
+  the phone's numbers exactly (spent 1 327 825, scheduled 433 840, 4 601 a day, projected
+  2 550 406, beyond 1 164 771, Bangkok 465 800, Hanoi 636 269, Da Nang 375 000).
+- **Writes, checked on staging with a throwaway trip (deleted, and the account's
+  `track_spending` put back to null):** the question and the Settings switch write
+  `profiles.track_spending`; an entry goes through `ledger_upsert_entry` in the web's shape
+  (`le` + uuid, "150,5" read as 150.5, no `everyday` unless it differs); an edit keeps fields the
+  phone doesn't know; a web entry written meanwhile survives the phone's write and shows at
+  once (the phone refetches when the rev jumped); deleting a booking's entry writes
+  `importSkip: ["stay:<id>"]` through `write_state` first, and a stale copy is refused with the
+  conflict message, reloaded, and the retry succeeds; the cap saves with every other `meta`
+  field kept.
+- **Not on the phone yet (the web does them):** subscription charges that add themselves and
+  booking imports (usePlanSync; the phone only reads them), writing `moneyUnlocked`, the
+  Subscriptions "Repeats" block and the "Cancelled it?" notice, editing rates. The phone uses
+  the local date for "today"; the web uses UTC (`useToday.ts`), which differs from midnight
+  to 7 am in Bangkok: open for the web.
+
 ### DECIDED — Patrik, 27 Sep: editing the Trip on iOS, and the rows after the last stop
 
 From the mock "Trip editing on iOS" (artifact QdrtgiADdvE6LbFALdaoZS), approved from his phone.

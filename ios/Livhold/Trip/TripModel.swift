@@ -20,14 +20,22 @@ struct TripRow: Codable, Sendable {
     let rawState: JSONValue
     let updatedAt: String?
     let stateRev: Int?
+    /// `trips.ledger`: what was spent, one entry per row (Money/Ledger.swift).
+    var ledger: [LedgerEntry] = []
+    var ledgerRev: Int?
+    /// When the journey was made; journeys older than Money round 2 keep every card.
+    var createdAt: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, owner, name, state
+        case id, owner, name, state, ledger
         case updatedAt = "updated_at"
         case stateRev = "state_rev"
+        case ledgerRev = "ledger_rev"
+        case createdAt = "created_at"
     }
 
-    init(id: String, owner: String?, name: String?, rawState: JSONValue, updatedAt: String?, stateRev: Int?) throws {
+    init(id: String, owner: String?, name: String?, rawState: JSONValue, updatedAt: String?, stateRev: Int?,
+         ledger: [LedgerEntry] = [], ledgerRev: Int? = nil, createdAt: String? = nil) throws {
         self.id = id
         self.owner = owner
         self.name = name
@@ -35,6 +43,15 @@ struct TripRow: Codable, Sendable {
         self.state = try JSONDecoder().decode(TripState.self, from: JSONEncoder().encode(rawState))
         self.updatedAt = updatedAt
         self.stateRev = stateRev
+        self.ledger = ledger
+        self.ledgerRev = ledgerRev
+        self.createdAt = createdAt
+    }
+
+    /// The same row with another state document (after a save).
+    func with(rawState: JSONValue, name: String?, updatedAt: String?, stateRev: Int?) throws -> TripRow {
+        try TripRow(id: id, owner: owner, name: name, rawState: rawState, updatedAt: updatedAt, stateRev: stateRev,
+                    ledger: ledger, ledgerRev: ledgerRev, createdAt: createdAt)
     }
 
     init(from decoder: Decoder) throws {
@@ -46,6 +63,11 @@ struct TripRow: Codable, Sendable {
         rawState = (try? c.decode(JSONValue.self, forKey: .state)) ?? .object([:])
         updatedAt = c.str(.updatedAt)
         stateRev = c.num(.stateRev).map { Int($0) }
+        if case .array(let rows)? = try? c.decode(JSONValue.self, forKey: .ledger) {
+            ledger = rows.map(LedgerEntry.init(raw:)).filter { !$0.id.isEmpty }
+        }
+        ledgerRev = c.num(.ledgerRev).map { Int($0) }
+        createdAt = c.str(.createdAt)
     }
 
     /// For the copy saved on the phone: the raw document, never the typed one.
@@ -57,10 +79,13 @@ struct TripRow: Codable, Sendable {
         try c.encode(rawState, forKey: .state)
         try c.encodeIfPresent(updatedAt, forKey: .updatedAt)
         try c.encodeIfPresent(stateRev, forKey: .stateRev)
+        try c.encode(JSONValue.array(ledger.map(\.json)), forKey: .ledger)
+        try c.encodeIfPresent(ledgerRev, forKey: .ledgerRev)
+        try c.encodeIfPresent(createdAt, forKey: .createdAt)
     }
 
-    /// The columns to select — the web's TRIP_COLS minus the ledger, which Money will add.
-    static let columns = "id,owner,name,state,updated_at,state_rev"
+    /// The columns to select — the web's TRIP_COLS (queries.ts).
+    static let columns = "id,owner,name,state,ledger,updated_at,created_at,state_rev,ledger_rev"
 }
 
 struct TripState: Codable, Sendable {
@@ -261,6 +286,8 @@ struct TransportLeg: Codable, Sendable, Identifiable, Hashable {
     var hours: Double?
     var url: String?
     var notes: String?
+    /// Unset counts as in the plan (spending.ts bookingsSummary).
+    var include: Bool?
 
     init(id: String, type: String, from: String, to: String, date: String? = nil, cur: String, price: Double,
          status: String? = nil, chargeDate: String? = nil, time: String? = nil, via: String? = nil, hours: Double? = nil) {
@@ -278,7 +305,7 @@ struct TransportLeg: Codable, Sendable, Identifiable, Hashable {
         self.hours = hours
     }
 
-    enum CodingKeys: String, CodingKey { case id, type, from, to, date, provider, cur, price, status, chargeDate, time, via, hours, url, notes }
+    enum CodingKeys: String, CodingKey { case id, type, from, to, date, provider, cur, price, status, chargeDate, time, via, hours, url, notes, include }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -297,6 +324,7 @@ struct TransportLeg: Codable, Sendable, Identifiable, Hashable {
         hours = c.num(.hours)
         url = c.str(.url)
         notes = c.str(.notes)
+        include = c.bool(.include)
     }
 }
 

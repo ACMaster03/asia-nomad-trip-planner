@@ -14,6 +14,11 @@ struct AccountView: View {
                 NavigationLink("Sign-in methods", value: Route.signInMethods)
             }
             Section {
+                NavigationLink("Money", value: Route.moneySettings)
+            } footer: {
+                Text("Spending tracking and the budget cap.")
+            }
+            Section {
                 Picker("Appearance", selection: $appearance) {
                     ForEach(Appearance.allCases) { Text($0.title).tag($0) }
                 }

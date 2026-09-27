@@ -92,32 +92,6 @@ struct HomeScreen: View {
     }
 }
 
-// MARK: - Money
-
-struct MoneyScreen: View {
-    var body: some View {
-        TabPage(tab: .money) {
-            Text("Money").font(.serif(26)).foregroundStyle(Palette.tx)
-        } content: {
-            Card {
-                Text("On pace for €4 960").font(.serif(20)).foregroundStyle(Palette.tx)
-                Text("€240 under your €5 200 cap").font(.sans(15)).foregroundStyle(Palette.tx2)
-                ProgressTrack(value: 0.95)
-            }
-            ForEach(["Stays", "Transport", "Food & drink", "Activities", "Subscriptions", "All entries"], id: \.self) { row in
-                HStack {
-                    Text(row).font(.sans(16, weight: .medium)).foregroundStyle(Palette.tx)
-                    Spacer()
-                    Image(systemName: "chevron.right").foregroundStyle(Palette.tx3)
-                }
-                .padding(.horizontal, 18)
-                .padding(.vertical, 16)
-                .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
-            }
-        }
-    }
-}
-
 // MARK: - Map
 
 struct MapScreen: View {

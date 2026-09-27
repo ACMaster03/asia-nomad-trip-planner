@@ -46,6 +46,16 @@ enum JSONValue: Codable, Sendable, Hashable {
     }
 
     var stringValue: String? { if case .string(let s) = self { s } else { nil } }
+    var numberValue: Double? { if case .number(let n) = self { n } else { nil } }
+    var boolValue: Bool? { if case .bool(let b) = self { b } else { nil } }
+    /// A string, or a number written as one ("12", not "12.0").
+    var text: String? {
+        switch self {
+        case .string(let s): s
+        case .number(let n): n.rounded() == n ? String(Int64(n)) : String(n)
+        default: nil
+        }
+    }
 
     /// Inserts or updates the item with this id in a list of the document
     /// (`segments`, `stays`, `transport`). Only the given fields change; a nil

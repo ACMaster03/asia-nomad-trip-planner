@@ -10,6 +10,7 @@ struct AppShell: View {
     @State private var router = TabRouter()
     @State private var trips = TripStore()
     @State private var editor = TripEditor()
+    @State private var money = MoneyEditor()
     @Namespace private var checkInZoom
     @Environment(AuthStore.self) private var auth
     @Environment(\.scenePhase) private var scenePhase
@@ -30,11 +31,14 @@ struct AppShell: View {
         // scroll views inside the navigation stacks (the last card ended under the
         // bar), so each screen keeps the room itself: see `reservesTabBar()`.
         .overlay(alignment: .bottom) {
+            // Stays down behind the keyboard instead of riding up on it.
             GlassTabBar(selection: router.selectionBinding) { router.checkInOpen = true }
+                .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .environment(router)
         .environment(trips)
         .environment(editor)
+        .environment(money)
         .environment(\.checkInZoom, checkInZoom)
         // The saved journey shows at once; the server's copy follows, and again
         // every time the app comes back to the front (the web refetches on focus).
@@ -54,6 +58,13 @@ struct AppShell: View {
                 .environment(trips)
                 .environment(editor)
         }
+        // Money's entry form (Money/EntrySheet.swift), from Money and All entries.
+        .sheet(item: $money.target) { target in
+            EntrySheet(target: target)
+                .environment(trips)
+                .environment(money)
+        }
+        .toast($money.toast)
     }
 }
 
@@ -107,6 +118,10 @@ private struct TabStack: View {
             StopScreen(segmentId: segmentId)
                 .modifier(ZoomDestination(id: route, namespace: zoom))
         case .tripSettings: TripSettingsScreen()
+        case .moneyEntries(let focus):
+            LedgerScreen(focus: focus)
+                .modifier(ZoomDestination(id: "entries", namespace: zoom))
+        case .moneySettings: MoneySettingsScreen()
         }
     }
 }

@@ -28,6 +28,10 @@ enum Days {
 
     /// The phone's calendar date — the viewer's clock, not UTC (format.ts localISODate).
     static func today(_ now: Date = .now) -> String {
+        #if DEBUG
+        // `-fixtureToday 2026-09-12` pins the day, to look at the fixture's busy weeks.
+        if let pinned = UserDefaults.standard.string(forKey: "fixtureToday"), pinned.count == 10 { return pinned }
+        #endif
         let c = Calendar.current.dateComponents([.year, .month, .day], from: now)
         return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
     }

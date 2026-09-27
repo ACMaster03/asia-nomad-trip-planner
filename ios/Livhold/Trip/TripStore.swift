@@ -54,9 +54,13 @@ final class TripStore {
     /// Call when the signed-in user is known: shows the saved copy, then refreshes.
     func start(userId: String) async {
         self.userId = userId
+        tracking = MoneyPrefsCache.tracking(userId: userId) ?? .unknown
+        cityCosts = MoneyPrefsCache.cities(userId: userId)
         #if DEBUG
         if Self.usesFixture {
             trip = TripFixture.trip(today: Days.today())
+            cityCosts = TripFixture.cities
+            tracking = UserDefaults.standard.string(forKey: "trackFixture").flatMap(Tracking.init(rawValue:)) ?? .yes
             phase = .ready
             return
         }
@@ -66,7 +70,9 @@ final class TripStore {
             fetchedAt = saved.savedAt
             phase = .ready
         }
+        async let tracked: Void = refreshTracking()
         await refresh()
+        await tracked
     }
 
     /// Fetches the active trip. Keeps what is shown if the network fails.
@@ -77,16 +83,23 @@ final class TripStore {
         do {
             try await Connectivity.shared.waitUntilOnline()
             if let data = try await fetchActiveTrip(userId: userId) {
-                let row = try JSONDecoder().decode(TripRow.self, from: data)
+                var row = try JSONDecoder().decode(TripRow.self, from: data)
                 // A fetch that started before a save landed carries the older
                 // copy: keep the newer one (the web's withPendingWrites).
-                if let shown = trip, shown.id == row.id, (shown.stateRev ?? 0) > (row.stateRev ?? 0) { return }
+                if let shown = trip, shown.id == row.id {
+                    if (shown.stateRev ?? 0) > (row.stateRev ?? 0) { return }
+                    if ledgerWrites > 0 || (shown.ledgerRev ?? 0) > (row.ledgerRev ?? 0) {
+                        row.ledger = shown.ledger
+                        row.ledgerRev = shown.ledgerRev
+                    }
+                }
                 trip = row
                 fetchedAt = .now
                 phase = .ready
                 error = nil
                 TripCache.save(data, userId: userId)
                 if let role = await fetchRole(row, userId: userId) { canEdit = role }
+                await loadCities(for: row)
             } else {
                 trip = nil
                 phase = .empty
@@ -144,8 +157,7 @@ final class TripStore {
         let name = doc["meta"]?["tripName"]?.stringValue ?? trip.name ?? "Trip"
 
         if Self.usesFixture {
-            self.trip = try TripRow(id: trip.id, owner: trip.owner, name: name, rawState: doc,
-                                    updatedAt: trip.updatedAt, stateRev: (trip.stateRev ?? 0) + 1)
+            self.trip = try trip.with(rawState: doc, name: name, updatedAt: trip.updatedAt, stateRev: (trip.stateRev ?? 0) + 1)
             return
         }
 
@@ -161,8 +173,9 @@ final class TripStore {
                 .rpc("write_state", params: Params(trip: trip.id, new_state: doc, new_name: name, expected_rev: trip.stateRev ?? 0))
                 .execute()
                 .value
-            let saved = try TripRow(id: trip.id, owner: trip.owner, name: name, rawState: doc,
-                                    updatedAt: ISO8601DateFormatter().string(from: .now), stateRev: rev)
+            // The ledger may have moved on while this saved (Money writes it separately).
+            let saved = try (self.trip ?? trip).with(rawState: doc, name: name,
+                                                     updatedAt: ISO8601DateFormatter().string(from: .now), stateRev: rev)
             self.trip = saved
             if let userId, let data = try? JSONEncoder().encode(saved) { TripCache.save(data, userId: userId) }
         } catch let e as PostgrestError where e.code == "REV01" {
@@ -176,6 +189,140 @@ final class TripStore {
         } catch {
             throw SaveError.failed(AuthStore.message(for: error) ?? "Couldn’t save your change. Please try again.")
         }
+    }
+
+    // MARK: Money
+
+    /// `profiles.track_spending`: nil in the database means not asked yet.
+    enum Tracking: String { case yes, no, ask, unknown }
+
+    private(set) var tracking: Tracking = .unknown
+    /// The trip's cities' catalogue costs, for a stop without a stay or a pace.
+    private(set) var cityCosts: [String: CityCost] = [:]
+    /// Ledger writes still on their way; a refetch keeps the ledger shown meanwhile.
+    private var ledgerWrites = 0
+
+    func refreshTracking() async {
+        guard let userId, !Self.usesFixture else { return }
+        struct Row: Decodable { let track_spending: Bool? }
+        do {
+            try await Connectivity.shared.waitUntilOnline()
+            let rows: [Row] = try await client.from("profiles").select("track_spending").eq("id", value: userId).limit(1).execute().value
+            guard let row = rows.first else { return }
+            tracking = row.track_spending.map { $0 ? .yes : .no } ?? .ask
+            MoneyPrefsCache.save(tracking: tracking, userId: userId)
+        } catch {
+            // Keep what was known; the page shows as it did last time.
+        }
+    }
+
+    /// Answers the tracking question, or flips the switch in Settings → Money.
+    func setTracking(_ on: Bool) async throws {
+        let before = tracking
+        tracking = on ? .yes : .no
+        guard let userId, !Self.usesFixture else { return }
+        MoneyPrefsCache.save(tracking: tracking, userId: userId)
+        do {
+            try await Connectivity.shared.waitUntilOnline()
+            try await client.from("profiles").update(["track_spending": on]).eq("id", value: userId).execute()
+        } catch {
+            tracking = before
+            MoneyPrefsCache.save(tracking: before, userId: userId)
+            throw SaveError.failed(AuthStore.message(for: error) ?? "Couldn’t save that. Please try again.")
+        }
+    }
+
+    /// Adds or replaces one ledger entry. Shown at once; the web's
+    /// `ledger_upsert_entry` replaces it by id, so a retry can't double it.
+    func upsertEntry(_ entry: LedgerEntry) async throws {
+        guard let trip else { return }
+        let before = trip.ledger.first { $0.id == entry.id }
+        applyLedger { $0 = $0.filter { $0.id != entry.id } + [entry] }
+        guard !Self.usesFixture else { return }
+        struct Params: Encodable, Sendable { let trip: String; let entry: JSONValue }
+        ledgerWrites += 1
+        defer { ledgerWrites -= 1 }
+        do {
+            try await Connectivity.shared.waitUntilOnline()
+            let rev: Int = try await client.rpc("ledger_upsert_entry", params: Params(trip: trip.id, entry: entry.json)).execute().value
+            let known = self.trip?.ledgerRev ?? 0
+            self.trip?.ledgerRev = rev
+            cacheTrip()
+            // Someone else wrote in between: fetch their entries (the web refetches after every write).
+            if rev > known + 1 { Task { await refresh() } }
+        } catch {
+            applyLedger { list in
+                list.removeAll { $0.id == entry.id }
+                if let before { list.append(before) }
+            }
+            throw ledgerError(error)
+        }
+    }
+
+    /// Deletes one ledger entry. One that came from a booking or a subscription
+    /// is first added to `importSkip`, so the web doesn't write it again.
+    func deleteEntry(_ entry: LedgerEntry) async throws {
+        guard let trip else { return }
+        if let source = entry.source, source.kind != "extra" {
+            try await save { doc in
+                var skip: [JSONValue] = []
+                if case .array(let a)? = doc["importSkip"] { skip = a }
+                if !skip.contains(.string(source.key)) { skip.append(.string(source.key)) }
+                doc["importSkip"] = .array(skip)
+            }
+        }
+        let index = trip.ledger.firstIndex { $0.id == entry.id }
+        applyLedger { $0.removeAll { $0.id == entry.id } }
+        guard !Self.usesFixture else { return }
+        struct Params: Encodable, Sendable { let trip: String; let entry_id: String }
+        ledgerWrites += 1
+        defer { ledgerWrites -= 1 }
+        do {
+            try await Connectivity.shared.waitUntilOnline()
+            let rev: Int = try await client.rpc("ledger_delete_entry", params: Params(trip: trip.id, entry_id: entry.id)).execute().value
+            let known = self.trip?.ledgerRev ?? 0
+            self.trip?.ledgerRev = rev
+            cacheTrip()
+            // Someone else wrote in between: fetch their entries (the web refetches after every write).
+            if rev > known + 1 { Task { await refresh() } }
+        } catch {
+            applyLedger { list in list.insert(entry, at: min(index ?? list.count, list.count)) }
+            throw ledgerError(error)
+        }
+    }
+
+    private func applyLedger(_ change: (inout [LedgerEntry]) -> Void) {
+        guard var t = trip else { return }
+        change(&t.ledger)
+        trip = t
+        cacheTrip()
+    }
+
+    private func cacheTrip() {
+        guard let userId, let trip, !Self.usesFixture, let data = try? JSONEncoder().encode(trip) else { return }
+        TripCache.save(data, userId: userId)
+    }
+
+    private func ledgerError(_ error: Error) -> Error {
+        if let e = error as? PostgrestError, e.code == "42501" {
+            canEdit = false
+            return SaveError.denied
+        }
+        if error is CancellationError { return error }
+        return SaveError.failed(AuthStore.message(for: error) ?? "Couldn’t save that entry. Please try again.")
+    }
+
+    /// Catalogue costs of the trip's cities (catalogue/queries.ts fetchCitiesByName).
+    private func loadCities(for row: TripRow) async {
+        let names = Array(Set(row.state.segments.map(\.city).filter { !$0.isEmpty }))
+        guard !names.isEmpty, let userId else { return }
+        struct City: Decodable { let city: String; let attributes: JSONValue? }
+        guard let rows: [City] = try? await client.from("cities").select("city,attributes").in("city", values: names).execute().value
+        else { return }
+        var out: [String: CityCost] = [:]
+        for r in rows { if let a = r.attributes, let cost = CityCost(attributes: a) { out[r.city] = cost } }
+        cityCosts = out
+        MoneyPrefsCache.save(cities: out, userId: userId)
     }
 
     /// The raw JSON of the active trip row, or nil when the user has none.
@@ -248,7 +395,37 @@ enum TripCache {
 
     /// Every saved trip, for sign-out: nothing of a journey stays on a shared phone.
     static func clearAll() {
+        MoneyPrefsCache.clearAll()
         guard let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
         try? FileManager.default.removeItem(at: dir.appending(path: "Trips", directoryHint: .isDirectory))
+    }
+}
+
+/// Small Money answers kept between launches, per user: the tracking answer and
+/// the trip's city costs, so the page draws right away with no signal.
+enum MoneyPrefsCache {
+    private static func key(_ what: String, _ userId: String) -> String { "money.\(what).\(userId)" }
+
+    static func tracking(userId: String) -> TripStore.Tracking? {
+        UserDefaults.standard.string(forKey: key("tracking", userId)).flatMap(TripStore.Tracking.init(rawValue:))
+    }
+
+    static func save(tracking: TripStore.Tracking, userId: String) {
+        UserDefaults.standard.set(tracking.rawValue, forKey: key("tracking", userId))
+    }
+
+    static func cities(userId: String) -> [String: CityCost] {
+        guard let data = UserDefaults.standard.data(forKey: key("cities", userId)) else { return [:] }
+        return (try? JSONDecoder().decode([String: CityCost].self, from: data)) ?? [:]
+    }
+
+    static func save(cities: [String: CityCost], userId: String) {
+        UserDefaults.standard.set(try? JSONEncoder().encode(cities), forKey: key("cities", userId))
+    }
+
+    static func clearAll() {
+        for k in UserDefaults.standard.dictionaryRepresentation().keys where k.hasPrefix("money.") {
+            UserDefaults.standard.removeObject(forKey: k)
+        }
     }
 }
