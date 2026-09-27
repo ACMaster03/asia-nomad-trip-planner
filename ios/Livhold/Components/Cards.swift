@@ -28,9 +28,8 @@ struct Notice: View {
     }
 
     /// A message made in code or from the server, shown as it is.
-    @_disfavoredOverload
-    init(text: String, kind: Kind = .info) {
-        self.text = Text(verbatim: text)
+    init(verbatim: String, kind: Kind = .info) {
+        self.text = Text(verbatim: verbatim)
         self.kind = kind
     }
 

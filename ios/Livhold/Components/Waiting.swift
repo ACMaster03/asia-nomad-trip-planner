@@ -74,10 +74,10 @@ struct WaitingNote: View {
 
     private func message(waited: TimeInterval) -> String? {
         if !connectivity.isOnline {
-            return "No connection right now. Stay on this screen and it goes through the moment you’re back online."
+            return String(localized: "No connection right now. Stay on this screen and it goes through the moment you’re back online.")
         }
         if waited > 4 {
-            return "Slow connection — still getting through. On a bus or up a mountain this can take a minute."
+            return String(localized: "Slow connection — still getting through. On a bus or up a mountain this can take a minute.")
         }
         return nil
     }

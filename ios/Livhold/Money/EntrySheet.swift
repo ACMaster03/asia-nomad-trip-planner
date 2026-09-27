@@ -120,7 +120,7 @@ struct EntrySheet: View {
                         Text(hint).font(.sans(13)).foregroundStyle(Palette.tx2)
                             .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 4)
                     }
-                    if let error { Notice(text: error, kind: .warn) }
+                    if let error { Notice(verbatim: error, kind: .warn) }
                     if editing != nil {
                         Button("Delete entry", role: .destructive) { confirmDelete = true }
                             .font(.sans(16, weight: .medium))
@@ -245,7 +245,7 @@ struct EntrySheet: View {
     }
 
     private func shortLabel(_ id: String) -> String {
-        id == "convenience" ? "Convenience" : Categories.label(id)
+        id == "convenience" ? String(localized: "Convenience") : Categories.label(id)
     }
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
@@ -259,21 +259,21 @@ struct EntrySheet: View {
                     Button("Income") { switchType(.income) }
                 } label: {
                     HStack(spacing: 4) {
-                        Text(type == .expense ? "Add expense" : "Add income").font(.sans(16, weight: .semibold))
+                        (type == .expense ? Text("Add expense") : Text("Add income")).font(.sans(16, weight: .semibold))
                         Image(systemName: "chevron.down").font(.system(size: 11, weight: .bold))
                     }
                     .foregroundStyle(Palette.tx)
                 }
                 .menuSettles(on: type)
             } else {
-                Text(type == .expense ? "Expense" : "Income").font(.sans(16, weight: .semibold))
+                (type == .expense ? Text("Expense") : Text("Income")).font(.sans(16, weight: .semibold))
             }
         }
         ToolbarItem(placement: .confirmationAction) {
             if busy {
                 ProgressView()
             } else {
-                Button(editing == nil ? "Add" : "Save") { Task { await save() } }
+                Button { Task { await save() } } label: { editing == nil ? Text("Add") : Text("Save") }
                     .fontWeight(.semibold)
                     .disabled(!valid)
             }
@@ -299,15 +299,15 @@ struct EntrySheet: View {
             parts.append("≈ " + MoneyText.full(Journey.toBase(a, currency, rates), base))
         }
         if editing == nil, let country = hereCountry, Self.currency(of: country) == currency, currency != base {
-            parts.append("you’re in \(country)")
+            parts.append(String(localized: "you’re in \(L10n.country(country))"))
         }
         return parts.isEmpty ? " " : parts.joined(separator: " · ")
     }
 
     private var footnote: String? {
-        if imported { return "Amount and date follow the booking on the Trip page." }
-        if category == "subscriptions", editing == nil { return "For one that repeats, add it under Subscriptions on Money." }
-        if editing == nil, store.tracking == .no || store.tracking == .ask { return "Saving this turns on spending tracking." }
+        if imported { return String(localized: "Amount and date follow the booking on the Trip page.") }
+        if category == "subscriptions", editing == nil { return String(localized: "For one that repeats, add it under Subscriptions on Money.") }
+        if editing == nil, store.tracking == .no || store.tracking == .ask { return String(localized: "Saving this turns on spending tracking.") }
         return nil
     }
 
@@ -400,7 +400,7 @@ struct EntrySheet: View {
             }
             let label = entry.note.isEmpty ? Categories.label(entry.category) : entry.note
             let shown = MoneyText.full(Journey.toBase(entry.amount, entry.currency, rates), base)
-            editor.toast = "\(editing == nil ? "Added" : "Saved") · \(shown) · \(label)"
+            editor.toast = editing == nil ? String(localized: "Added · \(shown) · \(label)") : String(localized: "Saved · \(shown) · \(label)")
             dismiss()
         } catch {
             self.error = error.localizedDescription
@@ -413,7 +413,8 @@ struct EntrySheet: View {
         busy = true
         do {
             try await store.deleteEntry(e)
-            editor.toast = "Deleted · \(e.note.isEmpty ? Categories.label(e.category) : e.note)"
+            let label = e.note.isEmpty ? Categories.label(e.category) : e.note
+            editor.toast = String(localized: "Deleted · \(label)")
             dismiss()
         } catch {
             self.error = error.localizedDescription

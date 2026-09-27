@@ -63,7 +63,7 @@ struct MoneyScreen: View {
         case .failed:
             VStack(alignment: .leading, spacing: 14) {
                 Text("Money").font(.serif(28)).foregroundStyle(Palette.tx)
-                Notice(text: store.error ?? "Couldn’t load your journey.", kind: .warn)
+                Notice(verbatim: store.error ?? String(localized: "Couldn’t load your journey."), kind: .warn)
                 Button("Try again") { Task { await store.refresh() } }.buttonStyle(.primary)
             }
             .padding(.top, 20)
@@ -137,7 +137,7 @@ private struct MoneyPage: View {
                 Text("Money").font(.serif(30)).foregroundStyle(Palette.tx)
                 Text(Journey.kicker(model.state, today: model.today).isEmpty
                      ? (model.state.meta.tripName ?? "")
-                     : "\(model.state.meta.tripName ?? "Journey") · \(Journey.kicker(model.state, today: model.today).lowercasedFirst)")
+                     : "\(model.state.meta.tripName ?? String(localized: "Journey")) · \(Journey.kicker(model.state, today: model.today).lowercasedFirst)")
                     .font(.sans(13)).foregroundStyle(Palette.tx2)
                     .lineLimit(1)
             }
@@ -172,8 +172,7 @@ struct CardLabel: View {
     }
 
     /// Words already made in code (String(localized:), a city).
-    @_disfavoredOverload
-    init(_ text: String, mauve: Bool = false) {
+    init(verbatim text: String, mauve: Bool = false) {
         self.text = Text(verbatim: text)
         self.mauve = mauve
     }
@@ -189,7 +188,7 @@ struct CardLabel: View {
 
 /// A plain row that reads like a list row on a card.
 private struct Line<Trailing: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     var detail: String? = nil
     var detailTone: Color = Palette.tx2
     @ViewBuilder var trailing: Trailing
@@ -246,8 +245,8 @@ private struct TopCard: View {
     /// The middle tab is the stop's city (Patrik, 27 Sep); a name too long for a
     /// third of the control, or no stop today, reads "This stop".
     private func title(_ v: View) -> String {
-        guard v == .here else { return v.rawValue }
-        guard let city = model.currentPlan?.seg.city, city.count <= 12 else { return "This stop" }
+        guard v == .here else { return String(localized: "Journey") }
+        guard let city = model.currentPlan?.seg.city, city.count <= 12 else { return String(localized: "This stop") }
         return city
     }
 
@@ -261,7 +260,7 @@ private struct TopCard: View {
             .lineLimit(1)
     }
 
-    private func tile(_ label: String, _ value: String, _ detail: String?, tone: Color = Palette.tx2) -> some SwiftUI.View {
+    private func tile(_ label: LocalizedStringKey, _ value: String, _ detail: String?, tone: Color = Palette.tx2) -> some SwiftUI.View {
         VStack(alignment: .leading, spacing: 2) {
             CardLabel(label)
             Text(value).font(.sans(19, weight: .semibold)).foregroundStyle(Palette.tx)
@@ -278,7 +277,7 @@ private struct TopCard: View {
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
-                    CardLabel(spentLabel)
+                    CardLabel(verbatim: spentLabel)
                     big(MoneyText.short(p.spent, model.base), value: p.spent)
                     if p.scheduled > 0 {
                         Text("+ \(MoneyText.approx(p.scheduled, model.base)) scheduled, not spent yet")
@@ -344,7 +343,7 @@ private struct TopCard: View {
                     }
                     .frame(width: 88, height: 88)
                     .animation(Motion.settle, value: p.spent)
-                    Text(model.cap != nil ? "of your cap" : "of where it lands")
+                    (model.cap != nil ? Text("of your cap") : Text("of where it lands"))
                         .font(.sans(11.5)).foregroundStyle(Palette.tx2)
                         .fixedSize()
                 }
@@ -352,25 +351,27 @@ private struct TopCard: View {
             }
             .buttonStyle(.plain)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(model.cap.map { "Budget cap \(MoneyText.full($0, model.base)), \(Int((p.spent / $0 * 100).rounded()))% spent" }
-                                ?? "\(Int((p.spent / whole * 100).rounded()))% of where the journey lands")
+            .accessibilityLabel(model.cap.map { String(localized: "Budget cap \(MoneyText.full($0, model.base)), \(Int((p.spent / $0 * 100).rounded()))% spent") }
+                                ?? String(localized: "\(Int((p.spent / whole * 100).rounded()))% of where the journey lands"))
             .accessibilityHint("Opens Money settings")
         }
     }
 
     private var spentLabel: String {
-        if let day = model.tripDay { return "Spent so far · \(day) day\(day == 1 ? "" : "s")" }
-        return model.tripStart != nil ? "Spent so far · before departure" : "Spent so far"
+        if let day = model.tripDay { return String(localized: "Spent so far · \(day) days") }
+        return model.tripStart != nil ? String(localized: "Spent so far · before departure") : String(localized: "Spent so far")
     }
 
     @ViewBuilder private var paceTile: some SwiftUI.View {
         if let perDay = model.pace.perDay {
-            let whereText: String = model.pace.scope == .stop ? "in \(model.current?.city ?? "this stop")" : "since departure"
-            tile("Per day", MoneyText.full(perDay, model.base), "everyday, \(whereText)")
+            let detail: String = model.pace.scope == .stop
+                ? (model.current.map { String(localized: "everyday, in \($0.city)") } ?? String(localized: "everyday, in this stop"))
+                : String(localized: "everyday, since departure")
+            tile("Per day", MoneyText.full(perDay, model.base), detail)
         } else if let day = model.tripDay {
-            tile("Per day", "measuring…", "\(min(day, 3)) of 3 days")
+            tile("Per day", String(localized: "measuring…"), String(localized: "\(min(day, 3)) of 3 days"))
         } else {
-            tile("Per day", "measuring…", "starts on departure day")
+            tile("Per day", String(localized: "measuring…"), String(localized: "starts on departure day"))
         }
     }
 
@@ -378,17 +379,17 @@ private struct TopCard: View {
 
     private func capLine(_ projected: Double) -> String? {
         guard let cap = model.cap else {
-            return "\(model.plan.reduce(0) { $0 + $1.nights }) planned nights"
+            return String(localized: "\(model.plan.reduce(0) { $0 + $1.nights }) planned nights")
         }
-        if projected > cap { return "about \(MoneyText.approx(projected - cap, model.base).dropFirst(2)) over your cap" }
-        return "\(Int((projected / cap * 100).rounded()))% of your cap"
+        if projected > cap { return String(localized: "about \(String(MoneyText.approx(projected - cap, model.base).dropFirst(2))) over your cap") }
+        return String(localized: "\(Int((projected / cap * 100).rounded()))% of your cap")
     }
 
     /// Over the cap: what a day would need to cost less, amber, never red (Patrik, 27 Sep).
     private func lessPerDay(_ p: MoneyModel.Projection) -> String? {
         guard let cap = model.cap, p.projected > cap, p.remainingNights > 0 else { return nil }
         let less = (p.projected - cap) / Double(p.remainingNights)
-        return "About \(MoneyText.full((less / 50).rounded(.up) * 50, model.base)) a day less gets you there."
+        return String(localized: "About \(MoneyText.full((less / 50).rounded(.up) * 50, model.base)) a day less gets you there.")
     }
 
     // MARK: here
@@ -403,7 +404,7 @@ private struct TopCard: View {
                     Text("everyday costs here so far").font(.sans(13)).foregroundStyle(Palette.tx2)
                 }
                 HStack(alignment: .top, spacing: 12) {
-                    tile("Per day here", MoneyText.full(local.perDay, model.base), "over \(local.days) day\(local.days == 1 ? "" : "s")")
+                    tile("Per day here", MoneyText.full(local.perDay, model.base), String(localized: "over \(local.days) days"))
                     tile("The stop comes to", MoneyText.approx(row.projected, model.base), PlanCard.includedWords(row.stayLabel),
                          tone: row.stayLabel == .draft || row.stayLabel == .none ? Palette.warn : Palette.tx2)
                 }
@@ -444,9 +445,9 @@ private struct StopBar: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("in \(Days.short(row.seg.arrive))")
                 Spacer()
-                Text(row.remaining > 0
-                     ? "\(row.remaining) night\(row.remaining == 1 ? "" : "s") left · out \(Days.short(row.seg.depart))"
-                     : "last night · out \(Days.short(row.seg.depart))")
+                row.remaining > 0
+                    ? Text("\(row.remaining) nights left · out \(Days.short(row.seg.depart))")
+                    : Text("last night · out \(Days.short(row.seg.depart))")
             }
             .font(.sans(12.5)).foregroundStyle(Palette.tx2)
         }
@@ -487,7 +488,7 @@ private struct LatestCard: View {
                 Spacer()
                 NavigationLink(value: Route.moneyEntries(nil)) {
                     Text("All entries").font(.sans(13.5, weight: .medium)).foregroundStyle(Palette.ac)
-                    + Text(" ›").font(.sans(13.5, weight: .medium)).foregroundStyle(Palette.ac)
+                    + Text(verbatim: " ›").font(.sans(13.5, weight: .medium)).foregroundStyle(Palette.ac)
                 }
             }
             .padding(.bottom, rows.isEmpty ? 0 : 4)
@@ -554,11 +555,11 @@ struct EntryRow: View {
         var parts = [Categories.label(entry.category)]
         if dateStyle == .relative { parts.append(MoneyText.day(entry.date, today: model.today)) }
         if entry.currency != model.base, !entry.currency.isEmpty { parts.append(MoneyText.original(entry)) }
-        if entry.orphaned { parts.append("booking removed") }
-        else if entry.source?.kind == "sub" { parts.append("added by itself") }
-        else if entry.isImported { parts.append("from booking") }
-        else if hollow { parts.append("not in daily average") }
-        else if entry.source == nil, entry.isExpense, !Categories.isEveryday(entry.category), isEverydayRow(entry) { parts.append("in daily average") }
+        if entry.orphaned { parts.append(String(localized: "booking removed")) }
+        else if entry.source?.kind == "sub" { parts.append(String(localized: "added by itself")) }
+        else if entry.isImported { parts.append(String(localized: "from booking")) }
+        else if hollow { parts.append(String(localized: "not in daily average")) }
+        else if entry.source == nil, entry.isExpense, !Categories.isEveryday(entry.category), isEverydayRow(entry) { parts.append(String(localized: "in daily average")) }
         return parts.joined(separator: " · ")
     }
 }
@@ -662,7 +663,7 @@ private struct DailySpendCard: View {
                     AxisValueLabel(anchor: .top, collisionResolution: .disabled) {
                         if let date = v.as(Date.self) {
                             let d = EntrySheet.iso(date)
-                            Text(d == model.today ? "today" : axisLabel(d))
+                            Text(d == model.today ? String(localized: "today") : axisLabel(d))
                                 .font(.sans(10.5, weight: d == model.today ? .semibold : .regular))
                                 .foregroundStyle(d == model.today ? Palette.ac2 : Palette.tx3)
                                 .fixedSize()
@@ -752,7 +753,7 @@ private struct DailySpendCard: View {
             }
             if !entries.isEmpty {
                 NavigationLink(value: Route.moneyEntries(date)) {
-                    Text(entries.count > shown.count ? "\(entries.count - shown.count) more in All entries ›" : "Open in All entries ›")
+                    (entries.count > shown.count ? Text("\(entries.count - shown.count) more in All entries ›") : Text("Open in All entries ›"))
                         .font(.sans(13.5, weight: .medium)).foregroundStyle(Palette.ac)
                 }
                 .padding(.top, 2)
@@ -816,11 +817,13 @@ private struct WhereItGoesCard: View {
         let window = model.window(range: 14, end: nil)
         let cats = model.byCategory(from: window.from, to: window.to)
         let total = cats.reduce(0) { $0 + $1.total }
-        let families = Dictionary(grouping: cats) { Categories.family($0.category) }
-            .map { (family: $0.key, total: $0.value.reduce(0) { $0 + $1.total }) }
+        let families: [(family: Family, total: Double)] = Dictionary(grouping: cats) { Categories.family($0.category) }
+            .map { (family: $0.key, total: $0.value.reduce(0.0) { $0 + $1.total }) }
             .filter { $0.total > 0 }
             .sorted { $0.total > $1.total }
         let days = Days.between(window.from, window.to) + 1
+        // Its own key: "in 14 days" here is a span, not a date ahead.
+        let span = String(localized: "chart.window", defaultValue: "in \(days) days")
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 CardLabel("Where it goes · \(days) days", mauve: true)
@@ -837,7 +840,7 @@ private struct WhereItGoesCard: View {
                     VStack(spacing: 0) {
                         Text(MoneyText.number(total, model.base)).font(.sans(15, weight: .semibold)).foregroundStyle(Palette.tx)
                             .minimumScaleFactor(0.7).lineLimit(1)
-                        Text("in \(days) days").font(.sans(10.5)).foregroundStyle(Palette.tx3)
+                        Text(span).font(.sans(10.5)).foregroundStyle(Palette.tx3)
                     }
                     .padding(.horizontal, 24)
                 }
@@ -899,11 +902,12 @@ private struct WhereItGoesCard: View {
     private func sentence(_ f: [(family: Family, total: Double)], total: Double) -> Text {
         func pct(_ v: Double) -> Int { Int((v / max(1, total) * 100).rounded()) }
         guard let first = f.first else { return Text("Nothing logged in these days.") }
-        var t = Text(first.family.label).bold() + Text(" take \(pct(first.total))%.")
-        if f.count > 1 {
-            t = t + Text(" ") + Text(f[1].family.label).bold() + Text(" \(pct(f[1].total))%")
-            if f.count > 2 { t = t + Text(", \(f[2].family.label.lowercased()) \(pct(f[2].total))%") }
-            t = t + Text(".")
+        var t = Text("\(Text(first.family.label).bold()) take \(pct(first.total))%.")
+        if f.count > 2 {
+            t = t + Text(verbatim: " ")
+                + Text("\(Text(f[1].family.label).bold()) \(pct(f[1].total))%, \(f[2].family.label.lowercased()) \(pct(f[2].total))%.")
+        } else if f.count > 1 {
+            t = t + Text(verbatim: " ") + Text("\(Text(f[1].family.label).bold()) \(pct(f[1].total))%.")
         }
         return t
     }
@@ -919,22 +923,22 @@ struct PlanCard: View {
 
     static func stayWords(_ label: MoneyModel.PlanRow.StayLabel) -> String {
         switch label {
-        case .booked: "stay paid"
-        case .unpaid: "stay booked, to pay"
-        case .draft: "stay not booked"
-        case .estimate: "stay estimated"
-        case .none: "no stay yet"
+        case .booked: String(localized: "stay paid")
+        case .unpaid: String(localized: "stay booked, to pay")
+        case .draft: String(localized: "stay not booked")
+        case .estimate: String(localized: "stay estimated")
+        case .none: String(localized: "no stay yet")
         }
     }
 
     /// Under a stop's total: what the total holds of the stay (Patrik, 27 Sep).
     static func includedWords(_ label: MoneyModel.PlanRow.StayLabel) -> String {
         switch label {
-        case .booked: "stay included"
-        case .unpaid: "stay included, to pay"
-        case .draft: "stay included, not booked yet"
-        case .estimate: "stay at the city average included"
-        case .none: "no stay yet"
+        case .booked: String(localized: "stay included")
+        case .unpaid: String(localized: "stay included, to pay")
+        case .draft: String(localized: "stay included, not booked yet")
+        case .estimate: String(localized: "stay at the city average included")
+        case .none: String(localized: "no stay yet")
         }
     }
 
@@ -978,7 +982,7 @@ struct PlanCard: View {
 
     private var planGap: String? {
         guard let end = model.state.meta.endDate, let last = model.plan.map(\.seg.depart).filter({ !$0.isEmpty }).max(), last < end else { return nil }
-        return "The plan ends \(Days.short(last)); the journey ends \(Days.short(end))."
+        return String(localized: "The plan ends \(Days.short(last)); the journey ends \(Days.short(end)).")
     }
 
     private func toggle(_ id: String) {
@@ -990,8 +994,8 @@ struct PlanCard: View {
     private func stopRow(_ row: MoneyModel.PlanRow) -> some View {
         let isOpen = open.contains(row.id)
         let warn = row.stayLabel == .draft || row.stayLabel == .none
-        var detail = "\(row.nights) night\(row.nights == 1 ? "" : "s")"
-        if row.nightsIn > 0 { detail += " · \(row.nightsIn) in" }
+        var detail = String(localized: "\(row.nights) nights")
+        if row.nightsIn > 0 { detail += " · " + String(localized: "\(row.nightsIn) in") }
         return VStack(spacing: 0) {
             Button { toggle(row.id) } label: {
                 HStack(spacing: 10) {
@@ -1016,9 +1020,11 @@ struct PlanCard: View {
             if isOpen {
                 VStack(spacing: 0) {
                     if row.nightsIn > 0 { sum("Already spent here", row.spent) }
-                    sum("\(row.remaining) night\(row.remaining == 1 ? "" : "s") left × \(MoneyText.number(row.rate, model.base))"
-                        + (row.fromPace ? "" : " (city average)"), Double(row.remaining) * row.rate)
-                    sum(stayLine(row.stayLabel), row.stay)
+                    sum(row.fromPace
+                        ? Text("\(row.remaining) nights left × \(MoneyText.number(row.rate, model.base))")
+                        : Text("\(row.remaining) nights left × \(MoneyText.number(row.rate, model.base)) (city average)"),
+                        Double(row.remaining) * row.rate)
+                    sum(Text(stayLine(row.stayLabel)), row.stay)
                     sum("Together", row.projected, bold: true, approx: true)
                 }
                 .padding(.horizontal, 10)
@@ -1032,17 +1038,21 @@ struct PlanCard: View {
 
     private func stayLine(_ label: MoneyModel.PlanRow.StayLabel) -> String {
         switch label {
-        case .booked: "The stay, paid"
-        case .unpaid: "The stay, to pay"
-        case .draft: "The stay, not booked yet"
-        case .estimate: "A stay, at the city average"
-        case .none: "No stay yet"
+        case .booked: String(localized: "The stay, paid")
+        case .unpaid: String(localized: "The stay, to pay")
+        case .draft: String(localized: "The stay, not booked yet")
+        case .estimate: String(localized: "A stay, at the city average")
+        case .none: String(localized: "No stay yet")
         }
     }
 
-    private func sum(_ title: String, _ value: Double, bold: Bool = false, approx: Bool = false) -> some View {
+    private func sum(_ title: LocalizedStringKey, _ value: Double, bold: Bool = false, approx: Bool = false) -> some View {
+        sum(Text(title), value, bold: bold, approx: approx)
+    }
+
+    private func sum(_ title: Text, _ value: Double, bold: Bool = false, approx: Bool = false) -> some View {
         HStack {
-            Text(title).font(.sans(13, weight: bold ? .semibold : .regular)).foregroundStyle(bold ? Palette.tx : Palette.tx2)
+            title.font(.sans(13, weight: bold ? .semibold : .regular)).foregroundStyle(bold ? Palette.tx : Palette.tx2)
             Spacer()
             Text(approx ? MoneyText.approx(value, model.base) : MoneyText.full(value, model.base))
                 .font(.sans(13, weight: bold ? .semibold : .regular)).foregroundStyle(Palette.tx)
@@ -1061,7 +1071,7 @@ struct PlanCard: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("How it adds up").font(.sans(15, weight: .medium)).foregroundStyle(Palette.tx2)
                         (Text("spent, the nights ahead, what’s still to pay")
-                         + (unbooked > 0 ? Text(" · \(unbooked) leg\(unbooked == 1 ? "" : "s") to book").foregroundColor(Palette.warn) : Text("")))
+                         + (unbooked > 0 ? (Text(verbatim: " · ") + Text("\(unbooked) legs to book")).foregroundColor(Palette.warn) : Text(verbatim: "")))
                             .font(.sans(12.5)).foregroundStyle(Palette.tx2)
                     }
                     Spacer()
@@ -1121,7 +1131,7 @@ private struct PlanInfo: View {
 // MARK: - bookings and subscriptions
 
 private struct Fold<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     let summary: Text
     @State var open: Bool
     @ViewBuilder var content: Content
@@ -1168,7 +1178,7 @@ private struct BookingsCard: View {
         let due = scheduled + b.toPay
         let total = MoneyText.short(b.total, model.base)
         let summary: Text = b.notBooked > 0
-            ? Text("\(total) · ") + Text("\(MoneyText.approx(b.notBooked, model.base)) not booked yet").foregroundColor(Palette.warn)
+            ? Text(verbatim: "\(total) · ") + Text("\(MoneyText.approx(b.notBooked, model.base)) not booked yet").foregroundColor(Palette.warn)
             : (due > 0 ? Text("\(total) · \(MoneyText.approx(due, model.base)) to pay") : Text("\(total), all paid"))
         Fold(title: "Bookings", summary: summary, open: open) {
             VStack(spacing: 0) {
@@ -1176,10 +1186,11 @@ private struct BookingsCard: View {
                 let legs = b.transport
                 Divider().overlay(Palette.ln)
                 row("stays", "Stays",
-                    "\(stays.filter { $0.status == .paid }.count) paid" + (stays.contains { $0.status == .unbooked } ? " · \(stays.filter { $0.status == .unbooked }.count) not booked" : ""),
+                    String(localized: "\(stays.filter { $0.status == .paid }.count) paid")
+                        + (stays.contains { $0.status == .unbooked } ? " · " + String(localized: "\(stays.filter { $0.status == .unbooked }.count) not booked") : ""),
                     stays.reduce(0) { $0 + $1.amount })
                 Divider().overlay(Palette.ln)
-                row("transport", "Transport", "\(legs.filter { $0.status != .unbooked }.count) of \(legs.count) booked",
+                row("transport", "Transport", String(localized: "\(legs.filter { $0.status != .unbooked }.count) of \(legs.count) booked"),
                     legs.reduce(0) { $0 + $1.amount })
                 Divider().overlay(Palette.ln)
                 VStack(spacing: 4) {
@@ -1194,7 +1205,7 @@ private struct BookingsCard: View {
 
     /// Stays and transport are booked and changed on the Trip page, so a row
     /// goes there (the web's Bookings card links to /itinerary the same way).
-    private func row(_ cat: String, _ title: String, _ detail: String, _ amount: Double) -> some View {
+    private func row(_ cat: String, _ title: LocalizedStringKey, _ detail: String, _ amount: Double) -> some View {
         Button { router.select(.trip) } label: {
             HStack(spacing: 12) {
                 CategoryTile(id: cat, size: 30)
@@ -1213,7 +1224,7 @@ private struct BookingsCard: View {
         .accessibilityHint("Opens the Trip page")
     }
 
-    private func sumLine(_ title: String, _ v: Double, _ tone: Color) -> some View {
+    private func sumLine(_ title: LocalizedStringKey,_ v: Double, _ tone: Color) -> some View {
         HStack {
             Text(title)
             Spacer()
@@ -1238,7 +1249,7 @@ private struct SubscriptionsCard: View {
             // Nothing yet: what they are, and the way to add one.
             VStack(alignment: .leading, spacing: 8) {
                 CardLabel("Subscriptions", mauve: true)
-                Text(store.canEdit ? "Repeating costs, like Netflix or iCloud." : "Nothing recurring recorded yet.")
+                (store.canEdit ? Text("Repeating costs, like Netflix or iCloud.") : Text("Nothing recurring recorded yet."))
                     .font(.sans(14.5)).foregroundStyle(Palette.tx2)
                 if store.canEdit { addButton }
             }
@@ -1252,7 +1263,7 @@ private struct SubscriptionsCard: View {
                     if showCancelled { ForEach(cancelled) { row($0) } }
                     if !cancelled.isEmpty {
                         Divider().overlay(Palette.ln)
-                        Button(showCancelled ? "Hide cancelled" : "Show cancelled (\(cancelled.count))") {
+                        Button(showCancelled ? String(localized: "Hide cancelled") : String(localized: "Show cancelled (\(cancelled.count))")) {
                             withAnimation(Motion.settle) { showCancelled.toggle() }
                         }
                         .font(.sans(13.5, weight: .semibold)).foregroundStyle(Palette.ac)
@@ -1298,13 +1309,15 @@ private struct SubscriptionsCard: View {
 
     /// "3 active · ≈ 8 800 Ft a month · iCloud tomorrow"
     private func summary(_ active: [Subscription], _ monthly: Double) -> Text {
-        let head = Text(active.isEmpty ? "none active" : "\(active.count) active · \(MoneyText.approx(monthly, model.base)) a month")
+        let head = active.isEmpty ? Text("none active") : Text("\(active.count) active · \(MoneyText.approx(monthly, model.base)) a month")
         let dated = active.compactMap { s in Subscriptions.nextCharge(s, from: model.today).map { (s, Days.between(model.today, $0)) } }
         guard let soon = dated.filter({ $0.1 <= 7 }).min(by: { $0.1 < $1.1 }) else { return head }
-        return head + Text(" · \(soon.0.label) ") + Text(when(soon.1)).foregroundColor(Palette.warn).bold()
+        return head + Text(verbatim: " · \(soon.0.label) ") + Text(when(soon.1)).foregroundColor(Palette.warn).bold()
     }
 
-    private func when(_ days: Int) -> String { days == 0 ? "today" : days == 1 ? "tomorrow" : "in \(days) days" }
+    private func when(_ days: Int) -> String {
+        days == 0 ? String(localized: "today") : days == 1 ? String(localized: "tomorrow") : String(localized: "in \(days) days")
+    }
 
     /// What the active ones take from tomorrow to the journey's end.
     private func ahead(_ active: [Subscription]) -> (days: Int, total: Double)? {
@@ -1363,7 +1376,7 @@ private struct SubscriptionsCard: View {
         if store.canEdit && !s.isCancelled {
             Button { toggleRemind(s) } label: { icon }
                 .buttonStyle(.plain)
-                .accessibilityLabel(on ? "Reminder on, \(SubscriptionForm.leadLabel(s.leadDays)). Turn off" : "Reminder off. Turn on")
+                .accessibilityLabel(on ? String(localized: "Reminder on, \(SubscriptionForm.leadLabel(s.leadDays)). Turn off") : String(localized: "Reminder off. Turn on"))
                 .sensoryFeedback(.selection, trigger: on)
         } else {
             icon
@@ -1375,16 +1388,17 @@ private struct SubscriptionsCard: View {
         if let off = s.cancelledOn {
             line = Text("cancelled \(Days.short(off))")
         } else {
-            line = Text(s.everyMonths == 1 ? "on the \(SubscriptionForm.ordinal(Int(s.anchor.suffix(2)) ?? 1))"
-                        : (next.map { "next \(Days.short($0))" } ?? ""))
-            if s.remind { line = line + Text(" · reminds \(SubscriptionForm.leadLabel(s.leadDays))") }
-            if let soon, soon <= 7 { line = line + Text(" · ") + Text(when(soon)).foregroundColor(Palette.warn).bold() }
+            line = s.everyMonths == 1 ? Text("on the \(SubscriptionForm.ordinal(Int(s.anchor.suffix(2)) ?? 1))")
+                : Text(next.map { String(localized: "next \(Days.short($0))") } ?? "")
+            if s.remind { line = line + Text(verbatim: " · ") + Text("reminds \(SubscriptionForm.leadLabel(s.leadDays))") }
+            if let soon, soon <= 7 { line = line + Text(verbatim: " · ") + Text(when(soon)).foregroundColor(Palette.warn).bold() }
         }
         return line.font(.sans(12.5)).foregroundStyle(Palette.tx2)
     }
 
     private func cadence(_ s: Subscription) -> String {
-        s.everyMonths == 1 ? "monthly" : (s.everyMonths == 12 ? "yearly" : "every \(s.everyMonths) months")
+        s.everyMonths == 1 ? String(localized: "monthly")
+            : (s.everyMonths == 12 ? String(localized: "yearly") : String(localized: "every \(s.everyMonths) months"))
     }
 
     private func toggleRemind(_ s: Subscription) {
@@ -1423,7 +1437,7 @@ private struct InviteCard: View {
                     .font(.sans(13.5)).foregroundStyle(Palette.ac)
                     .frame(maxWidth: .infinity)
             }
-            if let error { Notice(text: error, kind: .warn) }
+            if let error { Notice(verbatim: error, kind: .warn) }
         }
         .padding(16)
         .background(Palette.acSoft.opacity(0.5), in: .rect(cornerRadius: Radius.r))
@@ -1450,7 +1464,7 @@ private struct TrackQuestion: View {
             }
             .padding(.horizontal, 14)
             .background(Palette.canvas, in: .rect(cornerRadius: 14))
-            if let error { Notice(text: error, kind: .warn) }
+            if let error { Notice(verbatim: error, kind: .warn) }
             Button("Yes, track it") { answer(true) }.buttonStyle(.primary)
             Button("Not now") { answer(false) }
                 .font(.sans(16, weight: .medium)).foregroundStyle(Palette.ac)
@@ -1464,7 +1478,7 @@ private struct TrackQuestion: View {
         .livholdSheet(detents: [.medium, .large])
     }
 
-    private func row(_ a: String, _ b: String) -> some View {
+    private func row(_ a: LocalizedStringKey, _ b: LocalizedStringKey) -> some View {
         HStack {
             Text(a).font(.sans(14.5)).foregroundStyle(Palette.tx)
             Spacer()

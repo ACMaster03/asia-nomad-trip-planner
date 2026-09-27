@@ -17,19 +17,19 @@ enum ExpandStyle: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .fade: "Fade"
-        case .unfold: "Unfold"
-        case .blur: "Blur"
-        case .slide: "Slide"
+        case .fade: String(localized: "Fade")
+        case .unfold: String(localized: "Unfold")
+        case .blur: String(localized: "Blur")
+        case .slide: String(localized: "Slide")
         }
     }
 
     var detail: String {
         switch self {
-        case .fade: "The card grows; its content fades in where it stands, like Settings."
-        case .unfold: "The content grows out of the title, a touch smaller at first."
-        case .blur: "The content sharpens into place as the card grows."
-        case .slide: "The first build: slides down from under the title."
+        case .fade: String(localized: "The card grows; its content fades in where it stands, like Settings.")
+        case .unfold: String(localized: "The content grows out of the title, a touch smaller at first.")
+        case .blur: String(localized: "The content sharpens into place as the card grows.")
+        case .slide: String(localized: "The first build: slides down from under the title.")
         }
     }
 

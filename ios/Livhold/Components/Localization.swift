@@ -26,4 +26,22 @@ enum L10n {
         c.languageComponents = Locale.Language.Components(identifier: language)
         return Locale(components: c)
     }()
+
+    /// A country as the journey stores it, in English ("Thailand"), in the
+    /// app's language ("Thaiföld"); a name iOS doesn't know stays as typed.
+    static func country(_ name: String) -> String {
+        guard !isEnglish else { return name }
+        return countries[name.lowercased()] ?? name
+    }
+
+    private static let countries: [String: String] = {
+        let en = Locale(identifier: "en_US")
+        var map: [String: String] = [:]
+        for region in Locale.Region.isoRegions {
+            guard let name = en.localizedString(forRegionCode: region.identifier),
+                  let local = locale.localizedString(forRegionCode: region.identifier) else { continue }
+            map[name.lowercased()] = local
+        }
+        return map
+    }()
 }

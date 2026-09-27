@@ -21,7 +21,8 @@ struct SubscriptionForm: View {
     let sub: Subscription?
     @Environment(TripStore.self) private var store
 
-    private static let cadences = [(1, "Monthly"), (3, "Every 3 months"), (6, "Every 6 months"), (12, "Yearly")]
+    private static let cadences = [(1, String(localized: "Monthly")), (3, String(localized: "Every 3 months")),
+                                    (6, String(localized: "Every 6 months")), (12, String(localized: "Yearly"))]
     private static let leads = [1, 3, 7]
 
     @State private var name: String
@@ -58,7 +59,7 @@ struct SubscriptionForm: View {
         if let state = store.trip?.state {
             let currency = cur.isEmpty ? state.meta.baseCurrency : cur
             EditForm(
-                title: sub == nil ? "Add subscription" : "Edit subscription",
+                verbatimTitle: sub == nil ? String(localized: "Add subscription") : String(localized: "Edit subscription"),
                 canSave: valid,
                 dirty: Self.snapshot(name, amount, cur, everyMonths, anchor, remind, leadDays, cancelledOn) != initial,
                 saveLabel: sub == nil ? "Add" : "Save",
@@ -83,14 +84,16 @@ struct SubscriptionForm: View {
                     }
                     .pickerStyle(.menu)
                     .menuSettles(on: everyMonths)
-                    DatePicker(everyMonths == 1 ? "Charged on" : "Last (or next) charge", selection: anchorDate, displayedComponents: .date)
+                    DatePicker(selection: anchorDate, displayedComponents: .date) {
+                        everyMonths == 1 ? Text("Charged on") : Text("Last (or next) charge")
+                    }
                         .environment(\.timeZone, Days.utc)
                 } footer: {
                     Text("The app works out every charge from this date.")
                 }
                 .listRowBackground(Palette.sf)
 
-                Section(cancelledOn == nil ? "Next charge" : "Cancelled") { schedule }
+                Section { schedule } header: { cancelledOn == nil ? Text("Next charge") : Text("Cancelled") }
                     .listRowBackground(Palette.sf)
 
                 if cancelledOn == nil {
@@ -139,7 +142,7 @@ struct SubscriptionForm: View {
                 HStack(spacing: 8) {
                     Text(MoneyText.weekday(next) + (next.prefix(4) == Days.today().prefix(4) ? "" : " \(next.prefix(4))"))
                         .font(.sans(16, weight: .semibold))
-                    Text(days == 0 ? "today" : days == 1 ? "tomorrow" : "in \(days) days")
+                    (days == 0 ? Text("today") : days == 1 ? Text("tomorrow") : Text("in \(days) days"))
                         .font(.sans(12, weight: .bold)).foregroundStyle(Palette.warn)
                         .padding(.horizontal, 8).padding(.vertical, 2)
                         .background(Palette.warnSoft, in: .capsule)
@@ -157,17 +160,22 @@ struct SubscriptionForm: View {
         let ahead = everyMonths >= 12 ? 1 : 3
         let then = (1...ahead).map { Subscriptions.shiftMonths(next, $0 * everyMonths) }
             .map { $0.prefix(4) == next.prefix(4) ? Days.short($0) : "\(Days.short($0)) \($0.prefix(4))" }
-        let every = everyMonths == 1 ? "every month on the \(Self.ordinal(Int(anchor.suffix(2)) ?? 1))"
-            : everyMonths == 12 ? "yearly" : "every \(everyMonths) months"
-        return "\(every), then \(then.joined(separator: " · "))"
+        let ordinal = Self.ordinal(Int(anchor.suffix(2)) ?? 1)
+        let every = everyMonths == 1 ? String(localized: "every month on the \(ordinal)")
+            : everyMonths == 12 ? String(localized: "yearly") : String(localized: "every \(everyMonths) months")
+        let list = then.joined(separator: " · ")
+        return String(localized: "\(every), then \(list)")
     }
 
+    /// "14th" in English, "14." in Hungarian.
     static func ordinal(_ d: Int) -> String {
-        let suffix = (11...13).contains(d % 100) ? "th" : (d % 10 == 1 ? "st" : d % 10 == 2 ? "nd" : d % 10 == 3 ? "rd" : "th")
-        return "\(d)\(suffix)"
+        let f = NumberFormatter()
+        f.numberStyle = .ordinal
+        f.locale = L10n.locale
+        return f.string(from: NSNumber(value: d)) ?? "\(d)"
     }
 
-    static func leadLabel(_ days: Int) -> String { "\(days) day\(days == 1 ? "" : "s") before" }
+    static func leadLabel(_ days: Int) -> String { String(localized: "\(days) days before") }
 
     private var anchorDate: Binding<Date> {
         Binding(get: { Days.date(anchor) ?? .now }, set: { anchor = Days.iso($0) })

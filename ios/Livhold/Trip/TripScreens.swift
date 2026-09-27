@@ -48,7 +48,7 @@ struct TripScreen: View {
         case .failed:
             VStack(alignment: .leading, spacing: 14) {
                 Text("Your journey").font(.serif(28)).foregroundStyle(Palette.tx)
-                Notice(text: store.error ?? "Couldn’t load your journey.", kind: .warn)
+                Notice(verbatim: store.error ?? String(localized: "Couldn’t load your journey."), kind: .warn)
                 Button("Try again") { Task { await store.refresh() } }.buttonStyle(.primary)
             }
             .padding(.top, 20)
@@ -82,7 +82,7 @@ private struct TripTimeline: View {
             }
             if let notice = store.saveNotice {
                 Button { store.saveNotice = nil } label: {
-                    Notice(text: notice, kind: .warn)
+                    Notice(verbatim: notice, kind: .warn)
                 }
                 .buttonStyle(.plain)
                 .padding(.bottom, 8)
@@ -119,7 +119,7 @@ private struct TripTimeline: View {
                         .tracking(1.2)
                         .foregroundStyle(Palette.tx3)
                 }
-                Text(trip.name ?? state.meta.tripName ?? "Your journey")
+                Text(trip.name ?? state.meta.tripName ?? String(localized: "Your journey"))
                     .font(.serif(28))
                     .foregroundStyle(Palette.tx)
             }
@@ -137,7 +137,7 @@ private struct TripTimeline: View {
         if !tl.stops.isEmpty {
             let placed = tl.stops.reduce(0) { $0 + Journey.nights($1) }
             let total = Days.between(state.meta.startDate, state.meta.endDate)
-            Text(total > 0 ? "\(placed) of \(total) nights placed" : "\(placed) \(placed == 1 ? "night" : "nights") placed")
+            (total > 0 ? Text("\(placed) of \(total) nights placed") : Text("\(placed) nights placed"))
                 .font(.sans(16, weight: .medium))
                 .foregroundStyle(Palette.tx2)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -270,8 +270,11 @@ private struct HomeRow: View {
     }
 
     private var label: String {
-        if start { return home.isEmpty ? "Home · set where you live in Trip settings" : "Home · \(home)" }
-        return (onward ? "Journey ends · " : "Home · ") + (endDate.map { Days.short($0) } ?? "no date yet")
+        if start {
+            return home.isEmpty ? String(localized: "Home · set where you live in Trip settings") : String(localized: "Home · \(home)")
+        }
+        let end = endDate.map { Days.short($0) } ?? String(localized: "no date yet")
+        return onward ? String(localized: "Journey ends · \(end)") : String(localized: "Home · \(end)")
     }
 }
 
@@ -323,13 +326,13 @@ private struct EmptyLegStrip: View {
 
     var body: some View {
         HStack {
-            Text(leg.wayHome ? (onward ? "Onward" : "Going home") : "No transport yet")
+            (leg.wayHome ? (onward ? Text("Onward") : Text("Going home")) : Text("No transport yet"))
                 .font(.sans(16, weight: .semibold))
                 .foregroundStyle(leg.wayHome ? Palette.tx2 : Palette.ac2)
                 .lineLimit(1)
             Spacer(minLength: 8)
             if !leg.wayHome {
-                Text("\(leg.from.city) → \(leg.to.city)")
+                Text(verbatim: "\(leg.from.city) → \(leg.to.city)")
                     .font(.sans(13)).foregroundStyle(Palette.tx3).lineLimit(1)
             } else if store.canEdit {
                 Text("+ Add").font(.sans(15, weight: .semibold)).foregroundStyle(Palette.ac)
@@ -390,7 +393,7 @@ private struct LegStrip: View {
     }
 
     private var title: String {
-        var s = entry.type.isEmpty ? "Transport" : entry.type.prefix(1).uppercased() + entry.type.dropFirst()
+        var s = entry.type.isEmpty ? String(localized: "Transport") : TransportIcon.name(entry.type)
         if let d = entry.date { s += " · \(Days.short(d))" }
         if let t = entry.time, !t.isEmpty { s += " \(t)" }
         return s
@@ -399,7 +402,7 @@ private struct LegStrip: View {
     private var detail: String {
         var s = leg == nil ? "\(entry.from) → \(entry.to) · " : ""
         if let via = entry.via, !via.isEmpty {
-            s += "via \(via)"
+            s += String(localized: "via \(via)")
             if let h = entry.hours, h > 0 { s += " · \(Days.hours(h))" }
             s += " · "
         }
@@ -416,6 +419,19 @@ enum TransportIcon {
         case "bus": "bus.fill"
         case "ferry": "ferry.fill"
         default: nil
+        }
+    }
+
+    /// The type as it reads: the four known ones in the app's language, the
+    /// rest as typed, capitalised. The English name is what's saved.
+    static func name(_ type: String) -> String {
+        switch type.lowercased() {
+        case "flight": String(localized: "Flight")
+        case "train": String(localized: "Train")
+        case "bus": String(localized: "Bus")
+        case "ferry": String(localized: "Ferry")
+        case "other": String(localized: "Other")
+        default: type.prefix(1).uppercased() + type.dropFirst()
         }
     }
 }
@@ -453,7 +469,7 @@ private struct StopRow: View {
                 .padding(.vertical, 6)
         }
         .settlesOnScroll()
-        .confirmationDialog("Delete \(seg.city.isEmpty ? "this stop" : seg.city)?", isPresented: $confirmDelete, titleVisibility: .visible) {
+        .confirmationDialog(seg.city.isEmpty ? Text("Delete this stop?") : Text("Delete \(seg.city)?"), isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { quick { $0.remove("segments", id: seg.id) } }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -469,16 +485,28 @@ private struct StopRow: View {
             editor.open(.stay(nil, seg: seg, range: cov.covered.isEmpty ? nil : cov.gaps.first))
         }
         if !maybe, let leg = Journey.timeline(state).legs.first(where: { $0.from.seg?.id == seg.id }) {
-            Button(leg.wayHome ? "Add transport home" : "Add transport to \(leg.to.city)", systemImage: "airplane") {
-                editor.open(.transport(nil, from: leg.from.city, to: leg.to.city, date: leg.date))
+            let open = { editor.open(.transport(nil, from: leg.from.city, to: leg.to.city, date: leg.date)) }
+            if leg.wayHome {
+                Button("Add transport home", systemImage: "airplane", action: open)
+            } else {
+                Button("Add transport to \(leg.to.city)", systemImage: "airplane", action: open)
             }
         }
-        Button(seg.inPlan ? "Leave out of the plan" : "Put in the plan", systemImage: seg.inPlan ? "circle.dashed" : "checkmark.circle") {
+        let togglePlan = {
             let include = !seg.inPlan
             quick { $0.upsert("segments", id: seg.id, ["include": .bool(include)]) }
         }
+        if seg.inPlan {
+            Button("Leave out of the plan", systemImage: "circle.dashed", action: togglePlan)
+        } else {
+            Button("Put in the plan", systemImage: "checkmark.circle", action: togglePlan)
+        }
         Divider()
-        Button("Delete \(seg.city.isEmpty ? "stop" : seg.city)", systemImage: "trash", role: .destructive) { confirmDelete = true }
+        if seg.city.isEmpty {
+            Button("Delete stop", systemImage: "trash", role: .destructive) { confirmDelete = true }
+        } else {
+            Button("Delete \(seg.city)", systemImage: "trash", role: .destructive) { confirmDelete = true }
+        }
     }
 
     /// Saves a one-tap edit; if it can't, the timeline says why.
@@ -506,18 +534,18 @@ struct StopCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(seg.city.isEmpty ? "Stop" : seg.city)
+                    Text(seg.city.isEmpty ? String(localized: "Stop") : seg.city)
                         .font(.serif(21))
                         .foregroundStyle(Palette.tx)
                         .lineLimit(1)
-                    Text((seg.country.isEmpty ? "" : "\(seg.country) · ") + "\(Days.short(seg.arrive)) → \(Days.short(seg.depart))")
+                    Text((seg.country.isEmpty ? "" : "\(L10n.country(seg.country)) · ") + "\(Days.short(seg.arrive)) → \(Days.short(seg.depart))")
                         .font(.sans(15))
                         .foregroundStyle(Palette.tx2)
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 0) {
                     Text("\(nights)").font(.sans(19, weight: .semibold)).foregroundStyle(Palette.tx)
-                    Text(nights == 1 ? "night" : "nights")
+                    (nights == 1 ? Text("night") : Text("nights"))
                         .font(.sans(13)).textCase(.uppercase).tracking(1).foregroundStyle(Palette.tx2)
                 }
             }
@@ -613,7 +641,7 @@ struct StayList: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Journey.stayName(stay, in: seg))
                         .font(.sans(16, weight: .medium)).foregroundStyle(Palette.tx).lineLimit(1)
-                    Text("\(Days.short(range.from)) – \(Days.short(range.to)) · \(range.nights) \(range.nights == 1 ? "night" : "nights")")
+                    Text("\(Days.short(range.from)) – \(Days.short(range.to)) · \(range.nights) nights")
                         .font(.sans(13)).foregroundStyle(Palette.tx2).lineLimit(1)
                     if detailed {
                         let money = Journey.stayMoney(stay, today: today)
@@ -643,14 +671,14 @@ struct StayList: View {
             HStack {
                 Text("No bed \(Days.short(g.from)) → \(Days.short(g.to))").font(.sans(16, weight: .medium))
                 Spacer()
-                Text("\(g.nights) \(g.nights == 1 ? "night" : "nights")").font(.sans(13))
+                Text("\(g.nights) nights").font(.sans(13))
             }
             .foregroundStyle(Palette.warn)
         case .overlap(let o):
-            Text("Two stays overlap \(Days.short(o.from)) – \(Days.short(o.to)) · \(o.nights) \(o.nights == 1 ? "night" : "nights") counted twice")
+            Text("Two stays overlap \(Days.short(o.from)) – \(Days.short(o.to)) · \(o.nights) nights counted twice")
                 .font(.sans(13, weight: .medium)).foregroundStyle(Palette.warn)
         case .none:
-            Text(inPlan ? "No stay yet" : "Nights not counted")
+            (inPlan ? Text("No stay yet") : Text("Nights not counted"))
                 .font(.sans(16, weight: .medium))
                 .foregroundStyle(inPlan ? Palette.warn : Palette.tx3)
         }
@@ -757,12 +785,12 @@ private struct StopPage: View {
                         .font(.sans(13, weight: .semibold)).textCase(.uppercase).tracking(1.2)
                         .foregroundStyle(Palette.ac)
                 }
-                Text(seg.city.isEmpty ? "Stop" : seg.city)
+                Text(seg.city.isEmpty ? String(localized: "Stop") : seg.city)
                     .font(.serif(44, weight: .medium, relativeTo: .largeTitle))
                     .foregroundStyle(Palette.tx)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
-                Text((seg.country.isEmpty ? "" : "\(seg.country) · ") + "\(Days.short(seg.arrive)) → \(Days.short(seg.depart)) · \(nights) \(nights == 1 ? "night" : "nights")")
+                Text((seg.country.isEmpty ? "" : "\(L10n.country(seg.country)) · ") + "\(Days.short(seg.arrive)) → \(Days.short(seg.depart)) · " + String(localized: "\(nights) nights"))
                     .font(.sans(16, weight: .medium))
                     .foregroundStyle(Palette.tx2)
             }
@@ -772,7 +800,7 @@ private struct StopPage: View {
         .frame(height: 340)
     }
 
-    private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
+    private func section<C: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.sans(13, weight: .medium)).textCase(.uppercase).tracking(1.2)
@@ -781,7 +809,7 @@ private struct StopPage: View {
         }
     }
 
-    private func legSection(_ title: String, _ leg: Journey.Leg, onward: Bool) -> some View {
+    private func legSection(_ title: LocalizedStringKey, _ leg: Journey.Leg, onward: Bool) -> some View {
         section(title) {
             LegEntries(leg: leg, state: state, today: today, onward: onward)
         }
@@ -799,7 +827,7 @@ struct TripSettingsScreen: View {
                 let meta = trip.state.meta
                 Section {
                     LabeledContent("Name", value: trip.name ?? meta.tripName ?? "—")
-                    LabeledContent("Dates", value: "\(Days.short(meta.startDate)) → \(meta.endDate.map { Days.short($0) } ?? "open-ended")")
+                    LabeledContent("Dates", value: "\(Days.short(meta.startDate)) → \(meta.endDate.map { Days.short($0) } ?? String(localized: "open-ended"))")
                     LabeledContent("Home", value: meta.homeBase ?? "—")
                     LabeledContent("Currency", value: meta.baseCurrency)
                     if let cap = meta.budgetCap, cap > 0 {

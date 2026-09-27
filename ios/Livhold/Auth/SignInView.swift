@@ -39,8 +39,8 @@ struct SignInView: View {
                         if mode == .code { appleButton; or }
                         form
                         if let busySince { WaitingNote(since: busySince, onCancel: cancel) }
-                        if let error { Notice(text: error, kind: .warn) }
-                        if let notice { Notice(text: notice) }
+                        if let error { Notice(verbatim: error, kind: .warn) }
+                        if let notice { Notice(verbatim: notice) }
                     }
                     // On a phone the wash's hills sit right under the form (on the web the
                     // page scrolls past them), so the form gets a frosted panel to stay legible.
@@ -127,7 +127,7 @@ struct SignInView: View {
             if busy {
                 TravelLoader(color: Palette.on).frame(height: 21)
             } else {
-                Text(mode == .code ? "Email me a code" : "Sign in")
+                mode == .code ? Text("Email me a code") : Text("Sign in")
             }
         }
         .buttonStyle(.primary)
@@ -179,12 +179,12 @@ struct SignInView: View {
 
     private func sendReset() {
         guard looksLikeEmail else {
-            error = "Type your email above first, then tap “Forgot your password?” again."
+            error = String(localized: "Type your email above first, then tap “Forgot your password?” again.")
             return
         }
         run {
             try await store.sendPasswordReset(to: email)
-            notice = "Check your inbox — the reset link opens Livhold on the web."
+            notice = String(localized: "Check your inbox — the reset link opens Livhold on the web.")
         }
     }
 
@@ -241,8 +241,8 @@ struct BrandStack: View {
 
 /// Uppercase field label. Web: `text-base uppercase tracking-[.1em] text-tx2`.
 struct FieldLabel: View {
-    let text: String
-    init(_ text: String) { self.text = text }
+    let text: LocalizedStringKey
+    init(_ text: LocalizedStringKey) { self.text = text }
 
     var body: some View {
         Text(text)
@@ -255,18 +255,18 @@ struct FieldLabel: View {
 
 /// A text-only action under a form ("Use a password instead").
 struct LinkButton: View {
-    let title: String
+    let title: Text
     var quiet = false
     let action: () -> Void
 
-    init(_ title: String, quiet: Bool = false, action: @escaping () -> Void) {
-        self.title = title
+    init(_ title: LocalizedStringKey, quiet: Bool = false, action: @escaping () -> Void) {
+        self.title = Text(title)
         self.quiet = quiet
         self.action = action
     }
 
     var body: some View {
-        Button(title, action: action)
+        Button(action: action) { title }
             .font(.sans(16, weight: .medium))
             .foregroundStyle(quiet ? Palette.tx2 : Palette.ac)
             .frame(maxWidth: .infinity, minHeight: 44)

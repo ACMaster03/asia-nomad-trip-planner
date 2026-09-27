@@ -72,10 +72,10 @@ struct EditTap<Content: View>: View {
 
 /// The red button at the bottom of a form and the question it asks first.
 struct EditDelete {
-    let label: String
-    let question: String
-    var message: String?
-    var confirm = "Delete"
+    let label: LocalizedStringKey
+    let question: LocalizedStringKey
+    var message: LocalizedStringKey?
+    var confirm: LocalizedStringKey = "Delete"
     let action: () async throws -> Void
 }
 
@@ -83,13 +83,35 @@ struct EditDelete {
 /// "Discard changes?" instead of losing an edit to a swipe, the travel loader
 /// while it saves, and the reason in amber if it couldn't.
 struct EditForm<Content: View>: View {
-    let title: String
+    let title: Text
     let canSave: Bool
     let dirty: Bool
-    var saveLabel = "Save"
+    let saveLabel: LocalizedStringKey
     let save: () async throws -> Void
-    var delete: EditDelete?
-    @ViewBuilder var content: Content
+    let delete: EditDelete?
+    let content: Content
+
+    init(title: LocalizedStringKey, canSave: Bool, dirty: Bool, saveLabel: LocalizedStringKey = "Save",
+         save: @escaping () async throws -> Void, delete: EditDelete? = nil, @ViewBuilder content: () -> Content) {
+        self.init(text: Text(title), canSave: canSave, dirty: dirty, saveLabel: saveLabel, save: save, delete: delete, content: content)
+    }
+
+    /// A title from data (a city, "Hanoi → Hue"), shown as it is.
+    init(verbatimTitle title: String, canSave: Bool, dirty: Bool, saveLabel: LocalizedStringKey = "Save",
+         save: @escaping () async throws -> Void, delete: EditDelete? = nil, @ViewBuilder content: () -> Content) {
+        self.init(text: Text(verbatim: title), canSave: canSave, dirty: dirty, saveLabel: saveLabel, save: save, delete: delete, content: content)
+    }
+
+    private init(text: Text, canSave: Bool, dirty: Bool, saveLabel: LocalizedStringKey,
+                 save: @escaping () async throws -> Void, delete: EditDelete?, @ViewBuilder content: () -> Content) {
+        self.title = text
+        self.canSave = canSave
+        self.dirty = dirty
+        self.saveLabel = saveLabel
+        self.save = save
+        self.delete = delete
+        self.content = content()
+    }
 
     @Environment(\.dismiss) private var dismiss
     @State private var busy = false
@@ -155,7 +177,7 @@ struct EditForm<Content: View>: View {
                 Button("Discard changes", role: .destructive) { dismiss() }
                 Button("Keep editing", role: .cancel) {}
             }
-            .confirmationDialog(delete?.question ?? "", isPresented: $confirmDelete, titleVisibility: .visible) {
+            .confirmationDialog(delete.map { Text($0.question) } ?? Text(verbatim: ""), isPresented: $confirmDelete, titleVisibility: .visible) {
                 if let delete {
                     Button(delete.confirm, role: .destructive) { run(delete.action) }
                     Button("Cancel", role: .cancel) {}
@@ -228,23 +250,22 @@ private struct StopForm: View {
         (seg != nil || !city.trimmed.isEmpty) && !arrive.isEmpty && !depart.isEmpty && depart >= arrive
     }
 
-    /// Where the leg after this stop goes: "Hanoi", or "home".
-    private var nextPlace: String? {
+    /// The leg after this stop.
+    private var nextLeg: Journey.Leg? {
         guard let seg else { return nil }
-        guard let leg = Journey.timeline(state).legs.first(where: { $0.from.seg?.id == seg.id }) else { return nil }
-        return leg.wayHome ? "home" : leg.to.city
+        return Journey.timeline(state).legs.first(where: { $0.from.seg?.id == seg.id })
     }
 
     var body: some View {
         EditForm(
-            title: seg.map { $0.city.isEmpty ? "Stop" : $0.city } ?? "Add stop",
+            verbatimTitle: seg.map { $0.city.isEmpty ? String(localized: "Stop") : $0.city } ?? String(localized: "Add stop"),
             canSave: valid && dirty,
             dirty: dirty,
             saveLabel: seg == nil ? "Add" : "Save",
             save: save,
             delete: seg.map { seg in
                 EditDelete(label: "Delete this stop",
-                      question: "Delete \(seg.city.isEmpty ? "this stop" : seg.city)?",
+                      question: seg.city.isEmpty ? "Delete this stop?" : "Delete \(seg.city)?",
                       message: "Its stays and transport stay on the trip; the legs on either side become one.",
                       action: { try await store.save { $0.remove("segments", id: seg.id) } })
             }
@@ -275,7 +296,7 @@ private struct StopForm: View {
             Section {
                 Toggle("In the plan", isOn: $inPlan)
             } footer: {
-                Text(inPlan ? "Its nights and costs count in the plan." : "A maybe: shown faded on the timeline, with no legs of its own.")
+                inPlan ? Text("Its nights and costs count in the plan.") : Text("A maybe: shown faded on the timeline, with no legs of its own.")
             }
             .listRowBackground(Palette.sf)
             Section("Note") {
@@ -286,10 +307,13 @@ private struct StopForm: View {
     }
 
     private var hint: String {
-        guard !arrive.isEmpty, !depart.isEmpty else { return depart.isEmpty ? "Choose the day you leave." : "" }
-        guard depart >= arrive else { return "Leave can’t be before arrive." }
-        var s = "\(nights) \(nights == 1 ? "night" : "nights")."
-        if let seg, depart != seg.depart, let next = nextPlace { s += " Moving Leave moves the \(next) leg with it." }
+        guard !arrive.isEmpty, !depart.isEmpty else { return depart.isEmpty ? String(localized: "Choose the day you leave.") : "" }
+        guard depart >= arrive else { return String(localized: "Leave can’t be before arrive.") }
+        var s = String(localized: "\(nights) nights.")
+        if let seg, depart != seg.depart, let next = nextLeg {
+            s += " " + (next.wayHome ? String(localized: "Moving Leave moves the home leg with it.")
+                                     : String(localized: "Moving Leave moves the \(next.to.city) leg with it."))
+        }
         return s
     }
 
@@ -420,7 +444,7 @@ private struct StayForm: View {
             Section {
                 TextField("Where you sleep", text: $name)
                 Picker("Platform", selection: $platform) {
-                    ForEach(Self.platforms, id: \.self) { Text($0).tag($0) }
+                    ForEach(Self.platforms, id: \.self) { Text($0 == "Other" ? String(localized: "Other") : $0).tag($0) }
                 }
                 .pickerStyle(.menu)
                 .menuSettles(on: platform)
@@ -428,14 +452,14 @@ private struct StayForm: View {
                     TextField("The hotel’s site, a friend, …", text: $platformOther)
                 }
             } header: {
-                Text("\(seg.city) · \(Days.short(checkIn)) – \(Days.short(checkOut))")
+                Text(verbatim: "\(seg.city) · \(Days.short(checkIn)) – \(Days.short(checkOut))")
             }
             .listRowBackground(Palette.sf)
 
             Section {
                 DateRangeRow(fromLabel: "Check-in", toLabel: "Check-out", from: $checkIn, to: $checkOut)
             } footer: {
-                Text(nights > 0 ? "\(nights) \(nights == 1 ? "night" : "nights")" : "Check-out has to be after check-in.")
+                nights > 0 ? Text("\(nights) nights") : Text("Check-out has to be after check-in.")
             }
             .listRowBackground(Palette.sf)
 
@@ -599,7 +623,7 @@ private struct TransportForm: View {
 
     var body: some View {
         EditForm(
-            title: "\(from) → \(to)",
+            verbatimTitle: from + " → " + to,
             canSave: !from.isEmpty && !to.isEmpty && dirty,
             dirty: entry == nil ? current != initial : dirty,
             saveLabel: entry == nil ? "Add" : "Save",
@@ -616,7 +640,7 @@ private struct TransportForm: View {
                         Button { withAnimation(Motion.quick) { type = t.name } } label: {
                             VStack(spacing: 4) {
                                 Image(systemName: t.symbol).font(.system(size: 17, weight: .semibold))
-                                Text(t.name).font(.sans(12, weight: on ? .semibold : .medium))
+                                Text(TransportIcon.name(t.name)).font(.sans(12, weight: on ? .semibold : .medium))
                             }
                             .foregroundStyle(on ? Palette.ac2Deep : Palette.tx2)
                             .frame(maxWidth: .infinity)
@@ -662,7 +686,9 @@ private struct TransportForm: View {
                 PriceRow(label: "Price", amount: $amount, cur: $cur, currencies: Price.currencies(state, cur))
             } footer: {
                 let base = Journey.toBase(Price.value(amount), cur, state.rates)
-                Text("For everyone" + (base > 0 && cur != state.meta.baseCurrency ? " · ≈ \(Journey.money(base, state.meta.baseCurrency))" : ""))
+                base > 0 && cur != state.meta.baseCurrency
+                    ? Text("For everyone · ≈ \(Journey.money(base, state.meta.baseCurrency))")
+                    : Text("For everyone")
             }
             .listRowBackground(Palette.sf)
 
@@ -677,7 +703,7 @@ private struct TransportForm: View {
                     OptionalDateRow(label: "Card charged on", iso: $chargeDate, suggested: Days.today())
                 }
             } footer: {
-                Text(booked ? "Blank means the travel date. Fares are usually paid at booking." : "Booked adds the charge date and draws the leg solid.")
+                booked ? Text("Blank means the travel date. Fares are usually paid at booking.") : Text("Booked adds the charge date and draws the leg solid.")
             }
             .listRowBackground(Palette.sf)
 
@@ -740,7 +766,7 @@ enum Price {
 }
 
 struct PriceRow: View {
-    let label: String
+    let label: LocalizedStringKey
     @Binding var amount: String
     @Binding var cur: String
     let currencies: [String]
@@ -767,7 +793,7 @@ struct PriceRow: View {
 
 /// A date that may be blank: "Add" until chosen, then iOS's compact picker and a clear button.
 private struct OptionalDateRow: View {
-    let label: String
+    let label: LocalizedStringKey
     @Binding var iso: String
     var suggested: String = ""
 
@@ -790,7 +816,7 @@ private struct OptionalDateRow: View {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.tx3)
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel("Clear \(label)")
+                .accessibilityLabel(Text("Clear \(Text(label))"))
             }
         }
     }
@@ -801,7 +827,7 @@ private struct OptionalDateRow: View {
 }
 
 private struct OptionalTimeRow: View {
-    let label: String
+    let label: LocalizedStringKey
     @Binding var hhmm: String
 
     var body: some View {
@@ -821,7 +847,7 @@ private struct OptionalTimeRow: View {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.tx3)
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel("Clear \(label)")
+                .accessibilityLabel(Text("Clear \(Text(label))"))
             }
         }
     }
@@ -846,8 +872,8 @@ private struct OptionalTimeRow: View {
 /// One "Dates" row that opens an inline calendar: pick which end you're
 /// setting, tap a day. Leave is picked first when editing, the usual change.
 private struct DateRangeRow: View {
-    let fromLabel: String
-    let toLabel: String
+    let fromLabel: LocalizedStringKey
+    let toLabel: LocalizedStringKey
     @Binding var from: String
     @Binding var to: String
     var startOpen = false
@@ -881,11 +907,11 @@ private struct DateRangeRow: View {
     }
 
     private var summary: String {
-        guard !from.isEmpty else { return "Choose" }
+        guard !from.isEmpty else { return String(localized: "Choose") }
         return "\(Days.short(from)) → \(to.isEmpty ? "…" : Days.short(to))"
     }
 
-    private func end(_ label: String, _ iso: String, isEnd: Bool) -> some View {
+    private func end(_ label: LocalizedStringKey, _ iso: String, isEnd: Bool) -> some View {
         let on = settingEnd == isEnd
         return Button { settingEnd = isEnd } label: {
             VStack(alignment: .leading, spacing: 2) {

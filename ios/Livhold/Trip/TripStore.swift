@@ -108,7 +108,7 @@ final class TripStore {
         } catch is CancellationError {
             return
         } catch {
-            self.error = AuthStore.message(for: error) ?? "Couldn’t load your journey."
+            self.error = AuthStore.message(for: error) ?? String(localized: "Couldn’t load your journey.")
             if trip == nil { phase = .failed }
         }
     }
@@ -137,9 +137,9 @@ final class TripStore {
         var errorDescription: String? {
             switch self {
             case .conflict:
-                "Someone else changed this trip at the same time, so your change wasn’t saved and the latest version is loaded. Please redo your edit."
+                String(localized: "Someone else changed this trip at the same time, so your change wasn’t saved and the latest version is loaded. Please redo your edit.")
             case .denied:
-                "Your edit access to this trip was removed, so this change wasn’t saved."
+                String(localized: "Your edit access to this trip was removed, so this change wasn’t saved.")
             case .failed(let why):
                 why
             }
@@ -187,7 +187,7 @@ final class TripStore {
         } catch is CancellationError {
             throw CancellationError()
         } catch {
-            throw SaveError.failed(AuthStore.message(for: error) ?? "Couldn’t save your change. Please try again.")
+            throw SaveError.failed(AuthStore.message(for: error) ?? String(localized: "Couldn’t save your change. Please try again."))
         }
     }
 
@@ -228,7 +228,7 @@ final class TripStore {
         } catch {
             tracking = before
             MoneyPrefsCache.save(tracking: before, userId: userId)
-            throw SaveError.failed(AuthStore.message(for: error) ?? "Couldn’t save that. Please try again.")
+            throw SaveError.failed(AuthStore.message(for: error) ?? String(localized: "Couldn’t save that. Please try again."))
         }
     }
 
@@ -309,7 +309,7 @@ final class TripStore {
             return SaveError.denied
         }
         if error is CancellationError { return error }
-        return SaveError.failed(AuthStore.message(for: error) ?? "Couldn’t save that entry. Please try again.")
+        return SaveError.failed(AuthStore.message(for: error) ?? String(localized: "Couldn’t save that entry. Please try again."))
     }
 
     /// Catalogue costs of the trip's cities (catalogue/queries.ts fetchCitiesByName).

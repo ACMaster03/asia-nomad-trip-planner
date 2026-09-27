@@ -14,6 +14,17 @@ struct LedgerScreen: View {
         case all = "All", everyday = "Everyday", beyond = "Beyond the everyday", bookings = "Bookings",
              subscriptions = "Subscriptions", income = "Income"
         var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .all: String(localized: "All")
+            case .everyday: String(localized: "Everyday")
+            case .beyond: String(localized: "Beyond the everyday")
+            case .bookings: String(localized: "Bookings")
+            case .subscriptions: String(localized: "Subscriptions")
+            case .income: String(localized: "Income")
+            }
+        }
     }
 
     @Environment(TripStore.self) private var store
@@ -30,7 +41,7 @@ struct LedgerScreen: View {
             if let trip = store.trip {
                 let model = MoneyModel(trip: trip, ledger: trip.ledger, cities: store.cityCosts, today: Days.today())
                 list(model)
-                    .navigationTitle(category.map(Categories.label) ?? "All entries")
+                    .navigationTitle(category.map(Categories.label) ?? String(localized: "All entries"))
             } else {
                 Color.clear
             }
@@ -77,7 +88,7 @@ struct LedgerScreen: View {
 
                 if rows.isEmpty {
                     Section {
-                        Text(query.isEmpty ? "Nothing here yet." : "No entries match “\(query)”.")
+                        (query.isEmpty ? Text("Nothing here yet.") : Text("No entries match “\(query)”."))
                             .font(.sans(15)).foregroundStyle(Palette.tx2)
                     }
                     .listRowBackground(Color.clear)
@@ -162,7 +173,7 @@ struct LedgerScreen: View {
                         if let category {
                             RoundedRectangle(cornerRadius: 3).fill(Categories.color(category)).frame(width: 9, height: 9)
                         }
-                        Text(category.map(Categories.label) ?? "Category")
+                        Text(category.map(Categories.label) ?? String(localized: "Category"))
                         Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
                     }
                     .font(.sans(13, weight: category != nil ? .semibold : .regular))
@@ -177,7 +188,7 @@ struct LedgerScreen: View {
                 ForEach(Filter.allCases) { f in
                     let on = filter == f
                     Button { withAnimation(Motion.quick) { filter = f } } label: {
-                        Text(f.rawValue)
+                        Text(f.title)
                             .font(.sans(13, weight: on ? .semibold : .regular))
                             .foregroundStyle(on ? Palette.ac : Palette.tx2)
                             .padding(.horizontal, 12)
@@ -199,8 +210,8 @@ struct LedgerScreen: View {
     private func summary(_ past: [LedgerEntry], _ model: MoneyModel) -> some View {
         let spent = past.filter(\.isExpense).reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, model.rates) }
         let got = past.filter { $0.type == .income }.reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, model.rates) }
-        var parts = ["\(past.count) entr\(past.count == 1 ? "y" : "ies")", "\(MoneyText.full(spent, model.base)) spent"]
-        if got > 0 { parts.append("\(MoneyText.full(got, model.base)) received") }
+        var parts = [String(localized: "\(past.count) entries"), String(localized: "\(MoneyText.full(spent, model.base)) spent")]
+        if got > 0 { parts.append(String(localized: "\(MoneyText.full(got, model.base)) received")) }
         return Text(parts.joined(separator: " · "))
             .font(.sans(13)).foregroundStyle(Palette.tx2)
             .padding(.horizontal, 24)
@@ -212,7 +223,7 @@ struct LedgerScreen: View {
             Button { withAnimation(Motion.settle) { comingOpen.toggle() } } label: {
                 HStack {
                     Image(systemName: "calendar.badge.clock").foregroundStyle(Palette.tx2)
-                    Text("Coming up · \(coming.count) payment\(coming.count == 1 ? "" : "s")").font(.sans(14))
+                    Text("Coming up · \(coming.count) payments").font(.sans(14))
                     Spacer()
                     Text(MoneyText.full(total, model.base)).font(.sans(14, weight: .medium))
                     Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold))
@@ -248,9 +259,9 @@ struct LedgerScreen: View {
     private func dayHeader(_ date: String, _ entries: [LedgerEntry], _ model: MoneyModel) -> some View {
         let spent = entries.filter(\.isExpense).reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, model.rates) }
         var title = MoneyText.weekday(date)
-        if date == model.today { title = "Today · " + title }
-        else if date == Days.add(model.today, -1) { title = "Yesterday · " + title }
-        if date == model.tripStart { title += " · day 1" }
+        if date == model.today { title = String(localized: "Today · \(title)") }
+        else if date == Days.add(model.today, -1) { title = String(localized: "Yesterday · \(title)") }
+        if date == model.tripStart { title = String(localized: "\(title) · day 1") }
         return HStack {
             Text(title)
             Spacer()
@@ -296,7 +307,9 @@ struct LedgerScreen: View {
         Task {
             do {
                 try await store.upsertEntry(copy)
-                editor.toast = "Logged again · \(MoneyText.full(Journey.toBase(e.amount, e.currency, rates), base)) · \(e.note.isEmpty ? Categories.label(e.category) : e.note)"
+                let shown = MoneyText.full(Journey.toBase(e.amount, e.currency, rates), base)
+                let label = e.note.isEmpty ? Categories.label(e.category) : e.note
+                editor.toast = String(localized: "Logged again · \(shown) · \(label)")
             } catch {
                 editor.toast = error.localizedDescription
             }
@@ -307,7 +320,8 @@ struct LedgerScreen: View {
         Task {
             do {
                 try await store.deleteEntry(e)
-                editor.toast = "Deleted · \(e.note.isEmpty ? Categories.label(e.category) : e.note)"
+                let label = e.note.isEmpty ? Categories.label(e.category) : e.note
+                editor.toast = String(localized: "Deleted · \(label)")
             } catch {
                 editor.toast = error.localizedDescription
             }
@@ -357,12 +371,12 @@ struct MoneySettingsScreen: View {
                     NavigationLink {
                         RatesScreen()
                     } label: {
-                        LabeledContent("Exchange rates", value: "\(max(0, (store.trip?.state.rates.count ?? 1) - 1)) currencies")
+                        LabeledContent("Exchange rates", value: String(localized: "\(max(0, (store.trip?.state.rates.count ?? 1) - 1)) currencies"))
                     }
                 } header: {
-                    Text(meta.tripName ?? "This journey")
+                    Text(meta.tripName ?? String(localized: "This journey"))
                 } footer: {
-                    Text(store.canEdit ? "The cap is for this whole journey. Tapping the bar on Money opens this screen." : "Only the journey’s editors can change the cap.")
+                    store.canEdit ? Text("The cap is for this whole journey. Tapping the bar on Money opens this screen.") : Text("Only the journey’s editors can change the cap.")
                 }
             }
             if let error {

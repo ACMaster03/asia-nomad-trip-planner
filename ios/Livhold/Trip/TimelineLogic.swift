@@ -128,13 +128,13 @@ enum Journey {
     static func kicker(_ state: TripState, today: String) -> String {
         let meta = state.meta
         guard let day = tripDay(meta, today: today) else {
-            return meta.startDate.map { "Leaves \(Days.short($0))" } ?? ""
+            return meta.startDate.map { String(localized: "Leaves \(Days.short($0))") } ?? ""
         }
-        if let end = meta.endDate, today > end { return "Home again" }
+        if let end = meta.endDate, today > end { return String(localized: "Home again") }
         if let cur = current(in: state, today: today) {
-            return "Day \(day) · \(cur.city), night \(progress(cur, today: today).night)"
+            return String(localized: "Day \(day) · \(cur.city), night \(progress(cur, today: today).night)")
         }
-        return "Day \(day) · between stops"
+        return String(localized: "Day \(day) · between stops")
     }
 
     // MARK: city names
@@ -178,23 +178,23 @@ enum Journey {
 
     /// The money line on a leg strip (timeline.ts legMoneyState).
     static func legMoney(_ t: TransportLeg, today: String) -> MoneyState {
-        guard isBooked(t.status) else { return MoneyState(label: t.price > 0 ? "idea" : "idea · no price", tone: .muted) }
-        guard let date = t.chargeDate ?? t.date else { return MoneyState(label: "booked", tone: .ok) }
+        guard isBooked(t.status) else { return MoneyState(label: t.price > 0 ? String(localized: "idea") : String(localized: "idea · no price"), tone: .muted) }
+        guard let date = t.chargeDate ?? t.date else { return MoneyState(label: String(localized: "booked"), tone: .ok) }
         return date <= today
-            ? MoneyState(label: "paid \(Days.short(date))", tone: .ok)
-            : MoneyState(label: "will be charged on \(Days.short(date))", tone: .warn)
+            ? MoneyState(label: String(localized: "paid \(Days.short(date))"), tone: .ok)
+            : MoneyState(label: String(localized: "will be charged on \(Days.short(date))"), tone: .warn)
     }
 
     /// The money line under a stay row (timeline.ts stayMoneyState).
     static func stayMoney(_ st: Stay, today: String) -> MoneyState {
-        guard isBooked(st.status) else { return MoneyState(label: st.ppn > 0 ? "idea" : "idea · no price", tone: .muted) }
+        guard isBooked(st.status) else { return MoneyState(label: st.ppn > 0 ? String(localized: "idea") : String(localized: "idea · no price"), tone: .muted) }
         if let charge = st.chargeDate {
             return charge <= today
-                ? MoneyState(label: "paid \(Days.short(charge))", tone: .ok)
-                : MoneyState(label: "will be charged on \(Days.short(charge))", tone: .warn)
+                ? MoneyState(label: String(localized: "paid \(Days.short(charge))"), tone: .ok)
+                : MoneyState(label: String(localized: "will be charged on \(Days.short(charge))"), tone: .warn)
         }
-        if st.chargeAtCheckIn == true { return MoneyState(label: "will be charged at check-in", tone: .warn) }
-        return MoneyState(label: "deadlines not set", tone: .warn)
+        if st.chargeAtCheckIn == true { return MoneyState(label: String(localized: "will be charged at check-in"), tone: .warn) }
+        return MoneyState(label: String(localized: "deadlines not set"), tone: .warn)
     }
 
     // MARK: stays
@@ -203,7 +203,7 @@ enum Journey {
     /// Huai Khwang" under Bangkok reads "Home in Khet Huai Khwang").
     static func stayName(_ st: Stay, in seg: Segment) -> String {
         let name = st.name.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return "Stay" }
+        guard !name.isEmpty else { return String(localized: "Stay") }
         let city = seg.city.trimmingCharacters(in: .whitespaces)
         guard !city.isEmpty, name.lowercased().hasPrefix(city.lowercased()) else { return name }
         let rest = name.dropFirst(city.count)

@@ -37,9 +37,9 @@ private struct TabPage<Header: View, Content: View>: View {
 }
 
 private struct StandInCard: View {
-    let kicker: String
-    let title: String
-    let detail: String
+    let kicker: LocalizedStringKey
+    let title: LocalizedStringKey
+    let detail: LocalizedStringKey
 
     var body: some View {
         Card {
@@ -69,7 +69,7 @@ struct HomeScreen: View {
                     Avatar(name: auth.firstName ?? auth.email ?? "L")
                 }
                 .accessibilityLabel("Account")
-                Text("Hi, \(auth.firstName ?? "traveller")")
+                (auth.firstName.map { Text("Hi, \($0)") } ?? Text("Hi, traveller"))
                     .font(.serif(24))
                     .foregroundStyle(Palette.tx)
                 Spacer()
@@ -123,7 +123,7 @@ struct CheckInSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle("Where are you now?", size: 24)
-            ForEach([("Da Lat", "today"), ("Nha Trang", "next stop")], id: \.0) { place in
+            ForEach([("Da Lat", "today"), ("Nha Trang", "next stop")] as [(String, LocalizedStringKey)], id: \.0) { place in
                 Button { choice = place.0 } label: {
                     HStack {
                         Text(place.0).font(.sans(16, weight: .medium))

@@ -24,8 +24,8 @@ struct SectionTitle: View {
         self.size = size
     }
 
-    @_disfavoredOverload
-    init(_ text: String, size: CGFloat = 19) {
+    /// Words already made in code, shown as they are.
+    init(verbatim text: String, size: CGFloat = 19) {
         self.text = Text(verbatim: text)
         self.size = size
     }

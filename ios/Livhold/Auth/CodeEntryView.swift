@@ -47,7 +47,7 @@ struct CodeEntryView: View {
                 TravelLoader().frame(maxWidth: .infinity).padding(.vertical, 4)
             }
             if let busySince { WaitingNote(since: busySince) }
-            if let error { Notice(text: error, kind: .warn) }
+            if let error { Notice(verbatim: error, kind: .warn) }
 
             Spacer()
 
@@ -148,7 +148,7 @@ struct CodeEntryView: View {
                 try await Connectivity.shared.waitUntilOnline()
                 try await store.sendCode(to: email)
                 resendAt = .now.addingTimeInterval(Self.resendWait)
-                sent = "New code sent"
+                sent = String(localized: "New code sent")
             } catch {
                 self.error = AuthStore.message(for: error)
             }
