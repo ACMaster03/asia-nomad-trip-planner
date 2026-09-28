@@ -5,6 +5,32 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-29
+
+### DECIDED — Patrik, 28–29 Sep: Money numbers and layout (iOS builds 13–14 and after)
+
+- **"Lands near" covers the whole journey** (option 1 of two). The days between the last
+  planned stop and the journey's end count at the daily pace plus the average night's stay of
+  the planned stops. How it adds up shows them as their own row ("138 days not planned yet ·
+  ≈ …") with a note saying how. Before this they counted nothing while subscriptions ran to the
+  end, so the cap ring compared ~8 months of cap with ~3 months of costs. The option not taken:
+  keep it to the plan and say "to 13 Dec". "A day less gets you there" divides over all days ahead.
+- **Journey card's second line: "+ X not paid yet"** = entries dated after today + booked
+  bookings with no entry yet, the same money Bookings calls "to pay". It was "scheduled, not
+  spent yet" (entries dated ahead only), which left out bookings that never reached the ledger.
+- **Open, found on the way:** only the web writes bookings into the ledger (usePlanSync); the
+  iPhone app doesn't yet. Patrik's real journey shows the same gap on the web, so something
+  else keeps some bookings out too: read-only check pending (bookings vs ledger query).
+- **The web still has the old numbers** for both points; it follows in its own pull request.
+- **Layout:** Daily spend and Where it goes share one range; the legend always lists all seven
+  groups (missing ones dimmed); the box under the chart is one size (days at a glance, or the
+  picked day's three biggest spends + "N more"); Where it goes lists its top four, the rest
+  folded. Entry rows drop the category line (the icon says it); the second line is only the
+  day, the original charge and why it's there. Subscriptions sort by next charge; within a week
+  "in 4 days" replaces the date; "reminds 3 days before" is gone from the row; the bell answers
+  on tap. Patrik asked about the lead days on the bell; not built (a number on a bell reads as
+  unread notifications). "Add the next stop" left Plan; Stays/Transport cross-fade into Trip.
+
 ## 2026-09-27
 
 ### DECIDED + BUILT — Patrik, 27 Sep evening: iOS rounds after build 9 (TestFlight 10–12)

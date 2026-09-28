@@ -393,8 +393,8 @@ private struct TopCard: View {
 
     /// Over the cap: what a day would need to cost less, amber, never red (Patrik, 27 Sep).
     private func lessPerDay(_ p: MoneyModel.Projection) -> String? {
-        guard let cap = model.cap, p.projected > cap, p.remainingNights > 0 else { return nil }
-        let less = (p.projected - cap) / Double(p.remainingNights)
+        guard let cap = model.cap, p.projected > cap, p.daysAhead > 0 else { return nil }
+        let less = (p.projected - cap) / Double(p.daysAhead)
         return String(localized: "About \(MoneyText.full((less / 50).rounded(.up) * 50, model.base)) a day less gets you there.")
     }
 
@@ -1214,9 +1214,10 @@ struct PlanCard: View {
                     if p.unpaidStays > 0 { sum("Stays not paid yet", p.unpaidStays) }
                     if p.transportToPay > 0 { sum("Transport to pay", p.transportToPay) }
                     if p.subsAhead > 0 { sum("Subscriptions ahead", p.subsAhead) }
+                    if p.unplanned > 0 { sum("\(p.unplannedDays) days not planned yet", p.unplanned, approx: true) }
                     sum("The journey", p.projected, bold: true, approx: true)
-                    if let gap = planGap {
-                        Text("\(gap) Days after the last planned stop aren’t counted yet.")
+                    if let gap = planGap, p.unplanned > 0 {
+                        Text("\(gap) Those days count at your daily pace and the average night’s stay so far.")
                             .font(.sans(12.5)).foregroundStyle(Palette.tx2)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)

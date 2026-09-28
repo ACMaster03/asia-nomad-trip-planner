@@ -37,11 +37,22 @@
       }
     },
     "%@ Days after the last planned stop aren’t counted yet.": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ Az utolsó tervezett megálló utáni napok még nem számítanak bele."
+          }
+        }
+      }
+    },
+    "%@ Those days count at your daily pace and the average night’s stay so far.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Ezeket a napokat a napi tempód és az eddigi átlagos szállásár alapján számoljuk."
           }
         }
       }
@@ -349,6 +360,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld nappal előtte"
+          }
+        }
+      }
+    },
+    "%lld days not planned yet": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day not planned yet"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days not planned yet"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld nap még nincs megtervezve"
           }
         }
       }

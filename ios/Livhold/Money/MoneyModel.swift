@@ -71,7 +71,13 @@ struct MoneyModel {
         let transportToPay: Double
         let subsAhead: Double
         let remainingNights: Int
-        var projected: Double { spent + scheduled + ahead + unpaidStays + transportToPay + subsAhead }
+        /// Days between the last planned stop and the journey's end, at the daily
+        /// pace plus the average night's stay so far (Patrik, 29 Sep: the cap is for
+        /// the whole journey, so what it's compared with has to be too).
+        let unplannedDays: Int
+        let unplanned: Double
+        var daysAhead: Int { remainingNights + unplannedDays }
+        var projected: Double { spent + scheduled + ahead + unpaidStays + transportToPay + subsAhead + unplanned }
     }
 
     struct BeyondRow: Identifiable {
@@ -160,6 +166,21 @@ struct MoneyModel {
             }
         }
 
+        // The days no stop covers yet: everyday at the pace (or the plan's own rate
+        // before there is one), and a night at what the planned stays average.
+        var unplannedDays = 0
+        if let end = tripEnd {
+            let lastDepart = included.map(\.depart).filter { !$0.isEmpty }.max() ?? today
+            let from = max(lastDepart, today)
+            if end > from { unplannedDays = Days.between(from, end) }
+        }
+        let plannedNights = plan.reduce(0) { $0 + $1.nights }
+        let dayRate = pace.perDay
+            ?? (plannedNights > 0 ? plan.reduce(0.0) { $0 + $1.rate * Double($1.nights) } / Double(plannedNights) : 0)
+        let stayed = plan.filter { $0.stay > 0 && $0.nights > 0 }
+        let stayNights = stayed.reduce(0) { $0 + $1.nights }
+        let nightRate = stayNights > 0 ? stayed.reduce(0.0) { $0 + $1.stay } / Double(stayNights) : 0
+
         let expenses = ledger.filter { $0.isExpense && !$0.date.isEmpty }
         let settled = expenses.filter { $0.date <= today }
         let spent = settled.reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, rates) }
@@ -171,7 +192,9 @@ struct MoneyModel {
             unpaidStays: plan.filter { $0.stayLabel != .booked }.reduce(0) { $0 + $1.stay },
             transportToPay: bookings.transport.filter { $0.status == .unpaid }.reduce(0) { $0 + $1.amount },
             subsAhead: subsAhead,
-            remainingNights: plan.reduce(0) { $0 + $1.remaining }
+            remainingNights: plan.reduce(0) { $0 + $1.remaining },
+            unplannedDays: unplannedDays,
+            unplanned: Double(unplannedDays) * (dayRate + nightRate)
         )
 
         // beyondEveryday
