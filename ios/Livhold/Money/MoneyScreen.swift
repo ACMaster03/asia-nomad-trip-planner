@@ -529,7 +529,9 @@ struct EntryRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(entry.note.isEmpty ? Categories.label(entry.category) : entry.note)
                     .font(.sans(15, weight: .medium)).foregroundStyle(Palette.tx).lineLimit(1)
-                Text(detail).font(.sans(12.5)).foregroundStyle(entry.orphaned ? Palette.warn : Palette.tx2).lineLimit(1)
+                if let detail {
+                    Text(detail).font(.sans(12.5)).foregroundStyle(entry.orphaned ? Palette.warn : Palette.tx2).lineLimit(1)
+                }
             }
             Spacer(minLength: 8)
             Text((entry.type == .income ? "+" : "") + MoneyText.full(base, model.base))
@@ -537,8 +539,10 @@ struct EntryRow: View {
                 .foregroundStyle(entry.type == .income ? Palette.ac : Palette.tx)
         }
         .padding(.vertical, 9)
+        .frame(minHeight: 56)
         .contentShape(.rect)
         .accessibilityElement(children: .combine)
+        .accessibilityValue(Categories.label(entry.category))
     }
 
     /// Out of the daily average by its own switch.
@@ -554,8 +558,10 @@ struct EntryRow: View {
         }
     }
 
-    private var detail: String {
-        var parts = [Categories.label(entry.category)]
+    /// The day, the original charge, and why it's here when that isn't obvious.
+    /// No category: the tile shows it (Patrik, 28 Sep: fewer facts per row).
+    private var detail: String? {
+        var parts: [String] = []
         if dateStyle == .relative { parts.append(MoneyText.day(entry.date, today: model.today)) }
         if entry.currency != model.base, !entry.currency.isEmpty { parts.append(MoneyText.original(entry)) }
         if entry.orphaned { parts.append(String(localized: "booking removed")) }
@@ -563,7 +569,7 @@ struct EntryRow: View {
         else if entry.isImported { parts.append(String(localized: "from booking")) }
         else if hollow { parts.append(String(localized: "not in daily average")) }
         else if entry.source == nil, entry.isExpense, !Categories.isEveryday(entry.category), isEverydayRow(entry) { parts.append(String(localized: "in daily average")) }
-        return parts.joined(separator: " · ")
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }
 
@@ -735,9 +741,24 @@ private struct DailySpendCard: View {
             .sensoryFeedback(.selection, trigger: selected)
             .onChange(of: window.from) { selected = nil }
 
-            if let selected { callout(selected) }
-
             legend(days)
+
+            // Always there and always one size, so nothing below it moves: the
+            // days at a glance, or the day picked on the chart.
+            ZStack(alignment: .topLeading) {
+                panelTemplate.hidden()
+                Group {
+                    if let selected {
+                        callout(selected).id(selected)
+                    } else {
+                        overview(days: avgDays, avg: avg, sinceStart: avgDays.count < days.count)
+                    }
+                }
+                .transition(.opacity)
+            }
+            .padding(10)
+            .background(Palette.canvas, in: .rect(cornerRadius: 12))
+            .animation(Motion.quick, value: selected)
         }
         .padding(16)
         .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
@@ -804,19 +825,70 @@ private struct DailySpendCard: View {
                 .padding(.top, 2)
             }
         }
-        .padding(10)
-        .background(Palette.canvas, in: .rect(cornerRadius: 12))
-        .transition(.opacity)
+    }
+
+    /// The tallest the panel gets: a day with five things and the link.
+    private var panelTemplate: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: "Tue 23 Sep").font(.sans(14, weight: .semibold))
+            ForEach(0..<5, id: \.self) { _ in Text(verbatim: "Row").font(.sans(14)) }
+            Text(verbatim: "Open in All entries ›").font(.sans(13.5, weight: .medium)).padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Before a day is picked: what these days add up to, the biggest one a tap away.
+    private func overview(days: [MoneyModel.Day], avg: Double, sinceStart: Bool) -> some View {
+        let total = days.reduce(0) { $0 + $1.total }
+        let biggest = days.max { $0.total < $1.total }
+        let quiet = days.filter { $0.total == 0 }.count
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                sinceStart ? Text("\(days.count) days since you set off") : Text("\(days.count) days")
+                Spacer()
+                Text(MoneyText.full(total, model.base))
+            }
+            .font(.sans(14, weight: .semibold))
+            .foregroundStyle(Palette.tx)
+            line(Text("Average a day"), MoneyText.full(avg, model.base))
+            if let biggest, biggest.total > 0 {
+                Button { withAnimation(Motion.quick) { selected = biggest.date } } label: {
+                    line(Text("Biggest day · \(MoneyText.weekday(biggest.date))"), MoneyText.full(biggest.total, model.base), chevron: true)
+                }
+                .buttonStyle(.plain)
+            }
+            line(Text("Days with nothing logged"), "\(quiet)")
+            Text("Tap a day on the chart, or hold and slide.")
+                .font(.sans(13)).foregroundStyle(Palette.tx3)
+                .padding(.top, 2)
+        }
+    }
+
+    private func line(_ title: Text, _ value: String, chevron: Bool = false) -> some View {
+        HStack(spacing: 8) {
+            title.lineLimit(1)
+            Spacer(minLength: 8)
+            Text(value)
+            if chevron {
+                Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.tx3)
+            }
+        }
+        .font(.sans(14))
+        .foregroundStyle(Palette.tx2)
+        .contentShape(.rect)
     }
 
     private func legend(_ days: [MoneyModel.Day]) -> some View {
-        let shown = Family.allCases.filter { f in days.contains { ($0.byFamily[f] ?? 0) > 0 } }
+        // Every family, the ones missing from these days dimmed: the legend keeps
+        // its lines whatever the range.
+        let present = Set(Family.allCases.filter { f in days.contains { ($0.byFamily[f] ?? 0) > 0 } })
         return FlowLayout(spacing: 12, lineSpacing: 4) {
-            ForEach(shown) { f in
+            ForEach(Family.allCases) { f in
                 HStack(spacing: 5) {
                     RoundedRectangle(cornerRadius: 2.5).fill(f.color).frame(width: 9, height: 9)
                     Text(f.label).font(.sans(11.5)).foregroundStyle(Palette.tx2)
                 }
+                .opacity(present.contains(f) ? 1 : 0.35)
             }
         }
     }
@@ -902,9 +974,9 @@ private struct WhereItGoesCard: View {
             }
             .padding(.vertical, 4)
             VStack(spacing: 0) {
-                // "1 more…" hides as much as it saves: fold only two or more.
-                let folds = cats.count > 9 && !showAll
-                let shown = folds ? Array(cats.prefix(8)) : cats
+                // The top four; "1 more…" hides as much as it saves, so fold two or more.
+                let folds = cats.count > 5 && !showAll
+                let shown = folds ? Array(cats.prefix(4)) : cats
                 ForEach(shown) { c in
                     Divider().overlay(Palette.ln)
                     NavigationLink(value: Route.moneyEntries("cat:\(c.category)")) {
@@ -921,11 +993,11 @@ private struct WhereItGoesCard: View {
                     .buttonStyle(.plain)
                 }
                 if folds {
-                    let rest = cats.dropFirst(8).reduce(0) { $0 + $1.total }
+                    let rest = cats.dropFirst(4).reduce(0) { $0 + $1.total }
                     Divider().overlay(Palette.ln)
                     Button { withAnimation(Motion.settle) { showAll = true } } label: {
                         HStack {
-                            Text("\(cats.count - 8) more…").font(.sans(14.5)).foregroundStyle(Palette.tx2)
+                            Text("\(cats.count - 4) more…").font(.sans(14.5)).foregroundStyle(Palette.tx2)
                             Spacer()
                             Text(MoneyText.full(rest, model.base)).font(.sans(14.5)).foregroundStyle(Palette.tx2)
                         }
@@ -946,6 +1018,7 @@ private struct WhereItGoesCard: View {
         }
         .padding(16)
         .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
+        .onChange(of: range) { showAll = false }
     }
 
     /// "Food & drinks take 41%. Getting around 18%, health & care 16%." (WhereItGoes.tsx)

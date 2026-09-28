@@ -297,6 +297,34 @@
         }
       }
     },
+    "%lld days": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld nap"
+          }
+        }
+      }
+    },
     "%lld days before": {
       "localizations": {
         "en": {
@@ -321,6 +349,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld nappal előtte"
+          }
+        }
+      }
+    },
+    "%lld days since you set off": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day since you set off"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days since you set off"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az indulás óta eltelt %lld nap"
           }
         }
       }
@@ -1299,6 +1355,16 @@
         }
       }
     },
+    "Average a day": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Átlagosan naponta"
+          }
+        }
+      }
+    },
     "Base currency": {
       "localizations": {
         "hu": {
@@ -1335,6 +1401,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "A mindennapin túl"
+          }
+        }
+      }
+    },
+    "Biggest day · %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legdrágább nap · %@"
           }
         }
       }
@@ -2026,6 +2102,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Az utolsó tervezett megálló utáni napok még nem számítanak bele."
+          }
+        }
+      }
+    },
+    "Days with nothing logged": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Napok bejegyzés nélkül"
           }
         }
       }
@@ -4342,6 +4428,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rendszer"
+          }
+        }
+      }
+    },
+    "Tap a day on the chart, or hold and slide.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppints egy napra a grafikonon, vagy tartsd és húzd."
           }
         }
       }
