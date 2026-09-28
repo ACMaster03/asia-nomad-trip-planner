@@ -102,7 +102,12 @@ export default function DashboardClient({
   const basePhase = mounted && s ? tripPhase(s, todayIso) : 'pre'
   const inPlan = s ? s.segments.filter((x) => x.include !== false) : []
   const sorted = inPlan.slice().sort((a, c) => a.arrive.localeCompare(c.arrive))
-  const current = sorted.find((seg) => seg.arrive <= todayIso && todayIso <= seg.depart)
+  // The day you move belongs to the stop you move to, as on Trip (Timeline.tsx,
+  // and the iOS app's TimelineLogic): arrive ≤ today < depart. Home gave it to
+  // the stop you leave, so on a travel day it said "Bangkok, night 29" and "No
+  // bed tonight" (the bed is in Hanoi), named the stop after Hanoi as Next, and
+  // never showed Hanoi's arrival day (found 28 Sep, two days before that move).
+  const current = sorted.find((seg) => seg.arrive <= todayIso && todayIso < seg.depart)
   const nextStop = sorted.find((seg) => seg.arrive > todayIso)
   const stopNo = current ? sorted.indexOf(current) + 1 : 0
   const isArrive = basePhase === 'live' && current?.arrive === todayIso
@@ -305,6 +310,7 @@ export default function DashboardClient({
   const prog = current ? stopProgress(current, todayIso) : null
   const night = prog?.night ?? null
   const nightsHere = prog?.nights ?? null
+  const nightsLeft = prog?.left ?? 0
   // Tonight's bed, by the Trip timeline's rule (#58): a stop can hold several
   // stays, and one only reads "booked" when it is. It used to be the stop's
   // first counted stay, always "booked", an Idea included.
@@ -399,7 +405,7 @@ export default function DashboardClient({
                 two different horizons a line apart. It is still on the Stops
                 summary, where the whole route is the subject. */}
             <div className="mt-1.5 text-right text-base font-semibold text-ac2">
-              {Math.max(0, nightsHere - night)} nights left
+              {nightsLeft} {nightsLeft === 1 ? 'night' : 'nights'} left
             </div>
           </>
         )}
@@ -481,8 +487,10 @@ export default function DashboardClient({
                 {/* No "under/over the estimate" (#65, Patrik, 28 Sep): it set the
                     projection against the pre-trip city-average estimate, which
                     counts different things. Money's Budget cap row says whether
-                    the journey is heading over. */}
-                {fmt(money.pace.perDay)} a day{money.pace.scope === 'stop' && current ? ` in ${current.city}` : ''}
+                    the journey is heading over. The city is the one the pace
+                    is from: Money keeps the day you move with the stop you
+                    leave, so on a travel day it is not the stop above. */}
+                {fmt(money.pace.perDay)} a day{money.pace.scope === 'stop' && money.current ? ` in ${money.current.city}` : ''}
                 {!projected && <> · a&nbsp;projection after a week</>}
               </>
             ) : projected ? (
