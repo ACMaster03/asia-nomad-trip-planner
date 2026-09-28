@@ -116,12 +116,12 @@ enum Journey {
         return Days.between(start, today) + 1
     }
 
-    struct StopProgress { let night: Int; let nights: Int; let left: Int; let fraction: Double }
+    struct StopProgress { let night: Int; let nights: Int; let fraction: Double }
 
     static func progress(_ s: Segment, today: String) -> StopProgress {
         let n = max(nights(s), 1)
         let night = min(max(Days.between(s.arrive, today) + 1, 1), n)
-        return StopProgress(night: night, nights: n, left: n - night, fraction: min(1, Double(night) / Double(n)))
+        return StopProgress(night: night, nights: n, fraction: min(1, Double(night) / Double(n)))
     }
 
     /// "Day 12 · Da Lat, night 3", "Leaves 31 Aug", "Home again" (Timeline.tsx kicker).

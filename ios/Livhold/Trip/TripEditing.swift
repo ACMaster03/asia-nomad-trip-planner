@@ -37,6 +37,7 @@ final class TripEditor {
 struct EditSheet: View {
     let target: EditTarget
     @Environment(TripStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         if let state = store.trip?.state {
@@ -47,6 +48,10 @@ struct EditSheet: View {
             case .transport(let entry, let from, let to, let date):
                 TransportForm(entry: entry, from: from, to: to, legDate: date, state: state)
             }
+        } else {
+            // The journey went away under the sheet (signed out, or it was the
+            // last one): an empty sheet would just sit there, so close it.
+            Color.clear.onAppear { dismiss() }
         }
     }
 }
@@ -285,9 +290,11 @@ private struct StopForm: View {
             .listRowBackground(Palette.sf)
             Section("Comfort") {
                 Picker("Comfort", selection: $tier) {
-                    Text("Budget").tag(0)
-                    Text("Mid").tag(1)
-                    Text("Comfort").tag(2)
+                    // The tiers have keys of their own: "Budget" alone is Money's spending
+                    // cap ("Keret"), and "Comfort" is also this section's title.
+                    Text(String(localized: "tier.budget", defaultValue: "Budget")).tag(0)
+                    Text(String(localized: "tier.mid", defaultValue: "Mid")).tag(1)
+                    Text(String(localized: "tier.comfort", defaultValue: "Comfort")).tag(2)
                 }
                 .pickerStyle(.segmented)
                 .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
@@ -947,12 +954,20 @@ private struct RangeCalendar: View {
         _month = State(initialValue: String(anchor.prefix(8)) + "01")
     }
 
-    private var cells: [String?] {
-        guard let first = Days.date(month) else { return [] }
+    /// In the app's language, not the phone's: Hungarian on an English phone
+    /// shows Hungarian weekday letters.
+    private static let calendar: Calendar = {
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = Days.utc
+        cal.locale = L10n.locale
+        return cal
+    }()
+
+    private var cells: [String?] {
+        guard let first = Days.date(month) else { return [] }
+        let cal = Self.calendar
         let weekday = cal.component(.weekday, from: first)
-        let lead = (weekday - Calendar.current.firstWeekday + 7) % 7
+        let lead = (weekday - cal.firstWeekday + 7) % 7
         let count = cal.range(of: .day, in: .month, for: first)?.count ?? 30
         return Array(repeating: nil, count: lead) + (0..<count).map { Days.add(month, $0) }
     }
@@ -964,8 +979,8 @@ private struct RangeCalendar: View {
     }
 
     private var weekdays: [String] {
-        let s = Calendar.current.veryShortStandaloneWeekdaySymbols
-        let k = Calendar.current.firstWeekday - 1
+        let s = Self.calendar.veryShortStandaloneWeekdaySymbols
+        let k = Self.calendar.firstWeekday - 1
         return Array(s[k...] + s[..<k])
     }
 

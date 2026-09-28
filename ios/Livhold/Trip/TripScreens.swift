@@ -20,7 +20,12 @@ struct TripScreen: View {
                 .padding(.top, 8)
                 .padding(.bottom, 24)
             }
-            .refreshable { await store.refresh() }
+            .refreshable {
+                // Offline the fetch would wait for a connection and the spinner would
+                // hang; the saved-copy line already says there's no connection.
+                guard Connectivity.shared.isOnline else { return }
+                await store.refresh()
+            }
             .background(Palette.canvas.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .onChange(of: router.scrollToTop[.trip]) {
@@ -35,13 +40,15 @@ struct TripScreen: View {
             VStack(spacing: 14) {
                 TravelLoader()
                 Text("Getting your journey").font(.sans(15)).foregroundStyle(Palette.tx2)
+                // Nothing saved and no signal: say why it's waiting, as sign-in does.
+                if let since = store.refreshStarted { WaitingNote(since: since) }
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 180)
         case .empty:
             VStack(alignment: .leading, spacing: 12) {
                 Text("No journey yet").font(.serif(28)).foregroundStyle(Palette.tx)
-                Text("Start one on livhold.com — it shows up here as soon as it has a stop.")
+                Text("Once you start a journey on livhold.com, it shows up here.")
                     .font(.sans(16)).foregroundStyle(Palette.tx2)
             }
             .padding(.top, 40)
@@ -63,7 +70,6 @@ struct TripScreen: View {
 private struct TripTimeline: View {
     let trip: TripRow
 
-    @Environment(\.tabZoom) private var zoom
     @Environment(TripStore.self) private var store
 
     private var state: TripState { trip.state }
@@ -74,12 +80,8 @@ private struct TripTimeline: View {
         let onward = Journey.onward(state, tl)
         VStack(alignment: .leading, spacing: 0) {
             header
-            if let error = store.error {
-                // A refresh failed but the saved copy is still here: say so, quietly.
-                Text("Showing the copy saved on this phone. \(error)")
-                    .font(.sans(13)).foregroundStyle(Palette.tx3)
-                    .padding(.bottom, 8)
-            }
+            if !store.canEdit { ViewerNotice().padding(.bottom, 12) }
+            savedCopyLine
             if let notice = store.saveNotice {
                 Button { store.saveNotice = nil } label: {
                     Notice(verbatim: notice, kind: .warn)
@@ -117,7 +119,7 @@ private struct TripTimeline: View {
                         .font(.sans(13, weight: .medium))
                         .textCase(.uppercase)
                         .tracking(1.2)
-                        .foregroundStyle(Palette.tx3)
+                        .foregroundStyle(Palette.ac2)
                 }
                 Text(trip.name ?? state.meta.tripName ?? String(localized: "Your journey"))
                     .font(.serif(28))
@@ -133,6 +135,30 @@ private struct TripTimeline: View {
         .padding(.bottom, 12)
     }
 
+    /// No signal, or a refresh failed, while the saved copy is still here: say so,
+    /// quietly, and how old it is.
+    @ViewBuilder private var savedCopyLine: some View {
+        let why = !Connectivity.shared.isOnline ? String(localized: "No connection.") : store.error
+        if let why {
+            Group {
+                if let at = store.fetchedAt, at > .distantPast {
+                    Text("\(why) Showing the copy saved on this phone, updated \(Self.ago(at)).")
+                } else {
+                    Text("\(why) Showing the copy saved on this phone.")
+                }
+            }
+            .font(.sans(13)).foregroundStyle(Palette.tx3)
+            .padding(.bottom, 8)
+        }
+    }
+
+    private static func ago(_ date: Date) -> String {
+        let f = RelativeDateTimeFormatter()
+        f.locale = L10n.locale
+        f.unitsStyle = .full
+        return f.localizedString(for: min(date, .now), relativeTo: .now)
+    }
+
     @ViewBuilder private func footer(_ tl: Journey.Timeline) -> some View {
         if !tl.stops.isEmpty {
             let placed = tl.stops.reduce(0) { $0 + Journey.nights($1) }
@@ -145,8 +171,9 @@ private struct TripTimeline: View {
                 .padding(16)
                 .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
                 .padding(.top, 8)
-        } else {
-            Text("No stops yet.")
+        } else if tl.maybes.isEmpty {
+            // The web's wording; only when there isn't a maybe either.
+            (store.canEdit ? Text("No stops yet. Add your first one.") : Text("No stops yet."))
                 .font(.sans(16)).foregroundStyle(Palette.tx2)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(18)
@@ -158,9 +185,7 @@ private struct TripTimeline: View {
     @ViewBuilder private func orphans(_ tl: Journey.Timeline) -> some View {
         if !tl.orphans.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Transport not on a leg")
-                    .font(.sans(13, weight: .medium)).textCase(.uppercase).tracking(1.2)
-                    .foregroundStyle(Palette.tx3)
+                CardLabel("Transport not on a leg", mauve: true)
                 Text("These go to or from a city that is not a stop yet.")
                     .font(.sans(13)).foregroundStyle(Palette.tx2)
                 ForEach(tl.orphans) { t in
@@ -227,6 +252,26 @@ private struct Rail: View {
     }
 }
 
+/// The web's ViewerNotice, word for word: read-only reads as a property of the
+/// trip, not as something broken on this screen.
+private struct ViewerNotice: View {
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "eye").font(.system(size: 14, weight: .semibold)).foregroundStyle(Palette.tx3)
+            (Text("Read-only.").fontWeight(.medium).foregroundColor(Palette.tx)
+                + Text(verbatim: " ")
+                + Text("You were invited to this trip as a viewer, so you can see everything, but only the owner and co-editors can change it."))
+                .font(.sans(15)).foregroundStyle(Palette.tx2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Palette.sf, in: .rect(cornerRadius: Radius.r - 6))
+        .overlay(RoundedRectangle(cornerRadius: Radius.r - 6).strokeBorder(Palette.ln2, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+    }
+}
+
 /// "+ Add stop", where the web puts it: after the last stop, before the way on.
 private struct AddStopRow: View {
     @Environment(TripEditor.self) private var editor
@@ -257,6 +302,7 @@ private struct HomeRow: View {
     let home: String
     let endDate: String?
     let onward: Bool
+    @Environment(TripStore.self) private var store
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -272,7 +318,13 @@ private struct HomeRow: View {
 
     private var label: String {
         if start {
-            return home.isEmpty ? String(localized: "Home · set where you live in Trip settings") : String(localized: "Home · \(home)")
+            // A viewer can't open Trip settings to set it: just "Home". Its own key,
+            // as "Home" alone is the Home tab ("Kezdőlap"), not where you live.
+            if home.isEmpty {
+                return store.canEdit ? String(localized: "Home · set where you live in Trip settings")
+                    : String(localized: "timeline.home", defaultValue: "Home")
+            }
+            return String(localized: "Home · \(home)")
         }
         let end = endDate.map { Days.short($0) } ?? String(localized: "no date yet")
         return onward ? String(localized: "Journey ends · \(end)") : String(localized: "Home · \(end)")
@@ -327,19 +379,24 @@ private struct EmptyLegStrip: View {
 
     var body: some View {
         HStack {
-            (leg.wayHome ? (onward ? Text("Onward") : Text("Going home")) : Text("No transport yet"))
-                .font(.sans(16, weight: .semibold))
-                .foregroundStyle(leg.wayHome ? Palette.tx2 : Palette.ac2)
-                .lineLimit(1)
+            // The route under the words, not beside them: side by side both were
+            // cut in Hungarian and with long city names.
+            VStack(alignment: .leading, spacing: 2) {
+                (leg.wayHome ? (onward ? Text("Onward") : Text("Going home")) : Text("No transport yet"))
+                    .font(.sans(16, weight: .semibold))
+                    .foregroundStyle(leg.wayHome ? Palette.tx2 : Palette.ac2)
+                if !leg.wayHome {
+                    Text(verbatim: "\(leg.from.city) → \(leg.to.city)")
+                        .font(.sans(13)).foregroundStyle(Palette.tx2)
+                }
+            }
             Spacer(minLength: 8)
-            if !leg.wayHome {
-                Text(verbatim: "\(leg.from.city) → \(leg.to.city)")
-                    .font(.sans(13)).foregroundStyle(Palette.tx3).lineLimit(1)
-            } else if store.canEdit {
+            if leg.wayHome, store.canEdit {
                 Text("+ Add").font(.sans(15, weight: .semibold)).foregroundStyle(Palette.ac)
             }
         }
         .padding(.horizontal, 14)
+        .padding(.vertical, 8)
         .frame(minHeight: 44)
         .overlay(
             RoundedRectangle(cornerRadius: Radius.r - 6)
@@ -360,26 +417,29 @@ private struct LegStrip: View {
         let booked = Journey.isBooked(entry.status)
         let money = Journey.legMoney(entry, today: today)
         VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 8) {
+            // Two lines for the title and the detail: in Hungarian one line cut the
+            // time and the money state. The price keeps the first line, whole.
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
                 if let symbol = TransportIcon.symbol(entry.type) {
                     Image(systemName: symbol).font(.system(size: 14, weight: .semibold))
                 }
                 Text(title)
                     .font(.sans(16, weight: .medium))
-                    .lineLimit(1)
+                    .lineLimit(2)
                 Spacer(minLength: 8)
                 if entry.price > 0 {
                     Text(Journey.money(Journey.toBase(entry.price, entry.cur, state.rates), state.meta.baseCurrency))
                         .font(.sans(16, weight: .semibold))
                         .monospacedDigit()
                         .foregroundStyle(Palette.tx)
+                        .fixedSize()
                 }
             }
             .foregroundStyle(Palette.ac2Deep)
             (Text(detail) + Text(money.label).foregroundColor(money.tone.color))
                 .font(.sans(13))
                 .foregroundStyle(Palette.tx2)
-                .lineLimit(1)
+                .lineLimit(2)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -466,7 +526,7 @@ private struct StopRow: View {
             Rail(line: .solid, node: maybe ? .maybe : current ? .current : .stop, nodeTop: 36)
             StopCard(seg: seg, maybe: maybe, current: current, state: state, today: today)
                 .modifier(ZoomSource(id: Route.stop(seg.id), namespace: zoom))
-                .contextMenu { if store.canEdit { menu } }
+                .modifier(EditMenu(enabled: store.canEdit) { menu })
                 .padding(.vertical, 6)
         }
         .settlesOnScroll()
@@ -510,14 +570,42 @@ private struct StopRow: View {
         }
     }
 
-    /// Saves a one-tap edit; if it can't, the timeline says why.
+    /// Saves a one-tap edit; if it can't, the timeline says why. Offline the save
+    /// waits for a connection, so say so meanwhile instead of looking done.
     private func quick(_ change: @escaping (inout JSONValue) -> Void) {
         Task {
-            do { try await store.save(change) }
-            catch is CancellationError {}
+            let waiting = String(localized: "Will save when you’re back online.")
+            if !Connectivity.shared.isOnline { store.saveNotice = waiting }
+            do {
+                try await store.save(change)
+                if store.saveNotice == waiting { store.saveNotice = nil }
+            }
+            catch is CancellationError { if store.saveNotice == waiting { store.saveNotice = nil } }
             catch { store.saveNotice = error.localizedDescription }
         }
     }
+}
+
+/// The long-press menu, only for an editor: a viewer's long-press would lift the
+/// card with nothing under it.
+private struct EditMenu<Menu: View>: ViewModifier {
+    let enabled: Bool
+    @ViewBuilder let menu: () -> Menu
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.contextMenu { menu() }
+        } else {
+            content
+        }
+    }
+}
+
+private extension Segment {
+    /// Neither date set yet.
+    var undated: Bool { arrive.isEmpty && depart.isEmpty }
+    /// "0 nights" says nothing while a date is still missing.
+    func hidesNights(_ nights: Int) -> Bool { nights == 0 && (arrive.isEmpty || depart.isEmpty) }
 }
 
 /// Web `StopCard`, read-only: city, dates, nights, progress when you're there, and
@@ -547,16 +635,19 @@ struct StopCard: View {
                             .foregroundStyle(Palette.tx2)
                             .lineLimit(1)
                     }
-                    Text(verbatim: "\(Days.short(seg.arrive)) → \(Days.short(seg.depart))")
+                    // Undated, it said "— → —" and "0 nights": say it plainly instead.
+                    (seg.undated ? Text("No dates yet") : Text(verbatim: "\(Days.short(seg.arrive)) → \(Days.short(seg.depart))"))
                         .font(.sans(15))
                         .foregroundStyle(Palette.tx2)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 8)
-                VStack(alignment: .trailing, spacing: 0) {
-                    Text("\(nights)").font(.sans(19, weight: .semibold)).foregroundStyle(Palette.tx)
-                    (nights == 1 ? Text("night") : Text("nights"))
-                        .font(.sans(13)).textCase(.uppercase).tracking(1).foregroundStyle(Palette.tx2)
+                if !seg.hidesNights(nights) {
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Text("\(nights)").font(.sans(19, weight: .semibold)).foregroundStyle(Palette.tx)
+                        (nights == 1 ? Text("night") : Text("nights"))
+                            .font(.sans(13)).textCase(.uppercase).tracking(1).foregroundStyle(Palette.tx2)
+                    }
                 }
             }
             if current, nights > 0 {
@@ -651,8 +742,9 @@ struct StayList: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Journey.stayName(stay, in: seg))
                         .font(.sans(16, weight: .medium)).foregroundStyle(Palette.tx).lineLimit(1)
+                    // Two lines: in Hungarian one cut the nights count.
                     Text("\(Days.short(range.from)) – \(Days.short(range.to)) · \(range.nights) nights")
-                        .font(.sans(13)).foregroundStyle(Palette.tx2).lineLimit(1)
+                        .font(.sans(13)).foregroundStyle(Palette.tx2).lineLimit(2)
                     if detailed {
                         let money = Journey.stayMoney(stay, today: today)
                         Text(money.label.prefix(1).uppercased() + money.label.dropFirst())
@@ -805,9 +897,23 @@ private struct StopPage: View {
                         .font(.sans(16, weight: .medium))
                         .foregroundStyle(Palette.tx2)
                 }
-                Text(verbatim: "\(Days.short(seg.arrive)) → \(Days.short(seg.depart)) · " + String(localized: "\(nights) nights"))
-                    .font(.sans(16, weight: .medium))
-                    .foregroundStyle(Palette.tx2)
+                Group {
+                    if seg.undated {
+                        Text("No dates yet")
+                    } else if seg.hidesNights(nights) {
+                        Text(verbatim: "\(Days.short(seg.arrive)) → \(Days.short(seg.depart))")
+                    } else {
+                        Text(verbatim: "\(Days.short(seg.arrive)) → \(Days.short(seg.depart)) · " + String(localized: "\(nights) nights"))
+                    }
+                }
+                .font(.sans(16, weight: .medium))
+                .foregroundStyle(Palette.tx2)
+                if !seg.inPlan {
+                    // A maybe opened from the timeline, where it's only faded.
+                    Text("Maybe · not in the plan")
+                        .font(.sans(15))
+                        .foregroundStyle(Palette.tx2)
+                }
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 12)
@@ -817,9 +923,7 @@ private struct StopPage: View {
 
     private func section<C: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.sans(13, weight: .medium)).textCase(.uppercase).tracking(1.2)
-                .foregroundStyle(Palette.tx3)
+            CardLabel(title, mauve: true)
             content()
         }
     }

@@ -25,8 +25,10 @@ final class TripStore {
     private(set) var trip: TripRow?
     private(set) var refreshing = false
     private(set) var error: String?
-    /// When the shown copy was fetched from the server.
+    /// When the shown copy was fetched from the server: the saved-copy line says how old it is.
     private(set) var fetchedAt: Date?
+    /// When the current fetch began, for the loading screen's `WaitingNote`.
+    private(set) var refreshStarted: Date?
     /// Owner or co-editor. Fails open while unknown, like the web: on the road an
     /// owner losing every edit button to a network blip is the worse failure, and
     /// the database refuses a viewer's write anyway.
@@ -80,7 +82,8 @@ final class TripStore {
     func refresh() async {
         guard let userId, !refreshing, !Self.usesFixture else { return }
         refreshing = true
-        defer { refreshing = false }
+        refreshStarted = .now
+        defer { refreshing = false; refreshStarted = nil }
         do {
             try await Connectivity.shared.waitUntilOnline()
             if let data = try await fetchActiveTrip(userId: userId) {
@@ -110,9 +113,18 @@ final class TripStore {
         } catch is CancellationError {
             return
         } catch {
-            self.error = AuthStore.message(for: error) ?? String(localized: "Couldn’t load your journey.")
+            self.error = Self.loadMessage(error, saved: trip != nil)
             if trip == nil { phase = .failed }
         }
+    }
+
+    /// Why a fetch failed, in Trip's words: AuthStore's wording for a lost
+    /// connection talks about signing in.
+    private static func loadMessage(_ error: Error, saved: Bool) -> String {
+        if let url = error as? URLError, [.notConnectedToInternet, .networkConnectionLost, .dataNotAllowed].contains(url.code) {
+            return saved ? String(localized: "No connection.") : String(localized: "No connection. Try again once you’re back online.")
+        }
+        return AuthStore.message(for: error) ?? String(localized: "Couldn’t load your journey.")
     }
 
     /// Whether this user may edit the trip (lib/trips/role.ts), nil when the

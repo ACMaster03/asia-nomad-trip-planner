@@ -47,6 +47,32 @@
         }
       }
     },
+    "%@ Showing the copy saved on this phone, updated %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ Showing the copy saved on this phone, updated %2$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ A telefonon mentett példányt látod (frissítve: %2$@)."
+          }
+        }
+      }
+    },
+    "%@ Showing the copy saved on this phone.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ A telefonon mentett példányt látod."
+          }
+        }
+      }
+    },
     "%@ The %lld days after it count at your daily pace and the average night’s stay so far.": {
       "localizations": {
         "en": {
@@ -1688,6 +1714,7 @@
       }
     },
     "Budget": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -2020,7 +2047,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kényelmes"
+            "value": "Kényelmi szint"
           }
         }
       }
@@ -3420,7 +3447,18 @@
         }
       }
     },
+    "Maybe · not in the plan": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talán · nincs a tervben"
+          }
+        }
+      }
+    },
     "Mid": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -3616,12 +3654,42 @@
         }
       }
     },
+    "No connection.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs kapcsolat."
+          }
+        }
+      }
+    },
     "No connection. Livhold will sign you in once you’re back online — try again then.": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Nincs kapcsolat. A Livhold belép, amint újra online vagy — akkor próbáld újra."
+          }
+        }
+      }
+    },
+    "No connection. Try again once you’re back online.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs kapcsolat. Próbáld újra, amint újra online vagy."
+          }
+        }
+      }
+    },
+    "No dates yet": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs dátum"
           }
         }
       }
@@ -3692,6 +3760,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Még nincs megálló."
+          }
+        }
+      }
+    },
+    "No stops yet. Add your first one.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs megálló. Add hozzá az elsőt."
           }
         }
       }
@@ -3883,6 +3961,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adott napon"
+          }
+        }
+      }
+    },
+    "Once you start a journey on livhold.com, it shows up here.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha elkezdesz egy utazást a livhold.com-on, itt megjelenik."
           }
         }
       }
@@ -4116,6 +4204,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bevétel a tervbe"
+          }
+        }
+      }
+    },
+    "Read-only.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak olvasható."
           }
         }
       }
@@ -4416,6 +4514,7 @@
       }
     },
     "Showing the copy saved on this phone. %@": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -4627,6 +4726,7 @@
       }
     },
     "Start one on livhold.com — it shows up here as soon as it has a stop.": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -5409,6 +5509,16 @@
         }
       }
     },
+    "Will save when you’re back online.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentjük, amint újra online vagy."
+          }
+        }
+      }
+    },
     "Working on it": {
       "localizations": {
         "hu": {
@@ -5465,6 +5575,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Az utolsó belépési mód nem távolítható el, hogy senki ne zárja ki magát."
+          }
+        }
+      }
+    },
+    "You were invited to this trip as a viewer, so you can see everything, but only the owner and co-editors can change it.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megtekintőként hívtak meg erre az útra, így mindent láthatsz, de csak a tulajdonos és a társszerkesztők módosíthatják."
           }
         }
       }
@@ -6357,6 +6477,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "jegyek, túrák, templomok, koncertek"
+          }
+        }
+      }
+    },
+    "tier.budget": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Budget"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olcsó"
+          }
+        }
+      }
+    },
+    "tier.comfort": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Comfort"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kényelmes"
+          }
+        }
+      }
+    },
+    "tier.mid": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Mid"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Közepes"
+          }
+        }
+      }
+    },
+    "timeline.home": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Home"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otthon"
           }
         }
       }
