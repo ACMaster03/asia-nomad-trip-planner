@@ -26,7 +26,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
 - He decides product questions. Record decisions in `docs/NOTES.md` and on the
   GitHub issue that holds the topic.
 
-## Where the work stands (26 Sep)
+## Where the work stands (28 Sep)
 
 - The Trip timeline (mock 15 §1, §4, §5, §6) is live: pull request #68 was
   merged with Petra on 23 Sep, then #71 and #72 with her findings from the
@@ -105,8 +105,13 @@ Petra is new to software work; Patrik is not. The product conventions are in
   - Home keeps a Reminders row when nothing is due;
   - the Subscriptions card gets no unlock rule;
   - next comes the #65 wording pass on Home only (#106, the check-in as a sheet, turned out
-    done since 20 Sep). Trip was redone in the iOS app, and the web may take features back
-    from it.
+    done since 20 Sep), then vias on the globe, then #107 last. Trip was redone in the iOS
+    app, and the web may take features back from it.
+- Patrik, 28 Sep: the Home wording pass goes out in #118, measured per #65's rule 5. It
+  carries a travel-day fix found while measuring: Home now gives the day you move to the
+  stop you move to, as Trip does, where it used to show "No bed tonight" and skip the arrival
+  day. It needs merging before 30 Sep, the Bangkok → Hanoi move. Localisation (#119) comes
+  after this round; the iOS app already keeps English and Hungarian in a String Catalog.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.

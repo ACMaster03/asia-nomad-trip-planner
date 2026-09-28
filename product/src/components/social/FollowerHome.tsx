@@ -101,8 +101,7 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
         <div className="flex gap-3 rounded-[var(--r)] bg-sf p-4">
           <Link2 className="mt-0.5 size-5 flex-none text-ac2" aria-hidden />
           <p className="text-base leading-[1.5] text-tx2">
-            <span className="font-semibold text-tx">Did someone send you a follow link?</span> Open it again now
-            that you are signed in. One tap follows them, and their journey shows up here.
+            <span className="font-semibold text-tx">Got a follow link?</span> Open it again to follow.
           </p>
         </div>
       )}
@@ -122,7 +121,7 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
             <div className="min-w-0 grow">
               <div className="font-serif text-lg font-semibold">Going somewhere yourself?</div>
               <p className="mt-0.5 text-base leading-[1.5] text-tx2">
-                Set up a trip in three short steps. The people who follow you see it only when you let them.
+                Three short steps. Only people you let in see it.
               </p>
               <button
                 type="button"
@@ -144,8 +143,7 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
           onClick={() => following.refetch()}
           className="rounded-[var(--r)] bg-sf p-4 text-left text-base leading-[1.5] text-tx2"
         >
-          <span className="font-semibold text-tx">Something got in the way.</span> Check the connection and tap
-          here to try again.
+          <span className="font-semibold text-tx">Couldn&apos;t load</span> · tap to try again
         </button>
       )}
 

@@ -5,6 +5,94 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-09-28
+
+### DECIDED — Patrik, 28 Sep: Home's wording as proposed, then localisation
+
+- **The wording pass (#65, Home only):** "all" to the 18 lines proposed. The one product
+  call among them: Home's money card drops "under/over the estimate". It compared the
+  projection (every entry and subscription) with the pre-trip estimate (city averages), two
+  figures that count different things. Money's Budget cap row says whether the journey is
+  heading over.
+- **Localisation next (#119):** "we will move to localised version soon, the iOS is already
+  building with that in mind". Patrik: finish the Home round and publish it first. The iOS
+  app keeps its strings in `ios/Livhold/Localizable.xcstrings` (`feat/ios-foundation`):
+  English keys, Hungarian translations, 578 keys on 28 Sep. The web's format is the first
+  decision of that round.
+
+### BUILT — Home's wording pass (#65, Home only)
+
+Pull request #118. Visible words, measured at 390 px in `/dev/money-preview?screen=home`
+(browser clock set for before and after the trip) and `/dev/social-preview`, before → after:
+- during the trip 74 → 69; with the feed 171 → 166; offline 88 → 75;
+- before departure 83 → 83 (every stop in the fixture has a stay, so the shorter "no stay
+  yet" line does not show);
+- after the trip 74 → 51;
+- no journey, following people 132 → 122; nobody followed yet 82 → 43.
+
+The changed lines alone, toasts and errors included: 237 words → 90.
+
+**iOS:** Home's strings, when the iOS app gets a Home:
+- money card: "{amount} a day", plus " in {city}" when the pace is the stop's own, and
+  " · a projection after a week" until the projection unlocks; no over/under verdict;
+- "Offline · check-ins sync when you're back"; "Nothing here yet"; "Check in";
+- dates as "30 Sep" (`shortDate`);
+- toasts "Arrival recorded" and "Ticked · it's under Done";
+- off-route: "until your next check-in";
+- "Cancelled {name}? This charge goes, and no more are added from {date}.";
+- before departure: "{n} stops have no stay yet · city averages meanwhile";
+- after the trip: no archive note, and "Check-ins" as the kicker;
+- no journey: "Got a follow link? Open it again to follow.", "Three short steps. Only
+  people you let in see it.", "Couldn't load · tap to try again";
+- no access: "Deleted, or your invite was withdrawn.";
+- edit sheet: the date alone, and "Removed photos go for followers too".
+
+**Checked:** `tsc`; `eslint` (the four old findings); 155 node tests; `next build`; a
+screenshot of every state above.
+
+### FIXED — Home on a travel day (found 28 Sep, in #118)
+
+Found while measuring the wording pass, two days before the Bangkok → Hanoi move of 30 Sep.
+
+**The cause.** Home picked today's stop with arrive ≤ today ≤ depart, so a travel day went
+to the stop you leave. On 30 Sep it would have shown:
+- "Bangkok, night 29" and "0 nights left";
+- an amber "No bed tonight", although the bed is in Hanoi;
+- "Next: Da Nang";
+- no Hanoi arrival day.
+
+Trip gives the day to the stop you move to (arrive ≤ today < depart), on the web and in the
+iOS app.
+
+**The fix.** Home uses Trip's rule. On 30 Sep it shows "Hanoi, arrival day", the Hanoi stay
+as booked, "Next: Da Nang" and the "Arrived in Hanoi" button. On a stop's last day with
+nothing starting that day, it says "Between stops". "1 nights left" reads "1 night left".
+
+**The money card** names the stop its pace comes from. Money keeps the travel day with the
+stop you leave, so on 30 Sep it reads "… a day in Bangkok" under "Hanoi, arrival day".
+
+**Not changed:** Map (the "now" marker, `MapClient.tsx`), Money's pace (`moneyModel.ts`
+`currentStop`, `PlanCard.tsx`) and the reminder sheet (`AddReminderSheet.tsx`) still give the
+travel day to the stop you leave.
+
+**iOS:** Home's current stop is arrive ≤ today < depart, the same as
+`TimelineLogic.isCurrent` (`DashboardClient.tsx`). The money card's city is `moneyModel`'s
+own stop, arrive ≤ today ≤ depart.
+
+**Checked:** `/dev/money-preview?screen=home` with the browser clock on 29 Sep, 30 Sep,
+1 Oct and 13 Dec (Da Nang's last day, with nothing after it in the fixture).
+
+### OPEN — the after-the-trip recap overlaps at phone width (found 28 Sep)
+
+At 390 px, "Vs plan −3 043 945 Ft" runs into "Stops 3" in the recap grid
+(`DashboardClient.tsx`, the post-trip phase). It was there before the wording pass, and it
+shows once a journey has ended: from May 2027 for Asia. One fix is to let the amount wrap;
+another is one column when an amount is long.
+
+### LIVE — Hong Kong on the globe, tested by Patrik (27 Sep)
+
+Merged as #117. Patrik: "globe shows Hong Kong Island!"
+
 ## 2026-09-27
 
 ### FIXED — Hong Kong missing from the globe (Patrik, 27 Sep)

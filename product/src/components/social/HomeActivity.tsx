@@ -164,7 +164,7 @@ export default function HomeActivity({ own, ownPending, userId, segments }: { ow
       {ownPending && items.length === 0 && <p className="text-base text-tx2">Loading…</p>}
       {!ownPending && items.length === 0 && (
         <p className="rounded-[var(--r)] bg-sf p-4 text-base leading-[1.55] text-tx2">
-          Nothing here yet. Your check-ins and the posts of the people you follow gather here.
+          Nothing here yet
         </p>
       )}
       {items.length > 0 && (

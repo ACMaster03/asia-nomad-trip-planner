@@ -59,7 +59,7 @@ export default function RemindersClient() {
           canEdit={canEdit}
           onTick={() => {
             tick(r.id)
-            if (!r.done) toast('Ticked - gone from Home, still under Done')
+            if (!r.done) toast('Ticked · it’s under Done')
           }}
         />
       ) : (
