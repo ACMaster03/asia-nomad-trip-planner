@@ -9,6 +9,8 @@ import SwiftUI
 struct TripScreen: View {
     @Environment(TripStore.self) private var store
     @Environment(TabRouter.self) private var router
+    /// The new-journey form (NewJourney.swift): from the empty page or a finished journey.
+    @State private var planning = false
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -32,6 +34,9 @@ struct TripScreen: View {
                 withAnimation(Motion.settle) { proxy.scrollTo("top", anchor: .top) }
             }
         }
+        .sheet(isPresented: $planning) {
+            NewJourneySheet().environment(store)
+        }
     }
 
     @ViewBuilder private var content: some View {
@@ -46,12 +51,9 @@ struct TripScreen: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 180)
         case .empty:
-            VStack(alignment: .leading, spacing: 12) {
-                Text("No journey yet").font(.serif(28)).foregroundStyle(Palette.tx)
-                Text("Once you start a journey on livhold.com, it shows up here.")
-                    .font(.sans(16)).foregroundStyle(Palette.tx2)
-            }
-            .padding(.top, 40)
+            // Everything starts in the app (Patrik, 29 Sep): nobody is sent to the website.
+            NoJourneyCard { planning = true }
+                .padding(.top, 40)
         case .failed:
             VStack(alignment: .leading, spacing: 14) {
                 Text("Your journey").font(.serif(28)).foregroundStyle(Palette.tx)
@@ -61,7 +63,7 @@ struct TripScreen: View {
             .padding(.top, 20)
         case .ready:
             if let trip = store.trip {
-                TripTimeline(trip: trip)
+                TripTimeline(trip: trip) { planning = true }
             }
         }
     }
@@ -69,6 +71,8 @@ struct TripScreen: View {
 
 private struct TripTimeline: View {
     let trip: TripRow
+    /// Opens the new-journey form.
+    let planNext: () -> Void
 
     @Environment(TripStore.self) private var store
 
@@ -78,35 +82,49 @@ private struct TripTimeline: View {
     var body: some View {
         let tl = Journey.timeline(state)
         let onward = Journey.onward(state, tl)
-        VStack(alignment: .leading, spacing: 0) {
-            header
-            if !store.canEdit { ViewerNotice().padding(.bottom, 12) }
-            savedCopyLine
-            if let notice = store.saveNotice {
-                Button { store.saveNotice = nil } label: {
-                    Notice(verbatim: notice, kind: .warn)
+        ScrollViewReader { proxy in
+            VStack(alignment: .leading, spacing: 0) {
+                // State F (mocks-29sep §3): the journey has ended. Points forward; the
+                // timeline stays below, and "Look back" scrolls to it.
+                if Journey.isFinished(state, today: today) {
+                    FinishedJourneyCard(
+                        name: trip.name ?? state.meta.tripName ?? String(localized: "Your journey"),
+                        state: state,
+                        canEdit: store.canEdit,
+                        planNext: planNext,
+                        lookBack: { withAnimation(Motion.settle) { proxy.scrollTo("timeline", anchor: .top) } }
+                    )
                 }
-                .buttonStyle(.plain)
-                .padding(.bottom, 8)
-                .accessibilityHint("Dismiss")
-            }
-            ForEach(Journey.rows(tl)) { row in
-                switch row {
-                case .home(let start):
-                    HomeRow(start: start, home: tl.home, endDate: state.meta.endDate, onward: onward)
-                case .leg(let leg):
-                    if leg.wayHome, store.canEdit { AddStopRow() }
-                    LegRow(leg: leg, state: state, today: today, onward: onward)
-                case .stop(let seg, let maybe):
-                    NavigationLink(value: Route.stop(seg.id)) {
-                        StopRow(seg: seg, maybe: maybe, state: state, today: today)
+                header.id("timeline")
+                if !store.canEdit { ViewerNotice().padding(.bottom, 12) }
+                savedCopyLine
+                if let notice = store.saveNotice {
+                    Button { store.saveNotice = nil } label: {
+                        Notice(verbatim: notice, kind: .warn)
                     }
                     .buttonStyle(.plain)
+                    .padding(.bottom, 8)
+                    .accessibilityHint("Dismiss")
                 }
+                ForEach(Journey.rows(tl)) { row in
+                    switch row {
+                    case .home(let start):
+                        HomeRow(start: start, home: tl.home, endDate: state.meta.endDate, onward: onward)
+                    case .leg(let leg):
+                        if leg.wayHome, store.canEdit { AddStopRow() }
+                        LegRow(leg: leg, state: state, today: today, onward: onward)
+                    case .stop(let seg, let maybe):
+                        NavigationLink(value: Route.stop(seg.id)) {
+                            StopRow(seg: seg, maybe: maybe, state: state, today: today)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                // With nothing on the timeline, the no-stops card below offers the first stop.
+                if store.canEdit, !tl.legs.contains(where: \.wayHome), !tl.stops.isEmpty || !tl.maybes.isEmpty { AddStopRow() }
+                footer(tl)
+                orphans(tl)
             }
-            if store.canEdit, !tl.legs.contains(where: \.wayHome) { AddStopRow() }
-            footer(tl)
-            orphans(tl)
         }
     }
 
@@ -160,23 +178,19 @@ private struct TripTimeline: View {
     }
 
     @ViewBuilder private func footer(_ tl: Journey.Timeline) -> some View {
-        if !tl.stops.isEmpty {
-            let placed = tl.stops.reduce(0) { $0 + Journey.nights($1) }
-            let total = Days.between(state.meta.startDate, state.meta.endDate)
+        let placed = tl.stops.reduce(0) { $0 + Journey.nights($1) }
+        let total = Days.between(state.meta.startDate, state.meta.endDate)
+        if tl.stops.isEmpty, tl.maybes.isEmpty {
+            // State G (mocks-29sep §3): the frame stays, the card points to the first stop.
+            NoStopsCard(state: state, home: tl.home)
+        }
+        if !tl.stops.isEmpty || (tl.maybes.isEmpty && total > 0) {
             // "Planned", as Money says "days not planned yet" (Patrik, 29 Sep).
             (total > 0 ? Text("\(placed) of \(total) nights planned") : Text("\(placed) nights planned"))
                 .font(.sans(16, weight: .medium))
                 .foregroundStyle(Palette.tx2)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
-                .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
-                .padding(.top, 8)
-        } else if tl.maybes.isEmpty {
-            // The web's wording; only when there isn't a maybe either.
-            (store.canEdit ? Text("No stops yet. Add your first one.") : Text("No stops yet."))
-                .font(.sans(16)).foregroundStyle(Palette.tx2)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(18)
                 .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
                 .padding(.top, 8)
         }
@@ -936,31 +950,3 @@ private struct StopPage: View {
 }
 
 // MARK: - trip settings (read-only)
-
-struct TripSettingsScreen: View {
-    @Environment(TripStore.self) private var store
-
-    var body: some View {
-        List {
-            if let trip = store.trip {
-                let meta = trip.state.meta
-                Section {
-                    LabeledContent("Name", value: trip.name ?? meta.tripName ?? "—")
-                    LabeledContent("Dates", value: "\(Days.short(meta.startDate)) → \(meta.endDate.map { Days.short($0) } ?? String(localized: "open-ended"))")
-                    LabeledContent("Home", value: meta.homeBase ?? "—")
-                    LabeledContent("Currency", value: meta.baseCurrency)
-                    if let cap = meta.budgetCap, cap > 0 {
-                        LabeledContent("Budget cap", value: Journey.money(cap, meta.baseCurrency))
-                    }
-                } footer: {
-                    Text("Change these on livhold.com for now.")
-                }
-            }
-        }
-        .font(.sans(16))
-        .scrollContentBackground(.hidden)
-        .background(Palette.canvas.ignoresSafeArea())
-        .navigationTitle("Trip settings")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}

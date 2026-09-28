@@ -133,7 +133,8 @@ private struct TabStack: View {
         case .moneyEntries(let focus):
             LedgerScreen(focus: focus)
                 .modifier(ZoomDestination(id: "entries", namespace: zoom))
-        case .moneySettings: MoneySettingsScreen()
+        // Money's gear opens the journey's settings: the cap and rates live there now.
+        case .moneySettings: TripSettingsScreen()
         case .moneySubscriptions:
             SubscriptionsScreen()
                 .modifier(ZoomDestination(id: "subscriptions", namespace: zoom))

@@ -36,8 +36,8 @@ final class TripStore {
     /// Why a quick edit (from a long-press menu) didn't save; shown on the timeline.
     var saveNotice: String?
 
-    private let client: SupabaseClient
-    private var userId: String?
+    let client: SupabaseClient
+    private(set) var userId: String?
 
     init(client: SupabaseClient = Backend.client) {
         self.client = client
@@ -68,8 +68,9 @@ final class TripStore {
             return
         }
         #endif
+        fx = FxCache.load()
         if trip == nil, let saved = TripCache.load(userId: userId) {
-            trip = saved.row
+            trip = withLiveRates(saved.row)
             fetchedAt = saved.savedAt
             phase = .ready
         }
@@ -86,6 +87,7 @@ final class TripStore {
         defer { refreshing = false; refreshStarted = nil }
         do {
             try await Connectivity.shared.waitUntilOnline()
+            await refreshFx()
             if let data = try await fetchActiveTrip(userId: userId) {
                 var row = try JSONDecoder().decode(TripRow.self, from: data)
                 // A fetch that started before a save landed carries the older
@@ -97,7 +99,7 @@ final class TripStore {
                         row.ledgerRev = shown.ledgerRev
                     }
                 }
-                trip = row
+                trip = withLiveRates(row)
                 fetchedAt = .now
                 phase = .ready
                 error = nil
@@ -115,6 +117,75 @@ final class TripStore {
         } catch {
             self.error = Self.loadMessage(error, saved: trip != nil)
             if trip == nil { phase = .failed }
+        }
+    }
+
+    /// Starts a new journey the web's way (lib/trips/queries.ts createTrip, seeded
+    /// by newTrip.ts makeNewTripState), makes it the active one and shows it.
+    /// `id` is made once per form: if an earlier try landed and only its answer was
+    /// lost, the insert hits our own id (23505) and counts as done, so a retry
+    /// never makes a second journey.
+    func createTrip(id: String, name: String, startDate: String, endDate: String?, homeBase: String?,
+                    baseCurrency: String, travelers: Int) async throws {
+        guard let userId else {
+            throw SaveError.failed(String(localized: "Couldn’t start the journey. Please try again."))
+        }
+        let seed = NewTripSeed.state(name: name, startDate: startDate, endDate: endDate, homeBase: homeBase,
+                                     baseCurrency: baseCurrency, travelers: travelers)
+        let tripName = seed["meta"]?["tripName"]?.stringValue ?? name
+
+        if Self.usesFixture {
+            trip = try TripRow(id: id, owner: userId, name: tripName, rawState: seed,
+                               updatedAt: ISO8601DateFormatter().string(from: .now), stateRev: 1)
+            canEdit = true
+            phase = .ready
+            return
+        }
+
+        struct NewRow: Encodable, Sendable {
+            let id: String
+            let owner: String
+            let name: String
+            let state: JSONValue
+            let ledger: [JSONValue]
+        }
+        struct Active: Encodable, Sendable { let active_trip_id: String }
+        do {
+            try await Connectivity.shared.waitUntilOnline()
+            do {
+                try await Self.oneMoreTry {
+                    try await client.from("trips")
+                        .insert(NewRow(id: id, owner: userId, name: tripName, state: seed, ledger: []))
+                        .execute()
+                }
+            } catch let e as PostgrestError where e.code == "23505" {
+                // Our own id is already there: the earlier try landed.
+            }
+            // Best effort, as on the web: the newest journey is shown anyway.
+            _ = try? await client.from("profiles")
+                .update(Active(active_trip_id: id))
+                .eq("id", value: userId)
+                .execute()
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw SaveError.failed(AuthStore.message(for: error) ?? String(localized: "Couldn’t start the journey. Please try again."))
+        }
+        // A refresh already on its way would return early and show the old journey.
+        while refreshing { try? await Task.sleep(for: .milliseconds(100)) }
+        await refresh()
+    }
+
+    /// The first request after a pause can fail with -1005: cellular networks and
+    /// VPNs drop idle connections, and iOS doesn't resend a POST on its own. Every
+    /// write here is safe to send twice (fixed ids; write_state checks the
+    /// revision), so it gets one more try on a fresh connection.
+    static func oneMoreTry<T>(_ op: () async throws -> T, resent: (() -> Void)? = nil) async throws -> T {
+        do {
+            return try await op()
+        } catch let e as URLError where e.code == .networkConnectionLost {
+            resent?()
+            return try await op()
         }
     }
 
@@ -182,20 +253,25 @@ final class TripStore {
             let new_name: String
             let expected_rev: Int
         }
+        var resent = false
         do {
             try await Connectivity.shared.waitUntilOnline()
-            let rev: Int = try await client
-                .rpc("write_state", params: Params(trip: trip.id, new_state: doc, new_name: name, expected_rev: trip.stateRev ?? 0))
-                .execute()
-                .value
+            let rev: Int = try await Self.oneMoreTry({
+                try await client
+                    .rpc("write_state", params: Params(trip: trip.id, new_state: doc, new_name: name, expected_rev: trip.stateRev ?? 0))
+                    .execute()
+                    .value
+            }, resent: { resent = true })
             // The ledger may have moved on while this saved (Money writes it separately).
             let saved = try (self.trip ?? trip).with(rawState: doc, name: name,
                                                      updatedAt: ISO8601DateFormatter().string(from: .now), stateRev: rev)
-            self.trip = saved
+            self.trip = withLiveRates(saved)
             Task { await syncPlan() }
             if let userId, let data = try? JSONEncoder().encode(saved) { TripCache.save(data, userId: userId) }
         } catch let e as PostgrestError where e.code == "REV01" {
             await refresh()
+            // The first send landed after all: what's stored now is this very change.
+            if resent, self.trip?.rawState == doc { return }
             throw SaveError.conflict
         } catch let e as PostgrestError where e.code == "42501" {
             canEdit = false
@@ -240,7 +316,7 @@ final class TripStore {
         MoneyPrefsCache.save(tracking: tracking, userId: userId)
         do {
             try await Connectivity.shared.waitUntilOnline()
-            try await client.from("profiles").update(["track_spending": on]).eq("id", value: userId).execute()
+            try await Self.oneMoreTry { try await client.from("profiles").update(["track_spending": on]).eq("id", value: userId).execute() }
         } catch {
             tracking = before
             MoneyPrefsCache.save(tracking: before, userId: userId)
@@ -260,7 +336,7 @@ final class TripStore {
         defer { ledgerWrites -= 1 }
         do {
             try await Connectivity.shared.waitUntilOnline()
-            let rev: Int = try await client.rpc("ledger_upsert_entry", params: Params(trip: trip.id, entry: entry.json)).execute().value
+            let rev: Int = try await Self.oneMoreTry { try await client.rpc("ledger_upsert_entry", params: Params(trip: trip.id, entry: entry.json)).execute().value }
             let known = self.trip?.ledgerRev ?? 0
             self.trip?.ledgerRev = rev
             cacheTrip()
@@ -315,7 +391,7 @@ final class TripStore {
         defer { ledgerWrites -= 1 }
         do {
             try await Connectivity.shared.waitUntilOnline()
-            let rev: Int = try await client.rpc("ledger_delete_entry", params: Params(trip: trip.id, entry_id: entry.id)).execute().value
+            let rev: Int = try await Self.oneMoreTry { try await client.rpc("ledger_delete_entry", params: Params(trip: trip.id, entry_id: entry.id)).execute().value }
             let known = self.trip?.ledgerRev ?? 0
             self.trip?.ledgerRev = rev
             cacheTrip()
@@ -359,6 +435,68 @@ final class TripStore {
         for r in rows { if let a = r.attributes, let cost = CityCost(attributes: a) { out[r.city] = cost } }
         cityCosts = out
         MoneyPrefsCache.save(cities: out, userId: userId)
+    }
+
+    // MARK: Exchange rates
+
+    /// `fx_rates` (units per 1 USD) and when `fx-refresh` last succeeded. The cron
+    /// runs at 02:00 UTC, so the rates are the morning's (lib/catalogue/fx.ts).
+    struct FxSnapshot: Codable, Sendable {
+        let perUsd: [String: Double]
+        let lastSuccessAt: Date?
+        var fetchedAt: Date
+    }
+
+    private(set) var fx: FxSnapshot?
+
+    /// At most once an hour: the feed moves once a day.
+    func refreshFx() async {
+        if let fx, Date.now.timeIntervalSince(fx.fetchedAt) < 3600 { return }
+        struct Rate: Decodable { let code: String; let per_usd: Double }
+        struct Status: Decodable { let last_success_at: String? }
+        do {
+            let rates: [Rate] = try await client.from("fx_rates").select("code,per_usd").execute().value
+            let status: [Status] = (try? await client.from("fx_status").select("last_success_at").eq("id", value: true).limit(1).execute().value) ?? []
+            guard !rates.isEmpty else { return }
+            let when = status.first?.last_success_at.flatMap(Self.parseTimestamp)
+            fx = FxSnapshot(perUsd: Dictionary(rates.map { ($0.code, $0.per_usd) }, uniquingKeysWith: { a, _ in a }),
+                            lastSuccessAt: when, fetchedAt: .now)
+            FxCache.save(fx)
+            if let trip { self.trip = withLiveRates(trip) }
+        } catch {
+            // Keep the rates the journey was saved with.
+        }
+    }
+
+    /// The web's merge (useTripScreen.ts): every currency the journey has, at the
+    /// morning's rate, falling back to the stored one; never 0.
+    private func withLiveRates(_ row: TripRow) -> TripRow {
+        guard let perUsd = fx?.perUsd else { return row }
+        var row = row
+        let base = row.state.meta.baseCurrency
+        var rates: [String: Double] = [:]
+        for (code, stored) in row.state.rates {
+            if let a = perUsd[base], let b = perUsd[code], a > 0, b > 0 { rates[code] = a / b } else { rates[code] = stored }
+        }
+        rates[base] = 1
+        row.state.rates = rates
+        return row
+    }
+
+    private static func parseTimestamp(_ s: String) -> Date? {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = f.date(from: s) { return d }
+        f.formatOptions = [.withInternetDateTime]
+        if let d = f.date(from: s) { return d }
+        // Postgres' own text form: "2026-09-28 02:00:04.123+00"
+        let p = DateFormatter()
+        p.locale = Locale(identifier: "en_US_POSIX")
+        for format in ["yyyy-MM-dd HH:mm:ss.SSSSSSXXXXX", "yyyy-MM-dd HH:mm:ss.SSSXXXXX", "yyyy-MM-dd HH:mm:ssXXXXX", "yyyy-MM-dd HH:mm:ss.SSSSSSX", "yyyy-MM-dd HH:mm:ssX"] {
+            p.dateFormat = format
+            if let d = p.date(from: s) { return d }
+        }
+        return nil
     }
 
     /// The raw JSON of the active trip row, or nil when the user has none.
@@ -439,6 +577,17 @@ enum TripCache {
 
 /// Small Money answers kept between launches, per user: the tracking answer and
 /// the trip's city costs, so the page draws right away with no signal.
+/// The last exchange rates fetched, for a start with no signal. Not per user: the rates are everyone's.
+enum FxCache {
+    private static let key = "fx.snapshot"
+    static func load() -> TripStore.FxSnapshot? {
+        UserDefaults.standard.data(forKey: key).flatMap { try? JSONDecoder().decode(TripStore.FxSnapshot.self, from: $0) }
+    }
+    static func save(_ fx: TripStore.FxSnapshot?) {
+        UserDefaults.standard.set(fx.flatMap { try? JSONEncoder().encode($0) }, forKey: key)
+    }
+}
+
 enum MoneyPrefsCache {
     private static func key(_ what: String, _ userId: String) -> String { "money.\(what).\(userId)" }
 

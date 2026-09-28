@@ -7,7 +7,8 @@ import SwiftUI
 // at once and works with no signal.
 
 struct LedgerScreen: View {
-    /// "beyond", a filter, or a day ("2026-09-20") to open on.
+    /// "beyond", a filter, a day ("2026-09-20") to open on, "cat:<id>", or a group
+    /// and the days Where it goes showed ("fam:food:2026-09-15:2026-09-28").
     let focus: String?
 
     enum Filter: String, CaseIterable, Identifiable {
@@ -32,6 +33,9 @@ struct LedgerScreen: View {
     @State private var filter: Filter = .all
     /// One category, on top of the filter (from Where it goes, or the Category chip).
     @State private var category: String?
+    /// A family and its days, from a row of Where it goes: the entries behind its amount.
+    @State private var family: Family?
+    @State private var span: (from: String, to: String)?
     @State private var query = ""
     @State private var comingOpen = false
     @State private var didFocus = false
@@ -41,7 +45,7 @@ struct LedgerScreen: View {
             if let trip = store.trip {
                 let model = MoneyModel(trip: trip, ledger: trip.ledger, cities: store.cityCosts, today: Days.today())
                 list(model)
-                    .navigationTitle(category.map(Categories.label) ?? String(localized: "All entries"))
+                    .navigationTitle(category.map(Categories.label) ?? family?.label ?? String(localized: "All entries"))
             } else {
                 Color.clear
             }
@@ -62,6 +66,12 @@ struct LedgerScreen: View {
             didFocus = true
             if focus == "beyond" { filter = .beyond }
             if let focus, focus.hasPrefix("cat:") { category = String(focus.dropFirst(4)) }
+            if let focus, focus.hasPrefix("fam:") {
+                let parts = focus.split(separator: ":").map(String.init)
+                family = parts.count > 1 ? Family(rawValue: parts[1]) : nil
+                if parts.count > 3 { span = (parts[2], parts[3]) }
+                filter = .everyday
+            }
         }
     }
 
@@ -79,7 +89,7 @@ struct LedgerScreen: View {
         return ScrollViewReader { proxy in
             List {
                 Section {
-                    if !query.trimmed.isEmpty || filter != .all || category != nil { summary(past, model) }
+                    if !query.trimmed.isEmpty || filter != .all || category != nil || family != nil { summary(past, model) }
                     if !coming.isEmpty { comingUp(coming, model) }
                 }
                 .listRowBackground(Color.clear)
@@ -127,6 +137,8 @@ struct LedgerScreen: View {
         let words = Self.fold(query).split(separator: " ").map(String.init)
         return model.ledger.filter { e in
             if let category, e.category != category { return false }
+            if let family, Categories.family(e.category) != family { return false }
+            if let span, e.date < span.from || e.date > span.to { return false }
             switch filter {
             case .all: break
             case .everyday: guard e.isExpense && isEverydayRow(e) else { return false }
@@ -157,13 +169,33 @@ struct LedgerScreen: View {
         let used = counts.sorted { $0.value > $1.value || ($0.value == $1.value && $0.key < $1.key) }.map(\.key)
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
+                if let family {
+                    Button {
+                        withAnimation(Motion.quick) { self.family = nil; span = nil }
+                    } label: {
+                        HStack(spacing: 5) {
+                            RoundedRectangle(cornerRadius: 3).fill(family.color).frame(width: 9, height: 9)
+                            Text(family.label)
+                            if let span { Text(verbatim: "· \(Days.short(span.from)) – \(Days.short(span.to))") }
+                            Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
+                        }
+                        .font(.sans(13, weight: .semibold))
+                        .foregroundStyle(Palette.ac)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Palette.acSoft, in: .capsule)
+                        .overlay(Capsule().strokeBorder(Palette.acLine, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint(Text("Shows every group"))
+                }
                 Menu {
                     if category != nil {
                         Button("All categories", systemImage: "xmark") { withAnimation(Motion.quick) { category = nil } }
                     }
                     ForEach(used, id: \.self) { id in
                         Button {
-                            withAnimation(Motion.quick) { category = id }
+                            withAnimation(Motion.quick) { category = id; family = nil; span = nil }
                         } label: {
                             Label("\(Categories.label(id)) · \(counts[id] ?? 0)", systemImage: Categories.symbol(id))
                         }
@@ -326,130 +358,5 @@ struct LedgerScreen: View {
                 editor.toast = error.localizedDescription
             }
         }
-    }
-}
-
-// MARK: - Settings → Money
-
-/// Tracking and the budget cap, off the Money page (Patrik, 27 Sep): the switch
-/// is dead weight on the page after the first visit.
-struct MoneySettingsScreen: View {
-    @Environment(TripStore.self) private var store
-    @State private var capText = ""
-    @State private var error: String?
-    @State private var saved = false
-    @FocusState private var capFocused: Bool
-
-    var body: some View {
-        let meta = store.trip?.state.meta
-        let base = meta?.baseCurrency ?? "HUF"
-        List {
-            Section {
-                Toggle("Track spending", isOn: Binding(
-                    get: { store.tracking == .yes },
-                    set: { on in Task { do { try await store.setTracking(on) } catch { self.error = error.localizedDescription } } }
-                ))
-                .tint(Palette.ac)
-                .disabled(store.tracking == .unknown)
-            } footer: {
-                Text("Daily pace, where it goes and the projection. Bookings show either way.")
-            }
-            if let meta {
-                Section {
-                    HStack {
-                        Text("Budget cap")
-                        Spacer()
-                        TextField("None", text: $capText)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .focused($capFocused)
-                            .disabled(!store.canEdit)
-                            .onSubmit(saveCap)
-                        Text(MoneyText.symbol(base)).foregroundStyle(Palette.tx3)
-                    }
-                    LabeledContent("Base currency", value: base)
-                    NavigationLink {
-                        RatesScreen()
-                    } label: {
-                        LabeledContent("Exchange rates", value: String(localized: "\(max(0, (store.trip?.state.rates.count ?? 1) - 1)) currencies"))
-                    }
-                } header: {
-                    Text(meta.tripName ?? String(localized: "This journey"))
-                } footer: {
-                    store.canEdit ? Text("The cap is for this whole journey. Tapping the bar on Money opens this screen.") : Text("Only the journey’s editors can change the cap.")
-                }
-            }
-            if let error {
-                Section { Text(error).foregroundStyle(Palette.warn) }
-            }
-        }
-        .font(.sans(16))
-        .scrollContentBackground(.hidden)
-        .background(Palette.canvas.ignoresSafeArea())
-        .navigationTitle("Money")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { capFocused = false; saveCap() }.fontWeight(.semibold)
-            }
-        }
-        .onAppear { capText = Self.capString(meta?.budgetCap) }
-        .onChange(of: capFocused) { _, f in if !f { saveCap() } }
-        .sensoryFeedback(.success, trigger: saved)
-        .task { await store.refreshTracking() }
-    }
-
-    private static func capString(_ v: Double?) -> String {
-        guard let v, v > 0 else { return "" }
-        return v.formatted(.number.precision(.fractionLength(0)).grouping(.automatic).locale(Locale(identifier: "hu_HU")))
-    }
-
-    private func saveCap() {
-        let digits = capText.filter(\.isNumber)
-        let value = Double(digits) ?? 0
-        let current = store.trip?.state.meta.budgetCap ?? 0
-        guard value != current else { capText = Self.capString(current); return }
-        Task {
-            do {
-                try await store.save { doc in
-                    var meta = doc["meta"] ?? .object([:])
-                    meta["budgetCap"] = .number(value)
-                    doc["meta"] = meta
-                }
-                capText = Self.capString(value)
-                saved.toggle()
-                error = nil
-            } catch {
-                self.error = error.localizedDescription
-                capText = Self.capString(current)
-            }
-        }
-    }
-}
-
-/// The trip's rates, read-only on the phone for now.
-private struct RatesScreen: View {
-    @Environment(TripStore.self) private var store
-
-    var body: some View {
-        let base = store.trip?.state.meta.baseCurrency ?? "HUF"
-        let rates = (store.trip?.state.rates ?? [:]).filter { $0.key != base }.sorted { $0.key < $1.key }
-        List {
-            Section {
-                ForEach(rates, id: \.key) { code, rate in
-                    LabeledContent("1 \(code)", value: MoneyText.full(rate, base) == MoneyText.full(0, base) && rate > 0
-                                   ? "\(rate.formatted(.number.precision(.significantDigits(3)))) \(MoneyText.symbol(base))"
-                                   : MoneyText.full(rate, base))
-                }
-            } footer: {
-                Text("Updated from the day’s rates each time the journey opens. Add or remove currencies on livhold.com.")
-            }
-        }
-        .font(.sans(16))
-        .scrollContentBackground(.hidden)
-        .background(Palette.canvas.ignoresSafeArea())
-        .navigationTitle("Exchange rates")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

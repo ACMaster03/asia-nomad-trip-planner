@@ -15,7 +15,8 @@ struct TripRow: Codable, Sendable {
     let id: String
     let owner: String?
     let name: String?
-    let state: TripState
+    /// Its `rates` carry the morning's rates once TripStore has them (`withLiveRates`).
+    var state: TripState
     /// `state` exactly as stored, every field kept: what a save edits and sends back.
     let rawState: JSONValue
     let updatedAt: String?

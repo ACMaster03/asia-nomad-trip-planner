@@ -11,6 +11,8 @@ import SwiftUI
 enum EditTarget: Identifiable {
     case stop(Segment)
     case addStop
+    /// After "the flight there": the place it lands, filled in, from the flight's day.
+    case firstStop(city: String, arrive: String)
     /// `range`: the nights to fill in when adding (an amber gap), else the stop's dates.
     case stay(Stay?, seg: Segment, range: Journey.NightRange?)
     /// From, to and the day come from the leg, as on the web.
@@ -20,6 +22,7 @@ enum EditTarget: Identifiable {
         switch self {
         case .stop(let s): "stop-\(s.id)"
         case .addStop: "add-stop"
+        case .firstStop(let city, _): "first-stop-\(city)"
         case .stay(let st, let seg, let r): "stay-\(st?.id ?? "new")-\(seg.id)-\(r?.from ?? "")"
         case .transport(let t, let from, let to, _): "transport-\(t?.id ?? "new")-\(from)-\(to)"
         }
@@ -44,6 +47,7 @@ struct EditSheet: View {
             switch target {
             case .stop(let seg): StopForm(seg: seg, state: state)
             case .addStop: StopForm(seg: nil, state: state)
+            case .firstStop(let city, let arrive): StopForm(seg: nil, state: state, city: city, arrive: arrive)
             case .stay(let stay, let seg, let range): StayForm(stay: stay, seg: seg, range: range, state: state)
             case .transport(let entry, let from, let to, let date):
                 TransportForm(entry: entry, from: from, to: to, legDate: date, state: state)
@@ -230,13 +234,13 @@ private struct StopForm: View {
     @State private var inPlan: Bool
     @State private var notes: String
 
-    init(seg: Segment?, state: TripState) {
+    init(seg: Segment?, state: TripState, city: String = "", arrive: String = "") {
         self.seg = seg
         self.state = state
         let tl = Journey.timeline(state)
-        _city = State(initialValue: seg?.city ?? "")
+        _city = State(initialValue: seg?.city ?? city)
         _country = State(initialValue: seg?.country ?? "")
-        _arrive = State(initialValue: seg?.arrive ?? (tl.stops.last?.depart ?? state.meta.startDate ?? ""))
+        _arrive = State(initialValue: seg?.arrive ?? (arrive.isEmpty ? (tl.stops.last?.depart ?? state.meta.startDate ?? "") : arrive))
         _depart = State(initialValue: seg?.depart ?? "")
         _tier = State(initialValue: Int(seg?.tier ?? 1))
         _inPlan = State(initialValue: seg?.inPlan ?? true)
@@ -799,7 +803,7 @@ struct PriceRow: View {
 }
 
 /// A date that may be blank: "Add" until chosen, then iOS's compact picker and a clear button.
-private struct OptionalDateRow: View {
+struct OptionalDateRow: View {
     let label: LocalizedStringKey
     @Binding var iso: String
     var suggested: String = ""

@@ -7,6 +7,43 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-09-29
 
+### DECIDED — Patrik, 29 Sep: everything on the phone; Where it goes by group; Trip settings (iOS build 18)
+
+- **Nothing sends people to the website.** Someone who finds the app in the App
+  Store shouldn't need to know livhold.com exists. The iOS copy that said "on
+  livhold.com" is gone (Trip, Money, rates). Still web-bound: the password-reset
+  link (it finishes on the web's Account page) and the sign-in notice for people
+  who already use the web.
+- **Where it goes, version I of mock round 2**: the ring, its reading and every row
+  are groups (families), so the share and the amount always match. Each row has a
+  second line naming its categories, biggest first. Hold and slide on the ring to
+  read a group, or tap to pick one. A row opens All entries on that group and the
+  same days (`fam:<group>:<from>:<to>`), so its total matches the card.
+- **Trip settings are editable on the phone**: name, start, end (optional), home,
+  budget cap. The currency is shown but unavailable until each expense keeps its
+  own day's rate (#129). Exchange rates say when they were refreshed ("Refreshed
+  today, 04:00" in the phone's time zone, from `fx_status.last_success_at`). A
+  currency can be added or swiped away there. Reached from Trip's gear, Money's
+  gear and Account. The old Settings → Money screen is gone.
+- **The phone reads the morning's rates** (`fx_rates`), like the web's
+  useTripScreen merge: every currency the journey has, at today's rate, falling
+  back to the stored one. Only shown, never written back.
+- **Account**: "This journey" (Trip settings) and "You" (Track spending,
+  appearance). The bigger settings overhaul is still to come.
+- **Between journeys** (mock F and G, both approved): a finished journey (today
+  after its end date; no end date means never finished, as in the web's recap.ts)
+  shows "Where next?", the recap above "Plan the next journey", and "Look back".
+  A journey with no stops offers "Add the first stop" or "Or start with the flight
+  there"; once that flight is saved, the stop form opens with its place filled in.
+- **New journeys are made on the phone**: the same row as the web's `createTrip`
+  and `makeNewTripState` (checked field for field on staging), with a fixed id so
+  a retry can't make two, and it becomes the active journey.
+- **A write that hits a dropped connection is sent once more.** On staging the
+  first write after ~40 s idle failed with -1005 (the VPN dropped the connection).
+  Cellular does the same, and iOS doesn't resend a POST. Every write is safe to
+  repeat. Tested: create, stop, settings, cap and end date, and a concurrent web
+  edit refusing a stale save. The retry path itself didn't trigger in the test run.
+
 ### DECIDED — Patrik, 28–29 Sep: Money numbers and layout (iOS builds 13–14 and after)
 
 - **"Lands near" covers the whole journey** (option 1 of two). The days between the last

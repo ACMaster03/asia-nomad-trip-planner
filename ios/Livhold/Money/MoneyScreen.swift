@@ -57,8 +57,10 @@ struct MoneyScreen: View {
         case .empty:
             VStack(alignment: .leading, spacing: 12) {
                 Text("Money").font(.serif(28)).foregroundStyle(Palette.tx)
-                Text("Start a journey on livhold.com — its money shows up here.")
+                Text("No journey yet. Start one on Trip, and its money shows up here.")
                     .font(.sans(16)).foregroundStyle(Palette.tx2)
+                Button("Go to Trip") { withAnimation(.easeInOut(duration: 0.3)) { router.select(.trip) } }
+                    .buttonStyle(.primary)
             }
             .padding(.top, 40)
         case .failed:
@@ -940,19 +942,30 @@ private struct WhereItGoesCard: View {
     let model: MoneyModel
     @Binding var range: Int
     @Binding var end: String?
-    @State private var showAll = false
+    /// The slice under the finger (hold) or tapped; its row lights up.
+    @State private var picked: Family?
 
+    struct Group: Identifiable {
+        let family: Family
+        let total: Double
+        /// The categories inside, biggest first: the row's second line.
+        let inside: [String]
+        var id: Family { family }
+    }
+
+    /// Version I of mock round 2 (Patrik, 29 Sep): the ring, its reading and every
+    /// row speak in groups, so the share and the amount always match; the second
+    /// line says what the group holds. A row opens those entries in All entries.
     var body: some View {
         let window = model.window(range: range, end: end)
         let cats = model.byCategory(from: window.from, to: window.to)
         let total = cats.reduce(0) { $0 + $1.total }
-        let families: [(family: Family, total: Double)] = Dictionary(grouping: cats) { Categories.family($0.category) }
-            .map { (family: $0.key, total: $0.value.reduce(0.0) { $0 + $1.total }) }
+        let groups: [Group] = Dictionary(grouping: cats) { Categories.family($0.category) }
+            .map { Group(family: $0.key, total: $0.value.reduce(0.0) { $0 + $1.total },
+                         inside: $0.value.sorted { $0.total > $1.total }.map { Categories.label($0.category) }) }
             .filter { $0.total > 0 }
             .sorted { $0.total > $1.total }
         let days = Days.between(window.from, window.to) + 1
-        // Its own key: "in 14 days" here is a span, not a date ahead.
-        let span = String(localized: "chart.window", defaultValue: "in \(days) days")
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 CardLabel("Where it goes · \(days) days", mauve: true)
@@ -962,87 +975,159 @@ private struct WhereItGoesCard: View {
             if model.unlocks.range {
                 RangeBar(model: model, range: $range, end: $end)
             }
-            HStack(spacing: 16) {
-                Chart(families, id: \.family) { f in
-                    SectorMark(angle: .value("Spent", f.total), innerRadius: .ratio(0.64), angularInset: 1.5)
-                        .foregroundStyle(f.family.color)
-                        .cornerRadius(2)
+            if groups.isEmpty {
+                Text("Nothing logged in these days.").font(.sans(14.5)).foregroundStyle(Palette.tx2)
+                    .padding(.vertical, 8)
+            } else {
+                HStack(spacing: 16) {
+                    ring(groups, total: total)
+                    reading(total: total, days: days, groups: groups)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .chartBackground { _ in
-                    VStack(spacing: 0) {
-                        Text(MoneyText.number(total, model.base)).font(.sans(15, weight: .semibold)).foregroundStyle(Palette.tx)
-                            .minimumScaleFactor(0.7).lineLimit(1)
-                        Text(span).font(.sans(10.5)).foregroundStyle(Palette.tx3)
+                .padding(.vertical, 4)
+                VStack(spacing: 0) {
+                    ForEach(groups) { g in
+                        Divider().overlay(Palette.ln)
+                        row(g, total: total, window: window)
                     }
-                    .padding(.horizontal, 24)
-                }
-                .frame(width: 112, height: 112)
-                sentence(families, total: total)
-                    .font(.sans(14.5))
-                    .foregroundStyle(Palette.tx)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.vertical, 4)
-            VStack(spacing: 0) {
-                // The top four; "1 more…" hides as much as it saves, so fold two or more.
-                let folds = cats.count > 5 && !showAll
-                let shown = folds ? Array(cats.prefix(4)) : cats
-                ForEach(shown) { c in
                     Divider().overlay(Palette.ln)
-                    NavigationLink(value: Route.moneyEntries("cat:\(c.category)")) {
-                        HStack(spacing: 10) {
-                            RoundedRectangle(cornerRadius: 3).fill(Categories.color(c.category)).frame(width: 10, height: 10)
-                            Text(Categories.label(c.category)).font(.sans(14.5)).foregroundStyle(Palette.tx)
-                            Spacer()
-                            Text(MoneyText.full(c.total, model.base)).font(.sans(14.5, weight: .medium)).foregroundStyle(Palette.tx)
-                            Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.tx3)
-                        }
-                        .padding(.vertical, 8)
-                        .contentShape(.rect)
+                    HStack {
+                        Text("Everyday total").font(.sans(14.5, weight: .semibold))
+                        Spacer()
+                        Text(MoneyText.full(total, model.base)).font(.sans(14.5, weight: .semibold))
                     }
-                    .buttonStyle(.plain)
+                    .foregroundStyle(Palette.ac2)
+                    .padding(.vertical, 8)
                 }
-                if folds {
-                    let rest = cats.dropFirst(4).reduce(0) { $0 + $1.total }
-                    Divider().overlay(Palette.ln)
-                    Button { withAnimation(Motion.settle) { showAll = true } } label: {
-                        HStack {
-                            Text("\(cats.count - 4) more…").font(.sans(14.5)).foregroundStyle(Palette.tx2)
-                            Spacer()
-                            Text(MoneyText.full(rest, model.base)).font(.sans(14.5)).foregroundStyle(Palette.tx2)
-                        }
-                        .padding(.vertical, 8)
-                        .contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                }
-                Divider().overlay(Palette.ln)
-                HStack {
-                    Text("Everyday total").font(.sans(14.5, weight: .semibold))
-                    Spacer()
-                    Text(MoneyText.full(total, model.base)).font(.sans(14.5, weight: .semibold))
-                }
-                .foregroundStyle(Palette.ac2)
-                .padding(.vertical, 8)
             }
         }
         .padding(16)
         .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
-        .onChange(of: range) { showAll = false }
+        .onChange(of: window.from) { picked = nil }
+        .sensoryFeedback(.selection, trigger: picked)
     }
 
-    /// "Food & drinks take 41%. Getting around 18%, health & care 16%." (WhereItGoes.tsx)
-    private func sentence(_ f: [(family: Family, total: Double)], total: Double) -> Text {
-        func pct(_ v: Double) -> Int { Int((v / max(1, total) * 100).rounded()) }
-        guard let first = f.first else { return Text("Nothing logged in these days.") }
-        var t = Text("\(Text(first.family.label).bold()) take \(pct(first.total))%.")
-        if f.count > 2 {
-            t = t + Text(verbatim: " ")
-                + Text("\(Text(f[1].family.label).bold()) \(pct(f[1].total))%, \(f[2].family.label.lowercased()) \(pct(f[2].total))%.")
-        } else if f.count > 1 {
-            t = t + Text(verbatim: " ") + Text("\(Text(f[1].family.label).bold()) \(pct(f[1].total))%.")
+    private static func pct(_ v: Double, _ total: Double) -> Int { Int((v / max(1, total) * 100).rounded()) }
+
+    private func ring(_ groups: [Group], total: Double) -> some View {
+        Chart(groups) { g in
+            SectorMark(angle: .value("Spent", g.total), innerRadius: .ratio(0.62), angularInset: 1.5)
+                .foregroundStyle(g.family.color)
+                .opacity(picked == nil || picked == g.family ? 1 : 0.3)
+                .cornerRadius(2)
         }
-        return t
+        .chartLegend(.hidden)
+        .frame(width: 112, height: 112)
+        .overlay {
+            // Hold and slide round the ring to read each group; a tap picks one and
+            // a second tap lets go. Through UIKit so a swipe still scrolls the page.
+            RingTouches(
+                onTap: { p in
+                    let g = Self.group(at: p, in: groups, total: total)
+                    withAnimation(Motion.quick) { picked = (g == picked) ? nil : g }
+                },
+                onScrub: { p in
+                    if let g = Self.group(at: p, in: groups, total: total), g != picked { picked = g }
+                },
+                onLift: { withAnimation(Motion.quick) { picked = nil } }
+            )
+        }
+        .accessibilityElement()
+        .accessibilityLabel(Text("Where it goes"))
+        .accessibilityValue(Text(groups.map { "\($0.family.label) \(Self.pct($0.total, total))%" }.joined(separator: ", ")))
+    }
+
+    /// The group under a point of the 112-pt ring: Swift Charts starts at 12 o'clock, clockwise.
+    private static func group(at p: CGPoint, in groups: [Group], total: Double) -> Family? {
+        let dx = p.x - 56, dy = p.y - 56
+        guard total > 0, hypot(dx, dy) > 20 else { return nil }
+        var angle = atan2(dx, -dy) / (2 * .pi)
+        if angle < 0 { angle += 1 }
+        var sum = 0.0
+        for g in groups {
+            sum += g.total / total
+            if angle <= sum { return g.family }
+        }
+        return groups.last?.family
+    }
+
+    private func reading(total: Double, days: Int, groups: [Group]) -> some View {
+        let g = groups.first { $0.family == picked }
+        return VStack(alignment: .leading, spacing: 2) {
+            Text(g?.family.label ?? String(localized: "Everyday, \(days) days"))
+                .font(.sans(13)).foregroundStyle(Palette.tx2).lineLimit(1)
+            Text(MoneyText.full(g?.total ?? total, model.base))
+                .font(.sans(22, weight: .semibold)).foregroundStyle(Palette.tx)
+                .minimumScaleFactor(0.7).lineLimit(1)
+                .contentTransition(.numericText())
+            (g.map { Text("\(Self.pct($0.total, total))% of the everyday") } ?? Text("Hold the ring to read a group"))
+                .font(.sans(13)).foregroundStyle(Palette.tx3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .animation(Motion.quick, value: picked)
+    }
+
+    private func row(_ g: Group, total: Double, window: (from: String, to: String)) -> some View {
+        NavigationLink(value: Route.moneyEntries("fam:\(g.family.rawValue):\(window.from):\(window.to)")) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                RoundedRectangle(cornerRadius: 3).fill(g.family.color).frame(width: 10, height: 10)
+                    .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(g.family.label).font(.sans(14.5)).foregroundStyle(Palette.tx)
+                    Text(verbatim: g.inside.joined(separator: ", "))
+                        .font(.sans(12.5)).foregroundStyle(Palette.tx2)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(MoneyText.full(g.total, model.base)).font(.sans(14.5, weight: .medium)).foregroundStyle(Palette.tx)
+                    Text(verbatim: "\(Self.pct(g.total, total))%").font(.sans(12.5)).foregroundStyle(Palette.tx2)
+                }
+                Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.tx3)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 6)
+            .background(picked == g.family ? Palette.fill : .clear, in: .rect(cornerRadius: 8))
+            .padding(.horizontal, -6)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Tap, and hold-then-slide, on the ring with the point, and the lift that ends a hold.
+private struct RingTouches: UIViewRepresentable {
+    var onTap: (CGPoint) -> Void
+    var onScrub: (CGPoint) -> Void
+    var onLift: () -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.addGestureRecognizer(UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tap(_:))))
+        let hold = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.hold(_:)))
+        hold.minimumPressDuration = 0.2
+        view.addGestureRecognizer(hold)
+        return view
+    }
+
+    func updateUIView(_ view: UIView, context: Context) { context.coordinator.parent = self }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    @MainActor final class Coordinator: NSObject {
+        var parent: RingTouches
+        init(_ parent: RingTouches) { self.parent = parent }
+
+        @objc func tap(_ g: UITapGestureRecognizer) { parent.onTap(g.location(in: g.view)) }
+
+        @objc func hold(_ g: UILongPressGestureRecognizer) {
+            switch g.state {
+            case .began, .changed: parent.onScrub(g.location(in: g.view))
+            case .ended, .cancelled, .failed: parent.onLift()
+            default: break
+            }
+        }
     }
 }
 
