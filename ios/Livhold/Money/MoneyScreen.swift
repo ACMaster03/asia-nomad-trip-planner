@@ -794,8 +794,9 @@ private struct DailySpendCard: View {
         let entries = model.entries(on: date)
         let total = entries.reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, model.rates) }
         // The day's things as a list, full amounts (Patrik, 27 Sep: "6081 · 895" in one
-        // line saved room but didn't read). The five largest; the rest are one tap away.
-        let shown = entries.prefix(5)
+        // line saved room but didn't read). The three largest; the rest are one tap away,
+        // so the panel is no taller than the overview (Patrik, 29 Sep).
+        let shown = entries.prefix(3)
         return VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(MoneyText.weekday(date))
@@ -827,12 +828,17 @@ private struct DailySpendCard: View {
         }
     }
 
-    /// The tallest the panel gets: a day with five things and the link.
+    /// The panel's one size: the overview's, a header, three lines and the hint.
+    /// A day with three things and the link fits the same room.
     private var panelTemplate: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(verbatim: "Tue 23 Sep").font(.sans(14, weight: .semibold))
-            ForEach(0..<5, id: \.self) { _ in Text(verbatim: "Row").font(.sans(14)) }
-            Text(verbatim: "Open in All entries ›").font(.sans(13.5, weight: .medium)).padding(.top, 2)
+            ForEach(0..<3, id: \.self) { _ in Text(verbatim: "Row").font(.sans(14)) }
+            ZStack(alignment: .leading) {
+                Text("Tap a day on the chart, or hold and slide.").font(.sans(13))
+                Text(verbatim: "4 more in All entries ›").font(.sans(13.5, weight: .medium))
+            }
+            .padding(.top, 2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -1360,6 +1366,8 @@ private struct SubscriptionsCard: View {
     @Environment(TripStore.self) private var store
     @Environment(MoneyEditor.self) private var editor
     @State private var showCancelled = false
+    /// A bell's new state from the tap until the save lands, so it turns at once.
+    @State private var reminding: [String: Bool] = [:]
 
     var body: some View {
         let active = model.subscriptions.filter { !$0.isCancelled }
@@ -1488,7 +1496,7 @@ private struct SubscriptionsCard: View {
 
     /// On: a reminder before it charges. One tap turns it on or off, as on the web.
     @ViewBuilder private func bell(_ s: Subscription) -> some View {
-        let on = s.remind && !s.isCancelled
+        let on = (reminding[s.id] ?? s.remind) && !s.isCancelled
         let icon = Image(systemName: s.isCancelled ? "minus" : (on ? "bell.fill" : "bell.slash"))
             .font(.system(size: 14, weight: .semibold))
             .foregroundStyle(on ? Palette.ac2Deep : Palette.tx3)
@@ -1511,8 +1519,8 @@ private struct SubscriptionsCard: View {
         } else {
             line = s.everyMonths == 1 ? Text("on the \(SubscriptionForm.ordinal(Int(s.anchor.suffix(2)) ?? 1))")
                 : Text(next.map { String(localized: "next \(Days.short($0))") } ?? "")
-            if s.remind { line = line + Text(verbatim: " · ") + Text("reminds \(SubscriptionForm.leadLabel(s.leadDays))") }
-            if let soon, soon <= 7 { line = line + Text(verbatim: " · ") + Text(when(soon)).foregroundColor(Palette.warn).bold() }
+            // Within a week, how soon says it better than the date (Patrik, 29 Sep).
+            if let soon, soon <= 7 { line = Text(when(soon)).foregroundColor(Palette.warn).bold() }
         }
         return line.font(.sans(12.5)).foregroundStyle(Palette.tx2)
     }
@@ -1523,10 +1531,14 @@ private struct SubscriptionsCard: View {
     }
 
     private func toggleRemind(_ s: Subscription) {
+        let to = !(reminding[s.id] ?? s.remind)
+        reminding[s.id] = to
         Task {
+            // Saved or not, the journey's own value shows again: the new one, or the old.
+            defer { reminding[s.id] = nil }
             try? await store.save { state in
                 state.upsert("subscriptions", id: s.id, [
-                    "remind": .bool(!s.remind),
+                    "remind": .bool(to),
                     "leadDays": .number(Double(s.leadDays)),
                 ])
             }
