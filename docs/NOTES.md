@@ -18,9 +18,16 @@ when a decision needs to survive the conversation it was made in.
 - **Journey card's second line: "+ X not paid yet"** = entries dated after today + booked
   bookings with no entry yet, the same money Bookings calls "to pay". It was "scheduled, not
   spent yet" (entries dated ahead only), which left out bookings that never reached the ledger.
-- **Open, found on the way:** only the web writes bookings into the ledger (usePlanSync); the
-  iPhone app doesn't yet. Patrik's real journey shows the same gap on the web, so something
-  else keeps some bookings out too: read-only check pending (bookings vs ledger query).
+- **Bookings into the ledger from the phone too** (built 29 Sep, `ios/Livhold/Money/PlanSync.swift`,
+  a port of importCosts.ts planImports): after every fetch and every save, booked stays with a
+  charge date and booked legs with a price and a date get their row (the web's id,
+  `le-plan-<kind>-<id>`), changed ones follow, removed ones are flagged. Proven on staging: the
+  expected 5 writes out of 10 cases, unknown fields kept, a second open writes nothing, a
+  web-side price edit followed, and the web's own planImports run on the result finds nothing
+  to do (no ping-pong). Subscription charges are still written only by the web.
+- **Open:** Patrik's real journey shows the gap on the web as well, so something else keeps
+  some of its bookings out (no price, not "booked", or deleted once → importSkip).
+  Read-only check pending (bookings vs ledger query).
 - **The web still has the old numbers** for both points; it follows in its own pull request.
 - **Layout:** Daily spend and Where it goes share one range; the legend always lists all seven
   groups (missing ones dimmed); the box under the chart is one size (days at a glance, or the

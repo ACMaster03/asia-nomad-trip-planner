@@ -62,6 +62,7 @@ final class TripStore {
             cityCosts = TripFixture.cities
             tracking = UserDefaults.standard.string(forKey: "trackFixture").flatMap(Tracking.init(rawValue:)) ?? .yes
             phase = .ready
+            await syncPlan()
             return
         }
         #endif
@@ -99,6 +100,7 @@ final class TripStore {
                 error = nil
                 TripCache.save(data, userId: userId)
                 if let role = await fetchRole(row, userId: userId) { canEdit = role }
+                Task { await syncPlan() }
                 await loadCities(for: row)
             } else {
                 trip = nil
@@ -158,6 +160,7 @@ final class TripStore {
 
         if Self.usesFixture {
             self.trip = try trip.with(rawState: doc, name: name, updatedAt: trip.updatedAt, stateRev: (trip.stateRev ?? 0) + 1)
+            Task { await syncPlan() }
             return
         }
 
@@ -177,6 +180,7 @@ final class TripStore {
             let saved = try (self.trip ?? trip).with(rawState: doc, name: name,
                                                      updatedAt: ISO8601DateFormatter().string(from: .now), stateRev: rev)
             self.trip = saved
+            Task { await syncPlan() }
             if let userId, let data = try? JSONEncoder().encode(saved) { TripCache.save(data, userId: userId) }
         } catch let e as PostgrestError where e.code == "REV01" {
             await refresh()
@@ -256,6 +260,26 @@ final class TripStore {
                 if let before { list.append(before) }
             }
             throw ledgerError(error)
+        }
+    }
+
+    /// Booked stays and legs into All entries, kept in line with their bookings
+    /// (PlanSync.swift, the web's usePlanSync). One pass at a time; every write
+    /// is by id, so a second pass, or the web doing the same, can't double a row.
+    private var syncingPlan = false
+
+    func syncPlan() async {
+        // A viewer never writes: every row would bounce off the database.
+        guard let trip, canEdit, !syncingPlan else { return }
+        // `false` is the opt-out: then only rows already there are kept in line.
+        let autoImport = trip.rawState["autoImport"]?.boolValue ?? true
+        let writes = PlanSync.plan(trip).writes(autoImport: autoImport)
+        guard !writes.isEmpty else { return }
+        syncingPlan = true
+        defer { syncingPlan = false }
+        for entry in writes {
+            // Offline waits inside; a refusal stops the pass, the next open tries again.
+            do { try await upsertEntry(entry) } catch { break }
         }
     }
 
