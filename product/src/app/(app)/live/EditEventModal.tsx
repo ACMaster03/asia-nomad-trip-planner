@@ -123,7 +123,7 @@ export function EditEventModal({
       <div>
         <div className="text-base font-semibold">{headline}</div>
         <div className="mt-[3px] text-base text-tx3">
-          {fmtWhen(ev.occurred_at)} · place and time stay as they were - only your words change.
+          {fmtWhen(ev.occurred_at)}
         </div>
       </div>
 
@@ -217,8 +217,7 @@ export function EditEventModal({
               )}
             </div>
             <p className="mt-[7px] text-base leading-snug text-tx3">
-              Removed photos disappear for followers too. New ones upload when there&apos;s
-              signal.
+              Removed photos go for followers too
             </p>
           </div>
         </>

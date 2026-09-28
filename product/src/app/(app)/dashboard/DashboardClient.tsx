@@ -8,7 +8,7 @@ import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
 import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
-import { stayCounts, stayForNight } from '@/lib/trips/timeline'
+import { shortDate, stayCounts, stayForNight } from '@/lib/trips/timeline'
 import { isBookedStatus } from '@/lib/trips/commitment'
 import { useCheckIn } from '@/components/checkin/CheckInProvider'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
@@ -195,10 +195,7 @@ export default function DashboardClient({
           </span>
           <ChevronRight aria-hidden className="size-5 text-ac2" />
         </Link>
-        <div className="rounded-[var(--r)] bg-tag px-4 py-3.5 text-base leading-normal text-tag-ink">
-          Nothing is archived - Trip, Money and the feed stay as they were. Follow links keep working until they expire.
-        </div>
-        <div className={kicker}>The feed keeps the memories</div>
+        <div className={kicker}>Check-ins</div>
         <Link href="/dashboard" className={card + ' flex items-center justify-between'}>
           <span>
             <span className="block text-base font-semibold">All check-ins · {recap.checkIns} so far</span>
@@ -228,7 +225,7 @@ export default function DashboardClient({
             <div className="mt-2 font-serif text-[33px] font-semibold leading-none tracking-[-.02em]">{first.city}</div>
             <div className="mt-1.5 text-base font-medium text-tx2">
               {first.country} · {Math.max(1, Math.round((+new Date(first.depart) - +new Date(first.arrive)) / 86400000))} nights · from{' '}
-              {new Date(first.arrive).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
+              {shortDate(first.arrive)}
             </div>
             {daysTo !== null && (
               <div className="mt-3">
@@ -283,8 +280,7 @@ export default function DashboardClient({
             <div className="mt-3 flex gap-2 rounded-[var(--rCtl)] bg-warn-soft p-3">
               <TriangleAlert aria-hidden className="mt-0.5 size-4 flex-none text-warn" strokeWidth={2} />
               <p className="text-base leading-snug text-warn">
-                {b.missingAccomStops.length} {b.missingAccomStops.length === 1 ? 'stop has' : 'stops have'} no stay yet - the rest of the
-                estimate is city averages, not your numbers.
+                {b.missingAccomStops.length} {b.missingAccomStops.length === 1 ? 'stop has' : 'stops have'} no stay yet · city averages meanwhile
               </p>
             </div>
           )}
@@ -336,7 +332,7 @@ export default function DashboardClient({
         <div className="lv-enter flex items-start gap-2.5 rounded-[var(--r)] border-[1.5px] border-warn-line bg-sf p-3.5">
           <SatelliteDish aria-hidden className="mt-0.5 size-4 flex-none text-warn" strokeWidth={2} />
           <p className="flex-1 text-base font-medium leading-normal text-warn">
-            You&apos;re offline - check-ins are saved on this phone and will sync when you&apos;re back.
+            Offline · check-ins sync when you&apos;re back
           </p>
           {/* 16px glyph, 44px tap target — negative margins keep the layout
               where the bare icon sat (README: 44px min hit targets). */}
@@ -389,7 +385,7 @@ export default function DashboardClient({
                       ? `${stay.name || 'Stay'} · booked`
                       : <>{stay.name || 'Stay'} · <span className="text-warn">not booked</span></>
                     : <span className="text-warn">{stopHasStay ? 'No bed tonight' : 'No stay yet'}</span>}
-                  {phase === 'arrive' ? ` · ${nightsHere} nights planned` : ` · leave ${new Date(current.depart).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                  {phase === 'arrive' ? ` · ${nightsHere} nights planned` : ` · leave ${shortDate(current.depart)}`}
                 </>
               : ''}
         </div>
@@ -411,7 +407,7 @@ export default function DashboardClient({
           <Link href="/itinerary" className="mt-3 flex items-center justify-between border-t border-ln pt-3">
             <span>
               <span className="block text-base font-semibold">
-                Next: {nextStop.city} · {new Date(nextStop.arrive).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                Next: {nextStop.city} · {shortDate(nextStop.arrive)}
               </span>
               {b.missingAccomStops.length > 0 && (
                 <span className="block text-base text-warn">no stay yet{b.missingAccomStops.length > 1 ? ` - nor for the ${b.missingAccomStops.length - 1} after it` : ''}</span>
@@ -428,7 +424,7 @@ export default function DashboardClient({
           <Link href="/itinerary" className="mt-1 flex items-center justify-between border-b border-ln py-[13px]">
             <span>
               <span className="block text-base font-semibold text-ac">Add {placeName} as a stop</span>
-              <span className="block text-base text-tx2">joins the plan now · ends when you check in somewhere else</span>
+              <span className="block text-base text-tx2">until your next check-in</span>
             </span>
             <ChevronRight aria-hidden className="size-5 text-ac2" />
           </Link>
@@ -448,7 +444,7 @@ export default function DashboardClient({
         onClick={checkIn.open}
         className="flex items-center justify-center gap-2 rounded-[var(--r)] bg-ac py-[17px] text-lg font-semibold text-on"
       >
-        <MapPin aria-hidden className="size-5" strokeWidth={2.2} /> Check in - where are you?
+        <MapPin aria-hidden className="size-5" strokeWidth={2.2} /> Check in
       </button>
       {/* Arrival day only, and gone once it is recorded.
           It used to be a LINK to /live, so pressing "Arrived" recorded nothing
@@ -482,10 +478,12 @@ export default function DashboardClient({
           <span className="block text-base text-tx2">
             {money.pace.perDay !== null ? (
               <>
-                {fmt(money.pace.perDay)}/day everyday{money.pace.scope === 'stop' && current ? ` in ${current.city}` : ''} ·{' '}
-                {projected
-                  ? <span className="font-semibold text-ac2-deep">{money.projection.projected <= b.grand ? 'under the estimate' : 'over the estimate'}</span>
-                  : 'a\u00a0projection after a week'}
+                {/* No "under/over the estimate" (#65, Patrik, 28 Sep): it set the
+                    projection against the pre-trip city-average estimate, which
+                    counts different things. Money's Budget cap row says whether
+                    the journey is heading over. */}
+                {fmt(money.pace.perDay)} a day{money.pace.scope === 'stop' && current ? ` in ${current.city}` : ''}
+                {!projected && <> · a&nbsp;projection after a week</>}
               </>
             ) : projected ? (
               <>measuring your daily pace · {recapMid.spent > 0 ? `${fmt(recapMid.spent)} logged` : 'nothing logged yet'}</>

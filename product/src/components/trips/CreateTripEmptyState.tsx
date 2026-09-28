@@ -42,8 +42,7 @@ export default function CreateTripEmptyState() {
         <DoorClosed aria-hidden className="mx-auto size-9 text-tx2" strokeWidth={2} />
         <h1 className="mt-3 text-[22px] font-semibold leading-tight">You no longer have access to this trip</h1>
         <p className="mt-2.5 text-base leading-relaxed text-tx2">
-          It may have been deleted, or your invite was withdrawn. Ask the owner if you think
-          this is a mistake.
+          Deleted, or your invite was withdrawn.
         </p>
         <a
           href="/account"

@@ -156,7 +156,7 @@ export function ComingUp({ state, todayIso }: { state: TripState; todayIso: stri
               canEdit={canEdit}
               onTick={() => {
                 tick(r.id)
-                flash('Ticked - gone from Home, still under Done')
+                flash('Ticked · it’s under Done')
               }}
             />
           ) : (
