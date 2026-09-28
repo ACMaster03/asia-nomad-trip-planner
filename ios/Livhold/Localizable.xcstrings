@@ -285,6 +285,7 @@
       }
     },
     "%lld active · %@ a month": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1332,6 +1333,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Összes tétel"
+          }
+        }
+      }
+    },
+    "All subscriptions": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Összes előfizetés"
           }
         }
       }
@@ -2962,6 +2973,7 @@
       }
     },
     "Hide cancelled": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -3608,12 +3620,52 @@
         }
       }
     },
+    "No stays or transport in the plan yet. They’re added on Trip": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs szállás vagy közlekedés a tervben. Az Útitervben adhatod hozzá őket"
+          }
+        }
+      }
+    },
+    "No stops planned yet. Add them on Trip, and each one gets its cost here": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs tervezett megálló. Add hozzá őket az Útitervben, és mindegyik költsége itt jelenik meg"
+          }
+        }
+      }
+    },
     "No stops yet.": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Még nincs megálló."
+          }
+        }
+      }
+    },
+    "No subscriptions recorded yet.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs rögzített előfizetés."
+          }
+        }
+      }
+    },
+    "No subscriptions yet. Add the ones that keep charging from home, like Netflix or iCloud, and each charge adds itself on its day.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs előfizetés. Add hozzá az otthonról futókat, például a Netflixet vagy az iCloudot, és minden terhelés a maga napján bekerül."
           }
         }
       }
@@ -3634,6 +3686,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nincs"
+          }
+        }
+      }
+    },
+    "None active.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs aktív."
+          }
+        }
+      }
+    },
+    "None active. The cancelled ones are under All subscriptions.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs aktív. A lemondottakat az Összes előfizetés alatt találod."
           }
         }
       }
@@ -3709,6 +3781,7 @@
       }
     },
     "Nothing recurring recorded yet.": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -4082,6 +4155,7 @@
       }
     },
     "Repeating costs, like Netflix or iCloud.": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -4285,6 +4359,7 @@
       }
     },
     "Show cancelled (%lld)": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -5921,6 +5996,7 @@
       }
     },
     "none active": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {

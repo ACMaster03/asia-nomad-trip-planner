@@ -134,6 +134,9 @@ private struct TabStack: View {
             LedgerScreen(focus: focus)
                 .modifier(ZoomDestination(id: "entries", namespace: zoom))
         case .moneySettings: MoneySettingsScreen()
+        case .moneySubscriptions:
+            SubscriptionsScreen()
+                .modifier(ZoomDestination(id: "subscriptions", namespace: zoom))
         }
     }
 }

@@ -77,4 +77,6 @@ enum Route: Hashable {
     /// All entries, optionally opened on a filter ("beyond") or a day ("2026-09-20").
     case moneyEntries(String?)
     case moneySettings
+    /// Every subscription, from Money's card.
+    case moneySubscriptions
 }

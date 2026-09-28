@@ -3,8 +3,9 @@ import SwiftUI
 
 // Money on iOS (Money mock round 2, approved by Patrik on 27 Sep with the gaps
 // left as issues): the top card, Latest, Daily spend and Where it goes as the
-// web has them, Plan by stop with its sums, then Bookings and Subscriptions
-// folded. Tracking lives in Settings → Money; with it off the page shows what's
+// web has them, Plan by stop with its sums, then Bookings and Subscriptions,
+// always open (Patrik, 29 Sep: no card folds; Subscriptions shows its next three
+// and opens a page of its own, like Latest). Tracking lives in Settings → Money; with it off the page shows what's
 // committed and an invitation. Numbers come from MoneyModel (the web's maths).
 
 struct MoneyScreen: View {
@@ -1089,6 +1090,17 @@ struct PlanCard: View {
                 Text(MoneyText.approx(model.projection.projected, model.base)).font(.sans(13, weight: .medium)).foregroundStyle(Palette.tx2)
             }
             .padding(.bottom, 4)
+            if model.plan.isEmpty {
+                Button { withAnimation(.easeInOut(duration: 0.3)) { router.select(.trip) } } label: {
+                    (Text("No stops planned yet. Add them on Trip, and each one gets its cost here")
+                     + Text(verbatim: " ›").foregroundColor(Palette.ac))
+                        .font(.sans(14)).foregroundStyle(Palette.tx2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 10)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            }
             ForEach(model.plan) { row in
                 Divider().overlay(Palette.ln)
                 stopRow(row)
@@ -1260,42 +1272,6 @@ private struct PlanInfo: View {
 
 // MARK: - bookings and subscriptions
 
-private struct Fold<Content: View>: View {
-    let title: LocalizedStringKey
-    let summary: Text
-    @State var open: Bool
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button { withAnimation(Motion.settle) { open.toggle() } } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        CardLabel(title, mauve: true)
-                        summary.font(.sans(13.5)).foregroundStyle(Palette.tx2)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Palette.tx3)
-                        .rotationEffect(.degrees(open ? 180 : 0))
-                }
-                .padding(.vertical, 12)
-                .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-            if open {
-                content
-                    .padding(.bottom, 10)
-                    .expands()
-            }
-        }
-        .padding(.horizontal, 16)
-        .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
-        .clipped()
-    }
-}
-
 /// Two rows and what's paid, always open (Patrik, 29 Sep: it's only two rows);
 /// the total sits beside the title, as Plan's does.
 private struct BookingsCard: View {
@@ -1311,27 +1287,45 @@ private struct BookingsCard: View {
             HStack(alignment: .firstTextBaseline) {
                 CardLabel("Bookings", mauve: true)
                 Spacer()
-                Text(MoneyText.short(b.total, model.base)).font(.sans(13, weight: .medium)).foregroundStyle(Palette.tx2)
+                if !b.all.isEmpty {
+                    Text(MoneyText.short(b.total, model.base)).font(.sans(13, weight: .medium)).foregroundStyle(Palette.tx2)
+                }
             }
             .padding(.bottom, 4)
+            if b.all.isEmpty {
+                Button { withAnimation(.easeInOut(duration: 0.3)) { router.select(.trip) } } label: {
+                    (Text("No stays or transport in the plan yet. They’re added on Trip")
+                     + Text(verbatim: " ›").foregroundColor(Palette.ac))
+                        .font(.sans(14)).foregroundStyle(Palette.tx2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 10)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            } else {
             VStack(spacing: 0) {
                 let stays = b.stays
                 let legs = b.transport
+                if !stays.isEmpty {
                 Divider().overlay(Palette.ln)
                 row("stays", "Stays",
                     String(localized: "\(stays.filter { $0.status == .paid }.count) paid")
                         + (stays.contains { $0.status == .unbooked } ? " · " + String(localized: "\(stays.filter { $0.status == .unbooked }.count) not booked") : ""),
                     stays.reduce(0) { $0 + $1.amount })
+                }
+                if !legs.isEmpty {
                 Divider().overlay(Palette.ln)
                 row("transport", "Transport", String(localized: "\(legs.filter { $0.status != .unbooked }.count) of \(legs.count) booked"),
                     legs.reduce(0) { $0 + $1.amount })
+                }
                 Divider().overlay(Palette.ln)
                 VStack(spacing: 4) {
-                    sumLine("Paid", settled, Palette.tx2)
+                    if settled > 0 { sumLine("Paid", settled, Palette.tx2) }
                     if due > 0 { sumLine("Scheduled & to pay", due, Palette.tx2) }
                     if b.notBooked > 0 { sumLine("Not booked yet", b.notBooked, Palette.warn) }
                 }
                 .padding(.top, 10)
+            }
             }
         }
         .padding(.horizontal, 16)
@@ -1371,188 +1365,51 @@ private struct BookingsCard: View {
     }
 }
 
+/// Latest's pattern (Patrik, 29 Sep): the three that charge next, the rest on
+/// Subscriptions, one tap away; always open, like every card on Money now.
 private struct SubscriptionsCard: View {
     let model: MoneyModel
-    @Environment(TripStore.self) private var store
-    @Environment(MoneyEditor.self) private var editor
-    @State private var showCancelled = false
-    /// A bell's new state from the tap until the save lands, so it turns at once.
-    @State private var reminding: [String: Bool] = [:]
+    @Environment(\.tabZoom) private var zoom
 
     var body: some View {
-        let active = model.subscriptions.filter { !$0.isCancelled }
-            .sorted { (Subscriptions.nextCharge($0, from: model.today) ?? "9999") < (Subscriptions.nextCharge($1, from: model.today) ?? "9999") }
-        let cancelled = model.subscriptions.filter(\.isCancelled).sorted { ($0.cancelledOn ?? "") > ($1.cancelledOn ?? "") }
-        let monthly = active.reduce(0) { $0 + Journey.toBase($1.amount, $1.cur, model.rates) / Double($1.everyMonths) }
-        if model.subscriptions.isEmpty {
-            // Nothing yet: what they are, and the way to add one.
-            VStack(alignment: .leading, spacing: 8) {
+        let active = SubscriptionList.active(model)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
                 CardLabel("Subscriptions", mauve: true)
-                (store.canEdit ? Text("Repeating costs, like Netflix or iCloud.") : Text("Nothing recurring recorded yet."))
-                    .font(.sans(14.5)).foregroundStyle(Palette.tx2)
-                if store.canEdit { addButton }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
-        } else {
-            Fold(title: "Subscriptions", summary: summary(active, monthly), open: false) {
-                VStack(spacing: 0) {
-                    ForEach(active) { row($0) }
-                    if showCancelled { ForEach(cancelled) { row($0) } }
-                    if !cancelled.isEmpty {
-                        Divider().overlay(Palette.ln)
-                        Button(showCancelled ? String(localized: "Hide cancelled") : String(localized: "Show cancelled (\(cancelled.count))")) {
-                            withAnimation(Motion.settle) { showCancelled.toggle() }
-                        }
-                        .font(.sans(13.5, weight: .semibold)).foregroundStyle(Palette.ac)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 10)
+                Spacer()
+                if !model.subscriptions.isEmpty {
+                    NavigationLink(value: Route.moneySubscriptions) {
+                        Text("All subscriptions").font(.sans(13.5, weight: .medium)).foregroundStyle(Palette.ac)
+                        + Text(verbatim: " ›").font(.sans(13.5, weight: .medium)).foregroundStyle(Palette.ac)
                     }
+                }
+            }
+            .padding(.bottom, 4)
+            if model.subscriptions.isEmpty {
+                SubscriptionsEmpty()
+            } else if active.isEmpty {
+                Text("None active. The cancelled ones are under All subscriptions.")
+                    .font(.sans(14)).foregroundStyle(Palette.tx2)
+                    .padding(.vertical, 10)
+            } else {
+                ForEach(active.prefix(3)) { sub in
                     Divider().overlay(Palette.ln)
-                    VStack(spacing: 4) {
-                        HStack {
-                            Text("\(active.count) active").foregroundStyle(Palette.tx2)
-                            Spacer()
-                            Text("\(MoneyText.approx(monthly, model.base)) a month").fontWeight(.semibold)
-                        }
-                        .font(.sans(14.5))
-                        if let ahead = ahead(active), ahead.days > 0 {
-                            HStack {
-                                Text("across the \(ahead.days) days left")
-                                Spacer()
-                                Text(MoneyText.approx(ahead.total, model.base))
-                            }
-                            .font(.sans(13)).foregroundStyle(Palette.tx2)
-                        }
-                    }
-                    .padding(.top, 10)
-                    if store.canEdit {
-                        addButton.frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12)
-                    }
+                    SubscriptionRow(sub: sub, model: model)
                 }
-            }
-        }
-    }
-
-    private var addButton: some View {
-        Button { editor.sub = SubTarget(sub: nil) } label: {
-            Label("Subscription", systemImage: "plus")
-                .font(.sans(15, weight: .semibold))
-                .foregroundStyle(Palette.ac2Deep)
-                .padding(.horizontal, 16).padding(.vertical, 10)
-                .background(Palette.ac2Soft, in: .rect(cornerRadius: Radius.rCtl))
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// "3 active · ≈ 8 800 Ft a month · iCloud tomorrow"
-    private func summary(_ active: [Subscription], _ monthly: Double) -> Text {
-        let head = active.isEmpty ? Text("none active") : Text("\(active.count) active · \(MoneyText.approx(monthly, model.base)) a month")
-        let dated = active.compactMap { s in Subscriptions.nextCharge(s, from: model.today).map { (s, Days.between(model.today, $0)) } }
-        guard let soon = dated.filter({ $0.1 <= 7 }).min(by: { $0.1 < $1.1 }) else { return head }
-        return head + Text(verbatim: " · \(soon.0.label) ") + Text(when(soon.1)).foregroundColor(Palette.warn).bold()
-    }
-
-    private func when(_ days: Int) -> String {
-        days == 0 ? String(localized: "today") : days == 1 ? String(localized: "tomorrow") : String(localized: "in \(days) days")
-    }
-
-    /// What the active ones take from tomorrow to the journey's end.
-    private func ahead(_ active: [Subscription]) -> (days: Int, total: Double)? {
-        guard let end = model.tripEnd, end > model.today else { return nil }
-        let from = Days.add(model.today, 1)
-        let total = active.reduce(0.0) { sum, s in
-            sum + Double(Subscriptions.charges(s, from: from, to: end).count) * Journey.toBase(s.amount, s.cur, model.rates)
-        }
-        return (Days.between(model.today, end), total)
-    }
-
-    private func row(_ s: Subscription) -> some View {
-        let off = s.isCancelled
-        let next = off ? nil : Subscriptions.nextCharge(s, from: model.today)
-        let soon = next.map { Days.between(model.today, $0) }
-        return VStack(spacing: 0) {
-            Divider().overlay(Palette.ln)
-            HStack(alignment: .top, spacing: 12) {
-                bell(s)
-                Button { editor.sub = SubTarget(sub: s) } label: {
-                    HStack(alignment: .top, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(s.label).font(.sans(15, weight: .medium))
-                                .foregroundStyle(off ? Palette.tx3 : Palette.tx)
-                                .strikethrough(off).lineLimit(1)
-                            detail(s, next: next, soon: soon)
-                        }
-                        Spacer(minLength: 6)
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(MoneyText.full(Journey.toBase(s.amount, s.cur, model.rates), model.base))
-                                .font(.sans(15, weight: .semibold)).foregroundStyle(off ? Palette.tx3 : Palette.tx)
-                            Text(cadence(s)).font(.sans(12.5)).foregroundStyle(Palette.tx2)
-                        }
-                        if store.canEdit {
-                            Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(Palette.tx3).padding(.top, 4)
-                        }
-                    }
-                    .contentShape(.rect)
+                Divider().overlay(Palette.ln)
+                HStack {
+                    Text("\(active.count) active")
+                    Spacer()
+                    Text("\(MoneyText.approx(SubscriptionList.monthly(active, model), model.base)) a month")
                 }
-                .buttonStyle(.plain)
-                .disabled(!store.canEdit)
-            }
-            .padding(.vertical, 9)
-        }
-    }
-
-    /// On: a reminder before it charges. One tap turns it on or off, as on the web.
-    @ViewBuilder private func bell(_ s: Subscription) -> some View {
-        let on = (reminding[s.id] ?? s.remind) && !s.isCancelled
-        let icon = Image(systemName: s.isCancelled ? "minus" : (on ? "bell.fill" : "bell.slash"))
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(on ? Palette.ac2Deep : Palette.tx3)
-            .frame(width: 34, height: 34)
-            .background(on ? Palette.ac2Soft : Palette.fill, in: .circle)
-        if store.canEdit && !s.isCancelled {
-            Button { toggleRemind(s) } label: { icon }
-                .buttonStyle(.plain)
-                .accessibilityLabel(on ? String(localized: "Reminder on, \(SubscriptionForm.leadLabel(s.leadDays)). Turn off") : String(localized: "Reminder off. Turn on"))
-                .sensoryFeedback(.selection, trigger: on)
-        } else {
-            icon
-        }
-    }
-
-    private func detail(_ s: Subscription, next: String?, soon: Int?) -> some View {
-        var line: Text
-        if let off = s.cancelledOn {
-            line = Text("cancelled \(Days.short(off))")
-        } else {
-            line = s.everyMonths == 1 ? Text("on the \(SubscriptionForm.ordinal(Int(s.anchor.suffix(2)) ?? 1))")
-                : Text(next.map { String(localized: "next \(Days.short($0))") } ?? "")
-            // Within a week, how soon says it better than the date (Patrik, 29 Sep).
-            if let soon, soon <= 7 { line = Text(when(soon)).foregroundColor(Palette.warn).bold() }
-        }
-        return line.font(.sans(12.5)).foregroundStyle(Palette.tx2)
-    }
-
-    private func cadence(_ s: Subscription) -> String {
-        s.everyMonths == 1 ? String(localized: "monthly")
-            : (s.everyMonths == 12 ? String(localized: "yearly") : String(localized: "every \(s.everyMonths) months"))
-    }
-
-    private func toggleRemind(_ s: Subscription) {
-        let to = !(reminding[s.id] ?? s.remind)
-        reminding[s.id] = to
-        Task {
-            // Saved or not, the journey's own value shows again: the new one, or the old.
-            defer { reminding[s.id] = nil }
-            try? await store.save { state in
-                state.upsert("subscriptions", id: s.id, [
-                    "remind": .bool(to),
-                    "leadDays": .number(Double(s.leadDays)),
-                ])
+                .font(.sans(13.5)).foregroundStyle(Palette.tx2)
+                .padding(.top, 10)
             }
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
+        .modifier(ZoomSource(id: "subscriptions", namespace: zoom))
     }
 }
 

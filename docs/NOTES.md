@@ -38,6 +38,12 @@ when a decision needs to survive the conversation it was made in.
 - **Layout (Patrik, 29 Sep):** Bookings is always open, total beside the title, no "to pay" in
   the header. How it adds up says "Scheduled"; the planned nights and the days after the
   plan are one line, "213 days ahead".
+- **No card on Money folds any more (Patrik, 29 Sep).** Subscriptions works like Latest: the
+  three that charge next, "N active · ≈ X a month", and "All subscriptions ›" zooming into a
+  page with all of them, the totals, the cancelled ones and + to add. Empty states: Bookings
+  "No stays or transport in the plan yet" (taps to Trip), Plan "No stops planned yet",
+  Subscriptions explains itself with an add button (viewers: "No subscriptions recorded yet").
+- **The web's side of these numbers is issue #127.**
 - **The web still has the old numbers** for both points; it follows in its own pull request.
 - **Layout:** Daily spend and Where it goes share one range; the legend always lists all seven
   groups (missing ones dimmed); the box under the chart is one size (days at a glance, or the
