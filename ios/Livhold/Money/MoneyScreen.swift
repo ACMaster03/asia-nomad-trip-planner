@@ -282,8 +282,11 @@ private struct TopCard: View {
                 VStack(alignment: .leading, spacing: 3) {
                     CardLabel(verbatim: spentLabel)
                     big(MoneyText.short(p.spent, model.base), value: p.spent)
-                    if p.scheduled > 0 {
-                        Text("+ \(MoneyText.approx(p.scheduled, model.base)) scheduled, not spent yet")
+                    // Committed, not paid: entries dated ahead and bookings with no
+                    // entry yet, the same money Bookings calls "to pay" (Patrik, 29 Sep).
+                    let unpaid = p.scheduled + model.bookings.toPay
+                    if unpaid > 0 {
+                        Text("+ \(MoneyText.approx(unpaid, model.base)) not paid yet")
                             .font(.sans(13)).foregroundStyle(Palette.tx2)
                             .fixedSize(horizontal: false, vertical: true)
                     }

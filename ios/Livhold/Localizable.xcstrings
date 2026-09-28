@@ -862,7 +862,18 @@
         }
       }
     },
+    "+ %@ not paid yet": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ %@ még nincs kifizetve"
+          }
+        }
+      }
+    },
     "+ %@ scheduled, not spent yet": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
