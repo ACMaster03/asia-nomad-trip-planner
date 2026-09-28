@@ -970,8 +970,6 @@ struct PlanCard: View {
     @State private var open: Set<String> = []
     @State private var info = false
     @Environment(TabRouter.self) private var router
-    @Environment(TripEditor.self) private var tripEditor
-    @Environment(TripStore.self) private var store
 
     static func stayWords(_ label: MoneyModel.PlanRow.StayLabel) -> String {
         switch label {
@@ -1012,25 +1010,6 @@ struct PlanCard: View {
             ForEach(model.plan) { row in
                 Divider().overlay(Palette.ln)
                 stopRow(row)
-            }
-            if let gap = planGap {
-                Divider().overlay(Palette.ln)
-                // An action, not a place to go (Patrik, 28 Sep): the add-stop form opens
-                // over Money, arriving the day the last stop is left.
-                Button { tripEditor.open(.addStop) } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "plus.circle.fill").font(.system(size: 20)).foregroundStyle(Palette.ac)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("Add the next stop").font(.sans(15, weight: .semibold)).foregroundStyle(Palette.ac)
-                            Text(gap).font(.sans(12.5)).foregroundStyle(Palette.tx2).lineLimit(2)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.vertical, 10)
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .disabled(!store.canEdit)
             }
             Divider().overlay(Palette.ln)
             addsUp
@@ -1154,6 +1133,13 @@ struct PlanCard: View {
                     if p.transportToPay > 0 { sum("Transport to pay", p.transportToPay) }
                     if p.subsAhead > 0 { sum("Subscriptions ahead", p.subsAhead) }
                     sum("The journey", p.projected, bold: true, approx: true)
+                    if let gap = planGap {
+                        Text("\(gap) Days after the last planned stop aren’t counted yet.")
+                            .font(.sans(12.5)).foregroundStyle(Palette.tx2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.vertical, 8)
+                    }
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
@@ -1267,7 +1253,7 @@ private struct BookingsCard: View {
     /// Stays and transport are booked and changed on the Trip page, so a row
     /// goes there (the web's Bookings card links to /itinerary the same way).
     private func row(_ cat: String, _ title: LocalizedStringKey, _ detail: String, _ amount: Double) -> some View {
-        Button { router.select(.trip) } label: {
+        Button { withAnimation(.easeInOut(duration: 0.3)) { router.select(.trip) } } label: {
             HStack(spacing: 12) {
                 CategoryTile(id: cat, size: 30)
                 VStack(alignment: .leading, spacing: 1) {
@@ -1304,7 +1290,8 @@ private struct SubscriptionsCard: View {
 
     var body: some View {
         let active = model.subscriptions.filter { !$0.isCancelled }
-        let cancelled = model.subscriptions.filter(\.isCancelled)
+            .sorted { (Subscriptions.nextCharge($0, from: model.today) ?? "9999") < (Subscriptions.nextCharge($1, from: model.today) ?? "9999") }
+        let cancelled = model.subscriptions.filter(\.isCancelled).sorted { ($0.cancelledOn ?? "") > ($1.cancelledOn ?? "") }
         let monthly = active.reduce(0) { $0 + Journey.toBase($1.amount, $1.cur, model.rates) / Double($1.everyMonths) }
         if model.subscriptions.isEmpty {
             // Nothing yet: what they are, and the way to add one.

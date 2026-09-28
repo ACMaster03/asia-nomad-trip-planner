@@ -36,6 +36,16 @@
         }
       }
     },
+    "%@ Days after the last planned stop aren’t counted yet.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Az utolsó tervezett megálló utáni napok még nem számítanak bele."
+          }
+        }
+      }
+    },
     "%@ a month": {
       "localizations": {
         "hu": {
@@ -1032,6 +1042,7 @@
       }
     },
     "Add the next stop": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
