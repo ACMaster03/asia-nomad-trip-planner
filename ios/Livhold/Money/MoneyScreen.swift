@@ -80,6 +80,9 @@ private struct MoneyPage: View {
 
     @Environment(TripStore.self) private var store
     @Environment(MoneyEditor.self) private var editor
+    /// The days Daily spend and Where it goes look at, together.
+    @State private var range = 14
+    @State private var end: String?
 
     /// The quiet page: tracking off, or not answered and nothing typed yet (tracking.ts isQuiet).
     private var quiet: Bool {
@@ -111,10 +114,10 @@ private struct MoneyPage: View {
                 TopCard(model: model)
                 LatestCard(model: model)
                 if model.unlocks.chart {
-                    DailySpendCard(model: model)
+                    DailySpendCard(model: model, range: $range, end: $end)
                 }
                 if model.unlocks.whereItGoes {
-                    WhereItGoesCard(model: model)
+                    WhereItGoesCard(model: model, range: $range, end: $end)
                 }
                 if model.unlocks.projection {
                     PlanCard(model: model)
@@ -566,10 +569,77 @@ struct EntryRow: View {
 
 // MARK: - daily spend
 
+/// 7, 14, 30 or 90 days and the arrows to page back through them; Daily spend
+/// and Where it goes share one, so both cards look at the same days.
+private struct RangeBar: View {
+    let model: MoneyModel
+    @Binding var range: Int
+    @Binding var end: String?
+
+    var body: some View {
+        let window = model.window(range: range, end: end)
+        HStack(spacing: 6) {
+            pager("chevron.left", enabled: window.from > model.earliestDate) { page(-1, window) }
+            Picker("Days", selection: $range.animation(Motion.settle)) {
+                ForEach([7, 14, 30, 90], id: \.self) { Text("\($0)d").tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: range) { end = nil }
+            pager("chevron.right", enabled: window.to < model.today) { page(1, window) }
+        }
+    }
+
+    private func pager(_ symbol: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 13, weight: .semibold)).frame(width: 28, height: 28)
+        }
+        .foregroundStyle(enabled ? Palette.tx2 : Palette.tx3.opacity(0.4))
+        .disabled(!enabled)
+    }
+
+    private func page(_ dir: Int, _ window: (from: String, to: String)) {
+        let next = Days.add(window.to, dir * range)
+        withAnimation(Motion.settle) { end = next >= model.today ? nil : next }
+    }
+}
+
+/// Taps and hold-then-drag on a chart, through UIKit so they share the touch
+/// with the page's scrolling: a finger that moves before the hold is a scroll.
+private struct ChartTouches: UIViewRepresentable {
+    var onTap: (CGFloat) -> Void
+    var onScrub: (CGFloat) -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.addGestureRecognizer(UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tap(_:))))
+        let hold = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.hold(_:)))
+        hold.minimumPressDuration = 0.2
+        view.addGestureRecognizer(hold)
+        return view
+    }
+
+    func updateUIView(_ view: UIView, context: Context) { context.coordinator.parent = self }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    @MainActor final class Coordinator: NSObject {
+        var parent: ChartTouches
+        init(_ parent: ChartTouches) { self.parent = parent }
+
+        @objc func tap(_ g: UITapGestureRecognizer) { parent.onTap(g.location(in: g.view).x) }
+
+        @objc func hold(_ g: UILongPressGestureRecognizer) {
+            guard g.state == .began || g.state == .changed else { return }
+            parent.onScrub(g.location(in: g.view).x)
+        }
+    }
+}
+
 private struct DailySpendCard: View {
     let model: MoneyModel
-    @State private var range = 14
-    @State private var end: String?
+    @Binding var range: Int
+    @Binding var end: String?
     @State private var selected: String?
 
     var body: some View {
@@ -586,15 +656,7 @@ private struct DailySpendCard: View {
                 Text("\(Days.short(window.from)) – \(Days.short(window.to))").font(.sans(12.5)).foregroundStyle(Palette.tx2)
             }
             if model.unlocks.range {
-                HStack(spacing: 6) {
-                    pager("chevron.left", enabled: window.from > model.earliestDate) { page(-1, window) }
-                    Picker("Days", selection: $range) {
-                        ForEach([7, 14, 30, 90], id: \.self) { Text("\($0)d").tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .onChange(of: range) { end = nil; selected = nil }
-                    pager("chevron.right", enabled: window.to < model.today) { page(1, window) }
-                }
+                RangeBar(model: model, range: $range, end: $end)
             }
             // Days on a real date axis: one bar per calendar day, labels only where
             // `labels` puts them. (A text axis labelled every day on some phones.)
@@ -631,8 +693,9 @@ private struct DailySpendCard: View {
                 }
             }
             // A tap picks a day, a second tap on it closes the callout. Hold, then drag,
-            // and the callout follows the finger day by day, with a tick on each
-            // (Patrik, 27 Sep). The hold keeps a plain swipe for the page's scrolling.
+            // and the callout follows the finger day by day, with a tick on each. A
+            // swipe still scrolls the page (Patrik, 28 Sep: taps didn't register and
+            // the page wouldn't scroll over the chart; SwiftUI's gestures claimed both).
             .chartOverlay { proxy in
                 GeometryReader { geo in
                     let dayAt = { (x: CGFloat) -> String? in
@@ -640,20 +703,16 @@ private struct DailySpendCard: View {
                               let date: Date = proxy.value(atX: x - geo[plot].origin.x) else { return nil }
                         return min(max(EntrySheet.iso(date), window.from), window.to)
                     }
-                    Rectangle().fill(.clear).contentShape(.rect)
-                        .gesture(
-                            LongPressGesture(minimumDuration: 0.2)
-                                .sequenced(before: DragGesture(minimumDistance: 0))
-                                .onChanged { value in
-                                    guard case .second(true, let drag?) = value,
-                                          let day = dayAt(drag.location.x), day != selected else { return }
-                                    selected = day
-                                }
-                                .exclusively(before: SpatialTapGesture().onEnded { tap in
-                                    guard let day = dayAt(tap.location.x) else { return }
-                                    withAnimation(Motion.quick) { selected = selected == day ? nil : day }
-                                })
-                        )
+                    ChartTouches(
+                        onTap: { x in
+                            guard let day = dayAt(x) else { return }
+                            withAnimation(Motion.quick) { selected = selected == day ? nil : day }
+                        },
+                        onScrub: { x in
+                            guard let day = dayAt(x), day != selected else { return }
+                            selected = day
+                        }
+                    )
                 }
             }
             .chartYAxis(.hidden)
@@ -674,6 +733,7 @@ private struct DailySpendCard: View {
             .frame(height: 140)
             .animation(Motion.settle, value: window.from)
             .sensoryFeedback(.selection, trigger: selected)
+            .onChange(of: window.from) { selected = nil }
 
             if let selected { callout(selected) }
 
@@ -691,21 +751,6 @@ private struct DailySpendCard: View {
         return Calendar.current.date(from: DateComponents(year: p[0], month: p[1], day: p[2])) ?? .now
     }
 
-    private func pager(_ symbol: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 13, weight: .semibold)).frame(width: 28, height: 28)
-        }
-        .foregroundStyle(enabled ? Palette.tx2 : Palette.tx3.opacity(0.4))
-        .disabled(!enabled)
-    }
-
-    private func page(_ dir: Int, _ window: (from: String, to: String)) {
-        let next = Days.add(window.to, dir * range)
-        withAnimation(Motion.settle) {
-            end = next >= model.today ? nil : next
-            selected = nil
-        }
-    }
 
     /// Every day for a week, every 4th for 14, every 7th for 30, month starts for 90.
     private func labels(_ dates: [String]) -> [String] {
@@ -811,10 +856,12 @@ struct FlowLayout: Layout {
 
 private struct WhereItGoesCard: View {
     let model: MoneyModel
+    @Binding var range: Int
+    @Binding var end: String?
     @State private var showAll = false
 
     var body: some View {
-        let window = model.window(range: 14, end: nil)
+        let window = model.window(range: range, end: end)
         let cats = model.byCategory(from: window.from, to: window.to)
         let total = cats.reduce(0) { $0 + $1.total }
         let families: [(family: Family, total: Double)] = Dictionary(grouping: cats) { Categories.family($0.category) }
@@ -829,6 +876,9 @@ private struct WhereItGoesCard: View {
                 CardLabel("Where it goes · \(days) days", mauve: true)
                 Spacer()
                 Text("everyday costs").font(.sans(12.5)).foregroundStyle(Palette.tx2)
+            }
+            if model.unlocks.range {
+                RangeBar(model: model, range: $range, end: $end)
             }
             HStack(spacing: 16) {
                 Chart(families, id: \.family) { f in
@@ -920,6 +970,8 @@ struct PlanCard: View {
     @State private var open: Set<String> = []
     @State private var info = false
     @Environment(TabRouter.self) private var router
+    @Environment(TripEditor.self) private var tripEditor
+    @Environment(TripStore.self) private var store
 
     static func stayWords(_ label: MoneyModel.PlanRow.StayLabel) -> String {
         switch label {
@@ -963,13 +1015,22 @@ struct PlanCard: View {
             }
             if let gap = planGap {
                 Divider().overlay(Palette.ln)
-                Button { router.selection = .trip } label: {
-                    Line(title: "Add the next stop", detail: gap) {
-                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.tx3)
+                // An action, not a place to go (Patrik, 28 Sep): the add-stop form opens
+                // over Money, arriving the day the last stop is left.
+                Button { tripEditor.open(.addStop) } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "plus.circle.fill").font(.system(size: 20)).foregroundStyle(Palette.ac)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Add the next stop").font(.sans(15, weight: .semibold)).foregroundStyle(Palette.ac)
+                            Text(gap).font(.sans(12.5)).foregroundStyle(Palette.tx2).lineLimit(2)
+                        }
+                        Spacer(minLength: 0)
                     }
+                    .padding(.vertical, 10)
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .disabled(!store.canEdit)
             }
             Divider().overlay(Palette.ln)
             addsUp
@@ -1141,7 +1202,7 @@ private struct Fold<Content: View>: View {
             Button { withAnimation(Motion.settle) { open.toggle() } } label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        CardLabel(title)
+                        CardLabel(title, mauve: true)
                         summary.font(.sans(13.5)).foregroundStyle(Palette.tx2)
                     }
                     Spacer()
