@@ -137,7 +137,8 @@ private struct TripTimeline: View {
         if !tl.stops.isEmpty {
             let placed = tl.stops.reduce(0) { $0 + Journey.nights($1) }
             let total = Days.between(state.meta.startDate, state.meta.endDate)
-            (total > 0 ? Text("\(placed) of \(total) nights placed") : Text("\(placed) nights placed"))
+            // "Planned", as Money says "days not planned yet" (Patrik, 29 Sep).
+            (total > 0 ? Text("\(placed) of \(total) nights planned") : Text("\(placed) nights planned"))
                 .font(.sans(16, weight: .medium))
                 .foregroundStyle(Palette.tx2)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -538,9 +539,18 @@ struct StopCard: View {
                         .font(.serif(21))
                         .foregroundStyle(Palette.tx)
                         .lineLimit(1)
-                    Text((seg.country.isEmpty ? "" : "\(L10n.country(seg.country)) · ") + "\(Days.short(seg.arrive)) → \(Days.short(seg.depart))")
+                    // City, country and dates a row each (Patrik, 29 Sep): side by side they
+                    // ran out of room in Hungarian and with longer names.
+                    if !seg.country.isEmpty {
+                        Text(L10n.country(seg.country))
+                            .font(.sans(15))
+                            .foregroundStyle(Palette.tx2)
+                            .lineLimit(1)
+                    }
+                    Text(verbatim: "\(Days.short(seg.arrive)) → \(Days.short(seg.depart))")
                         .font(.sans(15))
                         .foregroundStyle(Palette.tx2)
+                        .lineLimit(1)
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 0) {
@@ -790,7 +800,12 @@ private struct StopPage: View {
                     .foregroundStyle(Palette.tx)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
-                Text((seg.country.isEmpty ? "" : "\(L10n.country(seg.country)) · ") + "\(Days.short(seg.arrive)) → \(Days.short(seg.depart)) · " + String(localized: "\(nights) nights"))
+                if !seg.country.isEmpty {
+                    Text(L10n.country(seg.country))
+                        .font(.sans(16, weight: .medium))
+                        .foregroundStyle(Palette.tx2)
+                }
+                Text(verbatim: "\(Days.short(seg.arrive)) → \(Days.short(seg.depart)) · " + String(localized: "\(nights) nights"))
                     .font(.sans(16, weight: .medium))
                     .foregroundStyle(Palette.tx2)
             }

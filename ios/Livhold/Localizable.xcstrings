@@ -754,6 +754,7 @@
       }
     },
     "%lld nights placed": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "variations": {
@@ -777,6 +778,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld éjszaka beosztva"
+          }
+        }
+      }
+    },
+    "%lld nights planned": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld night planned"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld nights planned"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld éjszaka megtervezve"
           }
         }
       }
@@ -836,6 +865,7 @@
       }
     },
     "%lld of %lld nights placed": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -847,6 +877,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld / %2$lld éjszaka beosztva"
+          }
+        }
+      }
+    },
+    "%lld of %lld nights planned": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld of %2$lld nights planned"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld / %2$lld éjszaka megtervezve"
           }
         }
       }
