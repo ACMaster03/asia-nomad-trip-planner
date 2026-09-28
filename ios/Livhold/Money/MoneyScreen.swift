@@ -93,7 +93,7 @@ private struct MoneyPage: View {
         VStack(alignment: .leading, spacing: 12) {
             header
             if quiet {
-                BookingsCard(model: model, open: true)
+                BookingsCard(model: model)
                 SubscriptionsCard(model: model)
                 if !model.ledger.isEmpty {
                     NavigationLink(value: Route.moneyEntries(nil)) {
@@ -127,7 +127,7 @@ private struct MoneyPage: View {
                         .font(.sans(13)).foregroundStyle(Palette.tx3)
                         .padding(.horizontal, 4)
                 }
-                BookingsCard(model: model, open: false)
+                BookingsCard(model: model)
                 SubscriptionsCard(model: model)
             }
         }
@@ -1209,15 +1209,15 @@ struct PlanCard: View {
             if isOpen {
                 VStack(spacing: 0) {
                     sum("Spent so far", p.spent)
-                    if p.scheduled > 0 { sum("Scheduled, not spent yet", p.scheduled) }
-                    sum("\(p.remainingNights) nights ahead", p.ahead)
+                    if p.scheduled > 0 { sum("Scheduled", p.scheduled) }
+                    // The planned stops' nights and the days after them, one line (Patrik, 29 Sep).
+                    sum("\(p.daysAhead) days ahead", p.ahead + p.unplanned, approx: p.unplanned > 0)
                     if p.unpaidStays > 0 { sum("Stays not paid yet", p.unpaidStays) }
                     if p.transportToPay > 0 { sum("Transport to pay", p.transportToPay) }
                     if p.subsAhead > 0 { sum("Subscriptions ahead", p.subsAhead) }
-                    if p.unplanned > 0 { sum("\(p.unplannedDays) days not planned yet", p.unplanned, approx: true) }
                     sum("The journey", p.projected, bold: true, approx: true)
                     if let gap = planGap, p.unplanned > 0 {
-                        Text("\(gap) Those days count at your daily pace and the average night’s stay so far.")
+                        Text("\(gap) The \(p.unplannedDays) days after it count at your daily pace and the average night’s stay so far.")
                             .font(.sans(12.5)).foregroundStyle(Palette.tx2)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
@@ -1296,9 +1296,10 @@ private struct Fold<Content: View>: View {
     }
 }
 
+/// Two rows and what's paid, always open (Patrik, 29 Sep: it's only two rows);
+/// the total sits beside the title, as Plan's does.
 private struct BookingsCard: View {
     let model: MoneyModel
-    let open: Bool
     @Environment(TabRouter.self) private var router
 
     var body: some View {
@@ -1306,11 +1307,13 @@ private struct BookingsCard: View {
         let scheduled = b.scheduled(after: model.today)
         let settled = b.paid(before: model.today)
         let due = scheduled + b.toPay
-        let total = MoneyText.short(b.total, model.base)
-        let summary: Text = b.notBooked > 0
-            ? Text(verbatim: "\(total) · ") + Text("\(MoneyText.approx(b.notBooked, model.base)) not booked yet").foregroundColor(Palette.warn)
-            : (due > 0 ? Text("\(total) · \(MoneyText.approx(due, model.base)) to pay") : Text("\(total), all paid"))
-        Fold(title: "Bookings", summary: summary, open: open) {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                CardLabel("Bookings", mauve: true)
+                Spacer()
+                Text(MoneyText.short(b.total, model.base)).font(.sans(13, weight: .medium)).foregroundStyle(Palette.tx2)
+            }
+            .padding(.bottom, 4)
             VStack(spacing: 0) {
                 let stays = b.stays
                 let legs = b.transport
@@ -1331,6 +1334,9 @@ private struct BookingsCard: View {
                 .padding(.top, 10)
             }
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
     }
 
     /// Stays and transport are booked and changed on the Trip page, so a row

@@ -24,10 +24,20 @@ when a decision needs to survive the conversation it was made in.
   `le-plan-<kind>-<id>`), changed ones follow, removed ones are flagged. Proven on staging: the
   expected 5 writes out of 10 cases, unknown fields kept, a second open writes nothing, a
   web-side price edit followed, and the web's own planImports run on the result finds nothing
-  to do (no ping-pong). Subscription charges are still written only by the web.
-- **Open:** Patrik's real journey shows the gap on the web as well, so something else keeps
-  some of its bookings out (no price, not "booked", or deleted once → importSkip).
-  Read-only check pending (bookings vs ledger query).
+  to do (no ping-pong).
+- **Subscription charges from the phone too** (same file, subChargesDue) with the web's
+  one-time pill (`ChargeNotice.swift`, on Home and Money; seen charges remembered per device).
+  Proven on staging: 1 charge written out of 5 cases (covered by a hand-typed entry, added
+  after the date, cancelled, deleted once), "Cancelled it?" → removed, cancelled from that
+  date, listed in importSkip, unknown fields kept; the web's planImports finds nothing to do.
+- **Why Bookings said 718k while the top said 578k (Patrik's journey):** Bookings called a
+  booked leg "scheduled" by its **travel** date, while its entry is dated by its **charge**
+  date. A flight paid in September for December counted as spent in All entries and as
+  scheduled in Bookings. Fixed on iOS (a leg's date is `chargeDate || date`, like its entry);
+  **the web's BookingsCard/bookingsSummary has the same bug** and goes into the web PR.
+- **Layout (Patrik, 29 Sep):** Bookings is always open, total beside the title, no "to pay" in
+  the header. How it adds up says "Scheduled"; the planned nights and the days after the
+  plan are one line, "213 days ahead".
 - **The web still has the old numbers** for both points; it follows in its own pull request.
 - **Layout:** Daily spend and Where it goes share one range; the legend always lists all seven
   groups (missing ones dimmed); the box under the chart is one size (days at a glance, or the

@@ -97,6 +97,8 @@ struct Subscription: Identifiable, Sendable {
     /// A heads-up before it charges, `leadDays` ahead (by email for now).
     let remind: Bool
     let leadDays: Int
+    /// The first day the app writes its charges by itself (types.ts autoFrom).
+    let autoFrom: String?
 
     init?(raw: JSONValue) {
         guard let id = raw["id"]?.text else { return nil }
@@ -110,6 +112,8 @@ struct Subscription: Identifiable, Sendable {
         cancelledOn = Subscriptions.valid(c) ? c : nil
         remind = raw["remind"]?.boolValue ?? false
         leadDays = Int((raw["leadDays"]?.numberValue ?? 3).rounded())
+        let from = raw["autoFrom"]?.text ?? ""
+        autoFrom = from.isEmpty ? nil : String(from.prefix(10))
     }
 
     var isCancelled: Bool { cancelledOn != nil }

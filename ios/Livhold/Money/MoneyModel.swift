@@ -288,7 +288,11 @@ struct MoneyModel {
         let transport = state.transport.filter { $0.include != false }.map { t in
             BookingRow(id: t.id, isStay: false, label: "\(t.type) \(t.from) → \(t.to)",
                        amount: Journey.toBase(t.price, t.cur, rates),
-                       date: t.date, status: status(Journey.isBooked(t.status), "transport:\(t.id)"))
+                       // Dated like its entry in All entries: when the card was charged,
+                       // else the travel date. The travel date alone called a flight paid
+                       // in September "scheduled" until December (Patrik, 29 Sep).
+                       date: [t.chargeDate, t.date].compactMap { $0 }.first { !$0.isEmpty },
+                       status: status(Journey.isBooked(t.status), "transport:\(t.id)"))
         }
         return Bookings(stays: stays, transport: transport)
     }

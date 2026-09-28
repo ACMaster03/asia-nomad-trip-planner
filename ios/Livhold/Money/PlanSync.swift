@@ -7,8 +7,8 @@ import Foundation
 // there, change it here: both apps write the same rows, so any difference in
 // amount, date or note would have them rewrite each other's rows forever.
 //
-// Not ported yet: the subscription charges (subChargesDue) — the web still
-// writes those, with its "Cancelled it?" notice.
+// And the subscription charges whose date has come (subChargesDue), each
+// announced once on the phone (ChargeNotice.swift), as on the web.
 
 enum PlanSync {
     struct Plan {
@@ -18,9 +18,12 @@ enum PlanSync {
         var updates: [LedgerEntry] = []
         /// Rows whose booking is gone: flagged, never deleted.
         var orphans: [LedgerEntry] = []
+        /// Subscription charges whose day has come and that nothing covers yet.
+        var subCharges: [LedgerEntry] = []
 
-        /// What to write now; new rows only while `autoImport` isn't switched off.
-        func writes(autoImport: Bool) -> [LedgerEntry] { updates + orphans + (autoImport ? candidates : []) }
+        /// What to write now; new booking rows only while `autoImport` isn't
+        /// switched off (that switch is about bookings, not subscriptions).
+        func writes(autoImport: Bool) -> [LedgerEntry] { updates + orphans + (autoImport ? candidates : []) + subCharges }
     }
 
     private struct Candidate {
@@ -73,16 +76,69 @@ enum PlanSync {
         return LedgerEntry(raw: .object(o))
     }
 
-    static func plan(_ trip: TripRow) -> Plan {
+    /// Subscriptions declared before automatic charges shipped start here (importCosts.ts).
+    static let subChargesFrom = "2026-09-25"
+    /// A charge typed by hand this close to the date covers it.
+    private static let coverDays = 15
+
+    private static func nameKey(_ s: String) -> String {
+        s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+    }
+
+    /// The subscription charges to write now (importCosts.ts subChargesDue): from
+    /// the day it was added (or the start of automatic charges) and the journey's
+    /// start, up to today or the journey's end, each once.
+    static func subCharges(_ trip: TripRow, today: String) -> [LedgerEntry] {
+        guard Subscriptions.valid(today), case .array(let items)? = trip.rawState["subscriptions"] else { return [] }
+        let subs = items.compactMap(Subscription.init(raw:))
+        let skip = skipped(trip)
+        let written = Set(trip.ledger.compactMap { $0.source?.kind == "sub" ? $0.source?.key : nil })
+        let start = trip.state.meta.startDate ?? ""
+        let end = trip.state.meta.endDate ?? ""
+        var out: [LedgerEntry] = []
+        for sub in subs {
+            let from = max(sub.autoFrom ?? subChargesFrom, start)
+            let to = !end.isEmpty && end < today ? end : today
+            for at in Subscriptions.charges(sub, from: from, to: to) {
+                let key = "sub:\(sub.id)@\(at)"
+                if written.contains(key) || skip.contains(key) { continue }
+                let covered = trip.ledger.contains { e in
+                    // Days apart either way (Days.between stops at 0 going backwards).
+                    e.isExpense && e.source?.kind != "sub" && Subscriptions.valid(e.date)
+                        && max(Days.between(e.date, at), Days.between(at, e.date)) <= coverDays
+                        && (e.subId == sub.id
+                            || (e.subId == nil && e.category == "subscriptions" && !nameKey(e.note).isEmpty && nameKey(e.note) == nameKey(sub.label)))
+                }
+                if covered { continue }
+                out.append(LedgerEntry(raw: .object([
+                    "id": .string("le-sub-\(sub.id)-\(at)"),
+                    "date": .string(at),
+                    "type": .string("expense"),
+                    "category": .string("subscriptions"),
+                    "amount": .number(cents(sub.amount)),
+                    "currency": .string(sub.cur),
+                    "note": .string(sub.label),
+                    "source": .object(["kind": .string("sub"), "id": .string("\(sub.id)@\(at)")]),
+                    "subId": .string(sub.id),
+                ])))
+            }
+        }
+        return out
+    }
+
+    private static func skipped(_ trip: TripRow) -> Set<String> {
+        guard case .array(let a)? = trip.rawState["importSkip"] else { return [] }
+        return Set(a.compactMap(\.stringValue))
+    }
+
+    static func plan(_ trip: TripRow, today: String) -> Plan {
         let state = trip.state
         var wanted: [String: Candidate] = [:]
         for st in state.stays { if let c = stay(st, state) { wanted[c.key] = c } }
         for t in state.transport { if let c = leg(t) { wanted[c.key] = c } }
 
-        let skip: Set<String> = {
-            guard case .array(let a)? = trip.rawState["importSkip"] else { return [] }
-            return Set(a.compactMap(\.stringValue))
-        }()
+        let skip = skipped(trip)
         // Subscription charges and the old one-offs are left alone here.
         var imported: [String: LedgerEntry] = [:]
         for e in trip.ledger {
@@ -110,6 +166,7 @@ enum PlanSync {
             o["orphaned"] = .bool(true)
             plan.orphans.append(LedgerEntry(raw: .object(o)))
         }
+        plan.subCharges = subCharges(trip, today: today)
         return plan
     }
 }

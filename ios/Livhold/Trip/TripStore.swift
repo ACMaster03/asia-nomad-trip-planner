@@ -273,7 +273,7 @@ final class TripStore {
         guard let trip, canEdit, !syncingPlan else { return }
         // `false` is the opt-out: then only rows already there are kept in line.
         let autoImport = trip.rawState["autoImport"]?.boolValue ?? true
-        let writes = PlanSync.plan(trip).writes(autoImport: autoImport)
+        let writes = PlanSync.plan(trip, today: Days.today()).writes(autoImport: autoImport)
         guard !writes.isEmpty else { return }
         syncingPlan = true
         defer { syncingPlan = false }

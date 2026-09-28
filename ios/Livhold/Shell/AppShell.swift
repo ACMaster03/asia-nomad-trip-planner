@@ -35,6 +35,13 @@ struct AppShell: View {
             GlassTabBar(selection: router.selectionBinding) { router.checkInOpen = true }
                 .ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        // A subscription charge the app added, until tapped: on Home and Money,
+        // where the web shows it too.
+        .overlay(alignment: .bottom) {
+            if router.selection == .home || router.selection == .money {
+                ChargeNotice().padding(.bottom, GlassTabBar.reservedHeight + 8)
+            }
+        }
         .environment(router)
         .environment(trips)
         .environment(editor)

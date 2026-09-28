@@ -47,7 +47,24 @@
         }
       }
     },
+    "%@ The %lld days after it count at your daily pace and the average night’s stay so far.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ The %2$lld days after it count at your daily pace and the average night’s stay so far."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ Az utána következő %2$lld napot a napi tempód és az eddigi átlagos szállásár alapján számoljuk."
+          }
+        }
+      }
+    },
     "%@ Those days count at your daily pace and the average night’s stay so far.": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -68,6 +85,7 @@
       }
     },
     "%@ not booked yet": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -114,6 +132,7 @@
       }
     },
     "%@ · %@ to pay": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -226,6 +245,7 @@
       }
     },
     "%@, all paid": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -336,6 +356,34 @@
         }
       }
     },
+    "%lld days ahead": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day ahead"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days ahead"
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hátralévő %lld nap"
+          }
+        }
+      }
+    },
     "%lld days before": {
       "localizations": {
         "en": {
@@ -365,6 +413,7 @@
       }
     },
     "%lld days not planned yet": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "variations": {
@@ -561,6 +610,7 @@
       }
     },
     "%lld nights ahead": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "variations": {
@@ -891,6 +941,38 @@
         }
       }
     },
+    "**%@ · %@** added to All entries, charged %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "**%1$@ · %2$@** added to All entries, charged %3$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**%1$@ · %2$@** bekerült az Összes tétel közé, terhelés: %3$@."
+          }
+        }
+      }
+    },
+    "**Cancelled %@?** This %@ charge is removed, and %@ is marked cancelled from %@, so no more are added.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "**Cancelled %1$@?** This %2$@ charge is removed, and %3$@ is marked cancelled from %4$@, so no more are added."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Lemondtad: %1$@?** Ez a(z) %2$@ terhelés törlődik, a(z) %3$@ pedig lemondottként szerepel ekkortól: %4$@, így több nem kerül be."
+          }
+        }
+      }
+    },
     "+ %@ beyond the everyday": {
       "localizations": {
         "hu": {
@@ -1003,6 +1085,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Szállás, városi átlagon"
+          }
+        }
+      }
+    },
+    "A subscription": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy előfizetés"
           }
         }
       }
@@ -1636,6 +1728,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lemondva"
+          }
+        }
+      }
+    },
+    "Cancelled it?": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lemondtad?"
           }
         }
       }
@@ -3420,6 +3522,16 @@
         }
       }
     },
+    "No": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem"
+          }
+        }
+      }
+    },
     "No bed %@ → %@": {
       "localizations": {
         "en": {
@@ -3622,6 +3734,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Most · 12. nap / 64"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendben"
           }
         }
       }
@@ -4075,6 +4197,16 @@
         }
       }
     },
+    "Scheduled": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ütemezett"
+          }
+        }
+      }
+    },
     "Scheduled & to pay": {
       "localizations": {
         "hu": {
@@ -4086,6 +4218,7 @@
       }
     },
     "Scheduled, not spent yet": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -5171,6 +5304,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Évente"
+          }
+        }
+      }
+    },
+    "Yes, remove it": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Igen, töröld"
           }
         }
       }
