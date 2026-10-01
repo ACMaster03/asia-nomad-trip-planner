@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
-import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
+import { tripDay, tripLength, stopProgress, offRoutePlace } from '@/lib/trips/progress'
 import { shortDate, stayCounts, stayForNight } from '@/lib/trips/timeline'
 import { isBookedStatus } from '@/lib/trips/commitment'
 import { useCheckIn } from '@/components/checkin/CheckInProvider'
@@ -78,7 +78,7 @@ export default function DashboardClient({
   // Clock-dependent → client-only (SSR snapshot renders the pre layout, same
   // hydration rule the old dashboard followed, minus the setState-in-effect).
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
-  const [driftDismissed, setDriftDismissed] = useState(false)
+  const [dismissedNow, setDismissedNow] = useState<string | null>(null)
   const offline = !useSyncExternalStore(subscribeOnline, snapOnline, snapTrue)
   const [offlineDismissed, setOfflineDismissed] = useState(false)
 
@@ -112,18 +112,23 @@ export default function DashboardClient({
   const stopNo = current ? sorted.indexOf(current) + 1 : 0
   const isArrive = basePhase === 'live' && current?.arrive === todayIso
 
-  // Off-plan: the latest check-in (≤48h old) names a place outside the
-  // planned stop's city. Coarse on purpose — the rig's GPS drift is Phase 7.
+  // Off-plan: the latest check-in (≤48h old, made after today's stop's arrival
+  // day) names a place outside the planned stop's city (lib/trips/progress.ts).
+  // Coarse on purpose — the rig's GPS drift is Phase 7.
   const latestCheckin = events.data?.find((e) => e.kind === 'checkin')
-  const placeName = (latestCheckin?.payload?.placeName as string | undefined) ?? ''
-  const isOff =
-    basePhase === 'live' &&
-    !isArrive &&
-    !!current &&
-    !!latestCheckin &&
-    +today - +new Date(latestCheckin.occurred_at) < 48 * 3600_000 &&
-    !!placeName &&
-    !placeName.toLowerCase().includes(current.city.toLowerCase())
+  const placeName = (basePhase === 'live' && !isArrive && offRoutePlace(current, latestCheckin, today)) || ''
+  const isOff = !!placeName
+  // "Leave it as is" holds for that check-in, reloads included (it used to be
+  // forgotten on reload, found 1 Oct). The next check-in asks again.
+  const driftDismissed =
+    !!latestCheckin && (dismissedNow === latestCheckin.id || readDismissed() === latestCheckin.id)
+  const dismissDrift = () => {
+    if (!latestCheckin) return
+    setDismissedNow(latestCheckin.id)
+    try {
+      localStorage.setItem(DRIFT_KEY, latestCheckin.id)
+    } catch {}
+  }
 
   const phase = basePhase === 'live' ? (isArrive ? 'arrive' : isOff && !driftDismissed ? 'off' : 'live') : basePhase
   // Already told us you got here? Then there is nothing left to press.
@@ -434,7 +439,7 @@ export default function DashboardClient({
             </span>
             <ChevronRight aria-hidden className="size-5 text-ac2" />
           </Link>
-          <button onClick={() => setDriftDismissed(true)} className="flex w-full items-center justify-between py-[13px] text-left">
+          <button onClick={dismissDrift} className="flex w-full items-center justify-between py-[13px] text-left">
             <span>
               <span className="block text-base font-semibold">Leave it as is</span>
               <span className="block text-base text-tx2">nothing moves</span>
@@ -519,6 +524,15 @@ function useScrollReset(phase: string) {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [phase])
+}
+
+const DRIFT_KEY = 'home.driftDismissed'
+function readDismissed(): string | null {
+  try {
+    return localStorage.getItem(DRIFT_KEY)
+  } catch {
+    return null
+  }
 }
 
 // useSyncExternalStore helpers — module-level so their identities are stable.
