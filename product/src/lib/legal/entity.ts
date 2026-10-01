@@ -57,6 +57,19 @@ export const LEGAL = {
    */
   euRepresentative: 'TODO_EU_REPRESENTATIVE',
 
+  /**
+   * The list on journey.livhold.com (migration 44, docs/landing-form): two facts
+   * about how the list is USED, both still Patrik and Petra's to decide (the
+   * brief, section 4). The tool that sends the launch email and the call
+   * invitations, and the tool the calls run on; each is named in "Who else
+   * touches it". Until they are set the policy shows a marker, which is the
+   * honest state, and the form must not go live on journey.livhold.com while
+   * either still reads "not set yet". Candidates: Resend (already a processor
+   * here) or Google Workspace for the mail; Google Meet or Zoom for the call.
+   */
+  listEmailTool: 'TODO_LAUNCH_EMAIL_TOOL',
+  callTool: 'TODO_VIDEO_CALL_TOOL',
+
   /** Product name as users see it. */
   product: 'Livhold',
   /** Public origin, used in copy and for the canonical policy URL. */
@@ -65,7 +78,7 @@ export const LEGAL = {
    * Shown as "Last updated". Bump it whenever the substance changes — Play
    * reviewers and users both read this as the freshness signal.
    */
-  lastUpdated: '16 September 2026',
+  lastUpdated: '1 October 2026',
 } as const
 
 export function isUnset(value: string): boolean {

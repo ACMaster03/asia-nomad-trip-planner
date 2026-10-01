@@ -22,6 +22,8 @@ import { LEGAL } from '@/lib/legal/entity'
 //   product/vercel.json                functions pinned to dub1 (Dublin)
 //   (absent) navigator.geolocation     the app never asks the device where it is
 //   (absent) any analytics SDK         nothing measures the reader
+//   migration 44 + api/journey-signup  the list form on journey.livhold.com:
+//                                      what it stores, insert-only, 12-month purge
 
 export const metadata: Metadata = {
   title: 'Privacy Policy · Livhold',
@@ -86,6 +88,29 @@ export default function PrivacyPage() {
         </ul>
       </Section>
 
+      <Section id="journey-list" title="If you join the list on journey.livhold.com">
+        <p>
+          The form on journey.livhold.com asks when you&apos;re leaving, for how long, how you plan
+          today, your email and, if you like, your first name. If you tick the box, it also notes
+          that you&apos;re happy to have a 20-minute call.
+        </p>
+        <p>
+          We use this for three things only: to email you when Livhold opens to everyone, to
+          understand how people plan long trips, and, only if you ticked the box, to get in touch
+          about a call. We don&apos;t use it for advertising, we don&apos;t sell it, and we
+          don&apos;t add you to anything else.
+        </p>
+        <p>
+          We&apos;re allowed to hold it because you gave it to us for these reasons (your consent).
+          You can withdraw that consent at any time: use the unsubscribe link in any email, or write
+          to <LegalValue value={LEGAL.contactEmail} /> and we&apos;ll delete your answers.
+        </p>
+        <p>
+          If we talk on a call, we take short written notes. We don&apos;t record calls unless we
+          ask you first and you say yes.
+        </p>
+      </Section>
+
       <Section id="what-we-dont" title="What we do not collect">
         <p>This list is as much the point as the one above it.</p>
         <ul className="list-disc space-y-1 pl-5">
@@ -144,6 +169,12 @@ export default function PrivacyPage() {
             push on, the notification travels through the service your browser uses (Google,
             Mozilla or Apple, depending on the browser). The content is encrypted to your device.
           </li>
+          <li>
+            <b className="font-semibold text-tx">For the list on journey.livhold.com</b>: Supabase
+            stores the form answers. The email when Livhold opens, and any invitation to a call, go
+            out through <LegalValue value={LEGAL.listEmailTool} />. A call itself runs on{' '}
+            <LegalValue value={LEGAL.callTool} />.
+          </li>
         </ul>
       </Section>
 
@@ -189,6 +220,10 @@ export default function PrivacyPage() {
             There is no undo, no grace period and no backup copy we can restore from.
           </b>{' '}
           We say so plainly because the button means it.
+        </p>
+        <p>
+          List answers and call notes are deleted 12 months after you send them, or sooner if you
+          ask. If you create a Livhold account, your account follows the rules above instead.
         </p>
       </Section>
 
