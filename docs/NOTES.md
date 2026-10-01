@@ -5,6 +5,52 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-01
+
+### BUILT — the list form on journey.livhold.com, and the policy that covers it
+
+Patrik and Petra's brief (`docs/landing-form/PR-brief.md`; the form is the one Petra signed
+off). Patrik, 1 Oct: journey.livhold.com is the landing page for livhold.com, a hosted page
+reached through a DNS record on Vercel, not a repository; the landing page may later move to
+livhold.com itself and the app to a subdomain, so this is built to survive both.
+- **The data path.** The form is pasted into the hosted page and posts JSON to
+  `livhold.com/api/journey-signup` (`product/src/app/api/journey-signup/route.ts`). Nothing but
+  that address is in the page: no Supabase key, no table name. The route checks the answers
+  (`lib/journey/signup.ts`, the form's own rules, 8 node tests) and inserts with the public key
+  into `journey_signups` (migration 44: RLS, one insert policy for anon and no grant beyond it,
+  so the key can add a row and never read one). CORS is open on purpose: the request may come
+  from a sandboxed embed whose origin reads `null`, and the route can do nothing the public key
+  cannot already do. The spam trap (`website`) is answered 204 and stores nothing.
+- **Retention.** The pg_cron job `journey-signups-purge-daily` (03:00 UTC, in 44) deletes rows
+  older than 12 months; `/privacy` promises the same number. Change both or neither.
+- **The policy** (`/privacy`): the brief's section after "What we store", a line under "Who else
+  touches it", a line under retention, "Last updated 1 October 2026". English only: the policy
+  has no Hungarian version, so the brief's Hungarian text waits for #119.
+- **Two markers on the page until Patrik and Petra decide** (`entity.ts`: `listEmailTool`,
+  `callTool`): the tool that sends the launch email and the call invites, and the tool the calls
+  run on. The form must not go live while either reads "not set yet".
+- **Still Patrik's:** NAIH next to the ICO (the policy already sends EEA readers to their own
+  authority); an unsubscribe link in every email to the list, which the policy promises; a
+  qualified read of the new text.
+- **Not checked:** whether the host of journey.livhold.com keeps a pasted `<style>` and
+  `<script>`. From this container the site answers 403 (egress proxy). If scripts are
+  stripped, the fallback is a page on livhold.com shown in an iframe.
+- **Go-live order** (`docs/landing-form/README.md`): markers filled → 44 on staging, its
+  TESTPLAN, 44 on production (SQL editor, as 43) → merge → paste the form, the hero link and
+  the footer links → the test list there. A form live before the policy collects answers the
+  policy does not cover.
+- **Checked:** `tsc`; `eslint` (the four old findings); 163 node tests, 8 new
+  (`signup.test.ts`); `next build`. On a dev server with placeholder Supabase values:
+  `/privacy` answers 200 signed out, with the new section, the date and the two markers; the
+  endpoint answers the preflight 204 with open CORS, a filled spam trap 204, a non-JSON body
+  and a bad email 400, and a valid row 502 while Supabase is unreachable. The pasted block,
+  loaded from a `file://` page (origin `null`) and submitted against that server, shows "That
+  didn't go through" and keeps every answer. The preview's five states at 390 px,
+  screenshotted; the empty submit shows all three messages. **Not run:** 44 and its TESTPLAN
+  against a database (no Supabase reachable from here), and a real submission end to end.
+- **iOS:** nothing. The form is on the web landing page; the app collects none of it, and the
+  store labels (`APP-STORE-PRIVACY.md`, `PLAY-DATA-SAFETY.md`) say so.
+
 ## 2026-09-28
 
 ### DECIDED — Patrik, 28 Sep: Home's wording as proposed, then localisation
