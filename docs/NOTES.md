@@ -7,6 +7,39 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### CHECKED — /privacy against the code, claim by claim (Patrik's ask, 2 Oct): five issues
+
+Patrik, closing the round: "do another check on anything that we may have not complied to
+with our own sayings yet in code; those are things we should create issues for." Read claim
+by claim against `product/src`, the migrations and the functions.
+
+**True:** nothing inferred or bought; password hashed by Supabase Auth; follow links hashed,
+`token_prefix` kept; no geolocation call; photos re-encoded (`media.ts`); no analytics or
+tracker; only sign-in cookies; Supabase in Ireland, Vercel `dub1`; public photo bucket with
+unguessable paths (12); a plain follow view writes nothing and reacting needs `auth.uid()`
+(34); revoke stops a link at once; deleting a trip or the account purges photos first
+(`purgeTripMedia`, 26's note); the journey list's 12-month purge (44).
+
+**Not kept, now issues:**
+- **#151, the policy's five statements** (documentation): digest unsubscribe is a soft
+  delete (17) while the page says "deletes the record"; the reminder emails to travellers
+  (stay deadlines, subscription charges) are sent with no switch and are not mentioned,
+  so "nothing is sent until someone switches it on" overstates; "trip invitations" are
+  not emailed by Resend, they are links (28), and the reminders are; "the app exports
+  your trip and your money ledger as files" is false for the web app; sign-in sessions
+  keep IP and user agent (`auth.sessions`, see APP-STORE-PRIVACY.md) and the page says
+  nothing about them. Each item carries its replacement sentence: one wording pull
+  request once Patrik agrees.
+- **#152, the export** (product): build "Export my data" or reword the portability line.
+- **#150, a switch for the reminder emails** (product): the only account emails with no
+  way off.
+- **#5 stays open** for Article 27 alone; the five company facts are set (comment there).
+- **#123** already covers the usage data #120 will start collecting.
+
+**Also ready, waiting on Patrik:** the paste into journey.livhold.com
+(`docs/landing-form/README.md`), then one real submission; the launch email's unsubscribe
+link comes with Resend when the list is sent from there.
+
 ### STARTED — Research: what people say on Reddit about apps like Livhold (Petra's weekly task)
 
 Patrik, 2 Oct: Petra found Reddit threads about apps in Livhold's space. Her weekly task is
