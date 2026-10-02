@@ -7,6 +7,19 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### LIVE — the journey list's endpoint and the privacy section, merged with Petra (2 Oct)
+
+Pull request #136, merged after the usual step (what changes, what could go wrong, "go"),
+built in about a minute. Petra checked livhold.com/privacy and found the one thing wrong:
+"write toprivacy@keepyourhabits.comand we'll delete", no spaces around the email. Fixed in
+the follow-up pull request, merged the same way.
+
+**Why, for next time.** The source had `to <LegalValue … /> and we&apos;ll`: the space
+before the element survived, the space after it did not. The compiler drops the leading
+space of a JSX text node that begins with a space and contains an `&apos;` (the "Your
+rights" sentence, same shape but no entity, renders fine). The page's own pattern is the
+safe one: `{' '}` on both sides of an element whenever the neighbouring text has an entity.
+
 ### APPLIED — migration 44, `journey_signups`, on staging and production (Petra, 2 Oct)
 
 **Applied by Petra in the Supabase dashboard's SQL editor**, guided here in the chat on

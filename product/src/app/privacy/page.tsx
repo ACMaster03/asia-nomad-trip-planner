@@ -102,8 +102,10 @@ export default function PrivacyPage() {
         </p>
         <p>
           We&apos;re allowed to hold it because you gave it to us for these reasons (your consent).
-          You can withdraw that consent at any time: use the unsubscribe link in any email, or write
-          to <LegalValue value={LEGAL.contactEmail} /> and we&apos;ll delete your answers.
+          You can withdraw that consent at any time: use the unsubscribe link in any email, or
+          write to{' '}
+          <LegalValue value={LEGAL.contactEmail} />
+          {' '}and we&apos;ll delete your answers.
         </p>
         <p>
           If we talk on a call, we take short written notes. We don&apos;t record calls unless we
