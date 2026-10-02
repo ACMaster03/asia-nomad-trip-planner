@@ -118,6 +118,12 @@ sentence, a contact address).
 - Patrik's parents get the follow link on a call and are watched opening it:
   follower tests three and four. Petra's mother shows what broke in her
   domestic journey, screen shared (#122).
+- Flora on a call: the first tester with a dated trip (a few weeks every two
+  or three months, not a nomad). Watch her set one up with a return date; then,
+  on her trip's last day whenever it falls, watch the end: "home now, close
+  it", the recap, and Home after. The stance asked for exactly this tester.
+- Artur and Angelina: date booked this week, call next week (Patrik's call:
+  the path screens get simplified from the #122 walk first).
 - First shorts published (the September numbers as the hook).
 - Patrik: MVP path audited with a fresh account; login persistence done.
 - Petra: start editing the Bangkok month video.

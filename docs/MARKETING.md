@@ -532,6 +532,13 @@ and built a journey (a weekend inside Hungary), found it buggy, and then
 lost the feed of the people she follows (#130). Likes: FX rates and
 conversion, the visual design. Lesson: watch followers too.
 
+**Flora, planned (2 Oct).** A friend who travels for a few weeks every two or
+three months. Not the ICP, and a friend, so weight her verdict accordingly, but
+the first tester with a start and an end date: countdown, day N of M, the last
+day, "home now, close it", the recap card, Home between journeys. The #21
+stance named this as the untested half of the product. Watching test on her
+next trip's setup; her last day watched live.
+
 **Ben, 2026-09-27, in person.** Five years on the road, longer stays, no
 social media, "traveller and entrepreneur". Not interested: a senior with a
 working system. Not ICP, and a good reminder that veterans are the hardest
