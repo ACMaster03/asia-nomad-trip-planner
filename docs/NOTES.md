@@ -20,8 +20,12 @@ is about: plan, money, follow, diary, other.
 
 The record is text: Reddit is blocked from Claude's container (proxy 403 on `reddit.com`
 and `old.reddit.com`, and the fetch tool refuses the host, 2 Oct), so Petra pastes the thread
-text or a screenshot and Claude types it out. Nothing captured yet. No GitHub issue holds
-the topic yet.
+text or a screenshot and Claude types it out. Issue #135 holds the topic (opened on Petra's
+"open it", 2 Oct). First source, 2 Oct, with Petra: S-01, r/femaletravelers, "For those of you
+that travel often, how do you…", the TripIt branch of the comments from one screenshot; the
+post itself and the other branches are still to paste. Five needs opened (N-01 to N-05):
+the trip builds itself from booking emails, calendar sync, changing plans without confusion,
+old trips kept in one place, free until the trip gets complex.
 
 **iOS:** none; documentation only.
 

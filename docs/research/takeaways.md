@@ -1,8 +1,7 @@
 # What it means for Livhold
 
 Dated notes, newest first. Patrik decides; a decision is marked DECIDED with the date and
-goes to `docs/NOTES.md` too, and to the GitHub issue that holds the topic once there is
-one.
+goes to `docs/NOTES.md` too, and to GitHub issue #135, which holds the topic.
 
 Three lines per round are enough: what is new, what repeats, what we would change. Name
 the sources and needs the note rests on (S-NN, N-NN), so it can be checked.
