@@ -127,6 +127,11 @@ Petra is new to software work; Patrik is not. The product conventions are in
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
+- Since 2 Oct Petra collects what people say on Reddit about apps like Livhold (her weekly
+  task; Patrik's ask; issue #135). It lives in `docs/research/` (the README holds the routine): one file
+  per thread under `sources/`, the needs in `needs.md`, the apps in `competitors.md`, and
+  what it means for Livhold in `takeaways.md`, where Patrik decides. Reddit is blocked from
+  Claude's container; Petra pastes the text or a screenshot and Claude types it out.
 
 ## Running the checks
 

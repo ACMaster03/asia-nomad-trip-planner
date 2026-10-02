@@ -7,6 +7,31 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### STARTED — Research: what people say on Reddit about apps like Livhold (Petra's weekly task)
+
+Patrik, 2 Oct: Petra found Reddit threads about apps in Livhold's space. Her weekly task is
+to collect what people need and what they say about the competitors, kept so that it can be
+learned from later: positioning and what to build. Set up in `docs/research/` (the README
+holds the routine, written for Petra): one file per thread under `sources/` (`S-NN`, the
+text word for word, no usernames), the needs in `needs.md` (`N-NN`, numbers never change,
+sources counted not comments), the apps in `competitors.md` (only what people say), and
+dated rounds in `takeaways.md`, where Patrik decides. Every thread is tagged with the job it
+is about: plan, money, follow, diary, other.
+
+The record is text: Reddit is blocked from Claude's container (proxy 403 on `reddit.com`
+and `old.reddit.com`, and the fetch tool refuses the host, 2 Oct), so Petra pastes the thread
+text or a screenshot and Claude types it out. Issue #135 holds the topic (opened on Petra's
+"open it", 2 Oct). First source, 2 Oct, with Petra: S-01, r/femaletravelers, "For those of you
+that travel often, how do you…", about 80 comments pasted as text (the post itself still to
+paste). Thirteen needs opened (N-01 to N-13); the loudest: the trip builds itself from the
+booking emails or screenshots (TripIt and Wanderlog do it, both miss some bookings), works
+offline, not locked into one app, the confirmation number at hand. Most people in the thread
+use no travel app: email folders, a calendar, a document or paper. Round 1 in
+`docs/research/takeaways.md` puts the import question to Patrik.
+
+**iOS:** none; documentation only.
+
+
 ### FIXED — Safari drew no space before a bold word on the legal pages: tabular figures (Petra, 2 Oct)
 
 After #137, Chrome read right and Safari on Petra's Mac still showed "so theUK GDPR" and
