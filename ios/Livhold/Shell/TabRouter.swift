@@ -79,4 +79,6 @@ enum Route: Hashable {
     case moneySettings
     /// Every subscription, from Money's card.
     case moneySubscriptions
+    /// Every reminder, from Home.
+    case reminders
 }

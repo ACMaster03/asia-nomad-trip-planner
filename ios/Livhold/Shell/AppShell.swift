@@ -138,6 +138,7 @@ private struct TabStack: View {
         case .moneySubscriptions:
             SubscriptionsScreen()
                 .modifier(ZoomDestination(id: "subscriptions", namespace: zoom))
+        case .reminders: RemindersScreen()
         }
     }
 }

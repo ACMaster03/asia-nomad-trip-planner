@@ -554,14 +554,15 @@ private struct AfterJourney: View {
 
 /// One card, two names (Patrik, 2 Oct): "Before you fly" before the journey,
 /// "Coming up" on it (reminders.ts beforeYouFly / comingUp). Your own reminders
-/// tick; money ones (a free cancellation ending, a card charge) carry a dot.
-/// Hidden when nothing is due. The Reminders page comes in a later round.
+/// tick; money ones show their amount on the right. When nothing is due the card
+/// shrinks to one row that names the next reminder and opens the page.
 private struct RemindersCard: View {
     enum Mode { case beforeYouFly, comingUp }
     let trip: TripRow
     let today: String
     let mode: Mode
     @Environment(TripStore.self) private var store
+    @Environment(TabRouter.self) private var router
     @State private var ticked: Set<String> = []
 
     var body: some View {
@@ -570,53 +571,70 @@ private struct RemindersCard: View {
         case .beforeYouFly:
             Array(all.filter { r in r.due.map { d in trip.state.meta.startDate.map { d < $0 } ?? true } ?? false }.prefix(5))
         case .comingUp:
-            Array(all.filter { $0.due != nil && ($0.overdue || Days.between(today, $0.due!) <= 7) }
-                .sorted { $0.overdue == $1.overdue ? ($0.due ?? "") < ($1.due ?? "") : $0.overdue }
-                .prefix(2))
+            Array(HomeReminder.comingUp(all, today: today).prefix(2))
         }
-        if !rows.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
-                (mode == .beforeYouFly ? Text("Before you fly") : Text("Coming up"))
-                    .font(.sans(12.5, weight: .semibold)).textCase(.uppercase).tracking(1.4)
-                    .foregroundStyle(Palette.ac2Deep)
-                    .padding(.bottom, 4)
-                ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
-                    if i > 0 { Divider().overlay(Palette.ln) }
-                    HStack(alignment: .top, spacing: 12) {
-                        if r.kind == .mine {
-                            Button { tick(r) } label: {
-                                Circle().strokeBorder(r.overdue ? Palette.warn : Palette.ln3, lineWidth: 2)
-                                    .frame(width: 24, height: 24)
-                                    .frame(width: 44, height: 44)
-                                    .contentShape(.rect)
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(!store.canEdit)
-                            .padding(.horizontal, -10)
-                            .padding(.vertical, -10)
-                            .accessibilityLabel(Text("Mark as done"))
-                        } else {
-                            Circle().fill(Palette.ac2).frame(width: 8, height: 8).padding(.horizontal, 8).padding(.top, 7)
-                        }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: r.title).font(.sans(16, weight: .semibold)).foregroundStyle(Palette.tx)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text(verbatim: r.dueLabel(today: today)).font(.sans(14))
-                                .foregroundStyle(r.overdue ? Palette.warn : Palette.tx2)
-                        }
-                        Spacer(minLength: 0)
+        Group {
+            if rows.isEmpty {
+                slim(next: all.first { $0.due.map { $0 >= today } == true })
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    (mode == .beforeYouFly ? Text("Before you fly") : Text("Coming up"))
+                        .font(.sans(12.5, weight: .semibold)).textCase(.uppercase).tracking(1.4)
+                        .foregroundStyle(Palette.ac2Deep)
+                        .padding(.bottom, 4)
+                    ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
+                        if i > 0 { Divider().overlay(Palette.ln) }
+                        ReminderRow(r: r, today: today, onTick: { tick(r) },
+                                    onOpen: r.opens.map { target in { router.open(target) } } ?? openPage)
                     }
-                    .padding(.vertical, 11)
+                    Divider().overlay(Palette.ln)
+                    Button(action: openPage) {
+                        HStack {
+                            Text("All reminders").font(.sans(15, weight: .medium)).foregroundStyle(Palette.tx2)
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Palette.tx3)
+                        }
+                        .padding(.vertical, 13)
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 18)
+                .padding(.top, 16)
+                .padding(.bottom, 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
+            }
+        }
+        .sensoryFeedback(.success, trigger: ticked.count)
+        .animation(Motion.settle, value: ticked)
+    }
+
+    /// "Reminders · next 14 Oct · iCloud 2 TB ›": nothing is due, but the page is one tap away.
+    private func slim(next: HomeReminder?) -> some View {
+        Button(action: openPage) {
+            HStack(spacing: 10) {
+                Image(systemName: "bell").font(.system(size: 14, weight: .semibold)).foregroundStyle(Palette.ac2Deep)
+                (Text("Reminders").foregroundColor(Palette.tx).fontWeight(.semibold)
+                 + Text(verbatim: " · ")
+                 + (next.map { r in Text("next \(Days.short(r.due ?? today)) · \(r.title)") } ?? Text("nothing coming up")))
+                    .font(.sans(15)).foregroundStyle(Palette.tx2)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.tx3)
             }
             .padding(.horizontal, 18)
-            .padding(.top, 16)
-            .padding(.bottom, 6)
+            .padding(.vertical, 15)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Palette.sf, in: .rect(cornerRadius: Radius.r))
-            .sensoryFeedback(.success, trigger: ticked.count)
-            .animation(Motion.settle, value: ticked)
+            .contentShape(.rect)
         }
+        .buttonStyle(.plain)
+    }
+
+    private func openPage() {
+        router.paths[.home, default: []].append(.reminders)
     }
 
     /// Ticks at once; the save follows. On a failure the row comes back.
@@ -630,70 +648,6 @@ private struct RemindersCard: View {
                 ticked.remove(r.id)
                 store.saveNotice = error.localizedDescription
             }
-        }
-    }
-}
-
-/// A reminder as Home shows it (reminders.ts deriveReminders): yours from
-/// `state.reminders`, and money deadlines worked out from booked stays.
-struct HomeReminder: Identifiable, Equatable {
-    enum Kind { case mine, money }
-    let id: String
-    let kind: Kind
-    let title: String
-    let due: String?
-    let done: Bool
-    let overdue: Bool
-
-    static func derive(_ trip: TripRow, today: String) -> [HomeReminder] {
-        var out: [HomeReminder] = []
-        if case .array(let list)? = trip.rawState["reminders"] {
-            for item in list {
-                guard let id = item["id"]?.stringValue, !id.isEmpty else { continue }
-                let due = item["due"]?.stringValue.flatMap { $0.isEmpty ? nil : String($0.prefix(10)) }
-                let doneOn = item["doneOn"]?.stringValue.flatMap { $0.isEmpty ? nil : $0 }
-                out.append(HomeReminder(id: id, kind: .mine, title: item["title"]?.stringValue ?? "",
-                                        due: due, done: doneOn != nil,
-                                        overdue: doneOn == nil && due.map { $0 < today } == true))
-            }
-        }
-        let state = trip.state
-        let base = state.meta.baseCurrency
-        for st in state.stays where st.include == true && Journey.isBooked(st.status) {
-            guard let seg = state.segments.first(where: { $0.id == st.segId }) else { continue }
-            let amount = MoneyText.full(Journey.toBase(Journey.stayTotal(st, seg), st.cur, state.rates), base)
-            let name = Journey.stayName(st, in: seg)
-            if let c = st.cancelUntil, !c.isEmpty, st.remind != false, c >= today {
-                out.append(HomeReminder(id: "money-cancel-\(st.id)", kind: .money,
-                                        title: String(localized: "Free cancellation ends · \(name)"),
-                                        due: String(c.prefix(10)), done: false, overdue: false))
-            }
-            if let c = st.chargeDate, !c.isEmpty, c >= today {
-                out.append(HomeReminder(id: "money-charge-\(st.id)", kind: .money,
-                                        title: String(localized: "Card charged · \(amount) · \(name)"),
-                                        due: String(c.prefix(10)), done: false, overdue: false))
-            }
-        }
-        return out.sorted { a, b in
-            switch (a.due, b.due) {
-            case let (x?, y?): x == y ? a.title < b.title : x < y
-            case (nil, _?): false
-            case (_?, nil): true
-            case (nil, nil): a.title < b.title
-            }
-        }
-    }
-
-    /// "17 Sep · in 5 days", "today", "was due 8 Sep · 4 days ago" (reminders.ts dueLabel).
-    func dueLabel(today: String) -> String {
-        guard let due else { return String(localized: "no date") }
-        let days = Days.between(today, due) - Days.between(due, today)
-        let date = Days.short(due)
-        if days < 0 { return String(localized: "was due \(date) · \(-days) days ago") }
-        switch days {
-        case 0: return String(localized: "\(date) · today")
-        case 1: return String(localized: "\(date) · tomorrow")
-        default: return String(localized: "\(date) · in \(days) days")
         }
     }
 }

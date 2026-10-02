@@ -784,12 +784,6 @@
     },
     "%lld nights left": {
       "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "még %lld éjszaka"
-          }
-        },
         "en": {
           "variations": {
             "plural": {
@@ -806,6 +800,12 @@
                 }
               }
             }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "még %lld éjszaka"
           }
         }
       }
@@ -1118,12 +1118,6 @@
     },
     "%lld stops": {
       "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld megálló"
-          }
-        },
         "en": {
           "variations": {
             "plural": {
@@ -1141,6 +1135,12 @@
               }
             }
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld megálló"
+          }
         }
       }
     },
@@ -1156,12 +1156,6 @@
     },
     "%lld travellers": {
       "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld utazó"
-          }
-        },
         "en": {
           "variations": {
             "plural": {
@@ -1178,6 +1172,12 @@
                 }
               }
             }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld utazó"
           }
         }
       }
@@ -1523,6 +1523,16 @@
         }
       }
     },
+    "Add reminder": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emlékeztető hozzáadása"
+          }
+        }
+      }
+    },
     "Add stay": {
       "localizations": {
         "hu": {
@@ -1656,6 +1666,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Összes tétel"
+          }
+        }
+      }
+    },
+    "All reminders": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Összes emlékeztető"
           }
         }
       }
@@ -1858,6 +1878,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alappénznem"
+          }
+        }
+      }
+    },
+    "Before %@ ends": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ vége előtt"
           }
         }
       }
@@ -2143,22 +2173,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kártyaterhelés napja"
-          }
-        }
-      }
-    },
-    "Card charged · %@ · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Card charged · %1$@ · %2$@"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kártyaterhelés · %1$@ · %2$@"
           }
         }
       }
@@ -2625,6 +2639,16 @@
         }
       }
     },
+    "Dated reminders appear on Home from 7 days before, and stay after the date until you tick them.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A dátummal megadott emlékeztetők 7 nappal előtte jelennek meg a Kezdőlapon, és a dátum után is ott maradnak, amíg ki nem pipálod őket."
+          }
+        }
+      }
+    },
     "Dates": {
       "localizations": {
         "hu": {
@@ -2778,6 +2802,16 @@
         }
       }
     },
+    "Delete reminder": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emlékeztető törlése"
+          }
+        }
+      }
+    },
     "Delete stop": {
       "localizations": {
         "hu": {
@@ -2804,6 +2838,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Törlöd ezt a tételt?"
+          }
+        }
+      }
+    },
+    "Delete this reminder?": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Törlöd ezt az emlékeztetőt?"
           }
         }
       }
@@ -2984,6 +3028,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Szerkesztés"
+          }
+        }
+      }
+    },
+    "Edit reminder": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emlékeztető szerkesztése"
           }
         }
       }
@@ -3316,17 +3370,17 @@
         }
       }
     },
-    "Free cancellation ends tomorrow at 12:00.": {},
-    "Free cancellation ends · %@": {
+    "Free cancellation ends": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ingyenes lemondás vége · %@"
+            "value": "Ingyenes lemondás vége"
           }
         }
       }
     },
+    "Free cancellation ends tomorrow at 12:00.": {},
     "Free cancellation until": {
       "localizations": {
         "hu": {
@@ -3604,6 +3658,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ötlet"
+          }
+        }
+      }
+    },
+    "In a week": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy hét múlva"
           }
         }
       }
@@ -3936,6 +4000,16 @@
         }
       }
     },
+    "Mark as not done": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visszaállítás nem késznek"
+          }
+        }
+      }
+    },
     "Mark cancelled": {
       "localizations": {
         "hu": {
@@ -4083,6 +4157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Új jelszó"
+          }
+        }
+      }
+    },
+    "New reminder": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Új emlékeztető"
           }
         }
       }
@@ -4471,6 +4555,16 @@
         }
       }
     },
+    "Nothing here yet. Your own reminders, booking deadlines and the next charge of each subscription all land on this one list.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs itt semmi. A saját emlékeztetőid, a foglalási határidők és minden előfizetés következő terhelése ezen az egy listán jelenik meg."
+          }
+        }
+      }
+    },
     "Nothing logged in these days.": {
       "localizations": {
         "hu": {
@@ -4734,6 +4828,16 @@
         }
       }
     },
+    "Overdue": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lejárt"
+          }
+        }
+      }
+    },
     "Paid": {
       "localizations": {
         "hu": {
@@ -4985,6 +5089,16 @@
         }
       }
     },
+    "Remind me to… e.g. Extend the Thai visa": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emlékeztess, hogy… pl. hosszabbítsd meg a thai vízumot"
+          }
+        }
+      }
+    },
     "Reminder off. Turn on": {
       "localizations": {
         "hu": {
@@ -5001,6 +5115,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Emlékeztető bekapcsolva, %@. Kikapcsolás"
+          }
+        }
+      }
+    },
+    "Reminders": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emlékeztetők"
           }
         }
       }
@@ -5946,6 +6070,16 @@
         }
       }
     },
+    "Ticking one takes it off Home and keeps it here under Done. Money reminders follow the stay or subscription they come from.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kipipált emlékeztető lekerül a Kezdőlapról, és itt marad a Kész alatt. A pénzes emlékeztetők a szállást vagy előfizetést követik, amelyből származnak."
+          }
+        }
+      }
+    },
     "Time": {
       "localizations": {
         "hu": {
@@ -6697,6 +6831,16 @@
         }
       }
     },
+    "card charge": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kártyaterhelés"
+          }
+        }
+      }
+    },
     "chart.window": {
       "extractionState": "stale",
       "localizations": {
@@ -6770,6 +6914,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "adományok és borravaló"
+          }
+        }
+      }
+    },
+    "done %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kész: %@"
           }
         }
       }
@@ -7072,6 +7226,22 @@
         }
       }
     },
+    "next %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "next %1$@ · %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "következő: %1$@ · %2$@"
+          }
+        }
+      }
+    },
     "next stop": {
       "localizations": {
         "hu": {
@@ -7159,6 +7329,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "nincs a napi átlagban"
+          }
+        }
+      }
+    },
+    "nothing coming up": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nincs közelgő"
           }
         }
       }
@@ -7526,6 +7706,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld. megálló / %2$lld"
+          }
+        }
+      }
+    },
+    "subscription": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "előfizetés"
           }
         }
       }

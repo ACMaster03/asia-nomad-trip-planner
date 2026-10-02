@@ -7,6 +7,37 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### BUILT — iPhone Reminders page, subscriptions in reminders, a slim row when nothing is due (Patrik, 2 Oct)
+
+Patrik on the first Home build, on Asia (day 33): the numbers are right, but with nothing due
+the reminders card was hidden, so there was no way to see reminders or add one, and charges
+later in the month were nowhere. Hiding it also went against his 27 Sep decision (Home keeps
+a Reminders row when nothing is due). The round-2 mock had shown a subscription in Coming up
+("iCloud 2 TB · in 12 days"), which neither the web rule nor the build ever did: a mock
+error. Decided by Patrik, the same hour, no mock ("just build it and publish the build"):
+
+- **Nothing due → one slim row**: "Reminders · next 12 Nov · Domain + hosting ›" (the date
+  first, so a long title cuts, not the date), opening the page. With rows, the card ends in
+  "All reminders ›". (Patrik picked this over his own header-button idea.)
+- **Money reminders keep, without the dot**: the amount sits on the right, with "card
+  charge" / "subscription" under it, as Subscriptions has the cadence. A small card or
+  calendar icon holds the tick circle's place. Stay deadlines open the stop on Trip,
+  subscriptions open Subscriptions on Money.
+- **Subscriptions are reminders**: each active one adds **only its next charge**, never one
+  per month (Patrik). They follow the 7-day window on Home like the stay charges. The
+  subscription's own bell (email before it charges) does not gate this; a charge is money,
+  the same reasoning as stay charges in reminders.ts.
+- **The Reminders page** (Home → All reminders, or the slim row), laid out like
+  Subscriptions: Overdue, Next, Done; tick and untick; + adds one (title, optional date,
+  "In a week", "Before {city} ends"); tapping your own opens it to edit or delete. After
+  the journey only Done shows (the web's rule).
+
+Checked in the sample trip (10 and 25 Oct), English and Hungarian: ticking, the slim row,
+add, edit, delete, untick.
+
+**iOS:** this is the iOS entry. **Web differs now:** `reminders.ts` has no subscriptions and
+still draws money rows with a dot; bringing the web in line is a follow-up, not done.
+
 ### BUILT — iPhone Home, everything but the feed (three mock rounds with Patrik, 2 Oct)
 
 Patrik, 2 Oct: "start with everything except for the feed"; your people get their own round
