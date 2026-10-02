@@ -7,6 +7,51 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### BUILT — iPhone Home, everything but the feed (three mock rounds with Patrik, 2 Oct)
+
+Patrik, 2 Oct: "start with everything except for the feed"; your people get their own round
+later. Mocks in https://claude.ai/artifact/TWBXmZTTLNUPGip2t786sE (rounds 1–3, comments
+there); "yes to the money line, go build it". Built in `ios/Livhold/Home/HomeScreen.swift`,
+replacing the stand-in.
+
+**On the road.** Eyebrow date, the journey's name, "Day 33 of 243 · stop 2 of 9" (or
+"· between stops"), avatar → Account. One stop card: "On plan" (or "Arrival day"), "Night n of
+N" for the stop, the city, the stay with its leave date (no "booked" — only the amber "not
+booked", "No stay yet", "No bed tonight"), the progress bar and nights left. **No Next row:**
+the whole card opens the stop on Trip (Patrik, round 1). At its foot the **money line**,
+"Spent here X · Y a day" (the pace from the third day), only when tracking is on, opening
+Money — the rest of the money card was left out ("not sure about the money card"). Arrival
+day adds "Arrived in {city}", which writes one `arrived` trip_events row and then hides.
+Between stops: "On the way", amber "No stop planned for tonight · {next} from {date}". Offline:
+"Offline · edits sync when you're back online".
+
+**Reminders: one card, two names.** "Before you fly" before the journey (due before the
+start, up to 5), "Coming up" on it (overdue first, then due within 7 days, at most 2), the
+rules of `reminders.ts`. Ticking your own reminder writes `doneOn` through `write_state`;
+money reminders (free cancellation, card charge) are dots. No "All reminders" link yet: the
+page comes in a later round (Patrik: "Yes build a page they can lead to but save that for a
+later round"). Hidden when empty.
+
+**Before the journey:** "N stops · N nights · N travellers", the first stop with the
+countdown, Before you fly, and the **Estimated total** — the same figure as Money's "Lands
+near" — against the cap, with an amber line naming how many stops are counted at city
+averages. **After:** "Home again", the journey in figures (nights, stops, countries,
+check-ins, spent, under/over the cap), Plan the next journey, Final numbers, Look back. **No
+journey:** the greeting and "Where to?".
+
+**Left out on purpose:** the money card on the road, the Check in button (the tab bar has
+it), the off-route card (#134), the feed (#130). New issues from the rounds: #144 travel-day
+spending counts towards the new stop, #148 named and dated sources for city prices (Patrik
+wants a monthly check "in the future"), #149 Money before departure.
+
+**Tested on staging, 2 Oct:** a throwaway journey arriving in Hanoi that day. "Arrived in
+Hanoi" wrote one event (author = the user, payload city) and stayed hidden after a relaunch;
+ticking a reminder wrote `doneOn`, kept an unknown field, `state_rev` 0 → 1. Journey deleted
+afterwards. Every state checked in the fixture (2 Oct, 13 Nov, 20 Dec, 19 Aug, May 2027), in
+English and Hungarian, with English plurals ("1 traveller", "1 day ago").
+
+**iOS:** this is the iOS entry. Web Home is unchanged.
+
 ### STARTED — Research: what people say on Reddit about apps like Livhold (Petra's weekly task)
 
 Patrik, 2 Oct: Petra found Reddit threads about apps in Livhold's space. Her weekly task is

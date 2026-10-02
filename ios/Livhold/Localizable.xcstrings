@@ -102,12 +102,38 @@
         }
       }
     },
+    "%@ a day": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ naponta"
+          }
+        }
+      }
+    },
     "%@ a month": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ havonta"
+          }
+        }
+      }
+    },
+    "%@ from %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ from %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (érkezés: %2$@)"
           }
         }
       }
@@ -132,6 +158,16 @@
         }
       }
     },
+    "%@ left": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ maradt"
+          }
+        }
+      }
+    },
     "%@ not booked yet": {
       "extractionState": "stale",
       "localizations": {
@@ -139,6 +175,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ még nincs lefoglalva"
+          }
+        }
+      }
+    },
+    "%@ over": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ túllépés"
           }
         }
       }
@@ -223,6 +269,22 @@
         }
       }
     },
+    "%@ · in %lld days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · in %2$lld days"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld nap múlva"
+          }
+        }
+      }
+    },
     "%@ · night %lld of %lld": {
       "localizations": {
         "en": {
@@ -235,6 +297,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ · %2$lld. éjszaka / %3$lld"
+          }
+        }
+      }
+    },
+    "%@ · today": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · ma"
+          }
+        }
+      }
+    },
+    "%@ · tomorrow": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · holnap"
           }
         }
       }
@@ -700,6 +782,34 @@
         }
       }
     },
+    "%lld nights left": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "még %lld éjszaka"
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld night left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld nights left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld nights left · out %@": {
       "localizations": {
         "en": {
@@ -1006,6 +1116,72 @@
         }
       }
     },
+    "%lld stops": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld megálló"
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld stop"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld stops"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld stops have no stay yet, so their nights are counted at each city’s average price": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld megállónál még nincs szállás, ezért az éjszakáikat a városi átlagáron számoljuk"
+          }
+        }
+      }
+    },
+    "%lld travellers": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld utazó"
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld traveller"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld travellers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld%%": {
       "shouldTranslate": false
     },
@@ -1141,6 +1317,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 %@"
+          }
+        }
+      }
+    },
+    "1 stop has no stay yet, so its nights are counted at the city’s average price": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 megállónál még nincs szállás, ezért az éjszakáit a városi átlagáron számoljuk"
           }
         }
       }
@@ -1524,16 +1710,6 @@
         }
       }
     },
-    "Anna is in Kampot": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anna Kampotban van"
-          }
-        }
-      }
-    },
     "Appearance": {
       "localizations": {
         "hu": {
@@ -1577,12 +1753,32 @@
         }
       }
     },
+    "Arrival day": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érkezés napja"
+          }
+        }
+      }
+    },
     "Arrive": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Érkezés"
+          }
+        }
+      }
+    },
+    "Arrived in %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megérkeztem: %@"
           }
         }
       }
@@ -1676,6 +1872,26 @@
         }
       }
     },
+    "Before you fly": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indulás előtt"
+          }
+        }
+      }
+    },
+    "Between stops": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Két megálló között"
+          }
+        }
+      }
+    },
     "Between stops today.": {
       "localizations": {
         "hu": {
@@ -1726,9 +1942,7 @@
         }
       }
     },
-    "Body text in Work Sans, the way every paragraph and control reads on the web.": {
-      "localizations": {}
-    },
+    "Body text in Work Sans, the way every paragraph and control reads on the web.": {},
     "Booked": {
       "localizations": {
         "hu": {
@@ -1826,16 +2040,6 @@
         }
       }
     },
-    "Bus to Nha Trang": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Busz Nha Trangba"
-          }
-        }
-      }
-    },
     "By continuing you agree to the [Terms](%@) and the [Privacy Policy](%@).": {
       "localizations": {
         "en": {
@@ -1912,9 +2116,7 @@
         }
       }
     },
-    "Caption 13 in tx3": {
-      "localizations": {}
-    },
+    "Caption 13 in tx3": {},
     "Car, boat, …": {
       "localizations": {
         "hu": {
@@ -1945,9 +2147,23 @@
         }
       }
     },
-    "Card title 19": {
-      "localizations": {}
+    "Card charged · %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Card charged · %1$@ · %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kártyaterhelés · %1$@ · %2$@"
+          }
+        }
+      }
     },
+    "Card title 19": {},
     "Cards open": {
       "localizations": {
         "hu": {
@@ -2025,6 +2241,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Érkezés"
+          }
+        }
+      }
+    },
+    "Check-ins": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check-inek"
           }
         }
       }
@@ -2149,6 +2375,16 @@
         }
       }
     },
+    "Coming up": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hamarosan"
+          }
+        }
+      }
+    },
     "Coming up · %lld payments": {
       "localizations": {
         "en": {
@@ -2247,6 +2483,16 @@
         }
       }
     },
+    "Couldn’t record the arrival. Please try again.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült rögzíteni az érkezést. Próbáld újra."
+          }
+        }
+      }
+    },
     "Couldn’t save that entry. Please try again.": {
       "localizations": {
         "hu": {
@@ -2327,19 +2573,7 @@
         }
       }
     },
-    "Da Lat": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Da Lat"
-          }
-        }
-      }
-    },
-    "Da Lat, three nights": {
-      "localizations": {}
-    },
+    "Da Lat, three nights": {},
     "Daily pace, where it goes and the projection. Bookings show either way.": {
       "extractionState": "stale",
       "localizations": {
@@ -2411,6 +2645,32 @@
         }
       }
     },
+    "Day %lld": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld. nap"
+          }
+        }
+      }
+    },
+    "Day %lld of %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Day %1$lld of %2$lld"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. nap / %2$lld"
+          }
+        }
+      }
+    },
     "Day %lld · %@, night %lld": {
       "localizations": {
         "en": {
@@ -2437,9 +2697,7 @@
         }
       }
     },
-    "Day 42": {
-      "localizations": {}
-    },
+    "Day 42": {},
     "Days": {
       "localizations": {
         "hu": {
@@ -2820,6 +3078,16 @@
         }
       }
     },
+    "Estimated total": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Becsült végösszeg"
+          }
+        }
+      }
+    },
     "Every 3 months": {
       "localizations": {
         "hu": {
@@ -2948,22 +3216,32 @@
         }
       }
     },
+    "Final numbers": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Végső számok"
+          }
+        }
+      }
+    },
+    "First stop": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Első megálló"
+          }
+        }
+      }
+    },
     "Flight": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Repülő"
-          }
-        }
-      }
-    },
-    "Following": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Követettek"
           }
         }
       }
@@ -3038,8 +3316,16 @@
         }
       }
     },
-    "Free cancellation ends tomorrow at 12:00.": {
-      "localizations": {}
+    "Free cancellation ends tomorrow at 12:00.": {},
+    "Free cancellation ends · %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingyenes lemondás vége · %@"
+          }
+        }
+      }
     },
     "Free cancellation until": {
       "localizations": {
@@ -3548,9 +3834,7 @@
         }
       }
     },
-    "Linh Phuoc Pagoda · 2h ago": {
-      "localizations": {}
-    },
+    "Linh Phuoc Pagoda · 2h ago": {},
     "Livhold": {
       "shouldTranslate": false
     },
@@ -3611,6 +3895,16 @@
         }
       }
     },
+    "Look back": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visszatekintés"
+          }
+        }
+      }
+    },
     "Look back ›": {
       "localizations": {
         "hu": {
@@ -3621,15 +3915,23 @@
         }
       }
     },
-    "Lora / Work Sans not bundled yet — showing the system fallback.": {
-      "localizations": {}
-    },
+    "Lora / Work Sans not bundled yet — showing the system fallback.": {},
     "Map": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Térkép"
+          }
+        }
+      }
+    },
+    "Mark as done": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Késznek jelölés"
           }
         }
       }
@@ -3725,16 +4027,6 @@
         }
       }
     },
-    "Máté is in Luang Prabang": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Máté Luang Prabangban van"
-          }
-        }
-      }
-    },
     "Name": {
       "localizations": {
         "hu": {
@@ -3761,16 +4053,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Név, dátumok, otthon, költségkeret és árfolyamok."
-          }
-        }
-      }
-    },
-    "Nest Homestay · 3 of 5 nights": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nest Homestay · 3. éjszaka / 5"
           }
         }
       }
@@ -3835,6 +4117,22 @@
         }
       }
     },
+    "Night %lld of %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Night %1$lld of %2$lld"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. éjszaka / %2$lld"
+          }
+        }
+      }
+    },
     "Nights not counted": {
       "localizations": {
         "hu": {
@@ -3867,6 +4165,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nincs szállás %1$@ → %2$@"
+          }
+        }
+      }
+    },
+    "No bed tonight": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ma éjjelre nincs szállás"
           }
         }
       }
@@ -3992,6 +4300,16 @@
         }
       }
     },
+    "No stop planned for tonight": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ma éjjelre nincs tervezett megálló"
+          }
+        }
+      }
+    },
     "No stops planned yet. Add them on Trip, and each one gets its cost here": {
       "localizations": {
         "hu": {
@@ -4008,6 +4326,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Még nincs megálló."
+          }
+        }
+      }
+    },
+    "No stops yet. Add the first place you’re going on Trip": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs megálló. Az első úti célt az Útitervben adhatod hozzá"
           }
         }
       }
@@ -4184,22 +4512,22 @@
         }
       }
     },
-    "Now · day 12 of 64": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Most · 12. nap / 64"
-          }
-        }
-      }
-    },
     "OK": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Rendben"
+          }
+        }
+      }
+    },
+    "Offline · edits sync when you’re back online": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline · a módosítások szinkronizálódnak, amint újra online leszel"
           }
         }
       }
@@ -4220,6 +4548,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adott napon"
+          }
+        }
+      }
+    },
+    "On plan": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terv szerint"
+          }
+        }
+      }
+    },
+    "On the way": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Úton"
           }
         }
       }
@@ -4286,6 +4634,16 @@
         }
       }
     },
+    "Opens Money": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megnyitja a Pénz oldalt"
+          }
+        }
+      }
+    },
     "Opens Money settings": {
       "localizations": {
         "hu": {
@@ -4302,6 +4660,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Megnyitja az Útiterv oldalt"
+          }
+        }
+      }
+    },
+    "Opens the stop on Trip": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megnyitja a megállót az Útitervben"
           }
         }
       }
@@ -4352,6 +4720,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Egyéb bevétel"
+          }
+        }
+      }
+    },
+    "Over cap": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keret felett"
           }
         }
       }
@@ -4426,9 +4804,7 @@
         }
       }
     },
-    "Petra checked in": {
-      "localizations": {}
-    },
+    "Petra checked in": {},
     "Phone & internet": {
       "localizations": {
         "hu": {
@@ -4700,16 +5076,6 @@
         }
       }
     },
-    "Sat 3 Oct · 08:30 · booked": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "okt. 3., szo · 08:30 · lefoglalva"
-          }
-        }
-      }
-    },
     "Save": {
       "localizations": {
         "hu": {
@@ -4817,12 +5183,8 @@
         }
       }
     },
-    "Section heading 21": {
-      "localizations": {}
-    },
-    "Section heading 25": {
-      "localizations": {}
-    },
+    "Section heading 21": {},
+    "Section heading 25": {},
     "See what a day costs": {
       "localizations": {
         "hu": {
@@ -5036,6 +5398,16 @@
         }
       }
     },
+    "Spent here ": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Itt elköltve: "
+          }
+        }
+      }
+    },
     "Spent so far": {
       "localizations": {
         "hu": {
@@ -5084,9 +5456,7 @@
         }
       }
     },
-    "Spent ₫640,000 of ₫900,000": {
-      "localizations": {}
-    },
+    "Spent ₫640,000 of ₫900,000": {},
     "Stand-in screen — the real %@ comes in its own round.": {
       "localizations": {
         "hu": {
@@ -5426,6 +5796,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Az utazás"
+          }
+        }
+      }
+    },
+    "The journey in figures": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az utazás számokban"
           }
         }
       }
@@ -5804,6 +6184,16 @@
         }
       }
     },
+    "Under cap": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keret alatt"
+          }
+        }
+      }
+    },
     "Unfold": {
       "localizations": {
         "hu": {
@@ -5855,9 +6245,7 @@
         }
       }
     },
-    "Vietnam": {
-      "localizations": {}
-    },
+    "Vietnam": {},
     "Ways you can get into this account. Your trips stay the same whichever you use.": {
       "localizations": {
         "hu": {
@@ -6134,9 +6522,7 @@
         }
       }
     },
-    "Your partner added a stay in Hoi An.": {
-      "localizations": {}
-    },
+    "Your partner added a stay in Hoi An.": {},
     "Your password": {
       "localizations": {
         "hu": {
@@ -6231,6 +6617,16 @@
         }
       }
     },
+    "all entries, month by month": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minden tétel, hónapról hónapra"
+          }
+        }
+      }
+    },
     "anything else": {
       "localizations": {
         "hu": {
@@ -6257,6 +6653,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "hátizsák, elektronika, adapterek, úti felszerelés"
+          }
+        }
+      }
+    },
+    "between stops": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "két megálló között"
           }
         }
       }
@@ -6308,26 +6714,6 @@
         }
       }
     },
-    "checked in 2 h ago": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "2 órája jelentkezett be"
-          }
-        }
-      }
-    },
-    "checked in yesterday": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tegnap jelentkezett be"
-          }
-        }
-      }
-    },
     "clothing and shoes": {
       "localizations": {
         "hu": {
@@ -6344,6 +6730,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "kávé, sör, gyümölcslé"
+          }
+        }
+      }
+    },
+    "day to departure": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nap az indulásig"
+          }
+        }
+      }
+    },
+    "days to departure": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nap az indulásig"
           }
         }
       }
@@ -6478,6 +6884,16 @@
         }
       }
     },
+    "from %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "érkezés: %@"
+          }
+        }
+      }
+    },
     "from booking": {
       "localizations": {
         "hu": {
@@ -6596,6 +7012,16 @@
         }
       }
     },
+    "leave %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "távozás: %@"
+          }
+        }
+      }
+    },
     "meals, street food, restaurants": {
       "localizations": {
         "hu": {
@@ -6676,6 +7102,16 @@
         }
       }
     },
+    "no date": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nincs dátum"
+          }
+        }
+      }
+    },
     "no date yet": {
       "localizations": {
         "hu": {
@@ -6707,12 +7143,32 @@
         }
       }
     },
+    "not booked": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nincs lefoglalva"
+          }
+        }
+      }
+    },
     "not in daily average": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "nincs a napi átlagban"
+          }
+        }
+      }
+    },
+    "of %@ cap · ": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keret: %@ · "
           }
         }
       }
@@ -6733,16 +7189,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "a keretből"
-          }
-        }
-      }
-    },
-    "of €5 200": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "5200 €-ból"
           }
         }
       }
@@ -6862,6 +7308,23 @@
         }
       }
     },
+    "recap.countries.title": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Countries"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Országok"
+          }
+        }
+      }
+    },
     "recap.nights": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -6879,6 +7342,23 @@
         }
       }
     },
+    "recap.nights.title": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Nights"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Éjszakák"
+          }
+        }
+      }
+    },
     "recap.stops": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -6892,6 +7372,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "megálló"
+          }
+        }
+      }
+    },
+    "recap.stops.title": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Stops"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megállók"
           }
         }
       }
@@ -7017,6 +7514,22 @@
         }
       }
     },
+    "stop %lld of %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "stop %1$lld of %2$lld"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. megálló / %2$lld"
+          }
+        }
+      }
+    },
     "supermarket runs": {
       "localizations": {
         "hu": {
@@ -7053,6 +7566,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "a havi díjak otthonról"
+          }
+        }
+      }
+    },
+    "the timeline and its stays": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "az idővonal és a szállások"
           }
         }
       }
@@ -7175,6 +7698,44 @@
         }
       }
     },
+    "was due %@ · %lld days ago": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "was due %1$@ · %#@days@"
+          },
+          "substitutions": {
+            "days": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg day ago"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg days ago"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esedékes volt: %1$@ · %2$lld napja"
+          }
+        }
+      }
+    },
     "will be charged at check-in": {
       "localizations": {
         "hu": {
@@ -7251,19 +7812,7 @@
         }
       }
     },
-    "₫1,284,500 · €48.20 · 12 nights": {
-      "localizations": {}
-    },
-    "€1 842 spent": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1842 € elköltve"
-          }
-        }
-      }
-    },
+    "₫1,284,500 · €48.20 · 12 nights": {},
     "≈ %@ a night · ≈ %@ in total": {
       "localizations": {
         "en": {

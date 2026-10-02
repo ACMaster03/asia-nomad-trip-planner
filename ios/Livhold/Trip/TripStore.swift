@@ -53,6 +53,9 @@ final class TripStore {
         #endif
     }
 
+    /// For screens that skip the network in fixture builds (Home's trip events).
+    static var isFixture: Bool { usesFixture }
+
     /// Call when the signed-in user is known: shows the saved copy, then refreshes.
     func start(userId: String) async {
         self.userId = userId

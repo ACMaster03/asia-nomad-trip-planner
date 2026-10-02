@@ -47,6 +47,14 @@ enum TripFixture {
             if let c = s.5 { o["cancelledOn"] = .string(c) }
             return .object(o)
         })
+        // Home's reminder card: one overdue, one due this week, one before departure, one done.
+        raw["reminders"] = .array([
+            .object(["id": .string("r-visa"), "title": .string("Extend the Vietnam visa"), "due": .string(Days.add(today, -2))]),
+            .object(["id": .string("r-sim"), "title": .string("Top up the SIM card"), "due": .string(Days.add(today, 4))]),
+            .object(["id": .string("r-ins"), "title": .string("Travel insurance"), "due": .string("2026-08-25")]),
+            .object(["id": .string("r-done"), "title": .string("Book the Hanoi flat"), "due": .string("2026-09-01"),
+                     "doneOn": .string("2026-08-30")]),
+        ])
         let ledger = entries(today: today).map { e -> LedgerEntry in
             var o: [String: JSONValue] = ["id": .string(e.id), "date": .string(e.date), "type": .string(e.income ? "income" : "expense"),
                                           "category": .string(e.cat), "amount": .number(e.amount), "currency": .string(e.cur), "note": .string(e.note)]

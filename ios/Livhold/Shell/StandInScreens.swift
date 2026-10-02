@@ -36,62 +36,6 @@ private struct TabPage<Header: View, Content: View>: View {
     }
 }
 
-private struct StandInCard: View {
-    let kicker: LocalizedStringKey
-    let title: LocalizedStringKey
-    let detail: LocalizedStringKey
-
-    var body: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(kicker)
-                    .font(.sans(12, weight: .medium))
-                    .textCase(.uppercase)
-                    .tracking(1.2)
-                    .foregroundStyle(Palette.tx3)
-                Text(title).font(.serif(20)).foregroundStyle(Palette.tx)
-                Text(detail).font(.sans(15)).foregroundStyle(Palette.tx2)
-            }
-        }
-        .settlesOnScroll()
-    }
-}
-
-// MARK: - Home
-
-struct HomeScreen: View {
-    @Environment(AuthStore.self) private var auth
-
-    var body: some View {
-        TabPage(tab: .home) {
-            HStack(spacing: 10) {
-                NavigationLink(value: Route.account) {
-                    Avatar(name: auth.firstName ?? auth.email ?? "L")
-                }
-                .accessibilityLabel("Account")
-                (auth.firstName.map { Text("Hi, \($0)") } ?? Text("Hi, traveller"))
-                    .font(.serif(24))
-                    .foregroundStyle(Palette.tx)
-                Spacer()
-            }
-        } content: {
-            StandInCard(kicker: "Now · day 12 of 64", title: "Da Lat", detail: "Nest Homestay · 3 of 5 nights")
-            StandInCard(kicker: "Next", title: "Bus to Nha Trang", detail: "Sat 3 Oct · 08:30 · booked")
-            Card {
-                Text("Money").font(.sans(12, weight: .medium)).textCase(.uppercase).tracking(1.2).foregroundStyle(Palette.tx3)
-                HStack(alignment: .firstTextBaseline) {
-                    Text("€1 842 spent").font(.sans(20, weight: .semibold)).foregroundStyle(Palette.tx)
-                    Spacer()
-                    Text("of €5 200").font(.sans(14)).foregroundStyle(Palette.tx3)
-                }
-                ProgressTrack(value: 0.35)
-            }
-            StandInCard(kicker: "Following", title: "Anna is in Kampot", detail: "checked in 2 h ago")
-            StandInCard(kicker: "Following", title: "Máté is in Luang Prabang", detail: "checked in yesterday")
-        }
-    }
-}
-
 // MARK: - Map
 
 struct MapScreen: View {

@@ -50,6 +50,14 @@ enum Days {
 
     /// "24 Nov" (timeline.ts shortDate); "—" when missing (sheetKit fmtDay).
     /// In another language the phone's own form, "nov. 24.".
+    /// "31 Aug 2026", in the phone's language.
+    static func withYear(_ iso: String) -> String {
+        guard let d = date(iso) else { return iso }
+        var style = Date.FormatStyle.dateTime.day().month(.abbreviated).year()
+        style.timeZone = TimeZone(identifier: "UTC")!
+        return d.formatted(style)
+    }
+
     static func short(_ iso: String?) -> String {
         guard let iso, let d = date(iso) else { return "—" }
         guard L10n.isEnglish else { return d.formatted(style.month(.abbreviated).day()) }
