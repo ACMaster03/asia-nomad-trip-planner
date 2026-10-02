@@ -55,10 +55,14 @@ export function LegalPage({
   children: React.ReactNode
 }) {
   return (
-    <main
-      className="min-h-dvh px-6 pb-16 pt-10"
-      style={{ background: 'var(--washLight)', color: 'var(--washInk)' }}
-    >
+    <main className="relative isolate min-h-dvh px-6 pb-16 pt-10" style={{ color: 'var(--washInk)' }}>
+      {/* The wash sits on a fixed, screen-sized layer rather than on the page.
+          These pages run to five screens, and `cover` on the page stretched a
+          phone-sized picture (576 px wide) to that height: zoomed in and
+          pixelated (Petra, 2 Oct 2026). Pinned to the screen it covers one
+          screen, as on the sign-in page. `background-attachment: fixed` would
+          read simpler, but iOS Safari ignores it; a fixed element does not. */}
+      <div aria-hidden className="fixed inset-0 -z-10" style={{ background: 'var(--washLight)' }} />
       <article className="lv-enter mx-auto w-full max-w-2xl rounded-[calc(var(--r)+2px)] bg-sf p-6 text-tx sm:p-8">
         <Link href="/login" className="text-base font-medium text-ac2-deep underline">
           ← Back to sign in

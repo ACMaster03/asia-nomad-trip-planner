@@ -7,6 +7,22 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### FIXED — the wash on the legal pages, pinned to the screen (Petra, 2 Oct)
+
+Petra, reading `/privacy` after #137: "the mountain pic is too widely zoomed in, low quality
+and pixeled". The 2b wash (`livhold-login-bg-light.jpg`) is a phone-portrait picture, 576 × 1248,
+and `LegalPage` painted it with `bottom/cover` on the page itself; `/privacy` is 4,865 px tall
+on a desktop and 8,312 px on a phone, so `cover` stretched it to that height. Now it sits on a
+fixed, screen-sized layer behind the card (a fixed element, not `background-attachment:
+fixed`, which iOS ignores), so it covers one screen, as on the sign-in page. `/terms` and
+`/delete-account` share the component. The other 2b screens (wizard, callback, digest,
+recap) are a screen tall and unchanged.
+
+**What remains, for Patrik and Petra:** on a wide desktop the picture is still a 576 px
+portrait scaled up ~2×, the same as the sign-in page today. A desktop-sized version of the
+landscape (the design asset, not something this repo can make) would finish the job; wire it
+with a media query in `--washLight` when it exists. **iOS:** nothing, web pages only.
+
 ### LIVE — the journey list's endpoint and the privacy section, merged with Petra (2 Oct)
 
 Pull request #136, merged after the usual step (what changes, what could go wrong, "go"),
