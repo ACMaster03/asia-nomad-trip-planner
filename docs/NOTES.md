@@ -30,11 +30,13 @@ columns of figures. #137's structural changes (LegalValue as a `<span>`, no `{' 
 the cause; they stay, since they keep the markup plain, and the `&apos;` rule from #137 is
 real and stays too.
 
-**For Patrik, app-wide:** the body-level setting applies to every screen, so anywhere the web
-app puts prose with an inline element after a space, Safari and iOS Safari draw them glued.
-The clean fix is to drop `tabular-nums` from `body` and put Tailwind's `tabular-nums` on the
-elements that line figures up (Money, the ledger, the cards' numbers). Not done here: it is a
-pass over the app's screens, and the iOS app is native and unaffected. **iOS:** nothing.
+**Decided by Patrik, 2 Oct, the same hour: fix it everywhere, as issue #140.** The body-level
+setting applies to every screen, so anywhere the web app puts prose with an inline element
+after a space, Safari and iOS Safari draw them glued; "we noticed it here by a miracle, other
+places most likely have the same problem." The fix: drop `tabular-nums` from `body`, put
+Tailwind's `tabular-nums` on the elements that line figures up (Money, the ledger, the cards'
+numbers), then check the prose screens in Safari. #139 (the legal pages) is live. The iOS app
+is native and unaffected. **iOS:** nothing.
 
 ### FIXED — the wash on the legal pages, pinned to the screen (Petra, 2 Oct)
 
