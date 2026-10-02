@@ -125,9 +125,14 @@ Petra is new to software work; Patrik is not. The product conventions are in
   (#138) and Safari's missing space before a bold word (#139, `tabular-nums` on `body`) are
   live, and the wash holds still on the iPhone (#143). Patrik: fix the Safari one on every
   screen, issue #140, next after the form's paste. The round closed with `/privacy` checked
-  claim by claim against the code: five statements the code does not keep are #151 (the
-  wording, with replacement sentences), #152 (no export exists) and #150 (no switch for the
-  reminder emails); #5 stays open for Article 27 alone.
+  claim by claim against the code: five statements the code does not keep were #151 (the
+  wording), #152 (no export exists) and #150 (no switch for the reminder emails); #5 stays
+  open for Article 27 alone. Patrik decided the same day: the policy states how Livhold will
+  operate, and each promise gets an issue that lands before launch, never weeks of features.
+  The wording went out as one pull request (sessions keep IP and user agent; reminders are
+  part of the service, switchable in settings, which is #150, high priority; unsubscribe
+  keeps a "do not email" note; a copy of your data comes by email to privacy@, by hand, so
+  #152 is closed; invitations are not emailed, they are rows matched at sign-in).
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.

@@ -22,6 +22,7 @@ import { LEGAL } from '@/lib/legal/entity'
 //   product/vercel.json                functions pinned to dub1 (Dublin)
 //   (absent) navigator.geolocation     the app never asks the device where it is
 //   (absent) any analytics SDK         nothing measures the reader
+//   auth.sessions (Supabase Auth)      IP and user agent per signed-in session
 //   migration 44 + api/journey-signup  the list form on journey.livhold.com:
 //                                      what it stores, insert-only, 12-month purge
 
@@ -58,6 +59,11 @@ export default function PrivacyPage() {
             is never visible to us or to you again.
           </li>
           <li>A first name, if you give one, so your name rather than your address appears to people you plan with.</li>
+          <li>
+            When you sign in, the address your connection comes from and the kind of browser or app
+            you use, kept while you stay signed in. The services we run on also keep ordinary request
+            logs for a short time, for security and to find faults; nobody reads them per person.
+          </li>
         </ul>
         <p className="font-semibold text-tx">What you put in a trip</p>
         <ul className="list-disc space-y-1 pl-5">
@@ -142,9 +148,11 @@ export default function PrivacyPage() {
       <Section id="why" title="Why we are allowed to hold it">
         <p>
           Your account and your trip content are processed to provide the service you asked for, which is
-          performing our agreement with you. Push notifications and email digests are processed on
-          consent, which is why nothing is sent until someone switches it on, and why a single tap
-          switches it back off.
+          performing our agreement with you. So are reminders about your own bookings, a stay&apos;s
+          cancel-by date or a subscription charge, which go to your email; you can switch them off in
+          your notification settings. Push notifications and the follower digests are processed on
+          consent: nothing is sent until someone switches it on, and a single tap switches it back
+          off.
         </p>
       </Section>
 
@@ -160,8 +168,9 @@ export default function PrivacyPage() {
             Dublin, Ireland.
           </li>
           <li>
-            <b className="font-semibold text-tx">Resend</b>: sends the emails: sign-in links, trip
-            invitations and follower digests. It handles the address the mail is going to.
+            <b className="font-semibold text-tx">Resend</b>: sends the emails: sign-in links, the
+            follower digests and reminders about your own bookings. It handles the address the mail
+            is going to.
           </li>
           <li>
             <b className="font-semibold text-tx">Your browser&apos;s push service</b>: if you turn
@@ -197,7 +206,9 @@ export default function PrivacyPage() {
           Ask for email digests and we store your email address and whether you confirmed it, so we
           can send them and stop when you say stop. Turn on push and we store your browser&apos;s
           push address in the same way. Every digest carries an unsubscribe link that works in one
-          click and needs no account. Unsubscribing deletes the record; it does not merely mute it.
+          click and needs no account. Unsubscribing stops the emails at once; we keep your address as
+          a “do not email” note, so a stale form cannot sign you up again, and we delete that too if
+          you write to us.
         </p>
         <p>
           Followers never see money, private notes, bookings or exact positions. They see the route,
@@ -233,14 +244,13 @@ export default function PrivacyPage() {
         </p>
         <p>
           You can ask for a copy of your data, ask for it to be corrected or erased, object to how
-          it is processed, ask us to restrict it, or ask for it in a portable form. Most of that you
-          can do yourself and instantly: the app exports your trip and your money ledger as files,
-          and <Link href="/delete-account" className="font-medium text-ac2-deep underline">deleting your account</Link> is
+          it is processed, ask us to restrict it, or ask for it in a portable form. Erasure you can
+          do yourself, instantly: <Link href="/delete-account" className="font-medium text-ac2-deep underline">deleting your account</Link> is
           a real erasure rather than a request that goes into a queue.
         </p>
         <p>
-          For anything else, write to <LegalValue value={LEGAL.contactEmail} /> and we will answer
-          within one month.
+          For a copy of your data, your trip and your money entries as files, or for anything else,
+          write to <LegalValue value={LEGAL.contactEmail} /> and we will answer within one month.
         </p>
         <p>
           <b className="font-semibold text-tx">If you are not satisfied</b>, you can complain to the
