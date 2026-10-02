@@ -7,6 +7,35 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### FIXED — Safari drew no space before a bold word on the legal pages: tabular figures (Petra, 2 Oct)
+
+After #137, Chrome read right and Safari on Petra's Mac still showed "so theUK GDPR" and
+"write toprivacy@…", in a private window and with `?fresh=1` too. Copy-paste from Safari had
+the spaces, so it was rendering, not content, and Vercel's own fetch of the page had both
+fixes. No WebKit here (the download is blocked), so a test page with ten builds of the same
+sentence went to Petra as an artifact (https://claude.ai/artifact/MMH3uuPJ4g9AzUQTVCVA2s). Her
+Safari screenshot: broken as live, without the enter animation, without the flex parent,
+with default smoothing, with the space inside the `<b>`, with the `<b>` inline-block; correct
+with **`font-variant-numeric: normal`**, with the system font, and with `&nbsp;`; with Lora
+the space before the `<b>` came out about three spaces wide.
+
+**The cause.** `body { font-variant-numeric: tabular-nums }` (globals.css, "figures are Work
+Sans tabular everywhere"). In Safari, with that on, the space at the end of a text run that
+precedes an inline element (`<b>`, `<span>`, `<a>`, `<mark>`) is drawn at the width of the
+font's tabular-space glyph: zero in Work Sans, a figure's width in Lora. Chrome draws a normal
+space. A space after an inline element is fine in both.
+
+**The fix here:** `normal-nums` on `LegalPage`'s article; the three legal pages have no
+columns of figures. #137's structural changes (LegalValue as a `<span>`, no `{' '}`) were not
+the cause; they stay, since they keep the markup plain, and the `&apos;` rule from #137 is
+real and stays too.
+
+**For Patrik, app-wide:** the body-level setting applies to every screen, so anywhere the web
+app puts prose with an inline element after a space, Safari and iOS Safari draw them glued.
+The clean fix is to drop `tabular-nums` from `body` and put Tailwind's `tabular-nums` on the
+elements that line figures up (Money, the ledger, the cards' numbers). Not done here: it is a
+pass over the app's screens, and the iOS app is native and unaffected. **iOS:** nothing.
+
 ### FIXED — the wash on the legal pages, pinned to the screen (Petra, 2 Oct)
 
 Petra, reading `/privacy` after #137: "the mountain pic is too widely zoomed in, low quality
@@ -31,12 +60,11 @@ toprivacy@keepyourhabits.comand we'll delete", then "so theUK GDPR" and "so theE
 Your rights, which predate this work. Fixed on all three legal pages in #137, merged the
 same way.
 
-**Two causes, for next time.** (1) Petra's browser drops a space that sits next to the
-`<!-- -->` React puts between two adjacent text nodes (Chromium does not, which is why the
-local checks passed): `so the{' '}<b>` renders "so the<!-- --> <b>", and a fragment such as
-the old `LegalValue` renders "write to <!-- -->privacy@…". So `LegalValue` is a `<span>` now,
-`{LEGAL.product}` next to text is wrapped in a `<span>`, and the legal pages use no `{' '}`:
-a space is always part of a text run. (2) The compiler drops the leading space of a JSX text
+**Two causes, for next time.** (1) Safari, not the `<!-- -->` markers this entry first
+blamed: see the tabular-figures entry above, found with Petra's test-page screenshot after
+#137 had not helped in Safari. The #137 changes stay (`LegalValue` is a `<span>`,
+`{LEGAL.product}` next to text is wrapped in a `<span>`, the legal pages use no `{' '}`):
+plainer markup, no harm. (2) The compiler drops the leading space of a JSX text
 run that contains an `&apos;`: "photos.Photos are re-encoded" had been live since September.
 Such a run is written as a plain string, `{" Photos are … camera's …"}`, or reworded ("we
 will" for "we&apos;ll"). The check that proves both, on a dev server, for `/privacy`,

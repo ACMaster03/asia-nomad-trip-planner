@@ -17,14 +17,14 @@ import { LEGAL, isUnset } from '@/lib/legal/entity'
  * A policy that silently prints "TODO_CONTACT_EMAIL" reads as a finished
  * document containing a typo; this reads as unfinished, which is the truth.
  *
- * A <span>, not a fragment. A fragment's text lands next to the page's own
- * text, and React separates adjacent text nodes with an invisible <!-- -->,
- * next to which at least one browser drops the space (Petra, 2 Oct 2026:
- * "write toprivacy@…", "so theUK GDPR"). An element has no such marker. For
- * the same reason the legal pages never use {' '}: a space is always part of
- * a text run, never a child of its own. And a text run that begins with a
- * space must not contain an &apos; (the compiler drops that leading space);
- * such runs are written as plain strings, {" … "}.
+ * A <span>, not a fragment, so the value is an element of its own rather than
+ * a text node glued to the page's text with React's <!-- --> marker; it keeps
+ * the HTML plain and the spaces around it ordinary. The legal pages also use
+ * no {' '}: a space is always part of a text run. Neither was the cause of
+ * "so theUK GDPR" in Safari (that was the body's tabular figures, see the
+ * article below), but both keep the markup simple. One rule that IS a cause:
+ * a text run that begins with a space must not contain an &apos;, because the
+ * compiler drops that leading space; such runs are plain strings, {" … "}.
  */
 export function LegalValue({ value }: { value: string }) {
   if (!isUnset(value)) return <span>{value}</span>
@@ -63,7 +63,13 @@ export function LegalPage({
           screen, as on the sign-in page. `background-attachment: fixed` would
           read simpler, but iOS Safari ignores it; a fixed element does not. */}
       <div aria-hidden className="fixed inset-0 -z-10" style={{ background: 'var(--washLight)' }} />
-      <article className="lv-enter mx-auto w-full max-w-2xl rounded-[calc(var(--r)+2px)] bg-sf p-6 text-tx sm:p-8">
+      {/* normal-nums: the body sets tabular figures app-wide, and in Safari that
+          setting, with Work Sans, draws the space before an inline element
+          (<b>, <span>, <a>) with no width: "so theUK GDPR", "write toprivacy@…"
+          (Petra, 2 Oct 2026; with Lora the same space comes out far too wide).
+          Prose has no columns of figures to line up, so the legal pages switch
+          it off. The app's numeric screens still rely on the body setting. */}
+      <article className="lv-enter mx-auto w-full max-w-2xl rounded-[calc(var(--r)+2px)] bg-sf p-6 normal-nums text-tx sm:p-8">
         <Link href="/login" className="text-base font-medium text-ac2-deep underline">
           ← Back to sign in
         </Link>
