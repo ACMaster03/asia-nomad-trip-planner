@@ -132,6 +132,31 @@ a qualified read.
 
 ## 2026-10-01
 
+### FIXED — Home called Hanoi an off-route detour in Bangkok (found 1 Oct)
+
+The morning after the Bangkok → Hanoi move (arrived 30 Sep, "Arrived" not pressed), Home
+said "off-route detour", "Bangkok · Not a stop in the plan · no stay logged" and "The plan
+still says Hanoi", offering "Add Bangkok as a stop". "Leave it as is" switched to "Hanoi,
+night 2", and a reload brought the detour back.
+
+**The cause.** Off-route came from the latest check-in alone: under 48 hours old and not
+naming today's stop. The last check-in was the Bangkok one from before the flight. The
+arrival day hides off-route, so it only showed the day after. "Leave it as is" lived in
+memory, so a reload forgot it.
+
+**The fix.** Only a check-in made after the stop's arrival day (UTC date) can make Home
+off-route (`offRoutePlace`, `lib/trips/progress.ts`). "Leave it as is" is kept per check-in
+in the browser, so it holds through reloads until the next check-in.
+
+**iOS:** when the iOS app gets Home's off-route card: a check-in counts only if it is under
+48 h old, made after today's stop's arrival day, and its place does not contain the stop's
+city (`offRoutePlace`, `progress.ts`); "Leave it as is" holds for that check-in until the
+next one (`DashboardClient.tsx`).
+
+**Checked:** `tsc`; `eslint`; 157 node tests (two new, the 1 Oct case among them);
+`next build`.
+
+
 ### BUILT — the list form on journey.livhold.com, and the policy that covers it
 
 Patrik and Petra's brief (`docs/landing-form/PR-brief.md`; the form is the one Petra signed

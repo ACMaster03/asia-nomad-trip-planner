@@ -36,3 +36,27 @@ export function stopProgress(seg: Segment, todayIso: string): StopProgress {
   const night = Math.min(Math.max(nightsBetween(seg.arrive, todayIso) + 1, 1), nights)
   return { night, nights, left: nights - night, pct: Math.min(100, Math.round((night / nights) * 100)) }
 }
+
+/**
+ * Home's off-route rule: the place named by the latest check-in, when it says
+ * you are somewhere other than today's stop; null when nothing is off.
+ *
+ * Only a check-in made after the stop's arrival day counts. One from before
+ * belongs to the stop you left: on 1 Oct, the day after the Bangkok → Hanoi
+ * move, the last check-in still said Bangkok, and Home called Hanoi an
+ * "off-route detour" in Bangkok (found 1 Oct). The arrival day itself already
+ * has its own layout, and you may check in in either city on it.
+ */
+export function offRoutePlace(
+  current: Pick<Segment, 'city' | 'arrive'> | undefined,
+  checkin: { occurred_at: string; payload?: Record<string, unknown> | null } | undefined,
+  now: Date,
+): string | null {
+  if (!current || !checkin) return null
+  const place = typeof checkin.payload?.placeName === 'string' ? checkin.payload.placeName : ''
+  if (!place) return null
+  const at = new Date(checkin.occurred_at)
+  if (+now - +at >= 48 * 3600_000) return null
+  if (at.toISOString().slice(0, 10) <= current.arrive) return null
+  return place.toLowerCase().includes(current.city.toLowerCase()) ? null : place
+}
