@@ -239,6 +239,48 @@ livhold.com itself and the app to a subdomain, so this is built to survive both.
 
 ## 2026-09-28
 
+### DECIDED — Livhold stays inside the Keep Your Habits Ltd for now; Petra is the GDPR Article 27 representative
+
+From the positioning session (record: `docs/MARKETING.md`, plan:
+`docs/PLAN-OCT-NOV-2026.md`). Owners' decision: run Livhold inside the
+existing UK company until the 30 November goal is known; no new entity, no
+move of Keep Your Habits. Profits, when there are any, stay in the company
+and fund marketing and development; nobody draws from the apps for a good
+while. Both owners are Hungarian tax residents, self-employed.
+
+Three conditions that make this safe: a one-page founders' agreement between
+Patrik and Petra on Livhold's ownership split, signed now; Livhold as its own
+line in the books (own sub-account, own Stripe when it comes, tagged
+receipts); the legal pages finished (#5) with the Ltd's details.
+
+**Article 27.** The Ltd is outside the EU and offers the service to EU users
+(the Hungarian pond first), and the launch logging (#120) is monitoring of
+behaviour, so the "occasional processing" exception does not apply: an EU
+representative is required. A representative may be a natural person
+established in a Member State (GDPR Art. 4(17), Art. 27(3)). Petra, a
+Hungarian resident with a Hungarian address, is designated. What it takes:
+
+1. a written mandate from the Ltd (Patrik as director) naming Petra as the
+   Article 27 representative, her Hungarian postal address and an email, the
+   scope (all processing under the GDPR), and that the Ltd remains the
+   controller and liable;
+2. her name and contact details on the privacy page and the legal pages
+   (Art. 13(1)(a)), part of #5 and #123;
+3. a record of processing activities (Art. 30) kept by the Ltd, with a copy
+   held by the representative: what data, why, legal basis, retention,
+   recipients (Supabase, Vercel, Resend, Apple, Google);
+4. a mailbox both owners read, for data subject requests and authorities.
+
+Known cost of this choice: a representative can be the addressee of
+enforcement (Recital 80), so Petra carries personal exposure that a
+representative service would carry instead. Accepted for now; revisit when
+there are users in numbers.
+
+Still to ask an accountant once: with both owners tax resident in Hungary,
+where the UK Ltd itself is treated as managed from. This concerns Keep Your
+Habits already, with or without Livhold.
+
+
 ### DECIDED — Patrik, 28 Sep: Home's wording as proposed, then localisation
 
 - **The wording pass (#65, Home only):** "all" to the 18 lines proposed. The one product
@@ -1779,10 +1821,12 @@ waits on that.
 ---
 ## 2026-09-20
 
-### BUILT — Money v2: issues #35, #37, #38 and #39, off mock 14
+### SHIPPED — Money v2: issues #35, #37, #38 and #39, off mock 14
 
-Branch `claude/subscription-category-visibility-qur53t`. The mock's four commits
-are the design record; this is the build. Nothing is deployed.
+Branch `claude/subscription-category-visibility-qur53t`, merged as PR #43
+(`f392b57`). The mock's four commits are the design record; this is the build.
+Live on www.livhold.com and the alert pipeline is live on both databases — see
+the deploy note below for what was proved and how.
 
 **The through-line: the page now speaks ONE number.** The overview, the Plan
 card and the monthly card all quote `projection.projected`, and
@@ -1832,14 +1876,29 @@ place a charge in a month, which the monthly bars have to do. FIXTURES and mock
 14 are updated; the projection is 4 132 420 and subscriptions move it
 **90% → 92%** of cap, not 90% → 91%.
 
-### TO DEPLOY — subscription alerts (nothing is live yet)
+### DEPLOYED — subscription alerts, staging and prod (2026-09-20)
 
 Order matters: the function first, the cron job second. A job pointing at a
 function that does not exist 404s once a day in silence.
 
     supabase functions deploy subscription-alerts --project-ref <ref>
-    tools/db.sh sql supabase/migrations/40-subscription-alerts.sql
-    tools/db.sh sql supabase/migrations/40-TESTPLAN.sql   # staging first
+    curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+      https://<ref>.supabase.co/functions/v1/subscription-alerts   # want 403
+    tools/db.sh --<target> apply 40
+    tools/db.sh --<target> test 40
+
+Done on both: cron jobid **11** on staging, **7** on prod, TESTPLAN "all
+assertions held" on each, and all four prod functions answering 403 unsigned.
+
+**End to end, without ever seeing the secret.** A database assertion cannot
+reach the far side of the HTTP call — whether `functions_url` resolves and
+whether the function accepts the signature. So run the job's own
+`net.http_post(...)` body once by hand (the secret is read inside the query from
+`app_config`; only the HMAC leaves), then read `net._http_response` by the
+returned request id. Staging request 185 and prod request 244 both came back
+**200** `{"date":"2026-09-20","sent":0,"results":[]}`. `sent: 0` is the pass —
+no subscriptions exist on the real trip yet. This is the check that did not
+exist before the 2026-09-18 outage, and it is the one that would have caught it.
 
 Docker must be running for the deploy (see the digest note, 2026-08-28). The
 function needs no new secrets — it reuses `CRON_SECRET`, `RESEND_API_KEY` and
@@ -1863,9 +1922,10 @@ So **after every deploy of a cron-invoked function, curl it unsigned and expect
     curl -s -o /dev/null -w '%{http_code}\n' -X POST \
       https://<ref>.supabase.co/functions/v1/subscription-alerts
 
-The fix is `--no-verify-jwt` on the deploy, and
-`[functions.subscription-alerts] verify_jwt = false` now lives in
-`supabase/config.toml` so a later redeploy cannot quietly turn it back on. The
+The fix is `[functions.subscription-alerts] verify_jwt = false` in
+`supabase/config.toml` rather than the forgettable `--no-verify-jwt` flag, so a
+later redeploy cannot quietly turn it back on. Proved twice: a plain staging
+redeploy flipped 401 → 403, and the **first** prod deploy answered 403 outright. The
 other three functions are left alone there: their dashboard setting is already
 right, and configuring them from assumption could break a working one.
 
