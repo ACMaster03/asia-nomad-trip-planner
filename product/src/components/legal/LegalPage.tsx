@@ -61,8 +61,12 @@ export function LegalPage({
           phone-sized picture (576 px wide) to that height: zoomed in and
           pixelated (Petra, 2 Oct 2026). Pinned to the screen it covers one
           screen, as on the sign-in page. `background-attachment: fixed` would
-          read simpler, but iOS Safari ignores it; a fixed element does not. */}
-      <div aria-hidden className="fixed inset-0 -z-10" style={{ background: 'var(--washLight)' }} />
+          read simpler, but iOS Safari ignores it; a fixed element does not.
+          h-lvh, not inset-0: iPhone Safari's address bar shrinks and grows as
+          you scroll, the viewport with it, and a layer sized to the viewport
+          resized too, so the bottom-anchored hills jumped (Petra, 2 Oct). The
+          large viewport height stays put. */}
+      <div aria-hidden className="fixed inset-x-0 top-0 -z-10 h-lvh" style={{ background: 'var(--washLight)' }} />
       {/* normal-nums: the body sets tabular figures app-wide, and in Safari that
           setting, with Work Sans, draws the space before an inline element
           (<b>, <span>, <a>) with no width: "so theUK GDPR", "write toprivacy@…"

@@ -72,7 +72,11 @@ on a desktop and 8,312 px on a phone, so `cover` stretched it to that height. No
 fixed, screen-sized layer behind the card (a fixed element, not `background-attachment:
 fixed`, which iOS ignores), so it covers one screen, as on the sign-in page. `/terms` and
 `/delete-account` share the component. The other 2b screens (wizard, callback, digest,
-recap) are a screen tall and unchanged.
+recap) are a screen tall and unchanged. **Then on the iPhone (Petra, dark theme):** the hills
+jumped up and down on a fast scroll. iPhone Safari's address bar shrinks and grows with the
+scroll, the viewport with it, and a layer sized `inset-0` resized too, so the bottom-anchored
+picture moved. The layer is `h-lvh` now (the large viewport height, which stays put while
+the bar moves), `inset-x-0 top-0`.
 
 **What remains, for Patrik and Petra:** on a wide desktop the picture is still a 576 px
 portrait scaled up ~2×, the same as the sign-in page today. A desktop-sized version of the
