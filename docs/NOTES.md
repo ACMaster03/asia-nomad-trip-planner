@@ -7,6 +7,26 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### APPLIED — migration 44, `journey_signups`, on staging and production (Petra, 2 Oct)
+
+**Applied by Petra in the Supabase dashboard's SQL editor**, guided here in the chat on
+Patrik's ask, the way 41 went on 23 Sep: the address bar's project ref checked before each
+step. Staging, `fdcncqnklscbztcydtye`: the migration ("Potential issue detected" on the
+`drop policy if exists` line, run anyway; the result was the job id, 14), then `44-TESTPLAN`,
+"Success. No rows returned". Production, `wvmnudcwcqktcugouqoe`: the migration (job id 9),
+then two read-only checks: the 11 columns of `information_schema.columns` in order with the
+right nullability, and one `cron.job` row, `journey-signups-purge-daily`, `0 3 * * *`,
+active. The test plan was not run on production: its fixtures are pretend sign-ups.
+
+**Two things worth knowing for next time.** Supabase's SQL editor shows the warning for any
+query containing `drop` or `delete`, so a migration with `drop policy if exists` and a test
+plan with a purge both trigger it; it is not a sign of a problem. And a query whose last
+statement returns rows shows the rows, not the word "Success": the migration ends with
+`select cron.schedule(...)`, so its pass looks like a single number under `schedule`.
+
+**Next:** the pull request (not yet opened), merged with Patrik's "go", then the paste into
+journey.livhold.com (`docs/landing-form/README.md`).
+
 ### DECIDED — Patrik, 2 Oct: Resend, Google Meet, no booking tool
 
 For the journey.livhold.com list (the brief's section 4): the automated email when Livhold
