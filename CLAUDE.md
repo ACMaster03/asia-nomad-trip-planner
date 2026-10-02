@@ -123,7 +123,11 @@ Petra is new to software work; Patrik is not. The product conventions are in
   #119.
 - 2 Oct, with Petra on livhold.com/privacy: the spaces (#137), the wash pinned to the screen
   (#138) and Safari's missing space before a bold word (#139, `tabular-nums` on `body`) are
-  live. Patrik: fix the Safari one on every screen, issue #140, next after the form's paste.
+  live, and the wash holds still on the iPhone (#143). Patrik: fix the Safari one on every
+  screen, issue #140, next after the form's paste. The round closed with `/privacy` checked
+  claim by claim against the code: five statements the code does not keep are #151 (the
+  wording, with replacement sentences), #152 (no export exists) and #150 (no switch for the
+  reminder emails); #5 stays open for Article 27 alone.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
