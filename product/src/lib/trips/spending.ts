@@ -218,6 +218,8 @@ export interface BookingRow {
   amount: number
   /** the booking's own currency figure, when it differs from base */
   original?: { amount: number; cur: string }
+  /** a booked stay at a stop taken out of the plan, or deleted (#105) */
+  outOfPlan?: boolean
 }
 
 /**
@@ -235,8 +237,12 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
   const base = state.meta.baseCurrency || 'HUF'
   const imported = new Set(ledger.filter((e) => e.source).map((e) => `${e.source!.kind}:${e.source!.id}`))
   const orig = (amount: number, cur: string) => (cur !== base ? { amount, cur } : undefined)
+  // A stop taken out of the plan, or deleted (#105): its drafts go with it,
+  // as its nights and estimate leave computeBudget. A booked stay stays and is
+  // marked: the money is committed until someone cancels the booking.
+  const inPlan = new Set(state.segments.filter((s) => s.include !== false).map((s) => s.id))
   const stays: BookingRow[] = state.stays
-    .filter((st) => st.include)
+    .filter((st) => st.include && (inPlan.has(st.segId) || isBookedStatus(st.status)))
     .map((st): BookingRow => {
       const seg = state.segments.find((s) => s.id === st.segId)
       const nights = stayNights(st, seg)
@@ -249,6 +255,7 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
         date: st.chargeDate || undefined,
         status: !booked ? 'unbooked' : paid ? 'paid' : 'unpaid',
         amount: toBase(total, st.cur, rates), original: orig(total, st.cur),
+        ...(inPlan.has(st.segId) ? {} : { outOfPlan: true }),
       }
     })
     .sort((a, b) => (a.date ?? '9').localeCompare(b.date ?? '9'))
@@ -277,6 +284,8 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
     draftedStays: stays.filter((r) => r.status === 'unbooked').reduce((a, r) => a + r.amount, 0),
     draftStays: stays.filter((r) => r.status === 'unbooked').length,
     unbooked: transport.filter((r) => r.status === 'unbooked').length,
+    /** booked stays still counted although their stop is not in the plan (#105) */
+    offPlanStays: stays.filter((r) => r.outOfPlan).length,
   }
 }
 

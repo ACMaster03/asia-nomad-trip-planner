@@ -6,6 +6,7 @@ import NewCountryBanner from './NewCountryBanner'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
+import { useHomeBase } from '@/lib/trips/useHomeBase'
 import { useMoney } from '@/lib/trips/Money'
 import { useConfirm } from '@/components/Confirm'
 import { localISODate, nightsBetween, segNights, stayTotal, toBase } from '@/lib/trips/format'
@@ -13,7 +14,7 @@ import { isBookedStatus } from '@/lib/trips/commitment'
 import { stopProgress, tripDay } from '@/lib/trips/progress'
 import { stopsAround } from '@/lib/trips/whereAmI'
 import {
-  buildTimeline, legMoneyState, shiftDepartures, stayCounts, stayMoneyState, stopCoverage,
+  buildTimeline, homeFor, legMoneyState, shiftDepartures, stayCounts, stayMoneyState, stopCoverage,
   type Leg, type NightRange, type Timeline as TimelineModel, type Tone,
 } from '@/lib/trips/timeline'
 import type { Segment, Stay, TransportLeg, TripState } from '@/lib/trips/types'
@@ -247,6 +248,8 @@ function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onToggle,
                 <span className="block truncate text-base font-medium">{stay.name || 'Stay'}</span>
                 <span className="block text-[13px] text-tx2">
                   {fmtDay(range.from)} – {fmtDay(range.to)} · {range.nights} {range.nights === 1 ? 'night' : 'nights'} · <span className={TONE[money.tone]}>{money.label}</span>
+                  {/* A stop out of the plan still owes its booked stays (#105): Money counts them until cancelled. */}
+                  {!inPlan && isBookedStatus(stay.status) && <span className="text-warn"> · still in Bookings</span>}
                 </span>
               </span>
               {total > 0 && <span className="flex-none text-base font-semibold tabular-nums">{fmt(total)}</span>}
@@ -296,7 +299,9 @@ export function Timeline() {
   const [sheet, setSheet] = useState<SheetState>(null)
   const todayIso = localISODate()
   const state = trip.data?.state
-  const tl = useMemo(() => (state ? buildTimeline(state) : null), [state])
+  // Home is the viewer's own (#58, migration 43), else the journey's.
+  const profileHome = useHomeBase().data
+  const tl = useMemo(() => (state ? buildTimeline(state, homeFor(profileHome, state.meta)) : null), [state, profileHome])
   const maybes = useMemo(
     () => (state ? state.segments.filter((x) => x.include === false).slice().sort((a, b) => a.arrive.localeCompare(b.arrive)) : []),
     [state],

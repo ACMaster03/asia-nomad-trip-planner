@@ -22,7 +22,7 @@ import { FoldButton, FoldedRow } from './Fold'
 // and what is not booked yet in amber, or else what is still to pay. The quiet
 // page shows it open, without ⌃: there it is the whole page.
 
-export function BookingsCard({ stays, transport, paid, toPay, draftedStays, draftStays, fmt, todayIso, folded, onToggle }: {
+export function BookingsCard({ stays, transport, paid, toPay, draftedStays, draftStays, offPlanStays = 0, fmt, todayIso, folded, onToggle }: {
   stays: BookingRow[]
   transport: BookingRow[]
   paid: number
@@ -30,6 +30,8 @@ export function BookingsCard({ stays, transport, paid, toPay, draftedStays, draf
   /** total of the drafted stays — counted in neither paid nor toPay */
   draftedStays: number
   draftStays: number
+  /** booked stays at a stop no longer in the plan: still counted, said in amber (#105) */
+  offPlanStays?: number
   fmt: (n: number) => string
   todayIso: string
   /** with onToggle: one line, or the card with ⌃ (Fold.tsx) */
@@ -97,6 +99,7 @@ export function BookingsCard({ stays, transport, paid, toPay, draftedStays, draf
           <div className="mt-0.5 text-[21px] font-semibold">{fmt(staysTotal)}</div>
           <div className="text-[13px] text-tx2">
             {paidStays} paid{draftStays > 0 ? ` · ${draftStays} draft` : ''}
+            {offPlanStays > 0 && <span className="text-warn"> · {offPlanStays} not in the plan</span>}
           </div>
         </div>
         <div>

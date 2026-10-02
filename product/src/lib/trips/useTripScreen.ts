@@ -7,6 +7,7 @@ import { fetchCityList, fetchCitiesByName } from '@/lib/catalogue/queries'
 import { fetchFx, crossRate } from '@/lib/catalogue/fx'
 import { qk } from '@/lib/catalogue/keys'
 import { buildCityIndex } from './budget'
+import { catalogueCity } from '../map/norm'
 import { useTripScope } from './TripScope'
 
 export function useTripScreen() {
@@ -32,10 +33,18 @@ export function useTripScreen() {
     () => [...new Set((trip.data?.state.segments ?? []).map((s) => s.city).filter(Boolean))],
     [trip.data],
   )
+  // Each stop's name as the catalogue spells it ("Hong Kong Island" → "Hong
+  // Kong", catalogueCity): fetched by that name, then indexed by the stop's
+  // own name too, so cityIdx[s.city] finds it wherever it is read.
+  const catalogueNames = useMemo(() => {
+    const lite = cities.data ?? []
+    return new Map(routeCities.map((n) => [n, catalogueCity(n, lite, false)?.city ?? n]))
+  }, [routeCities, cities.data])
+  const wantedCities = useMemo(() => [...new Set(catalogueNames.values())], [catalogueNames])
   const tripCities = useQuery({
-    queryKey: qk.tripCities(routeCities),
-    queryFn: () => fetchCitiesByName(sb, routeCities),
-    enabled: routeCities.length > 0,
+    queryKey: qk.tripCities(wantedCities),
+    queryFn: () => fetchCitiesByName(sb, wantedCities),
+    enabled: wantedCities.length > 0,
     staleTime: 6 * 60 * 60_000,
   })
   // FX snapshot (migration 19). Owner decision 2026-07-25: rates are data, not
@@ -45,7 +54,11 @@ export function useTripScreen() {
     queryFn: () => fetchFx(sb),
     staleTime: 60 * 60_000,
   })
-  const cityIdx = useMemo(() => buildCityIndex(tripCities.data ?? []), [tripCities.data])
+  const cityIdx = useMemo(() => {
+    const idx = buildCityIndex(tripCities.data ?? [])
+    for (const [stop, name] of catalogueNames) if (!idx[stop] && idx[name]) idx[stop] = idx[name]
+    return idx
+  }, [tripCities.data, catalogueNames])
 
   // THE MERGE. state.rates does double duty: Object.keys() is the currency
   // picker list in Stays/Transport/Stops/Ledger, while the values feed

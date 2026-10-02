@@ -215,7 +215,7 @@ export function useTripEvents(opts: {
   const recordArrived = (city: string) => {
     if (!city || !tripId) return
     addEvent.mutate({ id: crypto.randomUUID(), tripId, kind: 'arrived', payload: { city } })
-    toast('Arrival recorded - the button is done for this stop')
+    toast('Arrival recorded')
   }
 
   /** Resolves false when there was nothing to write, so the modal stays open. */

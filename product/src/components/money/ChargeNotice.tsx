@@ -90,8 +90,7 @@ export function ChargeNotice({ trip, canEdit, mut, stateMut }: {
         {asking === e.id ? (
           <>
             <p className="text-base leading-snug">
-              <b className="font-semibold">Cancelled {name}?</b> This {amount} charge is removed, and {name} is marked
-              cancelled from {shortDate(e.date)}, so no more are added.
+              <b className="font-semibold">Cancelled {name}?</b> This charge goes, and no more are added from {shortDate(e.date)}.
             </p>
             <div className="mt-2.5 flex justify-end gap-2">
               <button type="button" onClick={() => setAsking(null)} className="min-h-11 rounded-full border-[1.5px] border-canvas/40 px-5 text-base font-semibold">

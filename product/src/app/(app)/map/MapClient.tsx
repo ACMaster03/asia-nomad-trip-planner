@@ -11,6 +11,9 @@ import { qk } from '@/lib/catalogue/keys'
 import type { City } from '@/lib/catalogue/types'
 import type { Segment, TransportLeg } from '@/lib/trips/types'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
+import { useHomeBase } from '@/lib/trips/useHomeBase'
+import { homeFor } from '@/lib/trips/timeline'
+import { catalogueCity } from '@/lib/map/norm'
 import { tk } from '@/lib/trips/keys'
 import { fetchMyFollowing } from '@/lib/follow/follows'
 import { useFollowedRoutes } from '@/lib/follow/useFollowedRoutes'
@@ -44,6 +47,8 @@ export default function MapClient() {
   })
   const { data: countries = [] } = useQuery({ queryKey: qk.countries, queryFn: () => fetchCountries(sb) })
   const state = trip.data?.state
+  // The route's ⌂ is the viewer's home (#58), else the journey's.
+  const profileHome = useHomeBase().data
   // A tapped pin swaps the bottom card to that city (fix 2); closing it brings
   // the stop card back.
   const [picked, setPicked] = useState<City | null>(null)
@@ -77,7 +82,7 @@ export default function MapClient() {
     sorted[0]
   const stopNo = stop ? sorted.indexOf(stop) + 1 : 0
   const nights = stop ? Math.max(1, Math.round((+new Date(stop.depart) - +new Date(stop.arrive)) / 86400000)) : 0
-  const stopCity = stop ? (cities.data ?? []).find((c) => c.city === stop.city) : undefined
+  const stopCity = stop ? catalogueCity(stop.city, cities.data ?? [], false) : undefined
   const wifiRaw = getAtJsonPath(stopCity?.attributes, 'internet')
   const wifi = typeof wifiRaw === 'string' || typeof wifiRaw === 'number' ? String(wifiRaw) : null
 
@@ -107,6 +112,7 @@ export default function MapClient() {
         theirRoute={theirRoute}
         today={todayIso}
         onPickPeople={setPeopleAt}
+        home={state ? homeFor(profileHome, state.meta) : ''}
       />
       {selected && (
         <button

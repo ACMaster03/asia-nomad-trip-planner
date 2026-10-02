@@ -26,7 +26,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
 - He decides product questions. Record decisions in `docs/NOTES.md` and on the
   GitHub issue that holds the topic.
 
-## Where the work stands (26 Sep)
+## Where the work stands (28 Sep)
 
 - The Trip timeline (mock 15 §1, §4, §5, §6) is live: pull request #68 was
   merged with Petra on 23 Sep, then #71 and #72 with her findings from the
@@ -49,7 +49,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
   latter on 24 Sep (#37); it was Petra's idea. 3b, the one-time offer for
   Subscriptions entries typed before 3a, went live with #91 on 24 Sep (Petra and
   Patrik answered it on Asia on 25 Sep): its charges start on the
-  day of the answer, not back-filled (open for Patrik). 3c (#92, editing
+  day of the answer, not back-filled (Patrik kept it, 26 Sep). 3c (#92, editing
   one-offs on Money) was closed unmerged on 26 Sep: see the next point. As
   built, every existing account is asked the tracking question once;
   Patrik can change that.
@@ -94,6 +94,39 @@ Petra is new to software work; Patrik is not. The product conventions are in
   changes and what could go wrong, get a "go", merge, watch the Vercel build,
   test on livhold.com, record.
 - No hourly check-ins on pull requests unless someone asks for them.
+- Since 27 Sep another agent builds the iOS app (`ios/`) on Patrik's machine:
+  Trip now, Money next. Web bugs on Home and Trip go first, and every web
+  change to behaviour gets an "iOS:" line in its `docs/NOTES.md` entry (the
+  rule and its file), because that agent reads `main`, not this chat.
+- Decided by Patrik on 27 Sep (#58, #60, #62, #65):
+  - home moves to the person (`profiles.home_base`, migration 43, since #101 takes 42),
+    live on staging and production since 27 Sep; the app code reads it first and falls
+    back to the journey's home;
+  - Home keeps a Reminders row when nothing is due;
+  - the Subscriptions card gets no unlock rule;
+  - next comes the #65 wording pass on Home only (#106, the check-in as a sheet, turned out
+    done since 20 Sep), then vias on the globe, then #107 last. Trip was redone in the iOS
+    app, and the web may take features back from it.
+- Patrik, 28 Sep: the Home wording pass goes out in #118, measured per #65's rule 5. It
+  carries a travel-day fix found while measuring: Home now gives the day you move to the
+  stop you move to, as Trip does, where it used to show "No bed tonight" and skip the arrival
+  day. It needs merging before 30 Sep, the Bangkok → Hanoi move. Localisation (#119) comes
+  after this round; the iOS app already keeps English and Hungarian in a String Catalog.
+- 1 Oct: the list form for journey.livhold.com (Patrik and Petra's brief, `docs/landing-form/`)
+  is built and, since 2 Oct, live with Petra (#136): `/api/journey-signup` on livhold.com,
+  migration 44 (`journey_signups`, insert-only for the public key, purged after 12 months),
+  and the `/privacy` section that covers it. journey.livhold.com is a hosted page, not a repo: the form is pasted in after the
+  merge, never before. Patrik decided the providers on 2 Oct (Resend, a hand-written email to
+  arrange a call, Google Meet, no booking tool); the policy names them. Migration 44 is on
+  staging and production since 2 Oct (Petra, guided in the chat). Next: Patrik pastes the form
+  (`docs/landing-form/README.md`), then one real submission. The policy is English only until
+  #119.
+- 2 Oct, with Petra on livhold.com/privacy: the spaces (#137), the wash pinned to the screen
+  (#138) and Safari's missing space before a bold word (#139, `tabular-nums` on `body`) are
+  live. Patrik: fix the Safari one on every screen, issue #140, next after the form's paste.
+- Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
+  "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
+  `stay-deadline-alerts` redeploy, and the JWT secret rotation.
 
 ## Running the checks
 

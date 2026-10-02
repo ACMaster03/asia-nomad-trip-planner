@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTimeline, stopCoverage, stayRange, stayMoneyState, legMoneyState, deadlinesMissing, shiftDepartures, homeCity } from './timeline.ts'
+import { buildTimeline, stopCoverage, stayRange, stayMoneyState, legMoneyState, deadlinesMissing, shiftDepartures, homeCity, homeFor, stayForNight } from './timeline.ts'
 import { stayNights } from './format.ts'
 import type { Segment, Stay, TransportLeg, TripState } from './types'
 
@@ -69,6 +69,24 @@ test('stopCoverage ignores stays that do not count', () => {
   assert.deepEqual(c.gaps, [])
 })
 
+test('stayForNight: the stay that covers the night, booked first, none on a gap night', () => {
+  const bkk = seg('bkk', 'Bangkok', '2026-09-01', '2026-09-11')
+  const flat = stay('flat', 'bkk', { status: 'booked', checkIn: '2026-09-01', checkOut: '2026-09-05' })
+  const idea = stay('idea', 'bkk', { checkIn: '2026-09-07', checkOut: '2026-09-11' })
+  const stays = [idea, flat, stay('elsewhere', 'han', { status: 'booked' })]
+  assert.equal(stayForNight(bkk, stays, '2026-09-01')?.id, 'flat', 'arrival night')
+  assert.equal(stayForNight(bkk, stays, '2026-09-04')?.id, 'flat')
+  assert.equal(stayForNight(bkk, stays, '2026-09-05'), null, 'check-out morning: the flat is over, nothing claims the 5th')
+  assert.equal(stayForNight(bkk, stays, '2026-09-08')?.id, 'idea', 'an Idea is tonight’s stay, just not a booked one')
+  // two claim the same nights: the booked one is where you sleep
+  const hotel = stay('hotel', 'bkk', { status: 'booked', checkIn: '2026-09-07', checkOut: '2026-09-09' })
+  assert.equal(stayForNight(bkk, [idea, hotel], '2026-09-08')?.id, 'hotel')
+  // a stay that does not count is an old option, never tonight's
+  assert.equal(stayForNight(bkk, [stay('old', 'bkk', { include: false, status: 'booked' })], '2026-09-03'), null)
+  // a stay from before the timeline build spans its stop
+  assert.equal(stayForNight(bkk, [stay('legacy', 'bkk', { status: 'chosen' })], '2026-09-10')?.id, 'legacy')
+})
+
 test('buildTimeline: home, the legs between stops, the way home, transport on its leg, orphans apart', () => {
   const tl = buildTimeline(state({
     transport: [
@@ -84,6 +102,23 @@ test('buildTimeline: home, the legs between stops, the way home, transport on it
   assert.equal(tl.legs[1].booked, null)
   assert.equal(tl.legs[1].transport[0].id, 't2')
   assert.deepEqual(tl.orphans.map((t) => t.id), ['t3'])
+})
+
+// #58 (Patrik, 27 Sep): home is the person's. The journey's own is the fallback.
+test('homeFor: the person’s home first, the journey’s when they set none', () => {
+  assert.equal(homeFor('Vienna, Austria', { homeBase: 'Budapest, Hungary' }), 'Vienna, Austria')
+  assert.equal(homeFor(null, { homeBase: 'Budapest, Hungary' }), 'Budapest, Hungary')
+  assert.equal(homeFor('  ', { homeBase: 'Budapest, Hungary' }), 'Budapest, Hungary', 'a blank profile home is no home')
+  assert.equal(homeFor(undefined, {}), '')
+})
+
+test('buildTimeline starts and ends at the home it is given', () => {
+  const tl = buildTimeline(state({ transport: [leg('t1', 'Vienna', 'Bangkok', { status: 'booked' })] }), homeFor('Vienna, Austria', { homeBase: 'Budapest, Hungary' }))
+  assert.equal(tl.home, 'Vienna')
+  assert.deepEqual([tl.legs[0].from.city, tl.legs.at(-1)!.to.city], ['Vienna', 'Vienna'])
+  assert.equal(tl.legs[0].booked?.id, 't1', 'the flight from the person’s home sits on the first leg')
+  // without one, the journey's own, as before
+  assert.equal(buildTimeline(state()).home, 'Budapest')
 })
 
 test('buildTimeline: without a home there are only the legs between stops; unticked stops are left out', () => {

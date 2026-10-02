@@ -34,7 +34,15 @@ export function shortDate(iso: string): string {
 }
 
 /** "Budapest, Hungary" → "Budapest". */
-export const homeCity = (homeBase?: string) => (homeBase ?? '').split(',')[0].trim()
+export const homeCity = (homeBase?: string | null) => (homeBase ?? '').split(',')[0].trim()
+
+/**
+ * The home a journey starts and ends at, for the person looking at it (#58):
+ * their own, from the profile (migration 43), else the one the journey was
+ * created with. On a shared journey each traveller sees their own.
+ */
+export const homeFor = (profileHome: string | null | undefined, meta: { homeBase?: string }) =>
+  profileHome?.trim() || meta.homeBase?.trim() || ''
 
 /** A stay counts in the plan — the same flag budget.ts sums. */
 export const stayCounts = (st: Stay) => !!st.include
@@ -91,6 +99,20 @@ export function stopCoverage(seg: Segment, stays: Stay[]): StopCoverage {
   return { covered, gaps, overlaps }
 }
 
+/**
+ * The stay a traveller sleeps in on the night of `dayIso`, by the timeline's
+ * own rule (stopCoverage): counted stays only, and a booked one first when two
+ * claim the night. Null on a "No bed" night and at a stop with no counted stay.
+ * Home's top card reads it (#58): a stop can hold several stays since the
+ * timeline build, so "the stop's first stay" is not tonight's, and a stay is
+ * only called booked when it is (an Idea counts in the plan too).
+ */
+export function stayForNight(seg: Segment, stays: Stay[], dayIso: string): Stay | null {
+  const claims = stopCoverage(seg, stays.filter((st) => st.segId === seg.id)).covered
+    .filter(({ range: r }) => r.from <= dayIso && dayIso < r.to)
+  return (claims.find(({ stay }) => isBookedStatus(stay.status)) ?? claims[0])?.stay ?? null
+}
+
 export interface LegEnd {
   kind: 'home' | 'stop'
   city: string
@@ -128,8 +150,9 @@ export function legFor(legs: Leg[], t: Pick<TransportLeg, 'from' | 'to'>): Leg |
   return legs.find((l) => sameCity(l.from.city, t.from) && sameCity(l.to.city, t.to))
 }
 
-export function buildTimeline(state: TripState): Timeline {
-  const home = homeCity(state.meta.homeBase)
+/** `homeBase`: the viewer's home through homeFor; the journey's own when not given. */
+export function buildTimeline(state: TripState, homeBase: string = state.meta.homeBase ?? ''): Timeline {
+  const home = homeCity(homeBase)
   const stops = state.segments.filter((s) => s.include !== false).slice().sort(byArrive)
   const ends: LegEnd[] = []
   if (home) ends.push({ kind: 'home', city: home })

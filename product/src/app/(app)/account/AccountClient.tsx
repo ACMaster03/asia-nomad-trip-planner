@@ -24,6 +24,7 @@ import { AccountDeletion } from '@/components/trips/DangerZone'
 import { Modal } from '@/components/trips/Modal'
 import { NotificationSettings } from '@/components/trips/NotificationSettings'
 import { useToast } from '@/components/Toast'
+import { useHomeBase, useSetHomeBase } from '@/lib/trips/useHomeBase'
 import { applyLarger, applyTheme, storedLarger, storedTheme, type Theme } from '@/lib/theme'
 import { ActiveTripCard } from '@/app/(app)/settings/ActiveTripCard'
 
@@ -98,6 +99,50 @@ function NameCard({ initialFirstName }: { initialFirstName: string }) {
       </div>
       {save.isError && (
         <p className="mt-2 text-base text-ac2">Could not save your name. Try again.</p>
+      )}
+    </section>
+  )
+}
+
+// "Home" (#58; Patrik, 27 Sep; migration 43): where you live is a fact about
+// you, not any one journey, so it lives on the profile. Every journey starts
+// and ends there on Trip; a journey created before this, or by someone who
+// never set one, falls back to the home it was created with. Emptying it and
+// saving goes back to that.
+function HomeCard() {
+  const toast = useToast()
+  const home = useHomeBase()
+  const save = useSetHomeBase()
+  // null until the field is touched: it shows the saved home until then
+  const [typed, setTyped] = useState<string | null>(null)
+  const saved = home.data ?? ''
+  const value = typed ?? saved
+
+  return (
+    <section className="rounded-[var(--r)] bg-sf p-4">
+      <h2 className="font-serif text-[19px] font-semibold">Home</h2>
+      <p className="mt-1 text-base leading-normal text-tx2">Every journey starts and ends here.</p>
+      <div className="mt-2 flex items-end gap-[9px]">
+        <label className="block min-w-0 grow text-base font-medium text-tx2">
+          City, country
+          <input
+            className={input}
+            value={value}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder="Budapest, Hungary"
+            autoComplete="address-level2"
+          />
+        </label>
+        <button
+          onClick={() => save.mutate(value, { onSuccess: () => { setTyped(null); toast('Home saved') } })}
+          disabled={save.isPending || home.isPending || value.trim() === saved.trim()}
+          className="flex-none rounded-[calc(var(--r)-3px)] bg-ac px-[15px] py-3 text-base font-semibold text-on disabled:opacity-50"
+        >
+          {save.isPending ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+      {save.isError && (
+        <p className="mt-2 text-base text-ac2">Could not save your home. Try again.</p>
       )}
     </section>
   )
@@ -721,6 +766,8 @@ export default function AccountClient({
       <PasswordCard />
 
       <NameCard initialFirstName={initialFirstName ?? ''} />
+
+      <HomeCard />
 
       <ActiveTripCard />
 

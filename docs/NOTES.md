@@ -5,6 +5,152 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-02
+
+### FIXED — Safari drew no space before a bold word on the legal pages: tabular figures (Petra, 2 Oct)
+
+After #137, Chrome read right and Safari on Petra's Mac still showed "so theUK GDPR" and
+"write toprivacy@…", in a private window and with `?fresh=1` too. Copy-paste from Safari had
+the spaces, so it was rendering, not content, and Vercel's own fetch of the page had both
+fixes. No WebKit here (the download is blocked), so a test page with ten builds of the same
+sentence went to Petra as an artifact (https://claude.ai/artifact/MMH3uuPJ4g9AzUQTVCVA2s). Her
+Safari screenshot: broken as live, without the enter animation, without the flex parent,
+with default smoothing, with the space inside the `<b>`, with the `<b>` inline-block; correct
+with **`font-variant-numeric: normal`**, with the system font, and with `&nbsp;`; with Lora
+the space before the `<b>` came out about three spaces wide.
+
+**The cause.** `body { font-variant-numeric: tabular-nums }` (globals.css, "figures are Work
+Sans tabular everywhere"). In Safari, with that on, the space at the end of a text run that
+precedes an inline element (`<b>`, `<span>`, `<a>`, `<mark>`) is drawn at the width of the
+font's tabular-space glyph: zero in Work Sans, a figure's width in Lora. Chrome draws a normal
+space. A space after an inline element is fine in both.
+
+**The fix here:** `normal-nums` on `LegalPage`'s article; the three legal pages have no
+columns of figures. #137's structural changes (LegalValue as a `<span>`, no `{' '}`) were not
+the cause; they stay, since they keep the markup plain, and the `&apos;` rule from #137 is
+real and stays too.
+
+**Decided by Patrik, 2 Oct, the same hour: fix it everywhere, as issue #140.** The body-level
+setting applies to every screen, so anywhere the web app puts prose with an inline element
+after a space, Safari and iOS Safari draw them glued; "we noticed it here by a miracle, other
+places most likely have the same problem." The fix: drop `tabular-nums` from `body`, put
+Tailwind's `tabular-nums` on the elements that line figures up (Money, the ledger, the cards'
+numbers), then check the prose screens in Safari. #139 (the legal pages) is live. The iOS app
+is native and unaffected. **iOS:** nothing.
+
+### FIXED — the wash on the legal pages, pinned to the screen (Petra, 2 Oct)
+
+Petra, reading `/privacy` after #137: "the mountain pic is too widely zoomed in, low quality
+and pixeled". The 2b wash (`livhold-login-bg-light.jpg`) is a phone-portrait picture, 576 × 1248,
+and `LegalPage` painted it with `bottom/cover` on the page itself; `/privacy` is 4,865 px tall
+on a desktop and 8,312 px on a phone, so `cover` stretched it to that height. Now it sits on a
+fixed, screen-sized layer behind the card (a fixed element, not `background-attachment:
+fixed`, which iOS ignores), so it covers one screen, as on the sign-in page. `/terms` and
+`/delete-account` share the component. The other 2b screens (wizard, callback, digest,
+recap) are a screen tall and unchanged.
+
+**What remains, for Patrik and Petra:** on a wide desktop the picture is still a 576 px
+portrait scaled up ~2×, the same as the sign-in page today. A desktop-sized version of the
+landscape (the design asset, not something this repo can make) would finish the job; wire it
+with a media query in `--washLight` when it exists. **iOS:** nothing, web pages only.
+
+### LIVE — the journey list's endpoint and the privacy section, merged with Petra (2 Oct)
+
+Pull request #136, merged after the usual step (what changes, what could go wrong, "go"),
+built in about a minute. Petra checked livhold.com/privacy and found missing spaces: "write
+toprivacy@keepyourhabits.comand we'll delete", then "so theUK GDPR" and "so theEU GDPR" in
+Your rights, which predate this work. Fixed on all three legal pages in #137, merged the
+same way.
+
+**Two causes, for next time.** (1) Safari, not the `<!-- -->` markers this entry first
+blamed: see the tabular-figures entry above, found with Petra's test-page screenshot after
+#137 had not helped in Safari. The #137 changes stay (`LegalValue` is a `<span>`,
+`{LEGAL.product}` next to text is wrapped in a `<span>`, the legal pages use no `{' '}`):
+plainer markup, no harm. (2) The compiler drops the leading space of a JSX text
+run that contains an `&apos;`: "photos.Photos are re-encoded" had been live since September.
+Such a run is written as a plain string, `{" Photos are … camera's …"}`, or reworded ("we
+will" for "we&apos;ll"). The check that proves both, on a dev server, for `/privacy`,
+`/terms` and `/delete-account`: no ` <!-- -->` or `<!-- --> ` in the HTML, and no letter
+glued to `</b>`, `</span>`, `</a>` or `</mark>` or to their opening tags.
+
+### APPLIED — migration 44, `journey_signups`, on staging and production (Petra, 2 Oct)
+
+**Applied by Petra in the Supabase dashboard's SQL editor**, guided here in the chat on
+Patrik's ask, the way 41 went on 23 Sep: the address bar's project ref checked before each
+step. Staging, `fdcncqnklscbztcydtye`: the migration ("Potential issue detected" on the
+`drop policy if exists` line, run anyway; the result was the job id, 14), then `44-TESTPLAN`,
+"Success. No rows returned". Production, `wvmnudcwcqktcugouqoe`: the migration (job id 9),
+then two read-only checks: the 11 columns of `information_schema.columns` in order with the
+right nullability, and one `cron.job` row, `journey-signups-purge-daily`, `0 3 * * *`,
+active. The test plan was not run on production: its fixtures are pretend sign-ups.
+
+**Two things worth knowing for next time.** Supabase's SQL editor shows the warning for any
+query containing `drop` or `delete`, so a migration with `drop policy if exists` and a test
+plan with a purge both trigger it; it is not a sign of a problem. And a query whose last
+statement returns rows shows the rows, not the word "Success": the migration ends with
+`select cron.schedule(...)`, so its pass looks like a single number under `schedule`.
+
+**Next:** the pull request (not yet opened), merged with Patrik's "go", then the paste into
+journey.livhold.com (`docs/landing-form/README.md`).
+
+### DECIDED — Patrik, 2 Oct: Resend, Google Meet, no booking tool
+
+For the journey.livhold.com list (the brief's section 4): the automated email when Livhold
+opens goes through Resend, "the easiest thing to do"; a small list may get a hand-written
+round instead. Calls run on Google Meet. No calendar booking: when someone ticks the call box,
+we write to them individually by email to agree a time, which is how the form and its
+thank-you already read. The two policy markers are filled (`entity.ts`: `listEmailTool`,
+`callTool`), plus `mailbox` for the hand-written emails: "Google Workspace", from the brief's
+own line about keepyourhabits.com, not read off a bill. "Last updated" moved to 2 October.
+Still Patrik's: NAIH next to the ICO; the unsubscribe link in every Resend email to the list;
+a qualified read.
+
+## 2026-10-01
+
+### BUILT — the list form on journey.livhold.com, and the policy that covers it
+
+Patrik and Petra's brief (`docs/landing-form/PR-brief.md`; the form is the one Petra signed
+off). Patrik, 1 Oct: journey.livhold.com is the landing page for livhold.com, a hosted page
+reached through a DNS record on Vercel, not a repository; the landing page may later move to
+livhold.com itself and the app to a subdomain, so this is built to survive both.
+- **The data path.** The form is pasted into the hosted page and posts JSON to
+  `livhold.com/api/journey-signup` (`product/src/app/api/journey-signup/route.ts`). Nothing but
+  that address is in the page: no Supabase key, no table name. The route checks the answers
+  (`lib/journey/signup.ts`, the form's own rules, 8 node tests) and inserts with the public key
+  into `journey_signups` (migration 44: RLS, one insert policy for anon and no grant beyond it,
+  so the key can add a row and never read one). CORS is open on purpose: the request may come
+  from a sandboxed embed whose origin reads `null`, and the route can do nothing the public key
+  cannot already do. The spam trap (`website`) is answered 204 and stores nothing.
+- **Retention.** The pg_cron job `journey-signups-purge-daily` (03:00 UTC, in 44) deletes rows
+  older than 12 months; `/privacy` promises the same number. Change both or neither.
+- **The policy** (`/privacy`): the brief's section after "What we store", a line under "Who else
+  touches it", a line under retention, "Last updated 1 October 2026". English only: the policy
+  has no Hungarian version, so the brief's Hungarian text waits for #119.
+- **Two markers on the page until Patrik and Petra decide** (`entity.ts`: `listEmailTool`,
+  `callTool`): the tool that sends the launch email and the call invites, and the tool the calls
+  run on. Filled on 2 Oct (above).
+- **Still Patrik's:** NAIH next to the ICO (the policy already sends EEA readers to their own
+  authority); an unsubscribe link in every email to the list, which the policy promises; a
+  qualified read of the new text.
+- **Not checked:** whether the host of journey.livhold.com keeps a pasted `<style>` and
+  `<script>`. From this container the site answers 403 (egress proxy). If scripts are
+  stripped, the fallback is a page on livhold.com shown in an iframe.
+- **Go-live order** (`docs/landing-form/README.md`): markers filled → 44 on staging, its
+  TESTPLAN, 44 on production (SQL editor, as 43) → merge → paste the form, the hero link and
+  the footer links → the test list there. A form live before the policy collects answers the
+  policy does not cover.
+- **Checked:** `tsc`; `eslint` (the four old findings); 163 node tests, 8 new
+  (`signup.test.ts`); `next build`. On a dev server with placeholder Supabase values:
+  `/privacy` answers 200 signed out, with the new section, the date and the two markers; the
+  endpoint answers the preflight 204 with open CORS, a filled spam trap 204, a non-JSON body
+  and a bad email 400, and a valid row 502 while Supabase is unreachable. The pasted block,
+  loaded from a `file://` page (origin `null`) and submitted against that server, shows "That
+  didn't go through" and keeps every answer. The preview's five states at 390 px,
+  screenshotted; the empty submit shows all three messages. **Not run:** 44 and its TESTPLAN
+  against a database (no Supabase reachable from here), and a real submission end to end.
+- **iOS:** nothing. The form is on the web landing page; the app collects none of it, and the
+  store labels (`APP-STORE-PRIVACY.md`, `PLAY-DATA-SAFETY.md`) say so.
+
 ## 2026-09-29
 
 ### DECIDED — Patrik, 29 Sep: everything on the phone; Where it goes by group; Trip settings (iOS build 18)
@@ -91,7 +237,269 @@ when a decision needs to survive the conversation it was made in.
   on tap. Patrik asked about the lead days on the bell; not built (a number on a bell reads as
   unread notifications). "Add the next stop" left Plan; Stays/Transport cross-fade into Trip.
 
+## 2026-09-28
+
+### DECIDED — Patrik, 28 Sep: Home's wording as proposed, then localisation
+
+- **The wording pass (#65, Home only):** "all" to the 18 lines proposed. The one product
+  call among them: Home's money card drops "under/over the estimate". It compared the
+  projection (every entry and subscription) with the pre-trip estimate (city averages), two
+  figures that count different things. Money's Budget cap row says whether the journey is
+  heading over.
+- **Localisation next (#119):** "we will move to localised version soon, the iOS is already
+  building with that in mind". Patrik: finish the Home round and publish it first. The iOS
+  app keeps its strings in `ios/Livhold/Localizable.xcstrings` (`feat/ios-foundation`):
+  English keys, Hungarian translations, 578 keys on 28 Sep. The web's format is the first
+  decision of that round.
+
+### BUILT — Home's wording pass (#65, Home only)
+
+Pull request #118. Visible words, measured at 390 px in `/dev/money-preview?screen=home`
+(browser clock set for before and after the trip) and `/dev/social-preview`, before → after:
+- during the trip 74 → 69; with the feed 171 → 166; offline 88 → 75;
+- before departure 83 → 83 (every stop in the fixture has a stay, so the shorter "no stay
+  yet" line does not show);
+- after the trip 74 → 51;
+- no journey, following people 132 → 122; nobody followed yet 82 → 43.
+
+The changed lines alone, toasts and errors included: 237 words → 90.
+
+**iOS:** Home's strings, when the iOS app gets a Home:
+- money card: "{amount} a day", plus " in {city}" when the pace is the stop's own, and
+  " · a projection after a week" until the projection unlocks; no over/under verdict;
+- "Offline · check-ins sync when you're back"; "Nothing here yet"; "Check in";
+- dates as "30 Sep" (`shortDate`);
+- toasts "Arrival recorded" and "Ticked · it's under Done";
+- off-route: "until your next check-in";
+- "Cancelled {name}? This charge goes, and no more are added from {date}.";
+- before departure: "{n} stops have no stay yet · city averages meanwhile";
+- after the trip: no archive note, and "Check-ins" as the kicker;
+- no journey: "Got a follow link? Open it again to follow.", "Three short steps. Only
+  people you let in see it.", "Couldn't load · tap to try again";
+- no access: "Deleted, or your invite was withdrawn.";
+- edit sheet: the date alone, and "Removed photos go for followers too".
+
+**Checked:** `tsc`; `eslint` (the four old findings); 155 node tests; `next build`; a
+screenshot of every state above.
+
+### FIXED — Home on a travel day (found 28 Sep, in #118)
+
+Found while measuring the wording pass, two days before the Bangkok → Hanoi move of 30 Sep.
+
+**The cause.** Home picked today's stop with arrive ≤ today ≤ depart, so a travel day went
+to the stop you leave. On 30 Sep it would have shown:
+- "Bangkok, night 29" and "0 nights left";
+- an amber "No bed tonight", although the bed is in Hanoi;
+- "Next: Da Nang";
+- no Hanoi arrival day.
+
+Trip gives the day to the stop you move to (arrive ≤ today < depart), on the web and in the
+iOS app.
+
+**The fix.** Home uses Trip's rule. On 30 Sep it shows "Hanoi, arrival day", the Hanoi stay
+as booked, "Next: Da Nang" and the "Arrived in Hanoi" button. On a stop's last day with
+nothing starting that day, it says "Between stops". "1 nights left" reads "1 night left".
+
+**The money card** names the stop its pace comes from. Money keeps the travel day with the
+stop you leave, so on 30 Sep it reads "… a day in Bangkok" under "Hanoi, arrival day".
+
+**Not changed:** Map (the "now" marker, `MapClient.tsx`), Money's pace (`moneyModel.ts`
+`currentStop`, `PlanCard.tsx`) and the reminder sheet (`AddReminderSheet.tsx`) still give the
+travel day to the stop you leave.
+
+**iOS:** Home's current stop is arrive ≤ today < depart, the same as
+`TimelineLogic.isCurrent` (`DashboardClient.tsx`). The money card's city is `moneyModel`'s
+own stop, arrive ≤ today ≤ depart.
+
+**Checked:** `/dev/money-preview?screen=home` with the browser clock on 29 Sep, 30 Sep,
+1 Oct and 13 Dec (Da Nang's last day, with nothing after it in the fixture).
+
+### OPEN — the after-the-trip recap overlaps at phone width (found 28 Sep)
+
+At 390 px, "Vs plan −3 043 945 Ft" runs into "Stops 3" in the recap grid
+(`DashboardClient.tsx`, the post-trip phase). It was there before the wording pass, and it
+shows once a journey has ended: from May 2027 for Asia. One fix is to let the amount wrap;
+another is one column when an amount is long.
+
+### LIVE — Hong Kong on the globe, tested by Patrik (27 Sep)
+
+Merged as #117. Patrik: "globe shows Hong Kong Island!"
+
 ## 2026-09-27
+
+### FIXED — Hong Kong missing from the globe (Patrik, 27 Sep)
+
+Patrik: "why Hong Kong (confirmed leg of the journey in December) is not on the map as a
+3rd step?"
+
+**The cause.** Asia's stop is spelt "Hong Kong Island" (Petra, 23 Sep, below); the catalogue
+calls the place "Hong Kong". The timeline had matched the two since 23 Sep (`sameCity`,
+`lib/map/norm.ts`). Three other places looked a stop up by its exact name:
+- the globe's route (`buildRoute`), which dropped the stop, with no node and no arc;
+- the Map's bottom card, which lost its wifi line;
+- Money's city averages (`useTripScreen` fetched the route's catalogue rows by exact name), so
+  the stop had no city estimate, and the pre-trip estimate behind Home's "under/over the
+  estimate" missed its daily living.
+
+**The fix.** `catalogueCity` (`norm.ts`) is the one lookup: the exact name first, else the
+same place under another spelling.
+- `useTripScreen` fetches each stop under the catalogue's spelling and indexes it under the
+  stop's own name too, so `cityIdx[s.city]` finds it wherever it is read.
+- The globe highlights the catalogue city the stop was placed by.
+
+**iOS:** match a stop to the catalogue with `catalogueCity`, for the map and the city
+averages, never by exact name.
+
+**Checked.**
+- A new test in `norm.test.ts`; 155 node tests; `tsc`; `eslint` (the four old findings);
+  `next build`.
+- `/dev/map-preview?hk=1` (Asia's spelling) shows "4. Hong Kong Island" with its booked flight
+  from Da Nang. The same preview on the old code shows only the catalogue's dot.
+
+### LIVE — home on the person, tested by Patrik (27 Sep)
+
+Merged as #116. Account → Home shows "Budapest, Hungary", and Trip starts and ends there.
+
+### APPLIED — migration 43 on staging and production (Patrik, 27 Sep)
+
+`profiles.home_base`, with its backfill (#58).
+- Staging: 43, then `43-TESTPLAN.sql`, which ended in "Success".
+- Production: 43, the migration only.
+- Production afterwards: 13 profiles, 2 of them with a home from the backfill: Patrik and
+  Petra, each from a journey they own. Asia is Petra's, and Patrik is its co-traveller, so
+  his home came from a journey of his own. The other 11 are empty and see the journey's
+  home.
+- Before either, both files ran on a local Postgres 16 with the real profile policies of 03
+  and 06:
+  - 43 applies twice cleanly;
+  - the test plan passes 3/3;
+  - it fails as it should when `profiles_update` is opened to everyone, or when the co-member
+    read is dropped.
+
+### BUILT — home on the person (#58)
+
+Pull request #116. The app reads `profiles.home_base` first. `homeFor` (`timeline.ts`) falls
+back to the journey's `meta.homeBase`, so a failed read, or a person who never set a home,
+sees the home the journey was created with.
+- **Trip:** the timeline starts and ends at the viewer's home. On a shared journey each
+  traveller sees their own.
+- **Account:** a "Home" card, "Every journey starts and ends here.", sets it. Emptied and
+  saved, it clears, and the journey's home shows again.
+- **New journey:** the wizard's step 2 is "Home", prefilled from the profile, so a second
+  journey takes one tap. It saves to the journey, as the fallback, and to the profile.
+- **Map:** the globe's ⌂ is the viewer's home when the globe can place it (a known home or a
+  catalogue city). Otherwise the route starts where the first flight in comes from, as
+  before.
+- **What moves:** a flight from somewhere other than the viewer's home now sits under
+  "Transport not on a leg", as any flight that matches no leg does.
+- **iOS:** read `profiles.home_base` first, then `meta.homeBase`; that is `homeFor` in
+  `timeline.ts`. `TimelineLogic.swift`'s `homeCity(state.meta.homeBase)` becomes
+  `homeCity(homeFor(profile, meta))`. A journey the iOS app creates should write both.
+- **Checked:** `tsc`; `eslint` (the four old findings); `next build`; 154 node tests, 2 new
+  (`homeFor`, a timeline from a given home). `/dev/trip-preview?home=Vienna,%20Austria` shows
+  "Home · Vienna" at both ends, with the Budapest flight not on a leg.
+
+### DECIDED — Patrik, 27 Sep: home on the person, a way into Reminders, the order
+
+Patrik: "yes to everything". Recorded on #58, #60, #62 and #65.
+- **Home belongs to the person (#58).**
+  - It moves to `profiles.home_base`, migration 43, because #101 takes 42.
+  - On a shared journey each traveller sees their own home.
+  - The journey's `meta.homeBase` stays as the fallback.
+  - Built on the same day (below).
+- **A way into Reminders (#60).** Home's "Coming up" card never leaves during the trip. With
+  nothing due it is one row, "Nothing coming up · All reminders ›". No "Deadlines" row in
+  Trip settings.
+- **No unlock rule for the Subscriptions card (#62).** It is one folded line since #85.
+- **The order after that:**
+  1. #106: the check-in becomes a sheet and `/live` goes. It turned out done since 20 Sep;
+     see the 19 Sep entry, now marked FIXED.
+  2. The #65 wording pass, on Home only. Patrik: Trip was redone in the iOS app and "they
+     did a great job", so features may come back to the web from there instead of the web
+     adding its own.
+  3. Vias drawn on the globe.
+  4. #107, one vocabulary, last.
+
+### BUILT — Reminders reachable from Home whatever is due (#60)
+
+`ComingUp` (`HomeReminders.tsx`) returned nothing when no reminder was due, and then Home had
+no way into `/reminders` during the trip. Now the card shrinks to one row, "Nothing coming
+up · All reminders ›", the same row Home shows before departure.
+- **iOS:** Home's "Coming up" card never disappears; with nothing due it is that one row.
+- **Checked:** `/dev/money-preview?screen=home&stay=none` shows the row; with a charge due
+  the card is as before.
+
+### WORKING IN PARALLEL — the iOS agent (Patrik, 27 Sep)
+
+Another agent builds the iOS app (`ios/`) on Patrik's machine: Trip now, Money next, the
+two screens most finished on the web. Patrik: "we shouldn't be building an iOS application
+on code that is buggy on the web." So web bugs on Home and Trip go first, and **every web
+change to behaviour carries an "iOS:" line in its entry here**: the rule that changed and
+the file it lives in, so the port copies the fixed rule, not the old one. That agent reads
+`main`, not this chat.
+
+### NEXT MACHINE SESSION (Patrik) — the Supabase jobs that need the CLI
+
+Patrik's machine was out of reach on 27 Sep. Three jobs wait for it, best done together:
+1. **Subscription alerts:** is `subscription-alerts` deployed on production, and is its cron
+   job scheduled? Nothing records it since "TO DEPLOY" of 20 Sep (below). Production →
+   Edge Functions, and `supabase/checks/cron-jobs.sql` in the SQL editor, answer it. If not:
+   the steps in that entry, function first, cron second.
+2. **Redeploy `stay-deadline-alerts`** (27 Sep fix below: booked stays only). No redeploy
+   is recorded since the switch of 22 Sep either.
+3. **Rotate the JWT secret** (OPEN since 18 Sep, below). [Likely] It replaces the anon key,
+   so Vercel's environment and the iOS app (#98) need the new one in the same sitting.
+
+### BUILT — tonight's bed on Home, a stop out of the plan, deadline emails (#58, #105, #60)
+
+Patrik, 27 Sep: fix the Home and Trip bugs first (above). Pull request #108.
+- **Home's top card names tonight's stay (#58).** It took the stop's first counted stay
+  and always said "booked", an Idea included, and not tonight's when a stop holds
+  several. Now `stayForNight` (`timeline.ts`) picks the stay covering tonight by the
+  timeline's own rule (counted stays, a booked one first when two claim the night).
+  - Booked: "<name> · booked".
+  - An Idea: "<name> · not booked", amber.
+  - A night no stay covers: "No bed tonight", amber, the timeline's "No bed" row.
+  - A stop with no stay: "No stay yet", amber.
+  - **iOS:** Home's top card uses `stayForNight` and these four lines.
+- **A stop out of the plan (#105).** Its drafts left the forecast but stayed in Bookings'
+  "not booked yet"; its booked stays counted with nothing saying why.
+  - `bookingsSummary`: a draft at a stop out of the plan, or at a deleted stop, is gone
+    from Bookings. A booked one still counts, owed until cancelled, and is marked
+    `outOfPlan`.
+  - Money's Bookings card, opened: "· 1 not in the plan" in amber under Stays.
+  - Trip: the left-out stop's booked stay says "· still in Bookings" in amber.
+  - `computeBudget`'s "Actually committed" (Home before the trip) counts those booked stays
+    too, as Bookings does.
+  - **iOS:** Bookings and the stop card follow `bookingsSummary` (`spending.ts`) and the
+    marker in `Timeline.tsx`.
+- **Deadline emails for booked stays only (#60).** `stay-deadline-alerts` skipped only
+  stays switched off, so an Idea with a cancel-by date got the email, while the app's
+  Reminders list (`reminders.ts`) shows booked stays only. Same rule now. **Not live until
+  the function is redeployed** (machine session, above).
+- **Checked:** `tsc`; `eslint` (the four old findings); `next build`; node tests, 3 new
+  (`stayForNight`, a stop out of the plan in `bookingsSummary`). In the dev previews:
+  `?screen=home&stay=idea|gap|none` shows each Home line; `/dev/trip-preview?maybe=dad` and
+  `/dev/money-preview?maybe=han` show the two markers.
+- **Live with #108 (27 Sep), tested by Patrik on the phone:**
+  - Home's line reads right for Bangkok.
+  - Unticking a stop with a booked stay showed "· still in Bookings" on Trip and "· 1 not in
+    the plan" on Money's Bookings; ticking it back restored both.
+  - Money's sums and estimates are unchanged.
+  - The emails wait for the redeploy.
+
+### DECIDED — Patrik: the calls made in the builds stand
+
+Patrik on 26 Sep, catching up on Petra's rounds: "The decided entries are fine I think."
+These three stay as built:
+- **3b's charges start on the day of the answer, not back-filled** (#91, `subsOffer.ts`).
+  Back-filling would have made up charges for services that may already have been
+  cancelled, like the mock's Netflix, cancelled on 6 Sep and then charged on 20 Sep.
+- **3b makes one row per name, not per name and amount**, so a price rise never makes a
+  second subscription of the same thing. "Not now" became "No thanks", because the card never
+  comes back.
+- **Search on All entries matches the category as well as the name** (#90). An entry with no
+  name shows only its category.
 
 ### DECIDED + BUILT — Patrik, 27 Sep evening: iOS rounds after build 9 (TestFlight 10–12)
 
@@ -324,7 +732,7 @@ Pull request #96, the first of Patrik's two decisions below.
   subscription, stay price, leg price and hours) are now text fields that open the same
   decimal pad and are read by `parseAmount` (`format.ts`): a comma or a dot, spaces ignored,
   anything else refused rather than guessed. The extras form goes with the One-offs removal and
-  was left alone. Pull request #99.
+  was left alone. Pull request #99. Tested on the iPhone by Patrik, 27 Sep: "12,5 saves fine".
 - **A flat option, Patrik's (26 Sep, after #96):** "we might have stuff that we buy that's cheap
   but we don't want it counted." The switch is now on every expense typed by hand, and the 3×
   rule is gone. Stays, transport and subscriptions still never get it. Claude's note: one more
@@ -1578,7 +1986,16 @@ provider stack, and NO `NODE_ENV` guard so it survives a production build, is
 the way to actually look at a change before shipping it. Everything in this
 round was checked that way.
 
-### FIXED (symptom) / OPEN (cause) — Check in went to a page, not to a check-in
+### FIXED — Check in went to a page, not to a check-in
+
+**The cause was fixed on 20 Sep too; this entry was not updated until 27 Sep.** The work
+merged with #46:
+- a711344: the sheet lives in the layout (`CheckInProvider`).
+- e289807: Note is a mode of it, and Arrived is a real button on Home.
+- 9c7b8fe: `/live` redirects to `/dashboard`.
+
+On 27 Sep Claude opened #106 from this entry without checking the code, then closed it as
+done. What stays open is the wording, #107.
 
 Reported 2026-09-19 as "the check in button doesn't work, it loads a page that
 shouldn't be there, with another look". Screenshots of both screens settled it,
@@ -1927,7 +2344,10 @@ they are passed as `"$CHECKS/…"`. `run()` now absolutises before dispatching.
 
 ## 2026-09-14
 
-### OPEN — turn password sign-in on in the Supabase dashboard (Patrik)
+### RESOLVED — turn password sign-in on in the Supabase dashboard (Patrik)
+
+Patrik, 27 Sep: "password sign-in works for quite a while now". The switch was turned on
+at some point without a note here. Kept below as the record of why it was needed.
 
 **The code is merged and does nothing until this is done.** Password sign-in is
 on the login screen and in Account → Password, but the Supabase project still
