@@ -17,21 +17,27 @@ traveller checking in weekly.
 hour of content, every time. Content compounds later; conversations deliver
 the eight.
 
+**Changed 2026-10-02 (Patrik).** Patrik's week is three Livhold days; the job
+has the other four, with nothing planned on them. His build-in-public posts on
+Threads or X are dropped, not moved to Petra. The goal numbers move from
+Monday to Sunday, before the review. Artur and Angelina's call moves from
+week 1 to week 2. Week 1 has no interview quota.
+
 ---
 
 ## Patrik — every week
 
-About three hours plus the dinner evening, beside development. Reddit moved
-to Petra on 2026-09-28; Patrik's plate is the fuller one.
+Three Livhold days a week; the job has the other four, with nothing planned
+on them. Reddit moved to Petra on 2026-09-28. The build-in-public posts were
+dropped on 2026-10-02: they reach founders, not the people we are after.
 
 | When | What | Time |
 |---|---|---|
-| Monday | Run the goal numbers (journeys by strangers, followers active in the last 7 days, travellers who checked in in the last 7 days). Write them in the log below. | 30 min |
-| Mon · Wed · Fri | Build-in-public post on Threads or X: one screenshot, three lines, what got built. | 3 × 15 min |
-| One morning | Coworking, in the shared area. Work there; talk at the coffee machine. | (work time) |
-| Two per week | Interviews, twenty minutes each, and the five-line note within the hour. | 1.5 h |
+| The three days | Development: the pre-freeze issues below, in order, nothing else. One of the three days at the coworking space, in the shared area; talk at the coffee machine. | the days |
+| Two per week | Interviews, twenty minutes each, and the five-line note within the hour. On a Livhold day or an evening. | 1.5 h |
 | Thursday or Friday | Co-host the dinner. | 3 h |
-| Sunday | The review, together (below). | 30 min |
+| Sunday | Run the goal query and write the three numbers in the log below (journeys by strangers, followers active in the last 7 days, travellers who checked in in the last 7 days). Then the review, together. | 30 + 30 min |
+| A spare hour | Help Petra with a post. Optional, never instead of an interview. | – |
 
 Development priorities, in order, and nothing else before 31 October. All
 of them sit in the GitHub milestone **Pre-freeze check (22 Oct 2026)** with
@@ -65,7 +71,8 @@ one week before the freeze.
 ## Petra — every week
 
 About ten hours plus the dinner evening. Reddit moved here from Patrik on
-2026-09-28.
+2026-09-28. X did not: Patrik's build-in-public line was dropped on
+2026-10-02, not added here.
 
 | When | What | Time |
 |---|---|---|
@@ -104,11 +111,15 @@ sentence, a contact address).
 ## Week by week
 
 **Week 1 · 28 Sep – 4 Oct · move to Hanoi (Wed 30 Sep)**
-- Artur and Angelina on a video call: the first **watching test**, not a demo.
-  They share their screen and build a journey; Patrik says nothing until they
-  are done or stuck for two minutes; then "what did you expect to happen
-  here?" at each stop. They are testers one and two.
-- Petra: form live, Search Console checked, blog section up, press kit drafted.
+- Petra's mother answered: the first follower interview (her words are in
+  MARKETING.md). The journey she made at home hid her people feed, issue
+  #130; she shows it on a call in week 2.
+- Artur and Angelina moved to week 2 (Patrik, 2 Oct): the path screens get
+  simplified from the #122 walk first. No interview quota this week; the
+  routines start in week 2.
+- The form: backend live on livhold.com since 2 Oct (#136); Patrik pastes it
+  into the hosted page, then one real submission.
+- Petra: Search Console checked, blog section up, press kit drafted.
 - Patrik: goal query written; follower login persistence started.
 - First blog post: "What September in Bangkok cost us", numbers from Money.
 - Reddit (Petra): comments only.
@@ -122,8 +133,11 @@ sentence, a contact address).
   or three months, not a nomad). Watch her set one up with a return date; then,
   on her trip's last day whenever it falls, watch the end: "home now, close
   it", the recap, and Home after. The stance asked for exactly this tester.
-- Artur and Angelina: date booked this week, call next week (Patrik's call:
-  the path screens get simplified from the #122 walk first).
+- Artur and Angelina on a video call, moved from week 1: the first **watching
+  test**, not a demo, after the fresh-account walk and the path-screen fixes.
+  They share their screen and build a journey; Patrik says nothing until they
+  are done or stuck for two minutes; then "what did you expect to happen
+  here?" at each stop. They are testers one and two.
 - First shorts published (the September numbers as the hook).
 - Patrik: MVP path audited with a fresh account; login persistence done.
 - Petra: start editing the Bangkok month video.

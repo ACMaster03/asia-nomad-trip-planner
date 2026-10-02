@@ -285,8 +285,9 @@ by strangers.
 ## Content and channels — the plan (2026-09-28)
 
 Assets: a full month of September on camera, unedited. Willing to be the
-faces. Wanted: YouTube, Instagram, a blog by Petra, possibly Threads or X by
-Patrik, TikTok by cross-posting. Beginners at all of it.
+faces. Wanted: YouTube, Instagram, a blog by Petra, TikTok by cross-posting;
+Threads or X by Patrik was wanted too and dropped on 2 Oct (decisions
+below). Beginners at all of it.
 
 **The principle.** Content does not deliver the November eight. Conversations
 do. Content compounds over six to twelve months and builds pond B for 2027,
@@ -312,8 +313,10 @@ per city (plan, cost, what we'd change), two or three shorts a week cut from
 it with a single number as the hook ("Our month in Bangkok cost €X. Here's
 where it went."), and one blog post a week from Petra, in Hungarian and
 English, on the same topic. Shorts go to Instagram and TikTok from the same
-file. Patrik's Threads or X is build-in-public: what got built this week,
-one screenshot, three lines.
+file. Patrik's Threads or X was to be build-in-public, what got built this
+week in three lines; dropped on 2 Oct, not moved to Petra: it reaches
+founders, not the people we are after, and Patrik's Livhold time is three
+days a week.
 
 **What to say.** In the voice: calm, honest, "we", exact numbers. Never "ten
 tips to travel the world". Always "here is exactly what we did and what it
@@ -351,6 +354,18 @@ searchable and lasts, with Instagram and TikTok shorts feeding it.
   outlets, creators and groups is appended below when the search returns.
 - **A weekly Reddit to-do**, first for Patrik, moved to Petra the same day;
   both want a structured weekly plan. That plan is `docs/PLAN-OCT-NOV-2026.md`.
+
+## Decisions taken 2026-10-02 (Patrik)
+
+- **Build-in-public is dropped**, not moved to Petra. Patrik has three
+  Livhold days a week and the job has the other four; the posts on Threads
+  or X reach founders, not the chapter on the move, and Petra's ten hours
+  already cover the three doors. Reddit and the blog carry the written side
+  until December; revisit then.
+- **Artur and Angelina's call moves to week 2**, after the fresh-account
+  walk (#122) and the path-screen fixes: the screens have to feel
+  self-explanatory before strangers meet them.
+- The routines are in `docs/PLAN-OCT-NOV-2026.md` and on the shared page.
 
 ## The loop inside the product — round 6, DECIDED 2026-09-28
 
