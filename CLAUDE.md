@@ -121,6 +121,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   staging and production since 2 Oct (Petra, guided in the chat). Next: Patrik pastes the form
   (`docs/landing-form/README.md`), then one real submission. The policy is English only until
   #119.
+- 2 Oct, with Petra on livhold.com/privacy: the spaces (#137), the wash pinned to the screen
+  (#138) and Safari's missing space before a bold word (#139, `tabular-nums` on `body`) are
+  live. Patrik: fix the Safari one on every screen, issue #140, next after the form's paste.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
