@@ -171,9 +171,11 @@ export default function PrivacyPage() {
           </li>
           <li>
             <b className="font-semibold text-tx">For the list on journey.livhold.com</b>: Supabase
-            stores the form answers. The email when Livhold opens, and any invitation to a call, go
-            out through <LegalValue value={LEGAL.listEmailTool} />. A call itself runs on{' '}
-            <LegalValue value={LEGAL.callTool} />.
+            stores the form answers. The email when Livhold opens goes out through{' '}
+            <LegalValue value={LEGAL.listEmailTool} />, like our other emails. If you ticked the
+            call box, we write to you ourselves, from our{' '}
+            <LegalValue value={LEGAL.mailbox} /> mailbox, to find a time; there is no booking
+            tool. The call runs on <LegalValue value={LEGAL.callTool} />.
           </li>
         </ul>
       </Section>

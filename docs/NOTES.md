@@ -5,6 +5,20 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-02
+
+### DECIDED — Patrik, 2 Oct: Resend, Google Meet, no booking tool
+
+For the journey.livhold.com list (the brief's section 4): the automated email when Livhold
+opens goes through Resend, "the easiest thing to do"; a small list may get a hand-written
+round instead. Calls run on Google Meet. No calendar booking: when someone ticks the call box,
+we write to them individually by email to agree a time, which is how the form and its
+thank-you already read. The two policy markers are filled (`entity.ts`: `listEmailTool`,
+`callTool`), plus `mailbox` for the hand-written emails: "Google Workspace", from the brief's
+own line about keepyourhabits.com, not read off a bill. "Last updated" moved to 2 October.
+Still Patrik's: NAIH next to the ICO; the unsubscribe link in every Resend email to the list;
+a qualified read.
+
 ## 2026-10-01
 
 ### BUILT — the list form on journey.livhold.com, and the policy that covers it
@@ -28,7 +42,7 @@ livhold.com itself and the app to a subdomain, so this is built to survive both.
   has no Hungarian version, so the brief's Hungarian text waits for #119.
 - **Two markers on the page until Patrik and Petra decide** (`entity.ts`: `listEmailTool`,
   `callTool`): the tool that sends the launch email and the call invites, and the tool the calls
-  run on. The form must not go live while either reads "not set yet".
+  run on. Filled on 2 Oct (above).
 - **Still Patrik's:** NAIH next to the ICO (the policy already sends EEA readers to their own
   authority); an unsubscribe link in every email to the list, which the policy promises; a
   qualified read of the new text.

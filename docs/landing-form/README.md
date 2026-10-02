@@ -26,9 +26,9 @@ itself or the app moves to a subdomain.
 
 ## Going live, in this order
 
-1. Settle the two facts still open in `product/src/lib/legal/entity.ts`,
-   `listEmailTool` and `callTool`. Until then the policy shows "[… not set yet]"
-   where they belong, and the form must not go live.
+1. Done, 2 Oct (Patrik): Resend for the launch email, a hand-written email from
+   our mailbox to arrange a call, Google Meet for the call, no booking tool. The
+   policy names all three (`product/src/lib/legal/entity.ts`).
 2. Apply `supabase/migrations/44-journey-signups.sql` on staging in the SQL
    editor, run `44-TESTPLAN.sql` there, then apply 44 on production (as for 43).
 3. Merge the pull request: livhold.com gets the new policy and the endpoint.

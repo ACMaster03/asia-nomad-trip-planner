@@ -116,8 +116,10 @@ Petra is new to software work; Patrik is not. The product conventions are in
   is built, unmerged: `/api/journey-signup` on livhold.com, migration 44 (`journey_signups`,
   insert-only for the public key, purged after 12 months), and the `/privacy` section that
   covers it. journey.livhold.com is a hosted page, not a repo: the form is pasted in after the
-  merge, never before. Two policy markers wait on Patrik and Petra (`entity.ts`: the email tool
-  and the video tool). The policy is English only until #119.
+  merge, never before. Patrik decided the providers on 2 Oct (Resend, a hand-written email to
+  arrange a call, Google Meet, no booking tool); the policy names them. Next: migration 44 on
+  staging and production (SQL editor), then the merge, then the paste. The policy is English
+  only until #119.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
