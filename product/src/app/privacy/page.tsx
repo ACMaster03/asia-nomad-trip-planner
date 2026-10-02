@@ -37,13 +37,13 @@ export default function PrivacyPage() {
       intro={
         <>
           <p>
-            {LEGAL.product} is a trip planner. You put an itinerary, what you spend and what you
+            <span>{LEGAL.product}</span> is a trip planner. You put an itinerary, what you spend and what you
             see into it, and you choose who else gets to look. This page is the plain account of
             what that means for your data.
           </p>
           <p>
-            The service is operated by <LegalValue value={LEGAL.entity} />,{' '}
-            <LegalValue value={LEGAL.address} />, which is the data controller for it.
+            The service is operated by <LegalValue value={LEGAL.entity} />, <LegalValue value={LEGAL.address} />,
+            which is the data controller for it.
           </p>
         </>
       }
@@ -103,9 +103,7 @@ export default function PrivacyPage() {
         <p>
           We&apos;re allowed to hold it because you gave it to us for these reasons (your consent).
           You can withdraw that consent at any time: use the unsubscribe link in any email, or
-          write to{' '}
-          <LegalValue value={LEGAL.contactEmail} />
-          {' '}and we&apos;ll delete your answers.
+          write to <LegalValue value={LEGAL.contactEmail} /> and we will delete your answers.
         </p>
         <p>
           If we talk on a call, we take short written notes. We don&apos;t record calls unless we
@@ -121,10 +119,9 @@ export default function PrivacyPage() {
             device where it is. A check-in is placed by the city you picked, not by GPS.
           </li>
           <li>
-            <b className="font-semibold text-tx">Not the location in your photos.</b> Photos are
-            re-encoded on your phone before upload, which discards the camera&apos;s embedded data
-            (GPS coordinates, camera model, timestamp), so what leaves your device is the picture
-            and nothing else.
+            <b className="font-semibold text-tx">Not the location in your photos.</b>
+            {/* a plain string: this run starts with a space and holds an apostrophe, see LegalValue */}
+            {" Photos are re-encoded on your phone before upload, which discards the camera's embedded data (GPS coordinates, camera model, timestamp), so what leaves your device is the picture and nothing else."}
           </li>
           <li>
             <b className="font-semibold text-tx">No analytics and no tracking.</b> There is no
@@ -173,10 +170,9 @@ export default function PrivacyPage() {
           </li>
           <li>
             <b className="font-semibold text-tx">For the list on journey.livhold.com</b>: Supabase
-            stores the form answers. The email when Livhold opens goes out through{' '}
-            <LegalValue value={LEGAL.listEmailTool} />, like our other emails. If you ticked the
-            call box, we write to you ourselves, from our{' '}
-            <LegalValue value={LEGAL.mailbox} /> mailbox, to find a time; there is no booking
+            stores the form answers. The email when Livhold opens goes out through <LegalValue value={LEGAL.listEmailTool} />,
+            like our other emails. If you ticked the call box, we write to you ourselves, from
+            our <LegalValue value={LEGAL.mailbox} /> mailbox, to find a time; there is no booking
             tool. The call runs on <LegalValue value={LEGAL.callTool} />.
           </li>
         </ul>
@@ -216,14 +212,10 @@ export default function PrivacyPage() {
           it.
         </p>
         <p>
-          Deleting your account, from{' '}
-          <span className="font-medium text-tx">Account → Delete account</span>, removes the trips
-          you own along with their photos, removes your place on trips you had joined, and removes
-          your sign-in.{' '}
-          <b className="font-semibold text-tx">
-            There is no undo, no grace period and no backup copy we can restore from.
-          </b>{' '}
-          We say so plainly because the button means it.
+          Deleting your account, from <span className="font-medium text-tx">Account → Delete account</span>,
+          removes the trips you own along with their photos, removes your place on trips you had
+          joined, and removes your sign-in. <b className="font-semibold text-tx">There is no undo, no grace period and no backup copy we can restore from.</b> We
+          say so plainly because the button means it.
         </p>
         <p>
           List answers and call notes are deleted 12 months after you send them, or sooner if you
@@ -233,21 +225,18 @@ export default function PrivacyPage() {
 
       <Section id="rights" title="Your rights">
         <p>
-          <LegalValue value={LEGAL.entity} /> is a company registered in the United Kingdom, so the{' '}
-          <b className="font-semibold text-tx">UK GDPR</b> and the Data Protection Act 2018 apply to
-          what it does with your data. The service is also offered to people in the EEA, so the{' '}
-          <b className="font-semibold text-tx">EU GDPR</b> applies as well. The rights below are the
+          <LegalValue value={LEGAL.entity} /> is a company registered in the United Kingdom, so
+          the <b className="font-semibold text-tx">UK GDPR</b> and the Data Protection Act 2018 apply to
+          what it does with your data. The service is also offered to people in the EEA, so
+          the <b className="font-semibold text-tx">EU GDPR</b> applies as well. The rights below are the
           same under both.
         </p>
         <p>
           You can ask for a copy of your data, ask for it to be corrected or erased, object to how
           it is processed, ask us to restrict it, or ask for it in a portable form. Most of that you
           can do yourself and instantly: the app exports your trip and your money ledger as files,
-          and{' '}
-          <Link href="/delete-account" className="font-medium text-ac2-deep underline">
-            deleting your account
-          </Link>{' '}
-          is a real erasure rather than a request that goes into a queue.
+          and <Link href="/delete-account" className="font-medium text-ac2-deep underline">deleting your account</Link> is
+          a real erasure rather than a request that goes into a queue.
         </p>
         <p>
           For anything else, write to <LegalValue value={LEGAL.contactEmail} /> and we will answer
@@ -259,16 +248,16 @@ export default function PrivacyPage() {
           can complain to your own country&apos;s data protection authority instead.
         </p>
         <p>
-          Our representative in the EU, for the purposes of Article 27 of the EU GDPR, is{' '}
-          <LegalValue value={LEGAL.euRepresentative} />. People in the EEA may contact them about
+          Our representative in the EU, for the purposes of Article 27 of the EU GDPR,
+          is <LegalValue value={LEGAL.euRepresentative} />. People in the EEA may contact them about
           anything on this page as an alternative to contacting us directly.
         </p>
       </Section>
 
       <Section id="transfers" title="Data leaving the UK and the EEA">
         <p>
-          The company is in the United Kingdom and the service runs on providers in{' '}
-          <LegalValue value={LEGAL.dataRegion} />, so your data moves between the UK and the EEA in
+          The company is in the United Kingdom and the service runs on providers
+          in <LegalValue value={LEGAL.dataRegion} />, so your data moves between the UK and the EEA in
           the ordinary course of the service working. Both directions are covered by adequacy
           decisions (the EU recognises the UK, and the UK recognises the EEA), so no extra
           safeguard is needed for that leg.
