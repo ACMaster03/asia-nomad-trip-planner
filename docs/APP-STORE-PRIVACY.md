@@ -6,6 +6,10 @@ and [`PLAY-DATA-SAFETY.md`](PLAY-DATA-SAFETY.md), which carries the evidence for
 
 Filled for the iOS app (`com.livhold.app`), 2026-09-26.
 
+`/privacy` gained "If you join the list on journey.livhold.com" on 2026-10-01: a form on the
+landing page (migration 44, `docs/landing-form/`), not in the app. Nothing in the app collects
+it, so no label here changes.
+
 ## Tracking
 
 **No.** Nothing is used to track across other companies' apps or websites, no data broker,

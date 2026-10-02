@@ -57,6 +57,20 @@ export const LEGAL = {
    */
   euRepresentative: 'TODO_EU_REPRESENTATIVE',
 
+  /**
+   * The list on journey.livhold.com (migration 44, docs/landing-form): how the
+   * list is USED, each named in "Who else touches it". Decided by Patrik on
+   * 2 Oct 2026: the automated email when Livhold opens goes through Resend,
+   * already a processor here (a hand-written round from the mailbox instead,
+   * if the list is small); a call is arranged by ordinary email from our own
+   * mailbox, no booking tool, and runs on Google Meet. `mailbox` is the one
+   * of the three nobody has read off a bill: the brief says keepyourhabits.com
+   * is on Google Workspace; change it here if that is wrong.
+   */
+  listEmailTool: 'Resend',
+  mailbox: 'Google Workspace',
+  callTool: 'Google Meet',
+
   /** Product name as users see it. */
   product: 'Livhold',
   /** Public origin, used in copy and for the canonical policy URL. */
@@ -65,7 +79,7 @@ export const LEGAL = {
    * Shown as "Last updated". Bump it whenever the substance changes — Play
    * reviewers and users both read this as the freshness signal.
    */
-  lastUpdated: '16 September 2026',
+  lastUpdated: '2 October 2026',
 } as const
 
 export function isUnset(value: string): boolean {

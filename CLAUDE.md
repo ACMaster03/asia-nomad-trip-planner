@@ -112,6 +112,14 @@ Petra is new to software work; Patrik is not. The product conventions are in
   stop you move to, as Trip does, where it used to show "No bed tonight" and skip the arrival
   day. It needs merging before 30 Sep, the Bangkok → Hanoi move. Localisation (#119) comes
   after this round; the iOS app already keeps English and Hungarian in a String Catalog.
+- 1 Oct: the list form for journey.livhold.com (Patrik and Petra's brief, `docs/landing-form/`)
+  is built, unmerged: `/api/journey-signup` on livhold.com, migration 44 (`journey_signups`,
+  insert-only for the public key, purged after 12 months), and the `/privacy` section that
+  covers it. journey.livhold.com is a hosted page, not a repo: the form is pasted in after the
+  merge, never before. Patrik decided the providers on 2 Oct (Resend, a hand-written email to
+  arrange a call, Google Meet, no booking tool); the policy names them. Migration 44 is on
+  staging and production since 2 Oct (Petra, guided in the chat). Next: the pull request and
+  the merge, then the paste. The policy is English only until #119.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
