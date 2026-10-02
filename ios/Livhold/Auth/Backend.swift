@@ -43,6 +43,21 @@ enum Backend {
     static let client = SupabaseClient(
         supabaseURL: current.url,
         supabaseKey: current.publishableKey,
-        options: .init(auth: .init(emitLocalSessionAsInitialSession: true))
+        options: .init(
+            auth: .init(emitLocalSessionAsInitialSession: true),
+            global: .init(session: session)
+        )
     )
+
+    /// Tuned for travellers' connections. With no network at all a request waits for
+    /// one instead of failing at once (`waitsForConnectivity`); once sent, a stalled
+    /// request gives up after 30 s rather than the default 60, and nothing waits
+    /// longer than two minutes in total.
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = true
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 120
+        return URLSession(configuration: config)
+    }()
 }

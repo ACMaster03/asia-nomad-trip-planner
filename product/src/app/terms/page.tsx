@@ -27,9 +27,8 @@ export default function TermsPage() {
       intro={
         <>
           <p>
-            These terms are the agreement between you and{' '}
-            <LegalValue value={LEGAL.entity} /> for using {LEGAL.product}. Using the service means
-            accepting them.
+            These terms are the agreement between you and <LegalValue value={LEGAL.entity} /> for
+            using <span>{LEGAL.product}</span>. Using the service means accepting them.
           </p>
           <p>
             They are written to be read. Where something is a genuine limit on what you get, it says
@@ -46,7 +45,7 @@ export default function TermsPage() {
           you invited or gave a password to.
         </p>
         <p>
-          You must be at least 16 to use {LEGAL.product}. Do not create an account for anybody else
+          You must be at least 16 to use <span>{LEGAL.product}</span>. Do not create an account for anybody else
           without their knowledge.
         </p>
       </Section>
@@ -96,14 +95,14 @@ export default function TermsPage() {
 
       <Section id="availability" title="What we promise, and what we do not">
         <p>
-          {LEGAL.product} is provided as it is. There is no uptime guarantee, no support commitment
+          <span>{LEGAL.product}</span> is provided as it is. There is no uptime guarantee, no support commitment
           and no promise that a feature present today will be present next month. It is a small
           service, run by a small team, and it is more honest to say that here than to imply
           otherwise.
         </p>
         <p>
-          <b className="font-semibold text-tx">Keep your own copy of anything you cannot lose.</b>{' '}
-          The app exports your trip and your money ledger as files for exactly this reason. We take
+          <b className="font-semibold text-tx">Keep your own copy of anything you cannot lose.</b> The
+          app exports your trip and your money ledger as files for exactly this reason. We take
           reasonable care with your data, but a trip you would grieve over belongs in a second place
           as well.
         </p>
@@ -126,11 +125,8 @@ export default function TermsPage() {
       <Section id="ending" title="Ending it">
         <p>
           You can stop at any time by deleting your account, which erases the trips you own and
-          their photos with no undo. The{' '}
-          <Link href="/privacy#retention" className="font-medium text-ac2-deep underline">
-            Privacy Policy
-          </Link>{' '}
-          sets out exactly what goes.
+          their photos with no undo. The <Link href="/privacy#retention" className="font-medium text-ac2-deep underline">Privacy Policy</Link> sets
+          out exactly what goes.
         </p>
         <p>
           If a trip you had joined but did not own is deleted by its owner, it goes for you too.
@@ -149,11 +145,7 @@ export default function TermsPage() {
           you live.
         </p>
         <p className="pt-1">
-          See also the{' '}
-          <Link href="/privacy" className="font-medium text-ac2-deep underline">
-            Privacy Policy
-          </Link>
-          .
+          See also the <Link href="/privacy" className="font-medium text-ac2-deep underline">Privacy Policy</Link>.
         </p>
       </Section>
     </LegalPage>

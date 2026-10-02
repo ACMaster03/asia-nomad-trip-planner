@@ -24,6 +24,22 @@ struct GalleryView: View {
                     Notice(text: "Free cancellation ends tomorrow at 12:00.", kind: .warn)
                 }
                 section("Input") { Field(placeholder: "Add a note", text: $note) }
+                section("Tab bar") {
+                    // A sample only: the real bar belongs to the app shell (Shell/AppShell.swift).
+                    GlassTabBar(selection: $tab) { toast = "Checked in to Da Lat" }
+                        .padding(.top, 28)
+                        .clipShape(.rect(cornerRadius: Radius.r))
+                }
+                section("Waiting on the network") {
+                    HStack(spacing: 20) {
+                        TravelLoader()
+                        TravelLoader(color: Palette.on)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 18)
+                            .background(Palette.ac, in: .rect(cornerRadius: Radius.rCtl))
+                    }
+                    WaitingNote(since: .now.addingTimeInterval(-10)) {}
+                }
                 section("Wash") { washSample }
                 section("Colours") { swatches }
             }
@@ -32,14 +48,7 @@ struct GalleryView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Palette.canvas)
-        // Keeps scrolled content from running under the status bar.
-        .safeAreaInset(edge: .top, spacing: 0) {
-            Color.clear.frame(height: 0).background(Palette.canvas)
-        }
         .livholdText()
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            TabBar(selection: $tab) { toast = "Checked in to Da Lat" }
-        }
         .toast($toast)
         .sheet(isPresented: $sheetOpen) { sampleSheet }
     }
@@ -57,6 +66,7 @@ struct GalleryView: View {
                 ForEach(Appearance.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
+            ExpandStylePicker()
             if !Typography.isAvailable(FontFamily.serif) || !Typography.isAvailable(FontFamily.sans) {
                 Notice(text: "Lora / Work Sans not bundled yet — showing the system fallback.", kind: .warn)
             }
@@ -118,7 +128,7 @@ struct GalleryView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 ForEach(["Stays", "Transport", "Daily"], id: \.self) { name in
-                    Chip(title: name, selected: chip == name) { chip = name }
+                    Chip(title: LocalizedStringKey(name), selected: chip == name) { chip = name }
                 }
             }
             HStack(spacing: 8) {
@@ -164,7 +174,7 @@ struct GalleryView: View {
             SectionTitle("Add an expense", size: 21)
             HStack(spacing: 8) {
                 ForEach(["Stays", "Transport", "Daily"], id: \.self) { name in
-                    Chip(title: name, selected: chip == name) { chip = name }
+                    Chip(title: LocalizedStringKey(name), selected: chip == name) { chip = name }
                 }
             }
             Field(placeholder: "Amount", text: $note)
@@ -197,4 +207,49 @@ struct GalleryView: View {
 
 #Preview("Dark") {
     GalleryView(appearance: .constant(.dark)).preferredColorScheme(.dark)
+}
+
+/// How cards open, on trial (Components/Motion.swift ExpandStyle): pick one and
+/// try it here, then on Money's Plan, Bookings and Subscriptions.
+private struct ExpandStylePicker: View {
+    @AppStorage("motion.expand") private var style: ExpandStyle = .fade
+    @State private var open = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Cards open").font(.sans(13, weight: .semibold)).foregroundStyle(Palette.tx3)
+            Picker("Cards open", selection: $style) {
+                ForEach(ExpandStyle.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            Text(style.detail).font(.sans(13)).foregroundStyle(Palette.tx2)
+            VStack(alignment: .leading, spacing: 0) {
+                Button { withAnimation(Motion.settle) { open.toggle() } } label: {
+                    HStack {
+                        Text("Try it: Bangkok").font(.sans(15, weight: .medium)).foregroundStyle(Palette.tx)
+                        Spacer()
+                        Image(systemName: "chevron.down").font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Palette.tx3).rotationEffect(.degrees(open ? 180 : 0))
+                    }
+                    .padding(.vertical, 12)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                if open {
+                    VStack(spacing: 8) {
+                        ForEach(["Already spent here", "2 nights left × 4601", "The stay, paid", "Together"], id: \.self) { line in
+                            HStack { Text(line); Spacer(); Text("—") }.font(.sans(13)).foregroundStyle(Palette.tx2)
+                        }
+                    }
+                    .padding(10)
+                    .background(Palette.canvas, in: .rect(cornerRadius: 12))
+                    .padding(.bottom, 10)
+                    .expands()
+                }
+            }
+            .padding(.horizontal, 14)
+            .background(Palette.sf, in: .rect(cornerRadius: 16))
+            .clipped()
+        }
+    }
 }

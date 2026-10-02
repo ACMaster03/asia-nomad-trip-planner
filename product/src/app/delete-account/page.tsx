@@ -32,7 +32,7 @@ export default function DeleteAccountPage() {
       intro={
         <>
           <p>
-            You can erase your {LEGAL.product} account and everything in it. There are two ways, and
+            You can erase your <span>{LEGAL.product}</span> account and everything in it. There are two ways, and
             the first is instant.
           </p>
         </>
@@ -41,11 +41,7 @@ export default function DeleteAccountPage() {
       <Section id="in-app" title="From inside the app (takes a minute)">
         <ol className="list-decimal space-y-1 pl-5">
           <li>
-            Sign in at{' '}
-            <Link href="/login" className="font-medium text-ac2-deep underline">
-              {LEGAL.origin.replace(/^https:\/\//, '')}
-            </Link>
-            .
+            Sign in at <Link href="/login" className="font-medium text-ac2-deep underline">{LEGAL.origin.replace(/^https:\/\//, '')}</Link>.
           </li>
           <li>
             Open <span className="font-medium text-tx">Account</span>.
@@ -80,10 +76,8 @@ export default function DeleteAccountPage() {
           <li>Your sign-in, including your password if you set one.</li>
         </ul>
         <p>
-          <b className="font-semibold text-tx">
-            Nothing is retained, nothing is archived, and there is no undo.
-          </b>{' '}
-          We keep no backup copy we could restore you from, so export anything you want to keep
+          <b className="font-semibold text-tx">Nothing is retained, nothing is archived, and there is no undo.</b> We
+          keep no backup copy we could restore you from, so export anything you want to keep
           before you do this. The app writes your trip and all your money entries out as files.
         </p>
         <p>
@@ -91,11 +85,8 @@ export default function DeleteAccountPage() {
           contributions out of it as well, ask its owner.
         </p>
         <p className="pt-1">
-          The{' '}
-          <Link href="/privacy#retention" className="font-medium text-ac2-deep underline">
-            Privacy Policy
-          </Link>{' '}
-          covers what is stored in the first place.
+          The <Link href="/privacy#retention" className="font-medium text-ac2-deep underline">Privacy Policy</Link> covers
+          what is stored in the first place.
         </p>
       </Section>
     </LegalPage>

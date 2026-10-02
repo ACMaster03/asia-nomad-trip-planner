@@ -15,6 +15,8 @@ struct SignInView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var busy = false
+    @State private var busySince: Date?
+    @State private var work: Task<Void, Never>?
     @State private var error: String?
     @State private var notice: String?
     @State private var codeSentTo: String?
@@ -36,8 +38,9 @@ struct SignInView: View {
                     VStack(spacing: 14) {
                         if mode == .code { appleButton; or }
                         form
-                        if let error { Notice(text: error, kind: .warn) }
-                        if let notice { Notice(text: notice) }
+                        if let busySince { WaitingNote(since: busySince, onCancel: cancel) }
+                        if let error { Notice(verbatim: error, kind: .warn) }
+                        if let notice { Notice(verbatim: notice) }
                     }
                     // On a phone the wash's hills sit right under the form (on the web the
                     // page scrolls past them), so the form gets a frosted panel to stay legible.
@@ -115,12 +118,20 @@ struct SignInView: View {
             }
         }
 
-        Button(mode == .code ? "Email me a code" : "Sign in") {
+        Button {
             mode == .code ? sendCode() : signInWithPassword()
+        } label: {
+            // While waiting, the button carries the travelling dot instead of a spinner.
+            // It stays at full strength (not disabled) so the dot reads clearly;
+            // the actions ignore taps while busy.
+            if busy {
+                TravelLoader(color: Palette.on).frame(height: 21)
+            } else {
+                mode == .code ? Text("Email me a code") : Text("Sign in")
+            }
         }
         .buttonStyle(.primary)
-        .disabled(busy || !looksLikeEmail || (mode == .password && password.isEmpty))
-        .overlay { if busy { ProgressView().tint(Palette.on) } }
+        .disabled(!busy && (!looksLikeEmail || (mode == .password && password.isEmpty)))
 
         if mode == .code {
             LinkButton("Use a password instead") { switchTo(.password) }
@@ -168,23 +179,42 @@ struct SignInView: View {
 
     private func sendReset() {
         guard looksLikeEmail else {
-            error = "Type your email above first, then tap “Forgot your password?” again."
+            error = String(localized: "Type your email above first, then tap “Forgot your password?” again.")
             return
         }
         run {
             try await store.sendPasswordReset(to: email)
-            notice = "Check your inbox — the reset link opens Livhold on the web."
+            notice = String(localized: "Check your inbox — the reset link opens Livhold on the web.")
         }
     }
 
-    private func run(_ work: @escaping @MainActor () async throws -> Void) {
+    /// Every request goes through here: offline, it waits for the connection instead
+    /// of failing; slow, the note under the form says so after a few seconds.
+    private func run(_ request: @escaping @MainActor () async throws -> Void) {
+        guard !busy else { return }
         busy = true
+        busySince = .now
         error = nil
         notice = nil
-        Task {
-            defer { busy = false }
-            do { try await work() } catch { self.error = AuthStore.message(for: error) }
+        work = Task {
+            defer {
+                busy = false
+                busySince = nil
+            }
+            do {
+                try await Connectivity.shared.waitUntilOnline()
+                try await request()
+            } catch {
+                self.error = AuthStore.message(for: error)
+            }
         }
+    }
+
+    private func cancel() {
+        work?.cancel()
+        work = nil
+        busy = false
+        busySince = nil
     }
 }
 
@@ -211,8 +241,8 @@ struct BrandStack: View {
 
 /// Uppercase field label. Web: `text-base uppercase tracking-[.1em] text-tx2`.
 struct FieldLabel: View {
-    let text: String
-    init(_ text: String) { self.text = text }
+    let text: LocalizedStringKey
+    init(_ text: LocalizedStringKey) { self.text = text }
 
     var body: some View {
         Text(text)
@@ -225,18 +255,18 @@ struct FieldLabel: View {
 
 /// A text-only action under a form ("Use a password instead").
 struct LinkButton: View {
-    let title: String
+    let title: Text
     var quiet = false
     let action: () -> Void
 
-    init(_ title: String, quiet: Bool = false, action: @escaping () -> Void) {
-        self.title = title
+    init(_ title: LocalizedStringKey, quiet: Bool = false, action: @escaping () -> Void) {
+        self.title = Text(title)
         self.quiet = quiet
         self.action = action
     }
 
     var body: some View {
-        Button(title, action: action)
+        Button(action: action) { title }
             .font(.sans(16, weight: .medium))
             .foregroundStyle(quiet ? Palette.tx2 : Palette.ac)
             .frame(maxWidth: .infinity, minHeight: 44)
