@@ -4,15 +4,16 @@ import SwiftUI
 // its slim row when nothing is due. The page is laid out like Subscriptions:
 // cards of rows, the amount on the right. Money reminders carry no dot; the
 // amount says what they are. Each subscription adds only its next charge, not
-// one per month.
+// one per month. A tap on a money reminder opens the stay's or the
+// subscription's own form where you are, without leaving the page (Patrik, 2 Oct).
 
 /// A reminder as Home and the page show it (reminders.ts deriveReminders, plus
 /// the next charge of each subscription): yours from `state.reminders`, the
 /// money ones worked out from booked stays and active subscriptions.
 struct HomeReminder: Identifiable, Equatable {
     enum Kind { case mine, cancel, charge, subscription }
-    /// Where a tap on a money reminder goes.
-    enum Opens: Equatable { case stop(String), subscriptions }
+    /// Which form a tap on a money reminder opens.
+    enum Opens: Equatable { case stay(id: String, segId: String), subscription(String) }
 
     let id: String
     let kind: Kind
@@ -52,12 +53,12 @@ struct HomeReminder: Identifiable, Equatable {
             if let c = st.cancelUntil, !c.isEmpty, st.remind != false, c >= today {
                 out.append(HomeReminder(id: "money-cancel-\(st.id)", kind: .cancel,
                                         title: String(localized: "Free cancellation ends"), note: name, amount: amount,
-                                        due: String(c.prefix(10)), overdue: false, opens: .stop(seg.id)))
+                                        due: String(c.prefix(10)), overdue: false, opens: .stay(id: st.id, segId: seg.id)))
             }
             if let c = st.chargeDate, !c.isEmpty, c >= today {
                 out.append(HomeReminder(id: "money-charge-\(st.id)", kind: .charge,
                                         title: name, amount: amount, caption: String(localized: "card charge"),
-                                        due: String(c.prefix(10)), overdue: false, opens: .stop(seg.id)))
+                                        due: String(c.prefix(10)), overdue: false, opens: .stay(id: st.id, segId: seg.id)))
             }
         }
         // Only the next charge of each: a monthly one is not twelve reminders.
@@ -69,7 +70,7 @@ struct HomeReminder: Identifiable, Equatable {
                                         title: s.label,
                                         amount: MoneyText.full(Journey.toBase(s.amount, s.cur, state.rates), base),
                                         caption: String(localized: "subscription"),
-                                        due: next, overdue: false, opens: .subscriptions))
+                                        due: next, overdue: false, opens: .subscription(s.id)))
             }
         }
         return out.sorted { a, b in
@@ -187,16 +188,21 @@ struct ReminderRow: View {
     }
 }
 
-extension TabRouter {
-    /// Where a money reminder leads: the stop on Trip, or Subscriptions on Money.
-    func open(_ target: HomeReminder.Opens) {
-        switch target {
-        case .stop(let id):
-            paths[.trip] = [.stop(id)]
-            select(.trip)
-        case .subscriptions:
-            paths[.money] = [.moneySubscriptions]
-            select(.money)
+extension HomeReminder.Opens {
+    /// Opens the stay's or the subscription's form over the page you're on: both
+    /// sheets live in the shell, so nothing navigates.
+    @MainActor
+    func open(in trip: TripRow, trips: TripEditor, money: MoneyEditor) {
+        switch self {
+        case .stay(let id, let segId):
+            let state = trip.state
+            guard let stay = state.stays.first(where: { $0.id == id }),
+                  let seg = state.segments.first(where: { $0.id == segId }) else { return }
+            trips.open(.stay(stay, seg: seg, range: nil))
+        case .subscription(let id):
+            guard case .array(let subs)? = trip.rawState["subscriptions"],
+                  let sub = subs.compactMap(Subscription.init(raw:)).first(where: { $0.id == id }) else { return }
+            money.sub = SubTarget(sub: sub)
         }
     }
 }
@@ -206,7 +212,8 @@ extension TabRouter {
 /// Every reminder: overdue, next, done. Opens from Home.
 struct RemindersScreen: View {
     @Environment(TripStore.self) private var store
-    @Environment(TabRouter.self) private var router
+    @Environment(TripEditor.self) private var trips
+    @Environment(MoneyEditor.self) private var money
     @State private var editing: ReminderTarget?
     /// A tick's new doneOn from the tap until the save lands.
     @State private var flipped: [String: String?] = [:]
@@ -256,7 +263,7 @@ struct RemindersScreen: View {
                     }
                 }
                 group(Text("Overdue"), overdue, today: today, warn: true)
-                group(Text("Next"), next, today: today)
+                group(nil, next, today: today)
                 group(Text("Done"), done, today: today)
                 Text("Ticking one takes it off Home and keeps it here under Done. Money reminders follow the stay or subscription they come from.")
                     .font(.sans(13.5)).foregroundStyle(Palette.tx2)
@@ -270,12 +277,14 @@ struct RemindersScreen: View {
         .animation(Motion.settle, value: flipped)
     }
 
-    @ViewBuilder private func group(_ title: Text, _ rows: [HomeReminder], today: String, warn: Bool = false) -> some View {
+    @ViewBuilder private func group(_ title: Text?, _ rows: [HomeReminder], today: String, warn: Bool = false) -> some View {
         if !rows.isEmpty {
             card {
-                title.font(.sans(12.5, weight: .semibold)).textCase(.uppercase).tracking(1.4)
-                    .foregroundStyle(warn ? Palette.warn : Palette.tx2)
-                    .padding(.bottom, 2)
+                if let title {
+                    title.font(.sans(12.5, weight: .semibold)).textCase(.uppercase).tracking(1.4)
+                        .foregroundStyle(warn ? Palette.warn : Palette.tx2)
+                        .padding(.bottom, 2)
+                }
                 ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
                     if i > 0 { Divider().overlay(Palette.ln) }
                     ReminderRow(r: r, today: today, onTick: { toggle(r, today: today) }, onOpen: open(r))
@@ -286,7 +295,8 @@ struct RemindersScreen: View {
 
     private func open(_ r: HomeReminder) -> (() -> Void)? {
         if r.isMine { return store.canEdit ? { editing = ReminderTarget(reminder: r) } : nil }
-        return r.opens.map { target in { router.open(target) } }
+        guard store.canEdit, let target = r.opens, let trip = store.trip else { return nil }
+        return { target.open(in: trip, trips: trips, money: money) }
     }
 
     /// Ticks or unticks at once; the save follows. On a failure the row goes back.

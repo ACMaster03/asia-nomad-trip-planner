@@ -7,6 +7,31 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### DECIDED — iOS first, the web follows in one pass; leaving a tab closes its pages (Patrik, 2 Oct)
+
+Patrik on the Reminders build:
+
+- **Money reminders open their own form, where you are.** A subscription opens its edit
+  sheet, a stay deadline opens the stay's edit sheet, over Home or the Reminders page; no jump
+  to Money or Trip. (Jumping to Subscriptions from another tab landed at the bottom of the
+  page and skipped; that path is gone.)
+- **No "Next" label on the Reminders page**: the page title says it. Overdue and Done keep
+  theirs. Purple was floated and left out, since nothing else uses it.
+- **The web waits.** Patrik: go over every page on iOS first, then bring the web in line in
+  one pass, page by page. So the web's reminders (no subscriptions, dots) stay as they are,
+  and "Web differs now" notes are the list for that pass.
+- **Tab memory.** Each tab kept every page you opened (decided 27 Sep, spine mock C), so
+  after opening Reminders once, every return to Home landed on Reminders; the same for
+  Account, Trip settings and Subscriptions. Options weighed: keep all (Apple's default, but
+  the surprise Patrik hit); reset all (predictable, but loses a stop you were planning while
+  you check Money); reset after ~5 seconds away (Patrik's idea: forgives a mis-tap, but a
+  hidden timer makes the same tap do two different things); reset by kind. **Taken: reset by
+  kind** (Patrik: "we will go with your position"). Leaving a tab closes Reminders, Account,
+  settings, Subscriptions and All entries; a stop on Trip stays. Re-tapping a tab still goes
+  to its start. If the mis-tap case bites, the timer can come on top later.
+
+**iOS:** this is the iOS entry (`TabRouter.select`, `HomeReminder.Opens`).
+
 ### BUILT — iPhone Reminders page, subscriptions in reminders, a slim row when nothing is due (Patrik, 2 Oct)
 
 Patrik on the first Home build, on Asia (day 33): the numbers are right, but with nothing due

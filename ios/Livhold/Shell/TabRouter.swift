@@ -16,8 +16,16 @@ final class TabRouter {
 
     /// Every tap on a tab lands here, including a tap on the tab you're already on:
     /// the first re-tap goes back to the tab's start, the next one scrolls to the top.
+    ///
+    /// Leaving a tab closes the pages opened on it (Patrik, 2 Oct): Reminders,
+    /// Account, settings, Subscriptions and All entries are visits, and coming back
+    /// to them later was a surprise. A stop on Trip stays, so you can check Money
+    /// while planning Da Lat and come back to Da Lat (spine mock C, 27 Sep).
     func select(_ tab: AppTab) {
         guard tab == selection else {
+            paths[selection] = Array(paths[selection, default: []].prefix { route in
+                if case .stop = route { true } else { false }
+            })
             selection = tab
             return
         }

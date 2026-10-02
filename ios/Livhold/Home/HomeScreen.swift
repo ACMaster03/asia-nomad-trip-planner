@@ -563,6 +563,8 @@ private struct RemindersCard: View {
     let mode: Mode
     @Environment(TripStore.self) private var store
     @Environment(TabRouter.self) private var router
+    @Environment(TripEditor.self) private var trips
+    @Environment(MoneyEditor.self) private var money
     @State private var ticked: Set<String> = []
 
     var body: some View {
@@ -585,7 +587,7 @@ private struct RemindersCard: View {
                     ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
                         if i > 0 { Divider().overlay(Palette.ln) }
                         ReminderRow(r: r, today: today, onTick: { tick(r) },
-                                    onOpen: r.opens.map { target in { router.open(target) } } ?? openPage)
+                                    onOpen: opener(r))
                     }
                     Divider().overlay(Palette.ln)
                     Button(action: openPage) {
@@ -631,6 +633,12 @@ private struct RemindersCard: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+    }
+
+    /// A money reminder opens its own form; yours open the page.
+    private func opener(_ r: HomeReminder) -> () -> Void {
+        guard store.canEdit, let target = r.opens else { return openPage }
+        return { target.open(in: trip, trips: trips, money: money) }
     }
 
     private func openPage() {
