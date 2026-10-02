@@ -22,10 +22,12 @@ The record is text: Reddit is blocked from Claude's container (proxy 403 on `red
 and `old.reddit.com`, and the fetch tool refuses the host, 2 Oct), so Petra pastes the thread
 text or a screenshot and Claude types it out. Issue #135 holds the topic (opened on Petra's
 "open it", 2 Oct). First source, 2 Oct, with Petra: S-01, r/femaletravelers, "For those of you
-that travel often, how do you…", the TripIt branch of the comments from one screenshot; the
-post itself and the other branches are still to paste. Five needs opened (N-01 to N-05):
-the trip builds itself from booking emails, calendar sync, changing plans without confusion,
-old trips kept in one place, free until the trip gets complex.
+that travel often, how do you…", about 80 comments pasted as text (the post itself still to
+paste). Thirteen needs opened (N-01 to N-13); the loudest: the trip builds itself from the
+booking emails or screenshots (TripIt and Wanderlog do it, both miss some bookings), works
+offline, not locked into one app, the confirmation number at hand. Most people in the thread
+use no travel app: email folders, a calendar, a document or paper. Round 1 in
+`docs/research/takeaways.md` puts the import question to Patrik.
 
 **iOS:** none; documentation only.
 
