@@ -7,6 +7,26 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### LIVE — the journey list's endpoint and the privacy section, merged with Petra (2 Oct)
+
+Pull request #136, merged after the usual step (what changes, what could go wrong, "go"),
+built in about a minute. Petra checked livhold.com/privacy and found missing spaces: "write
+toprivacy@keepyourhabits.comand we'll delete", then "so theUK GDPR" and "so theEU GDPR" in
+Your rights, which predate this work. Fixed on all three legal pages in #137, merged the
+same way.
+
+**Two causes, for next time.** (1) Petra's browser drops a space that sits next to the
+`<!-- -->` React puts between two adjacent text nodes (Chromium does not, which is why the
+local checks passed): `so the{' '}<b>` renders "so the<!-- --> <b>", and a fragment such as
+the old `LegalValue` renders "write to <!-- -->privacy@…". So `LegalValue` is a `<span>` now,
+`{LEGAL.product}` next to text is wrapped in a `<span>`, and the legal pages use no `{' '}`:
+a space is always part of a text run. (2) The compiler drops the leading space of a JSX text
+run that contains an `&apos;`: "photos.Photos are re-encoded" had been live since September.
+Such a run is written as a plain string, `{" Photos are … camera's …"}`, or reworded ("we
+will" for "we&apos;ll"). The check that proves both, on a dev server, for `/privacy`,
+`/terms` and `/delete-account`: no ` <!-- -->` or `<!-- --> ` in the HTML, and no letter
+glued to `</b>`, `</span>`, `</a>` or `</mark>` or to their opening tags.
+
 ### APPLIED — migration 44, `journey_signups`, on staging and production (Petra, 2 Oct)
 
 **Applied by Petra in the Supabase dashboard's SQL editor**, guided here in the chat on

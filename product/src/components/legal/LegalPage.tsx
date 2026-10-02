@@ -16,9 +16,18 @@ import { LEGAL, isUnset } from '@/lib/legal/entity'
  * Renders a company fact, or a loud marker if it has not been filled in yet.
  * A policy that silently prints "TODO_CONTACT_EMAIL" reads as a finished
  * document containing a typo; this reads as unfinished, which is the truth.
+ *
+ * A <span>, not a fragment. A fragment's text lands next to the page's own
+ * text, and React separates adjacent text nodes with an invisible <!-- -->,
+ * next to which at least one browser drops the space (Petra, 2 Oct 2026:
+ * "write toprivacy@…", "so theUK GDPR"). An element has no such marker. For
+ * the same reason the legal pages never use {' '}: a space is always part of
+ * a text run, never a child of its own. And a text run that begins with a
+ * space must not contain an &apos; (the compiler drops that leading space);
+ * such runs are written as plain strings, {" … "}.
  */
 export function LegalValue({ value }: { value: string }) {
-  if (!isUnset(value)) return <>{value}</>
+  if (!isUnset(value)) return <span>{value}</span>
   return (
     <mark className="rounded bg-warn-soft px-1 font-semibold text-warn">
       [{value.replace(/^TODO_/, '').replace(/_/g, ' ').toLowerCase()}: not set yet]
@@ -57,7 +66,8 @@ export function LegalPage({
 
         <h1 className="mt-5 font-serif text-[30px] font-semibold leading-[1.2]">{title}</h1>
         <p className="mt-1.5 text-base text-tx3">
-          Last updated {LEGAL.lastUpdated} · <LegalValue value={LEGAL.entity} />
+          <span>{`Last updated ${LEGAL.lastUpdated} · `}</span>
+          <LegalValue value={LEGAL.entity} />
         </p>
 
         <div className="mt-4 flex flex-col gap-2.5 text-base leading-relaxed text-tx2">{intro}</div>
@@ -66,8 +76,7 @@ export function LegalPage({
 
         <hr className="mt-8 border-ln" />
         <p className="mt-4 text-base leading-relaxed text-tx3">
-          Questions about any of this go to{' '}
-          <span className="font-medium text-tx2">
+          Questions about any of this go to <span className="font-medium text-tx2">
             <LegalValue value={LEGAL.contactEmail} />
           </span>
           .
