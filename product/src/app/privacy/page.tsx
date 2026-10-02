@@ -22,6 +22,8 @@ import { LEGAL } from '@/lib/legal/entity'
 //   product/vercel.json                functions pinned to dub1 (Dublin)
 //   (absent) navigator.geolocation     the app never asks the device where it is
 //   (absent) any analytics SDK         nothing measures the reader
+//   migration 44 + api/journey-signup  the list form on journey.livhold.com:
+//                                      what it stores, insert-only, 12-month purge
 
 export const metadata: Metadata = {
   title: 'Privacy Policy · Livhold',
@@ -35,13 +37,13 @@ export default function PrivacyPage() {
       intro={
         <>
           <p>
-            {LEGAL.product} is a trip planner. You put an itinerary, what you spend and what you
+            <span>{LEGAL.product}</span> is a trip planner. You put an itinerary, what you spend and what you
             see into it, and you choose who else gets to look. This page is the plain account of
             what that means for your data.
           </p>
           <p>
-            The service is operated by <LegalValue value={LEGAL.entity} />,{' '}
-            <LegalValue value={LEGAL.address} />, which is the data controller for it.
+            The service is operated by <LegalValue value={LEGAL.entity} />, <LegalValue value={LEGAL.address} />,
+            which is the data controller for it.
           </p>
         </>
       }
@@ -86,6 +88,29 @@ export default function PrivacyPage() {
         </ul>
       </Section>
 
+      <Section id="journey-list" title="If you join the list on journey.livhold.com">
+        <p>
+          The form on journey.livhold.com asks when you&apos;re leaving, for how long, how you plan
+          today, your email and, if you like, your first name. If you tick the box, it also notes
+          that you&apos;re happy to have a 20-minute call.
+        </p>
+        <p>
+          We use this for three things only: to email you when Livhold opens to everyone, to
+          understand how people plan long trips, and, only if you ticked the box, to get in touch
+          about a call. We don&apos;t use it for advertising, we don&apos;t sell it, and we
+          don&apos;t add you to anything else.
+        </p>
+        <p>
+          We&apos;re allowed to hold it because you gave it to us for these reasons (your consent).
+          You can withdraw that consent at any time: use the unsubscribe link in any email, or
+          write to <LegalValue value={LEGAL.contactEmail} /> and we will delete your answers.
+        </p>
+        <p>
+          If we talk on a call, we take short written notes. We don&apos;t record calls unless we
+          ask you first and you say yes.
+        </p>
+      </Section>
+
       <Section id="what-we-dont" title="What we do not collect">
         <p>This list is as much the point as the one above it.</p>
         <ul className="list-disc space-y-1 pl-5">
@@ -94,10 +119,9 @@ export default function PrivacyPage() {
             device where it is. A check-in is placed by the city you picked, not by GPS.
           </li>
           <li>
-            <b className="font-semibold text-tx">Not the location in your photos.</b> Photos are
-            re-encoded on your phone before upload, which discards the camera&apos;s embedded data
-            (GPS coordinates, camera model, timestamp), so what leaves your device is the picture
-            and nothing else.
+            <b className="font-semibold text-tx">Not the location in your photos.</b>
+            {/* a plain string: this run starts with a space and holds an apostrophe, see LegalValue */}
+            {" Photos are re-encoded on your phone before upload, which discards the camera's embedded data (GPS coordinates, camera model, timestamp), so what leaves your device is the picture and nothing else."}
           </li>
           <li>
             <b className="font-semibold text-tx">No analytics and no tracking.</b> There is no
@@ -144,6 +168,13 @@ export default function PrivacyPage() {
             push on, the notification travels through the service your browser uses (Google,
             Mozilla or Apple, depending on the browser). The content is encrypted to your device.
           </li>
+          <li>
+            <b className="font-semibold text-tx">For the list on journey.livhold.com</b>: Supabase
+            stores the form answers. The email when Livhold opens goes out through <LegalValue value={LEGAL.listEmailTool} />,
+            like our other emails. If you ticked the call box, we write to you ourselves, from
+            our <LegalValue value={LEGAL.mailbox} /> mailbox, to find a time; there is no booking
+            tool. The call runs on <LegalValue value={LEGAL.callTool} />.
+          </li>
         </ul>
       </Section>
 
@@ -181,34 +212,31 @@ export default function PrivacyPage() {
           it.
         </p>
         <p>
-          Deleting your account, from{' '}
-          <span className="font-medium text-tx">Account → Delete account</span>, removes the trips
-          you own along with their photos, removes your place on trips you had joined, and removes
-          your sign-in.{' '}
-          <b className="font-semibold text-tx">
-            There is no undo, no grace period and no backup copy we can restore from.
-          </b>{' '}
-          We say so plainly because the button means it.
+          Deleting your account, from <span className="font-medium text-tx">Account → Delete account</span>,
+          removes the trips you own along with their photos, removes your place on trips you had
+          joined, and removes your sign-in. <b className="font-semibold text-tx">There is no undo, no grace period and no backup copy we can restore from.</b> We
+          say so plainly because the button means it.
+        </p>
+        <p>
+          List answers and call notes are deleted 12 months after you send them, or sooner if you
+          ask. If you create a Livhold account, your account follows the rules above instead.
         </p>
       </Section>
 
       <Section id="rights" title="Your rights">
         <p>
-          <LegalValue value={LEGAL.entity} /> is a company registered in the United Kingdom, so the{' '}
-          <b className="font-semibold text-tx">UK GDPR</b> and the Data Protection Act 2018 apply to
-          what it does with your data. The service is also offered to people in the EEA, so the{' '}
-          <b className="font-semibold text-tx">EU GDPR</b> applies as well. The rights below are the
+          <LegalValue value={LEGAL.entity} /> is a company registered in the United Kingdom, so
+          the <b className="font-semibold text-tx">UK GDPR</b> and the Data Protection Act 2018 apply to
+          what it does with your data. The service is also offered to people in the EEA, so
+          the <b className="font-semibold text-tx">EU GDPR</b> applies as well. The rights below are the
           same under both.
         </p>
         <p>
           You can ask for a copy of your data, ask for it to be corrected or erased, object to how
           it is processed, ask us to restrict it, or ask for it in a portable form. Most of that you
           can do yourself and instantly: the app exports your trip and your money ledger as files,
-          and{' '}
-          <Link href="/delete-account" className="font-medium text-ac2-deep underline">
-            deleting your account
-          </Link>{' '}
-          is a real erasure rather than a request that goes into a queue.
+          and <Link href="/delete-account" className="font-medium text-ac2-deep underline">deleting your account</Link> is
+          a real erasure rather than a request that goes into a queue.
         </p>
         <p>
           For anything else, write to <LegalValue value={LEGAL.contactEmail} /> and we will answer
@@ -220,16 +248,16 @@ export default function PrivacyPage() {
           can complain to your own country&apos;s data protection authority instead.
         </p>
         <p>
-          Our representative in the EU, for the purposes of Article 27 of the EU GDPR, is{' '}
-          <LegalValue value={LEGAL.euRepresentative} />. People in the EEA may contact them about
+          Our representative in the EU, for the purposes of Article 27 of the EU GDPR,
+          is <LegalValue value={LEGAL.euRepresentative} />. People in the EEA may contact them about
           anything on this page as an alternative to contacting us directly.
         </p>
       </Section>
 
       <Section id="transfers" title="Data leaving the UK and the EEA">
         <p>
-          The company is in the United Kingdom and the service runs on providers in{' '}
-          <LegalValue value={LEGAL.dataRegion} />, so your data moves between the UK and the EEA in
+          The company is in the United Kingdom and the service runs on providers
+          in <LegalValue value={LEGAL.dataRegion} />, so your data moves between the UK and the EEA in
           the ordinary course of the service working. Both directions are covered by adequacy
           decisions (the EU recognises the UK, and the UK recognises the EEA), so no extra
           safeguard is needed for that leg.

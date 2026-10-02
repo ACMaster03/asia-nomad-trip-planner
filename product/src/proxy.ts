@@ -32,6 +32,8 @@ export const config = {
     // `privacy`, `terms` and `delete-account` join them: a Play reviewer and a
     // crawler both open those signed out, and they hold no secret worth a
     // session for. Play REQUIRES the deletion page to work with no sign-in.
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|follow|digest|api/digest|privacy|terms|delete-account|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // `api/journey-signup` too: the list form on journey.livhold.com posts
+    // there cross-origin, from a visitor with no account and no cookies.
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|follow|digest|api/digest|api/journey-signup|privacy|terms|delete-account|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

@@ -11,6 +11,10 @@ party for its own purposes — every "shared" answer below is No.
 
 Last checked against the code: **2026-09-14**.
 
+`/privacy` gained "If you join the list on journey.livhold.com" on 2026-10-01: a form on the
+landing page (migration 44, `docs/landing-form/`), not in the app. Nothing in the app collects
+it, so no answer below changes.
+
 ## Required URLs
 
 | Field | Value | Status |

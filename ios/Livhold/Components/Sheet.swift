@@ -16,15 +16,21 @@ extension View {
 
 /// Section heading used on screens and inside sheets. Web: `font-serif text-[19px] font-semibold`.
 struct SectionTitle: View {
-    let text: String
+    let text: Text
     var size: CGFloat = 19
 
-    init(_ text: String, size: CGFloat = 19) {
-        self.text = text
+    init(_ key: LocalizedStringKey, size: CGFloat = 19) {
+        self.text = Text(key)
+        self.size = size
+    }
+
+    /// Words already made in code, shown as they are.
+    init(verbatim text: String, size: CGFloat = 19) {
+        self.text = Text(verbatim: text)
         self.size = size
     }
 
     var body: some View {
-        Text(text).font(.serif(size)).foregroundStyle(Palette.tx)
+        text.font(.serif(size)).foregroundStyle(Palette.tx)
     }
 }

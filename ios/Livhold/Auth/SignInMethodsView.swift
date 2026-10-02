@@ -38,7 +38,7 @@ struct SignInMethodsView: View {
                 .redacted(reason: loaded ? [] : .placeholder)
 
                 Notice(text: "After connecting, “Continue with Apple” opens this same account, even if you chose Hide My Email.")
-                if let error { Notice(text: error, kind: .warn) }
+                if let error { Notice(verbatim: error, kind: .warn) }
 
                 Text("You can’t remove the last way in, so nobody locks themselves out.")
                     .font(.sans(13))
@@ -55,7 +55,7 @@ struct SignInMethodsView: View {
         .task { await reload() }
         .refreshable { await reload() }
         .sheet(isPresented: $showPassword) {
-            PasswordSheet { toast = "Password saved — you can sign in with it now" }
+            PasswordSheet { toast = String(localized: "Password saved — you can sign in with it now") }
         }
         .confirmationDialog(
             "Disconnect Apple?",
@@ -92,15 +92,15 @@ struct SignInMethodsView: View {
     }
 
     private var appleDetail: String {
-        guard let apple else { return "Face ID next time" }
+        guard let apple else { return String(localized: "Face ID next time") }
         if case let .string(address)? = apple.identityData?["email"] { return address }
-        return "Connected"
+        return String(localized: "Connected")
     }
 
     /// Supabase does not tell the app whether a password exists, so the row offers
     /// both: set one, or replace the one you have. The web's Account → Password is the same.
     private var passwordRow: some View {
-        MethodRow(symbol: "key", title: "Password", detail: "Set or change") {
+        MethodRow(symbol: "key", title: "Password", detail: String(localized: "Set or change")) {
             Button("Set") { showPassword = true }
                 .buttonStyle(RowActionStyle(quiet: true))
         }
@@ -127,7 +127,7 @@ struct SignInMethodsView: View {
             do {
                 try await store.connectApple(result)
                 await reload()
-                toast = "Apple connected"
+                toast = String(localized: "Apple connected")
             } catch {
                 self.error = AuthStore.message(for: error)
             }
@@ -142,7 +142,7 @@ struct SignInMethodsView: View {
             do {
                 try await store.disconnect(identity)
                 await reload()
-                toast = "Apple disconnected"
+                toast = String(localized: "Apple disconnected")
             } catch {
                 self.error = AuthStore.message(for: error)
             }
@@ -154,7 +154,7 @@ struct SignInMethodsView: View {
 
 private struct MethodRow<Trailing: View>: View {
     let symbol: String
-    let title: String
+    let title: LocalizedStringKey
     let detail: String
     @ViewBuilder var trailing: Trailing
 
@@ -177,7 +177,7 @@ private struct MethodRow<Trailing: View>: View {
 }
 
 private struct StatusPill: View {
-    let title: String
+    let title: LocalizedStringKey
 
     var body: some View {
         Text(title)
@@ -230,7 +230,7 @@ private struct PasswordSheet: View {
             Field(placeholder: "Type it again", text: $confirm, isSecure: true)
                 .textContentType(.newPassword)
             if let hint { Text(hint).font(.sans(14)).foregroundStyle(Palette.warn) }
-            if let error { Notice(text: error, kind: .warn) }
+            if let error { Notice(verbatim: error, kind: .warn) }
             Button("Save password", action: save)
                 .buttonStyle(.primary)
                 .disabled(!ready || busy)
@@ -244,8 +244,8 @@ private struct PasswordSheet: View {
     private var ready: Bool { password.count >= minimum && password == confirm }
 
     private var hint: String? {
-        if !password.isEmpty && password.count < minimum { return "At least \(minimum) characters." }
-        if !confirm.isEmpty && password != confirm { return "The two don’t match yet." }
+        if !password.isEmpty && password.count < minimum { return String(localized: "At least \(minimum) characters.") }
+        if !confirm.isEmpty && password != confirm { return String(localized: "The two don’t match yet.") }
         return nil
     }
 

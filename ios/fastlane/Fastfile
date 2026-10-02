@@ -1,7 +1,7 @@
 default_platform(:ios)
 
 # Same shape as the habit tracker's iOS lanes (habit-tracker-app/fastlane/Fastfile):
-# App Store Connect API key from env, match for signing, build number one past
+# App Store Connect API key from ~/.kyh-deploy (or env in CI), match for signing, build number one past
 # whatever TestFlight already has.
 
 platform :ios do
@@ -11,10 +11,23 @@ platform :ios do
 
   desc "Build and upload to TestFlight"
   lane :beta do
+    # The team's App Store Connect API key. On this Mac it is the JSON that
+    # ~/.kyh-deploy/make-asc-key.sh writes (never in the repo); in CI, env vars.
+    key_path = File.expand_path(ENV["ASC_API_KEY_PATH"] || "~/.kyh-deploy/asc-api-key.json")
+    key = if File.exist?(key_path)
+      JSON.parse(File.read(key_path))
+    else
+      {
+        "key_id" => ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+        "issuer_id" => ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+        "key" => ENV["APP_STORE_CONNECT_API_KEY_KEY"]
+      }
+    end
+    UI.user_error!("No App Store Connect API key: run ~/.kyh-deploy/make-asc-key.sh <KEY_ID> <ISSUER_ID>") unless key["key_id"]
     api_key = app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"]
+      key_id: key["key_id"],
+      issuer_id: key["issuer_id"],
+      key_content: key["key"]
     )
 
     increment_build_number(
