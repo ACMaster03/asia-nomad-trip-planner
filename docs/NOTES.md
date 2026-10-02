@@ -5,6 +5,26 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-02
+
+### STARTED — Research: what people say on Reddit about apps like Livhold (Petra's weekly task)
+
+Patrik, 2 Oct: Petra found Reddit threads about apps in Livhold's space. Her weekly task is
+to collect what people need and what they say about the competitors, kept so that it can be
+learned from later: positioning and what to build. Set up in `docs/research/` (the README
+holds the routine, written for Petra): one file per thread under `sources/` (`S-NN`, the
+text word for word, no usernames), the needs in `needs.md` (`N-NN`, numbers never change,
+sources counted not comments), the apps in `competitors.md` (only what people say), and
+dated rounds in `takeaways.md`, where Patrik decides. Every thread is tagged with the job it
+is about: plan, money, follow, diary, other.
+
+The record is text: Reddit is blocked from Claude's container (proxy 403 on `reddit.com`
+and `old.reddit.com`, and the fetch tool refuses the host, 2 Oct), so Petra pastes the thread
+text or a screenshot and Claude types it out. Nothing captured yet. No GitHub issue holds
+the topic yet.
+
+**iOS:** none; documentation only.
+
 ## 2026-09-28
 
 ### DECIDED — Patrik, 28 Sep: Home's wording as proposed, then localisation
