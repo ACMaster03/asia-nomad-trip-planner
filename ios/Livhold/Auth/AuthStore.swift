@@ -106,9 +106,20 @@ final class AuthStore {
     /// Signs out THIS device only; the traveller's other devices stay signed in.
     func signOut() async {
         try? await auth.signOut(scope: .local)
+        // Nothing of a journey stays on the phone after signing out.
+        TripCache.clearAll()
     }
 
+    /// The signed-in user's id as the database writes it (lowercase uuid).
+    var userId: String? { session?.user.id.uuidString.lowercased() }
+
     var email: String? { session?.user.email }
+
+    /// The name the web shows to people you plan with (`user_metadata.first_name`).
+    var firstName: String? {
+        if case let .string(name)? = session?.user.userMetadata["first_name"], !name.isEmpty { return name }
+        return nil
+    }
 
     func identities() async throws -> [UserIdentity] {
         try await auth.userIdentities()
@@ -159,7 +170,7 @@ enum AuthFailure: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .appleTokenMissing: "Apple didn’t send a sign-in token. Please try again."
+        case .appleTokenMissing: String(localized: "Apple didn’t send a sign-in token. Please try again.")
         }
     }
 }
@@ -171,20 +182,31 @@ extension AuthStore {
         if let apple = error as? ASAuthorizationError, apple.code == .canceled { return nil }
         if let auth = error as? AuthError {
             switch auth.errorCode {
-            case .invalidCredentials: return "That email and password don’t match. Check both, or sign in with a code instead."
-            case .otpExpired: return "That code didn’t work. It may be mistyped, used already, or older than an hour — check it, or ask for a new one."
-            case .overEmailSendRateLimit, .overRequestRateLimit: return "Too many tries just now. Wait a minute, then try again."
-            case .weakPassword: return "That password is too short — use at least 6 characters."
-            case .samePassword: return "That’s already your password."
-            case .validationFailed: return "That doesn’t look like an email address."
-            case .emailNotConfirmed: return "Confirm your email first — use the code or link we sent."
-            case .identityAlreadyExists: return "That Apple ID already belongs to another Livhold account."
-            case .singleIdentityNotDeletable: return "This is your only way in, so it can’t be removed."
-            case .manualLinkingDisabled: return "Connecting Apple isn’t switched on yet."
+            case .invalidCredentials: return String(localized: "That email and password don’t match. Check both, or sign in with a code instead.")
+            case .otpExpired: return String(localized: "That code didn’t work. It may be mistyped, used already, or older than an hour — check it, or ask for a new one.")
+            case .overEmailSendRateLimit, .overRequestRateLimit: return String(localized: "Too many tries just now. Wait a minute, then try again.")
+            case .weakPassword: return String(localized: "That password is too short — use at least 6 characters.")
+            case .samePassword: return String(localized: "That’s already your password.")
+            case .validationFailed: return String(localized: "That doesn’t look like an email address.")
+            case .emailNotConfirmed: return String(localized: "Confirm your email first — use the code or link we sent.")
+            case .identityAlreadyExists: return String(localized: "That Apple ID already belongs to another Livhold account.")
+            case .singleIdentityNotDeletable: return String(localized: "This is your only way in, so it can’t be removed.")
+            case .manualLinkingDisabled: return String(localized: "Connecting Apple isn’t switched on yet.")
             default: break
             }
         }
-        if (error as? URLError) != nil { return "No connection. Check your internet and try again." }
-        return "Something went wrong signing in. Please try again in a moment."
+        if error is CancellationError { return nil }
+        if let url = error as? URLError {
+            switch url.code {
+            case .cancelled: return nil
+            case .timedOut:
+                return String(localized: "The connection is too slow to get through right now. Try again in a moment, or from Wi-Fi.")
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
+                return String(localized: "No connection. Livhold will sign you in once you’re back online — try again then.")
+            default:
+                return String(localized: "We couldn’t reach Livhold. Check your connection and try again.")
+            }
+        }
+        return String(localized: "Something went wrong signing in. Please try again in a moment.")
     }
 }

@@ -35,20 +35,10 @@ private struct RootView: View {
                 SignInView()
                     .transition(.opacity)
             case .signedIn:
-                // The gallery is the whole app until the first real screens land; it stays
-                // afterwards behind a debug entry point, like the web's /dev preview routes.
-                NavigationStack {
-                    GalleryView(appearance: $appearance)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                NavigationLink { AccountView() } label: {
-                                    Image(systemName: "person.crop.circle").accessibilityLabel("Account")
-                                }
-                            }
-                        }
-                        .toolbarBackground(Palette.canvas, for: .navigationBar)
-                }
-                .transition(.opacity)
+                // The design gallery now lives in Account → Design gallery, like the
+                // web's /dev preview routes.
+                AppShell()
+                    .transition(.opacity)
             }
         }
         .animation(.easeOut(duration: 0.25), value: auth.phase)
@@ -59,7 +49,13 @@ private struct RootView: View {
 enum Appearance: String, CaseIterable, Identifiable {
     case system, light, dark
     var id: Self { self }
-    var title: String { rawValue.capitalized }
+    var title: String {
+        switch self {
+        case .system: String(localized: "System")
+        case .light: String(localized: "Light")
+        case .dark: String(localized: "Dark")
+        }
+    }
 
     var colorScheme: ColorScheme? {
         switch self {

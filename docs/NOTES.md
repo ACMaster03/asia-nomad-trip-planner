@@ -151,6 +151,92 @@ livhold.com itself and the app to a subdomain, so this is built to survive both.
 - **iOS:** nothing. The form is on the web landing page; the app collects none of it, and the
   store labels (`APP-STORE-PRIVACY.md`, `PLAY-DATA-SAFETY.md`) say so.
 
+## 2026-09-29
+
+### DECIDED — Patrik, 29 Sep: everything on the phone; Where it goes by group; Trip settings (iOS build 18)
+
+- **Nothing sends people to the website.** Someone who finds the app in the App
+  Store shouldn't need to know livhold.com exists. The iOS copy that said "on
+  livhold.com" is gone (Trip, Money, rates). Still web-bound: the password-reset
+  link (it finishes on the web's Account page) and the sign-in notice for people
+  who already use the web.
+- **Where it goes, version I of mock round 2**: the ring, its reading and every row
+  are groups (families), so the share and the amount always match. Each row has a
+  second line naming its categories, biggest first. Hold and slide on the ring to
+  read a group, or tap to pick one. A row opens All entries on that group and the
+  same days (`fam:<group>:<from>:<to>`), so its total matches the card.
+- **Trip settings are editable on the phone**: name, start, end (optional), home,
+  budget cap. The currency is shown but unavailable until each expense keeps its
+  own day's rate (#129). Exchange rates say when they were refreshed ("Refreshed
+  today, 04:00" in the phone's time zone, from `fx_status.last_success_at`). A
+  currency can be added or swiped away there. Reached from Trip's gear, Money's
+  gear and Account. The old Settings → Money screen is gone.
+- **The phone reads the morning's rates** (`fx_rates`), like the web's
+  useTripScreen merge: every currency the journey has, at today's rate, falling
+  back to the stored one. Only shown, never written back.
+- **Account**: "This journey" (Trip settings) and "You" (Track spending,
+  appearance). The bigger settings overhaul is still to come.
+- **Between journeys** (mock F and G, both approved): a finished journey (today
+  after its end date; no end date means never finished, as in the web's recap.ts)
+  shows "Where next?", the recap above "Plan the next journey", and "Look back".
+  A journey with no stops offers "Add the first stop" or "Or start with the flight
+  there"; once that flight is saved, the stop form opens with its place filled in.
+- **New journeys are made on the phone**: the same row as the web's `createTrip`
+  and `makeNewTripState` (checked field for field on staging), with a fixed id so
+  a retry can't make two, and it becomes the active journey.
+- **A write that hits a dropped connection is sent once more.** On staging the
+  first write after ~40 s idle failed with -1005 (the VPN dropped the connection).
+  Cellular does the same, and iOS doesn't resend a POST. Every write is safe to
+  repeat. Tested: create, stop, settings, cap and end date, and a concurrent web
+  edit refusing a stale save. The retry path itself didn't trigger in the test run.
+
+### DECIDED — Patrik, 28–29 Sep: Money numbers and layout (iOS builds 13–14 and after)
+
+- **"Lands near" covers the whole journey** (option 1 of two). The days between the last
+  planned stop and the journey's end count at the daily pace plus the average night's stay of
+  the planned stops. How it adds up shows them as their own row ("138 days not planned yet ·
+  ≈ …") with a note saying how. Before this they counted nothing while subscriptions ran to the
+  end, so the cap ring compared ~8 months of cap with ~3 months of costs. The option not taken:
+  keep it to the plan and say "to 13 Dec". "A day less gets you there" divides over all days ahead.
+- **Journey card's second line: "+ X not paid yet"** = entries dated after today + booked
+  bookings with no entry yet, the same money Bookings calls "to pay". It was "scheduled, not
+  spent yet" (entries dated ahead only), which left out bookings that never reached the ledger.
+- **Bookings into the ledger from the phone too** (built 29 Sep, `ios/Livhold/Money/PlanSync.swift`,
+  a port of importCosts.ts planImports): after every fetch and every save, booked stays with a
+  charge date and booked legs with a price and a date get their row (the web's id,
+  `le-plan-<kind>-<id>`), changed ones follow, removed ones are flagged. Proven on staging: the
+  expected 5 writes out of 10 cases, unknown fields kept, a second open writes nothing, a
+  web-side price edit followed, and the web's own planImports run on the result finds nothing
+  to do (no ping-pong).
+- **Subscription charges from the phone too** (same file, subChargesDue) with the web's
+  one-time pill (`ChargeNotice.swift`, on Home and Money; seen charges remembered per device).
+  Proven on staging: 1 charge written out of 5 cases (covered by a hand-typed entry, added
+  after the date, cancelled, deleted once), "Cancelled it?" → removed, cancelled from that
+  date, listed in importSkip, unknown fields kept; the web's planImports finds nothing to do.
+- **Why Bookings said 718k while the top said 578k (Patrik's journey):** Bookings called a
+  booked leg "scheduled" by its **travel** date, while its entry is dated by its **charge**
+  date. A flight paid in September for December counted as spent in All entries and as
+  scheduled in Bookings. Fixed on iOS (a leg's date is `chargeDate || date`, like its entry);
+  **the web's BookingsCard/bookingsSummary has the same bug** and goes into the web PR.
+- **Layout (Patrik, 29 Sep):** Bookings is always open, total beside the title, no "to pay" in
+  the header. How it adds up says "Scheduled"; the planned nights and the days after the
+  plan are one line, "213 days ahead".
+- **No card on Money folds any more (Patrik, 29 Sep).** Subscriptions works like Latest: the
+  three that charge next, "N active · ≈ X a month", and "All subscriptions ›" zooming into a
+  page with all of them, the totals, the cancelled ones and + to add. Empty states: Bookings
+  "No stays or transport in the plan yet" (taps to Trip), Plan "No stops planned yet",
+  Subscriptions explains itself with an add button (viewers: "No subscriptions recorded yet").
+- **The web's side of these numbers is issue #127.**
+- **The web still has the old numbers** for both points; it follows in its own pull request.
+- **Layout:** Daily spend and Where it goes share one range; the legend always lists all seven
+  groups (missing ones dimmed); the box under the chart is one size (days at a glance, or the
+  picked day's three biggest spends + "N more"); Where it goes lists its top four, the rest
+  folded. Entry rows drop the category line (the icon says it); the second line is only the
+  day, the original charge and why it's there. Subscriptions sort by next charge; within a week
+  "in 4 days" replaces the date; "reminds 3 days before" is gone from the row; the bell answers
+  on tap. Patrik asked about the lead days on the bell; not built (a number on a bell reads as
+  unread notifications). "Add the next stop" left Plan; Stays/Transport cross-fade into Trip.
+
 ## 2026-09-28
 
 ### DECIDED — Patrik, 28 Sep: Home's wording as proposed, then localisation
@@ -414,6 +500,117 @@ These three stay as built:
   comes back.
 - **Search on All entries matches the category as well as the name** (#90). An entry with no
   name shows only its category.
+
+### DECIDED + BUILT — Patrik, 27 Sep evening: iOS rounds after build 9 (TestFlight 10–12)
+
+- **Money top card:** two tabs, the stop (its city; "This stop" over 12 letters) and Journey;
+  Today removed. Journey shows the cap as a ring on the right (spent solid, where it lands
+  pale, % spent in the middle); "beyond the everyday" only on Journey. The stop's bar has a
+  segment a night, "today" above, arrival/departure under it; "stay included" under its total.
+- **Daily spend:** hold then drag runs the callout day by day. **Menus** redraw at their new
+  width after a pick (they fade out instead of flowing back into the chip); All entries' chips
+  sit in a bar above the list.
+- **Subscriptions** are edited on the phone (form, bell, cancel/resume, delete), proven on
+  staging incl. a concurrent web edit; charges are still written by the web. **Bookings**
+  rows open the Trip tab. Notifications for them: later (Patrik).
+- **Languages:** English + Hungarian (Localizable.xcstrings, build 12). Hungarian was chosen
+  to test long words and because we can check its grammar. Open: transport types stored
+  as English words ("bus") show as typed; category matching in Hungarian uses the Hungarian
+  labels plus the English aliases; one flight title truncates with Hungarian dates.
+
+### DECIDED — Patrik, 27 Sep: Money on iOS (from mock round 1, artifact MWKt6NpVmvgHHpURmgpRMF)
+
+- **Tracking moves to Settings → Money** (switch, budget cap, base currency, rates). The page no
+  longer carries the switch or the **Budget cap row**; the cap is reached from the top card's bar.
+  The first-visit question stays (asked once, `profiles.track_spending`); off by default shows the
+  committed money plus an invitation at the bottom. Invitation copy stays generic.
+- **Kept as the web has it:** Latest (the door to the ledger), Daily spend (7/14/30/90, stacked by
+  family, average line, tap a bar), Where it goes (donut, sentence, table, everyday total), Plan by
+  stop with each row opening to its sum, plus an ⓘ explainer. Mauve card titles return.
+- **Top card:** large amounts rounded (1.33 M Ft); the bar carries no text of its own; "beyond the
+  everyday" becomes one line that opens All entries filtered. Which layout is open (mock round 2
+  shows four: A spent leads, B sentence, C ring, D today first).
+- **Every category gets its own colour**, a shade inside its family, on a solid icon tile.
+- **All entries** as mocked (filters, Coming up, swipe actions incl. Log again, source badges),
+  opened with a zoom and kept on the phone so it opens instantly.
+- Over-cap wording as a daily amount, amber, never red.
+- **Swift now:** Swift Charts, rolling numbers, swipe actions, pull to search. **Later:** quick add
+  and widget (#112), receipt scanning with line items (#110). Open questions as issues, not
+  blockers: count the days after the last planned stop (#111), an in & out card (#113).
+- The add-expense sheet is redrawn in round 2 (big amount, currency menu, top-4 category tiles,
+  system number pad).
+
+### DECIDED — Patrik, 27 Sep: Money round 2 comments, then "build it, holes as issues"
+
+- Top card still open (#114): iOS ships a **Today / Here / Journey** switch on the card
+  (Journey = mock version A) to try on the phone before one is picked.
+- "Lands near" is out of tone; kept for now, options in #115.
+- The daily-average switch is one row: "In the daily average". Activities uses binoculars
+  (outline), Convenience store a storefront. Bookings and Subscriptions keep plain titles.
+
+### BUILT — iOS: Money (branch feat/ios-foundation)
+
+- `ios/Livhold/Money/`: the web's maths ported one to one (`MoneyModel.swift`: burnRate,
+  tripPace, planByStop, bookingsSummary, projectFromPlan, beyondEveryday, unlocks, dailySpend,
+  spendByCategory), the category registry with a colour and SF Symbol per category
+  (`Categories.swift`), the page, All entries, the entry sheet and Settings → Money.
+- **Checked against the web's own code:** `moneyModel.ts` run under node on the iOS fixture gave
+  the phone's numbers exactly (spent 1 327 825, scheduled 433 840, 4 601 a day, projected
+  2 550 406, beyond 1 164 771, Bangkok 465 800, Hanoi 636 269, Da Nang 375 000).
+- **Writes, checked on staging with a throwaway trip (deleted, and the account's
+  `track_spending` put back to null):** the question and the Settings switch write
+  `profiles.track_spending`; an entry goes through `ledger_upsert_entry` in the web's shape
+  (`le` + uuid, "150,5" read as 150.5, no `everyday` unless it differs); an edit keeps fields the
+  phone doesn't know; a web entry written meanwhile survives the phone's write and shows at
+  once (the phone refetches when the rev jumped); deleting a booking's entry writes
+  `importSkip: ["stay:<id>"]` through `write_state` first, and a stale copy is refused with the
+  conflict message, reloaded, and the retry succeeds; the cap saves with every other `meta`
+  field kept.
+- **Not on the phone yet (the web does them):** subscription charges that add themselves and
+  booking imports (usePlanSync; the phone only reads them), writing `moneyUnlocked`, the
+  Subscriptions "Repeats" block and the "Cancelled it?" notice, editing rates. The phone uses
+  the local date for "today"; the web uses UTC (`useToday.ts`), which differs from midnight
+  to 7 am in Bangkok: open for the web.
+
+### DECIDED — Patrik, 27 Sep: editing the Trip on iOS, and the rows after the last stop
+
+From the mock "Trip editing on iOS" (artifact QdrtgiADdvE6LbFALdaoZS), approved from his phone.
+
+- **Look first, then edit (Apple Calendar's model).** The stop page is where you look. **Edit**
+  in its corner and every stay or transport row open a form sheet with **Cancel** and **Save**;
+  an amber row ("No bed …", "No transport yet") opens Add with its dates filled in. A long press
+  on a timeline card gives quick actions (Edit stop, Add stay, Add transport, Leave out of the
+  plan, Delete). Reason: an iPhone sheet without Save commits on a swipe, easy to do by accident.
+  The web keeps tap-to-edit for now; moving it to Cancel/Save is open.
+- **Dates:** one row that opens an inline calendar in Apple's style; pick Arrive or Leave, tap a day.
+- **The rows after the last stop (mock options C and D).** While the last stop leaves before the
+  journey's end date, the way on reads **"Onward"** and the end **"Journey ends · 30 Apr"**
+  (Patrik: as nomads it speaks to the user; Hong Kong is the last known stop with about five
+  months to go). Once a stop reaches the end date it turns into **"Going home"** and
+  **"Home · 30 Apr"**. No end date: it stays onward. The end date stays in Trip settings, needed
+  for the estimate. The web still says "Home · not planned yet" / "Home again"; iOS only so far.
+- The other wording is to be reviewed before release.
+
+### BUILT — iOS: the Trip can be edited (branch feat/ios-foundation, TestFlight build 6)
+
+- Stop (dates, comfort, in the plan, note; Add stop with city and country), stay and transport
+  forms with the web's fields, defaults and save rules (StopSheet/StaySheet/LegSheet,
+  `Timeline.tsx` saveStop/saveStay/saveLeg). Moving a stop's Leave moves the leg after it, as on
+  the web (`shiftDepartures`).
+- **Saves go through `write_state` with the trip's `state_rev`**, like the web. The phone edits
+  the stored document field by field (`ios/Livhold/Trip/JSONValue.swift`), so fields it doesn't
+  know (reminders, subscriptions, extras, weather, …) are sent back untouched.
+- A conflict shows the web's message, loads the latest copy and keeps the sheet open; tapping
+  Save again saves on top. Viewers get no edit controls (owner or `trip_members.role =
+  'editor'`, failing open like `useTripRole`).
+- **Checked on staging with a throwaway trip, deleted afterwards:** an added flight landed with
+  the web's exact shape; rev 0 → 1; an unknown `reminders` entry and a stop's `weather` survived.
+  A simulated web edit (rev → 2) made the next phone save refuse with the conflict message; the
+  retry saved (rev 3) and kept the web's note.
+- Also in this round (builds 4–5): the timeline reads the real journey; lines only between stay
+  rows; payment lines moved to the stop page; a future charge reads "will be charged on …"
+  (the web still says "card charged on …" for a future date, open); a stay name that starts with
+  its city drops the city.
 
 ## 2026-09-26 (4)
 

@@ -3,7 +3,7 @@ import SwiftUI
 /// Text input. Web: `rounded-[22px] border-[1.5px] border-ln2 bg-sf/90 px-4 py-3.5`, and on focus
 /// `border-ac shadow-[0_0_0_4px_var(--acSoft)]` over 180ms.
 struct Field: View {
-    let placeholder: String
+    let placeholder: LocalizedStringKey
     @Binding var text: String
     /// Dots instead of text — for passwords. Content type and keyboard come from the
     /// caller (`.textContentType(.password)`), which reach the field through the environment.

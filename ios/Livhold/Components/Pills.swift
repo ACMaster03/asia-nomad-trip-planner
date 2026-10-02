@@ -3,7 +3,7 @@ import SwiftUI
 /// Choice chip. Web: `rounded-full border-[1.4px] border-ln3 px-3 py-1.5 text-base font-medium text-tx2`;
 /// selected: `border-ac bg-ac-soft`.
 struct Chip: View {
-    let title: String
+    let title: LocalizedStringKey
     var selected = false
     var action: () -> Void = {}
 
@@ -24,7 +24,7 @@ struct Chip: View {
 
 /// Label pill. Web: `rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink`.
 struct TagPill: View {
-    let title: String
+    let title: LocalizedStringKey
 
     var body: some View {
         Text(title)
@@ -39,7 +39,7 @@ struct TagPill: View {
 
 /// Small filled count. Web: `h-8 rounded-full bg-fill px-2.5 text-[13px] font-semibold text-tx2`.
 struct FillPill: View {
-    let title: String
+    let title: LocalizedStringKey
     var systemImage: String?
 
     var body: some View {
