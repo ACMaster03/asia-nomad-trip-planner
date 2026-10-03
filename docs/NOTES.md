@@ -7,6 +7,16 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
+### IN REVIEW — a signed-in device is forgotten after 90 days idle (#101, remade; Patrik, 3 Oct)
+
+What #101 had left after #158: migration 42 (`purge_idle_sessions()` plus the nightly cron job
+`purge-idle-sessions` at 03:17 UTC, deleting `auth.sessions` rows unused for 90 days; the Auth
+setting is Pro-only), the sentence on `/privacy`, and the sessions paragraph in both store docs.
+42 is on staging since 26 Sep (job active, checked 3 Oct). Production: Patrik runs
+`tools/db.sh --prod apply 42`, then `tools/db.sh --prod test 42`. #101 closed as superseded.
+
+iOS: an iPhone left unopened for 90 days is signed out and signs in again; nothing to build.
+
 ### IN REVIEW — the legal pages finished (#5, #123; Patrik, 3 Oct)
 
 Patrik: be done with the legal pages; #5 and #123 done, #128 if it can be. Decided in the chat:

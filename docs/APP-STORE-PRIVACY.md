@@ -43,7 +43,7 @@ Diagnostics (crash, performance, other) · Sensitive Info · Surroundings · Bod
 
 | Where | What it holds | Label impact |
 |---|---|---|
-| `auth.sessions` (Supabase Auth, built in) | **IP address and user-agent** of every signed-in session. No `timebox`/`inactivity_timeout` in `config.toml`, so a row lives until sign-out or account deletion (staging's oldest: 2026-07-22). | IP is location at city level at best → covered by **Coarse Location**; purpose App Functionality (Apple counts security and fraud prevention there). |
+| `auth.sessions` (Supabase Auth, built in) | **IP address and user-agent** of every signed-in session. Migration 42's nightly `purge-idle-sessions` deletes a row after 90 days without use (the Auth setting for it is Pro-only); otherwise it lives until sign-out or account deletion. | IP is location at city level at best → covered by **Coarse Location**; purpose App Functionality (Apple counts security and fraud prevention there). |
 | `auth.audit_log_entries` | empty — audit events are not written to the database | none |
 | `alert_log`, digest `confirm_sent_at` / `last_sent_at` | what the service sent, to which address, when (dedupe) | none beyond Email Address |
 | Supabase / Vercel platform logs | request logs with IP, short retention, operations only | none (not analysed per user) |

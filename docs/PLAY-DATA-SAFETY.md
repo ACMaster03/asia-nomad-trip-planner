@@ -71,6 +71,15 @@ path, or uploads a `File` straight to storage without going through that
 function, **this form becomes a false declaration** and Location starts being
 collected. Treat that function as a compliance boundary, not just a resizer.
 
+### Sign-in sessions and logs
+
+`auth.sessions` (Supabase Auth, built in) stores the **IP address and user-agent** of every
+signed-in device. Migration 42 deletes a session after 90 days without use (nightly
+`purge-idle-sessions`, 03:17 UTC), which is the number `/privacy` states; the Auth setting that
+would do the same is Pro-only. Platform request logs (Supabase, Vercel) are short-lived and
+operational. None of this adds a data type: an IP is at most approximate location, already
+declared.
+
 ## Security and handling
 
 | Question | Answer | Evidence |
