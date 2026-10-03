@@ -135,9 +135,9 @@ export default function PrivacyPage() {
           that you&apos;re happy to have a 20-minute call.
         </p>
         <p>
-          We use this for three things only: to email you when Livhold opens to everyone, to
-          understand how people plan long trips, and, only if you ticked the box, to get in touch
-          about a call. We don&apos;t use it for advertising, we don&apos;t sell it, and we
+          We use this for three things only: to email you updates on how Livhold is developing
+          and what each next phase brings, including when it opens; to understand how people plan
+          long trips; and, only if you ticked the box, to get in touch about a call. We don&apos;t use it for advertising, we don&apos;t sell it, and we
           don&apos;t add you to anything else.
         </p>
         <p>
@@ -221,7 +221,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <b className="font-semibold text-tx">For the list on journey.livhold.com</b>: Supabase
-            stores the form answers. The email when Livhold opens goes out through <LegalValue value={LEGAL.listEmailTool} />,
+            stores the form answers. The update emails go out through <LegalValue value={LEGAL.listEmailTool} />,
             like our other emails. If you ticked the call box, we write to you ourselves, from
             our <LegalValue value={LEGAL.mailbox} /> mailbox, to find a time; there is no booking
             tool. The call runs on <LegalValue value={LEGAL.callTool} />.

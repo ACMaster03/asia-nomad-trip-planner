@@ -30,8 +30,15 @@ The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`
   (`/login`) for people who already have an account. No "Start using Livhold" after the form:
   each sign-up gets a hand-written reply (the interview invitation). When the landing page
   sends people straight to the app again is open: Patrik leans to after 30 Nov, not 31 Oct.
-  Open for round two: the wording, and an email-updates line (the consent today covers one
-  email, when Livhold opens, plus the call if ticked).
+- **Patrik, same day: the list is for updates, not one launch email.** The small print now
+  reads that we use the email for updates on how Livhold is developing and each next phase,
+  including when it opens (call only if ticked); `consent_text_version` is `2026-10-03`, and
+  `/privacy`'s list section says the same. The form says "once Livhold opens at the end of
+  October", no longer "to everyone" (public or a beta for the list stays open). The header
+  button is "Start your journey" to the form, not "Sign in": sign-in is open, so it would
+  let anyone in. **25 Oct, the Sunday review:** when the landing page sends people straight
+  to the app (Patrik leans to after 30 Nov; the press pitches of 2 Nov pull the other way).
+  Round two: Patrik's wording, and "Not packing yet?" now greets everyone.
 - **Checked before the DNS move:** `livhold.com` is on Vercel DNS; `journey` is a CNAME to
   `custom-domains.chatgpt.site` with a 60-second TTL; Vercel already holds a `*.livhold.com`
   certificate, so the move opens no certificate gap. The app is served at the apex

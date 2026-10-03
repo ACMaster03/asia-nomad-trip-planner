@@ -81,5 +81,9 @@ page's CSS needs:
 
 ## If the small print under the button changes
 
-Bump `consent_text_version` in the preview's script (today `"2026-10-01"`) and
+Bump `consent_text_version` in the preview's script (today `"2026-10-03"`) and
 re-run the generator, so each row records which wording the person agreed to.
+- `2026-10-01`: one email when Livhold opens, and a call only if ticked. No row was ever
+  stored under it but Patrik's own test (3 Oct, deleted).
+- `2026-10-03` (Patrik): updates on how Livhold is developing and each next phase,
+  including the opening, and a call only if ticked. `/privacy` says the same.

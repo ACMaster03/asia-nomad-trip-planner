@@ -57,7 +57,9 @@ export const LEGAL = {
    * 2 Oct 2026: the automated email when Livhold opens goes through Resend,
    * already a processor here (a hand-written round from the mailbox instead,
    * if the list is small); a call is arranged by ordinary email from our own
-   * mailbox, no booking tool, and runs on Google Meet. `mailbox` is the one
+   * mailbox, no booking tool, and runs on Google Meet. 3 Oct 2026 (Patrik): the
+   * list's email is no longer one launch email but updates on the development
+   * and its phases, including the opening (consent_text_version 2026-10-03). `mailbox` is the one
    * of the three nobody has read off a bill: the brief says keepyourhabits.com
    * is on Google Workspace; change it here if that is wrong.
    */
