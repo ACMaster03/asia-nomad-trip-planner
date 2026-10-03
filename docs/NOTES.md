@@ -7,6 +7,38 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### DECIDED — the policy states how we will operate, not how we operate today (Patrik, 2 Oct)
+
+Patrik on the five statements of #151: "write the privacy policy that is enough and is good,
+cover ourselves, but not weeks developing features for it." One wording pull request on
+`/privacy`, and each promise it makes gets an issue that must land before people see the site:
+- **Sign-in sessions** keep the connection address and the user agent (`auth.sessions`), and
+  the providers keep short-lived request logs: now said under "Your account". The warning in
+  `docs/APP-STORE-PRIVACY.md` is replaced by the same sentence.
+- **Reminder emails** (stay deadlines, subscription charges) are named as part of the
+  service, "you can switch them off in your notification settings". That switch is #150,
+  high priority, before launch; "nothing is sent until someone switches it on" now covers
+  only push and the follower digests, which is what the code does.
+- **Unsubscribe** stops the emails at once and the address stays as a "do not email" note
+  (migration 17's soft delete), deleted too on request. The page no longer says "deletes the
+  record".
+- **Export** is not built and not promised (#152 closed, not planned): a copy of your data,
+  trip and money entries as files, comes by writing to privacy@keepyourhabits.com, answered
+  within one month, by hand. Patrik: "if there are more requests than we think, we add the
+  outlet."
+- **Fact check, invitations:** not emailed. Nothing in the app or the functions sends an
+  invite email: `createInvite` writes a row (migration 25), and `pending_invites()` /
+  `accept_invite()` match the signed-in email, so the invited person sees the trip the next
+  time they sign in; follow links (28) are copied and shared by the traveller. The Resend
+  line now reads "sign-in links, the follower digests and reminders about your own bookings".
+- **Account deletion** stays "a real erasure rather than a request that goes into a queue"
+  (the code does that: `purgeTripMedia`, then the rows). A 30-day grace period was mused, not
+  decided; nothing changes until it is.
+
+iOS: the policy promises every reminder email and notification is switchable per person.
+The iOS app is building its notification switches now (Patrik, 2 Oct); the web follows in
+#150. Nothing else in this entry changes app behaviour.
+
 ### CHECKED — /privacy against the code, claim by claim (Patrik's ask, 2 Oct): five issues
 
 Patrik, closing the round: "do another check on anything that we may have not complied to

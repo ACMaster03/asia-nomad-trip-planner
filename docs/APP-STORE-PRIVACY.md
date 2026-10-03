@@ -44,8 +44,9 @@ Diagnostics (crash, performance, other) · Sensitive Info · Surroundings · Bod
 | `alert_log`, digest `confirm_sent_at` / `last_sent_at` | what the service sent, to which address, when (dedupe) | none beyond Email Address |
 | Supabase / Vercel platform logs | request logs with IP, short retention, operations only | none (not analysed per user) |
 
-⚠ **`/privacy` does not mention IP addresses, sessions or logs at all.** Under GDPR an IP
-address is personal data, so the policy needs a line on it regardless of the store labels.
+Since 2 Oct 2026 `/privacy` names them, under "Your account": the connection address and the
+kind of browser or app, kept while signed in, plus the providers' short-lived request logs. Under
+GDPR an IP address is personal data, so the line is needed regardless of the store labels.
 
 ## What would make these answers false on iOS
 
