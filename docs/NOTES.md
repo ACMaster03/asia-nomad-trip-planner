@@ -7,6 +7,17 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
+### DECIDED — Patrik, 3 Oct: the app moves to app.livhold.com, the landing page takes livhold.com
+
+One repository, a folder and a Vercel project each: `landing/` serves livhold.com (and the blog
+later, in the same project), `product/` serves app.livhold.com (and is the origin the Android
+TWA will wrap), `ios/` is unchanged apart from its web address. journey.livhold.com redirects to
+livhold.com. Why now: a TWA is tied to one origin, and none is built yet. The five users sign in
+again and reinstall; Patrik accepts that. Done from Patrik's machine; the brief, order of work,
+risks and test list are in `docs/APP-MOVE-BRIEF.md`.
+- **iOS:** `ios/Livhold/Auth/Backend.swift`, `production.web` becomes `https://app.livhold.com`
+  when the move lands (where a password reset opens); not before.
+
 ### BUILT — journey.livhold.com moves to this repository (`landing/`), waiting on Patrik
 
 Petra, 3 Oct: the landing page on ChatGPT's hosting (`chatgpt.site`, behind Cloudflare)

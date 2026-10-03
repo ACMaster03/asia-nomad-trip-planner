@@ -125,6 +125,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Vietnam VPN). Petra's site is in `landing/` (its README), with the list form written in by
   `tools/landing-form.mjs`, so nothing is pasted by hand any more. Waiting on Patrik: a
   Vercel project with Root Directory `landing`, then the `journey` DNS record moved to it.
+  Patrik decided the same day: the app moves to app.livhold.com and the landing page (blog
+  later) takes livhold.com, one repository, a Vercel project per folder. Done from his
+  machine, before any Android TWA work: `docs/APP-MOVE-BRIEF.md`.
 - 2 Oct, with Petra on livhold.com/privacy: the spaces (#137), the wash pinned to the screen
   (#138) and Safari's missing space before a bold word (#139, `tabular-nums` on `body`) are
   live, and the wash holds still on the iPhone (#143). Patrik: fix the Safari one on every
