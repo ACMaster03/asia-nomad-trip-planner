@@ -84,6 +84,6 @@ footer{display:grid;grid-template-columns:minmax(220px,1fr) auto;grid-template-a
 
 /* Give the footer room to reflow before its columns get cramped. */
 @media(max-width:900px){footer{grid-template-columns:1fr;grid-template-areas:"brand" "links" "legal";align-items:start;justify-items:start;text-align:left}.footer-links{justify-content:flex-start;flex-wrap:wrap;gap:8px 24px}.footer-legal{flex-wrap:wrap;justify-content:flex-start;gap:4px 20px}}
-.hero-later{display:table;margin-top:16px;font-size:14px;color:#f5f2eae0;text-decoration:underline;text-decoration-color:#f5f2ea66;text-underline-offset:5px;min-height:44px;line-height:44px}.hero-later:hover{color:#fff;text-decoration-color:#fff}
+
 .closing-form{margin-top:64px}.closing-form,.closing-form *{text-shadow:none}
-@media(max-width:650px){.hero-later{font-size:13px;margin-top:8px}.closing-form{margin-top:48px}}
+@media(max-width:650px){.closing-form{margin-top:48px}}

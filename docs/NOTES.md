@@ -7,6 +7,48 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
+### IN PROGRESS — app.livhold.com, step 1: the `landing` Vercel project (#163)
+
+The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`).
+- **Done, 3 Oct:** Vercel project `landing` (`prj_1QkkNcCb7GWA2SKcvzBGojgPEN8M`), linked to this
+  repository, Root Directory `landing`, production branch `main`. The first build (e2d4895, #162)
+  is READY at `landing-eight-mu-61.vercel.app`, which opens without a Vercel login (the longer
+  per-deployment addresses ask for one). Checked at 375 px: every file comes from the site
+  itself, no console errors, no sideways scroll; the links still point at `livhold.com`
+  (`/dashboard`, `/privacy`, `/terms`) and the canonical at `journey.livhold.com`, which is right
+  until step 5. The form works from there: Patrik sent one at 05:29 UTC, the app answered 204,
+  and the row (source `direct`) was in production's `journey_signups`; he deleted it the same
+  minute by `tools/db.sh --prod sql`, one row.
+- **Petra's first look, through Patrik (3 Oct):** "Leaving later? Tell us when" was too quiet;
+  its underline and arrow are now the page's mauve (`#de9ba7`, as "held together."). On the
+  phone, "Available on the web · iOS & Android coming soon" sat on top of "Scroll into your next
+  chapter"; the hero line is gone (Patrik: iOS is on its way, Android does not matter now). The
+  closing section's "Open the web app · iOS & Android coming soon" went with the next change.
+- **Patrik, same day: the form is the one call to action until the app opens.** "Start your
+  journey" scrolls to the form; "Leaving later? Tell us when", the closing "Start using Livhold"
+  button and its availability line are gone; the header button is a small "Sign in"
+  (`/login`) for people who already have an account. No "Start using Livhold" after the form:
+  each sign-up gets a hand-written reply (the interview invitation). When the landing page
+  sends people straight to the app again is open: Patrik leans to after 30 Nov, not 31 Oct.
+- **Patrik, same day: the list is for updates, not one launch email.** The small print now
+  reads that we use the email for updates on how Livhold is developing and each next phase,
+  including when it opens (call only if ticked); `consent_text_version` is `2026-10-03`, and
+  `/privacy`'s list section says the same. The form says "once Livhold opens at the end of
+  October", no longer "to everyone" (public or a beta for the list stays open). The header
+  button is "Start your journey" to the form, not "Sign in": sign-in is open, so it would
+  let anyone in. **25 Oct, the Sunday review:** when the landing page sends people straight
+  to the app (Patrik leans to after 30 Nov; the press pitches of 2 Nov pull the other way).
+  Round two: Patrik's wording, and "Not packing yet?" now greets everyone.
+- **Checked before the DNS move:** `livhold.com` is on Vercel DNS; `journey` is a CNAME to
+  `custom-domains.chatgpt.site` with a 60-second TTL; Vercel already holds a `*.livhold.com`
+  certificate, so the move opens no certificate gap. The app is served at the apex
+  (`www` 308s to `livhold.com`), as the brief says.
+- **Next:** Petra checks the preview on her phone and laptop (a real form submission there
+  writes a real row to production's `journey_signups`). Then, on Patrik's "go": add
+  `journey.livhold.com` to `landing` and delete the `journey` CNAME. Rollback: recreate the
+  CNAME `journey → custom-domains.chatgpt.site`.
+- **iOS:** nothing; `ios/` does not use journey.livhold.com.
+
 ### DECIDED — Patrik, 3 Oct: the app moves to app.livhold.com, the landing page takes livhold.com
 
 One repository, a folder and a Vercel project each: `landing/` serves livhold.com (and the blog
