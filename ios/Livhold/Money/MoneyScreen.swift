@@ -1175,7 +1175,10 @@ struct FlowLayout: Layout {
             line = max(line, size.height)
             widest = max(widest, x - spacing)
         }
-        return CGSize(width: min(widest, width), height: y + line)
+        // The full width when there is one: placed in a narrower box (the widest line),
+        // the items wrapped onto a line this height didn't count and ran into what's
+        // below (Patrik, 3 Oct: the legend over the day panel).
+        return CGSize(width: width.isFinite ? width : widest, height: y + line)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
