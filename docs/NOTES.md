@@ -23,7 +23,15 @@ The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`
   its underline and arrow are now the page's mauve (`#de9ba7`, as "held together."). On the
   phone, "Available on the web · iOS & Android coming soon" sat on top of "Scroll into your next
   chapter"; the hero line is gone (Patrik: iOS is on its way, Android does not matter now). The
-  closing section's "Open the web app · iOS & Android coming soon" stays until Patrik says.
+  closing section's "Open the web app · iOS & Android coming soon" went with the next change.
+- **Patrik, same day: the form is the one call to action until the app opens.** "Start your
+  journey" scrolls to the form; "Leaving later? Tell us when", the closing "Start using Livhold"
+  button and its availability line are gone; the header button is a small "Sign in"
+  (`/login`) for people who already have an account. No "Start using Livhold" after the form:
+  each sign-up gets a hand-written reply (the interview invitation). When the landing page
+  sends people straight to the app again is open: Patrik leans to after 30 Nov, not 31 Oct.
+  Open for round two: the wording, and an email-updates line (the consent today covers one
+  email, when Livhold opens, plus the call if ticked).
 - **Checked before the DNS move:** `livhold.com` is on Vercel DNS; `journey` is a CNAME to
   `custom-domains.chatgpt.site` with a 60-second TTL; Vercel already holds a `*.livhold.com`
   certificate, so the move opens no certificate gap. The app is served at the apex
