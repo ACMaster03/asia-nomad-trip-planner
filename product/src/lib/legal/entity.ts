@@ -23,7 +23,7 @@ export const LEGAL = {
    * Play requires a working contact route, and a GDPR request arriving here
    * starts a one-month clock whether or not anyone is looking.
    */
-  contactEmail: 'privacy@keepyourhabits.com',
+  contactEmail: 'support@keepyourhabits.com',
   /**
    * Law governing the Terms. KeepYourHabits Ltd is London-based, and England &
    * Wales is the legal system covering London — confirmed with the owner
@@ -49,7 +49,7 @@ export const LEGAL = {
    */
   euRepresentative: 'Patrik Grohmann',
   euRepresentativeAddress: 'Őzgida utca 16-20, 1025 Budapest, Hungary',
-  euRepresentativeEmail: 'privacy@keepyourhabits.com',
+  euRepresentativeEmail: 'support@keepyourhabits.com',
 
   /**
    * The list on journey.livhold.com (migration 44, docs/landing-form): how the
