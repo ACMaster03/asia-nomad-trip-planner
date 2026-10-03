@@ -121,13 +121,26 @@ Petra is new to software work; Patrik is not. The product conventions are in
   staging and production since 2 Oct (Petra, guided in the chat). Next: Patrik pastes the form
   (`docs/landing-form/README.md`), then one real submission. The policy is English only until
   #119.
+- 3 Oct: journey.livhold.com leaves ChatGPT's hosting (Cloudflare there blocked Petra on a
+  Vietnam VPN). Petra's site is in `landing/` (its README), with the list form written in by
+  `tools/landing-form.mjs`, so nothing is pasted by hand any more. Waiting on Patrik: a
+  Vercel project with Root Directory `landing`, then the `journey` DNS record moved to it.
+  Patrik decided the same day: the app moves to app.livhold.com and the landing page (blog
+  later) takes livhold.com, one repository, a Vercel project per folder. Done from his
+  machine, before any Android TWA work: `docs/APP-MOVE-BRIEF.md`.
 - 2 Oct, with Petra on livhold.com/privacy: the spaces (#137), the wash pinned to the screen
   (#138) and Safari's missing space before a bold word (#139, `tabular-nums` on `body`) are
   live, and the wash holds still on the iPhone (#143). Patrik: fix the Safari one on every
   screen, issue #140, next after the form's paste. The round closed with `/privacy` checked
-  claim by claim against the code: five statements the code does not keep are #151 (the
-  wording, with replacement sentences), #152 (no export exists) and #150 (no switch for the
-  reminder emails); #5 stays open for Article 27 alone.
+  claim by claim against the code: five statements the code does not keep were #151 (the
+  wording), #152 (no export exists) and #150 (no switch for the reminder emails); #5 stays
+  open for Article 27 alone. Patrik decided the same day: the policy states how Livhold will
+  operate, and each promise gets an issue that lands before launch, never weeks of features.
+  The wording went out as one pull request (sessions keep IP and user agent; reminders are
+  part of the service, switchable in settings, which is #150, high priority; unsubscribe
+  keeps a "do not email" note; a copy of your data comes by email to privacy@, by hand, so
+  #152 is closed; invitations are not emailed, they are rows matched at sign-in). It is live
+  since 2 Oct (#155, Patrik's "go"); the once-more pass before the public release is #156.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.

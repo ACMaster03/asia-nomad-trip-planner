@@ -1,66 +1,49 @@
-<!doctype html>
-<html lang="en">
-<head>
+<!doctype html><html lang="en"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Livhold · Journey form (preview)</title>
-<!-- Preview only: the landing page already loads Lora + Work Sans -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Work+Sans:wght@400;500;600;650&display=swap">
-<style>
-  /* ---------- PREVIEW ONLY: a stand-in for the landing page around the form ---------- */
-  body { margin: 0; background: #121a18; color: #f5f2ea; font: 16px/1.6 "Work Sans", sans-serif; }
-  .pv-bar { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; padding: 10px 16px; background: rgba(7,19,17,.92); border-bottom: 1px solid rgba(245,242,234,.12); font-size: 13px; }
-  .pv-bar span { color: rgba(245,242,234,.6); }
-  .pv-bar button { font: inherit; font-weight: 600; color: #f5f2ea; background: transparent; border: 1px solid rgba(245,242,234,.25); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
-  .pv-bar button[aria-pressed="true"] { background: #3f5a3e; border-color: #3f5a3e; }
-  .pv-hero, .pv-mid, .pv-closing { padding: 88px 20px; text-align: center; }
-  .pv-hero h1 { font: 400 clamp(38px, 7vw, 60px)/1.07 Lora, Georgia, serif; letter-spacing: -0.065em; margin: 0 0 16px; }
-  .pv-hero h1 em, .pv-closing h2 em { color: #de9ba7; }
-  .pv-hero p, .pv-closing p { color: rgba(245,242,234,.72); max-width: 44ch; margin: 0 auto 28px; }
-  .pv-btn { display: inline-block; font-size: 15px; font-weight: 650; color: #f5f2ea; text-decoration: none; border-radius: 999px; padding: 14px 27px; background: linear-gradient(155deg, #4b6948 0%, #3f5a3e 52%, #2e4933 100%); box-shadow: rgba(2,9,6,.44) 0 18px 34px, rgba(23,45,30,.45) 0 -3px 7px inset; }
-  .pv-later { display: block; margin-top: 18px; font-size: 14px; color: #f5f2ea; text-decoration: underline; text-decoration-color: #de9ba7; text-underline-offset: 4px; background: none; border: 0; font-family: inherit; cursor: pointer; margin-inline: auto; }
-  .pv-mid { color: rgba(245,242,234,.35); font-size: 14px; min-height: 40vh; display: grid; place-items: center; border-block: 1px dashed rgba(245,242,234,.1); }
-  .pv-closing { background: #111b18; padding-bottom: 40px; }
-  .pv-closing h2 { font: 400 clamp(32px, 6vw, 44px)/1.13 Lora, Georgia, serif; letter-spacing: -0.057em; margin: 0 0 14px; }
-  .pv-small { font-size: 13px; color: rgba(245,242,234,.55); margin-top: 14px; }
-  .pv-closing-wrap { background: #111b18; padding: 0 16px 96px; }
-  .pv-dialog { border: 0; padding: 0; background: transparent; max-width: 680px; width: calc(100% - 24px); max-height: calc(100dvh - 32px); }
-  .pv-dialog::backdrop { background: rgba(7,19,17,.72); backdrop-filter: blur(3px); }
-  .pv-close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(31,42,36,.08); color: #1f2a24; font-size: 20px; line-height: 1; cursor: pointer; }
-  .pv-dialog .lh-form { margin: 0; }
-</style>
-</head>
-<body>
-
-<div class="pv-bar" role="group" aria-label="Preview a state">
-  <span>Preview a state:</span>
-  <button type="button" data-pv="">Empty form</button>
-  <button type="button" data-pv="missing">Answers missing</button>
-  <button type="button" data-pv="failed">Sending failed</button>
-  <button type="button" data-pv="sent">Sent</button>
-  <button type="button" data-pv="sentcall">Sent, call ticked</button>
-</div>
-
-<header class="pv-hero">
-  <h1>Life on the move,<br><em>held together.</em></h1>
-  <p>A month here. A new chapter there. One place for your plans, your money, and the people along for the journey.</p>
-  <a class="pv-btn" href="#">Start your journey</a>
-  <button type="button" class="pv-later" data-open-form>Leaving later? Tell us when →</button>
-</header>
-
-<div class="pv-mid">(the six feature sections of the landing page)</div>
-
-<section class="pv-closing">
-  <p class="pv-small" style="letter-spacing:2.8px;text-transform:uppercase;margin:0 auto 14px">Made for longer journeys. And the life in between.</p>
-  <h2>Where will you<br><em>feel at home next?</em></h2>
-  <p>Livhold began with a plan to travel through Asia while working online. Now it’s here for your journey, too.</p>
-  <a class="pv-btn" href="#">Start using Livhold</a>
-  <p class="pv-small">Open the web app · iOS &amp; Android coming soon</p>
-</section>
-
-<div class="pv-closing-wrap" id="pv-slot">
-
-<!-- ===================== COPY FROM HERE ===================== -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#3f5a3e">
+<meta name="color-scheme" content="dark">
+<title>Livhold — Plan Longer Trips Together</title>
+<meta name="description" content="Plan longer trips together with Livhold. Organize stays, transport and budgets, share updates with loved ones, and explore what comes next.">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<link rel="canonical" href="https://journey.livhold.com/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Livhold">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://journey.livhold.com/">
+<meta property="og:title" content="Livhold — Plan Longer Trips Together">
+<meta property="og:description" content="Organize stays, transport and budgets, share the journey with your people, and explore what comes next.">
+<meta property="og:image" content="https://journey.livhold.com/og-card.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Livhold — Life on the move, held together">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Livhold — Plan Longer Trips Together">
+<meta name="twitter:description" content="Organize stays, transport and budgets, share the journey with your people, and explore what comes next.">
+<meta name="twitter:image" content="https://journey.livhold.com/og-card.jpg">
+<meta name="twitter:image:alt" content="Livhold — Life on the move, held together">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://journey.livhold.com/#organization","name":"Livhold","url":"https://livhold.com/","logo":"https://journey.livhold.com/icon-512.png"},{"@type":"WebSite","@id":"https://journey.livhold.com/#website","url":"https://journey.livhold.com/","name":"Livhold","description":"Plan longer trips together, understand your spending, and keep the people you love close to the journey.","publisher":{"@id":"https://journey.livhold.com/#organization"}},{"@type":"SoftwareApplication","name":"Livhold","url":"https://livhold.com/dashboard","applicationCategory":"TravelApplication","operatingSystem":"Web","description":"A shared planning space for longer trips, stays, transport, budgets, check-ins and destination discovery."}]}</script>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="style.css?v=18">
+</head><body>
+<a class="skip" href="#story">Skip to the story</a>
+<header><a class="brand" href="#top" aria-label="Livhold home"><img src="assets/logo.png" alt=""><span>livhold</span></a><nav aria-label="Main navigation"><a class="button small" href="https://livhold.com/dashboard">Start using Livhold</a></nav></header>
+<main id="top"><section class="hero"><div class="hero-image" aria-hidden="true"><div class="hero-photo hero-misty-hill is-active"></div><div class="hero-photo hero-highlands"></div><div class="hero-photo hero-sunset-coast"></div><div class="hero-photo hero-city-night"></div></div><div class="hero-shade"></div><div class="hero-content"><p class="eyebrow">FOR THE PLACES YOU CALL HOME. FOR A WHILE.</p><h1>Life on the move,<br><em>held together.</em></h1><p class="intro">A month here. A new chapter there.<br>One place for your plans, your money,<br>and the people along for the journey.</p><a class="button hero-cta" href="https://livhold.com/dashboard">Start your journey</a><a class="hero-later" href="#tell-us">Leaving later? Tell us when →</a><p class="availability">Available on the web · iOS & Android coming soon</p></div><a class="scroll-cue" href="#story"><span class="scroll-line"></span>SCROLL INTO YOUR NEXT CHAPTER</a></section>
+<section id="story" class="journey"><div class="stage" aria-hidden="true"><div class="scene scene-morning"></div><div class="scene scene-day"></div><div class="scene scene-sunset"></div><div class="scene scene-night"></div><div class="scene scene-together"></div><div class="scene-shade"></div><div class="chapter-caption" id="chapter-caption">A little room to breathe</div><div class="phone-wrap"><div class="phone"><div class="island"></div><div class="phone-status"><span>9:41</span><span>••• ▰</span></div><div class="screen screen-home active"><div class="app-kicker">MONDAY 12 OCTOBER</div><div class="app-title-row"><h3>Asia</h3><span class="avatar blush">J</span></div><p class="muted">Chiang Mai, stop 1 of 3</p><div class="app-card"><div class="card-top">● ON PLAN <span>Day 12 of 90</span></div><h4>Chiang Mai, night 11</h4><p>Chiang Mai · booked · leave 31 Oct</p><div class="progress"><i></i></div><p class="right mauve">19 nights left</p><div class="divider"></div><b>Next: Da Nang · 1 Nov <span class="arrow">›</span></b></div><div class="app-action">⌖ &nbsp; Check in - where are you?</div><div class="trip-track"><i></i></div><div class="chart-label"><span>Chiang Mai, stop 1 of 3</span><span>home 30 Dec</span></div><div class="app-card compact"><b>Spent $684 of ≈ $5,130 projected</b><p>$57/day everyday in Chiang Mai</p></div><div class="following"><span>Following 2</span><span>4 followers</span></div><div class="app-kicker below">ACTIVITY · 3 <span class="arrow">Check-ins ›</span></div><div class="mini-moment"><span class="avatar">⌖</span><div><b>You · Chiang Mai</b><p>Finding our favourite coffee spot.</p></div></div></div>
+<div class="screen screen-trip"><div class="tabs"><b>Stops</b><span>Stays</span><span>Transport</span><span>Extras</span></div><div class="app-title-row"><h3>Stops</h3><span class="mini-button">+ Add stop</span></div><p class="muted trip-instruction">Your stops in date order. Untick one and it leaves the plan and the budget. Tap a card to edit or delete it.</p><div class="app-card real-stop"><span class="checkmark">✓</span><div><strong>Chiang Mai</strong><p>Thailand · 1 Oct → 31 Oct · Mid</p></div><span class="nights"><b>30</b><small>NIGHTS</small></span><div class="progress"><i></i></div><div class="stop-actions"><span>Stay: Old city…</span><b>＋ Add stay</b><b>Delete</b></div></div><div class="app-card real-stop"><span class="checkmark">✓</span><div><strong>Da Nang</strong><p>Vietnam · 1 Nov → 30 Nov · Mid</p></div><span class="nights"><b>30</b><small>NIGHTS</small></span><div class="stop-actions"><span>Stay: Coastal…</span><b>＋ Add stay</b><b>Delete</b></div></div><div class="app-card real-stop"><span class="checkmark">✓</span><div><strong>Ubud</strong><p>Indonesia · 1 Dec → 30 Dec · Mid</p></div><span class="nights"><b>30</b><small>NIGHTS</small></span><div class="stop-actions"><span>Stay: Garden…</span><b>＋ Add stay</b><b>Delete</b></div></div></div>
+<div class="screen screen-together"><p class="muted">‹ Back to Trip</p><h3>Trip settings</h3><h4 class="people-heading">People on this trip</h4><div class="app-card invite-card"><p>Invite by email, then copy their link below and send it yourself: <b>nothing is emailed automatically.</b> Signing in with that address also shows the invite in-app.</p><div class="invite-fields"><div><span>Email</span><div class="fake-field">partner@example.com</div></div><div><span>Can</span><div class="fake-field">Edit ⌄</div></div></div><div class="invite-submit">Send invite</div><p><b>Edit</b> can change the plan; <b>View</b> sees everything but changes nothing. Either way they must sign in with this address, so the invite is useless to anyone else. That is the difference from a follow link, which opens for whoever holds it.</p></div></div>
+<div class="screen screen-money"><div class="app-title-row"><h3>Money</h3><span class="mini-button pale">＋ Entry</span></div><p class="muted">Asia · day 12 · Chiang Mai</p><div class="app-card"><div class="app-kicker">SPENT SO FAR · 12 DAYS</div><div class="big-number">$684</div><p>+ $120 scheduled · dated after today,<br>not spent yet</p><div class="divider"></div><div class="money-cols"><div><small>PER DAY</small><b>$57</b><p>everyday costs</p></div><div><small>PROJECTED TOTAL</small><b>$5,130</b><p>90 planned nights,<br>at this pace</p></div></div><div class="progress"><i></i></div><div class="chart-label"><span>13% of projected</span><span>pre-trip estimate $5,000</span></div></div><div class="app-card"><div class="app-kicker">DAILY SPEND</div><div class="chart-controls"><span>‹</span><span>7d</span><b>14d</b><span>30d</span><span>90d</span><span>›</span></div><div class="chart"><i style="--h:38%"></i><i style="--h:60%"></i><i style="--h:46%"></i><i style="--h:75%"></i><i style="--h:48%"></i><i style="--h:90%"></i><i style="--h:54%"></i><i style="--h:66%"></i><i style="--h:43%"></i></div><div class="chart-label"><span>29 Sept</span><span>Today</span></div><p class="chart-legend">■ Food & drinks &nbsp; ■ Groceries & shops<br>■ Getting around &nbsp; ■ Clothes & accessories<br>■ Health & care &nbsp; ■ Activities</p></div></div>
+<div class="screen screen-checkin"><p class="muted">‹ Back</p><div class="app-card post"><div class="person"><span class="avatar blush">⌖</span><div><b>Jamie · Asia</b><h4>By the sea</h4></div></div><p class="stars">★★★★★</p><p>Watching the sunset</p><p class="post-age">1d ago</p><div class="post-photo"></div><div class="real-reactions"><span>❤️ 2</span><span>😂</span><span>😮</span><span>👏</span><span>🔥</span><span>🥹</span></div><p class="reaction-help">Tap to react · counts are visible to the travellers only</p></div><div class="app-card"><div class="app-kicker">COMMENTS</div><div class="comment-field"></div></div></div>
+<div class="screen screen-map"><div class="map-visual"><div class="map-search">⌕</div><div class="map-options">⚙ Map options</div><div class="map-legend"><span>LEGEND</span><p>● Planned stop<br>● Catalogue city<br>— Hazard</p></div></div><div class="app-card map-place"><div><h4>Chiang Mai</h4><p>Stop 1 · 30 nights</p></div><span class="mini-button">Details</span></div></div>
+<div class="phone-nav"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v11h-6v-8H9v8H3z"/></svg><small>Home</small></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 6h7a4 4 0 0 1 0 8H8a4 4 0 0 0 0 8h5"/></svg><small>Trip</small></span><span class="nav-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="16" height="17" rx="3"/><path d="M3 8h17v5h-6v4h6v-4M7 4V2"/></svg><small>Money</small></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 5 6-3 6 3 6-3v17l-6 3-6-3-6 3V5Zm6-3v17m6-14v17"/></svg><small>Map</small></span></div></div><p class="sample-label">Interface recreation · sample data</p></div><div class="chapter-progress"><i></i></div></div>
+<div class="chapters"><article class="chapter" data-chapter="0"><div class="chapter-copy"><p class="eyebrow">01 / ARRIVE</p><h2>Somewhere new.<br><em>A little more home.</em></h2><p>Stay for a month. Find your favourite coffee. Let a place become part of your everyday life.</p><p class="detail">Your current stay and the next step, together at a glance.</p></div></article><article class="chapter" data-chapter="1"><div class="chapter-copy"><p class="eyebrow">02 / MAKE A PLAN</p><h2>A next chapter.<br><em>At your own pace.</em></h2><p>Bring your stops, stays, transport, and extras into one trip. From a single longer stay to a journey around the world.</p><p class="detail">Less piecing things together. More looking forward.</p></div></article><article class="chapter" data-chapter="together"><div class="chapter-copy"><p class="eyebrow">03 / TRAVEL TOGETHER</p><h2>One journey.<br><em>Together.</em></h2><p>For the two of you. Or a few more. Invite your partner or travel companions to edit the same trip, and make the plan together.</p><p class="detail">Give your co-travellers Edit access. Share a follow link with friends and family back home.</p></div></article><article class="chapter" data-chapter="2"><div class="chapter-copy"><p class="eyebrow">04 / LIVE A LITTLE</p><h2>Know your spending.<br><em>Find your freedom.</em></h2><p>Keep track of what comes in and what goes out. Understand what a day costs—and what your current pace could mean for the months ahead.</p><p class="detail">The practical side of staying a little longer.</p></div></article><article class="chapter" data-chapter="3"><div class="chapter-copy"><p class="eyebrow">05 / BRING THEM ALONG</p><h2>Far from home.<br><em>Still close.</em></h2><p>A photo. A few words. A moment worth keeping. Share your journey through a link so your people can follow, react, and leave a little love.</p><p class="detail">Optional weekly recaps for those back home. Fellow travellers to follow along the way.</p></div></article><article class="chapter" data-chapter="4"><div class="chapter-copy"><p class="eyebrow">06 / LOOK AHEAD</p><h2>The world is open.<br><em>Get to know it.</em></h2><p>Explore the map and see reported natural hazards around potential destinations. Another perspective as you decide where life takes you next.</p><p class="detail">A new place. Another chapter of your own.</p></div></article></div></section>
+<section class="closing"><div class="closing-image"></div><div class="closing-inner"><p class="eyebrow">MADE FOR LONGER JOURNEYS. AND THE LIFE IN BETWEEN.</p><h2>Where will you<br><em>feel at home next?</em></h2><p>Livhold began with a plan to travel through Asia while working online.<br>Now it’s here for your journey, too.</p><a class="button" href="https://livhold.com/dashboard">Start using Livhold</a><p class="availability">Open the web app · iOS & Android coming soon</p><div class="closing-form">
+<!-- lh-form:start (written by tools/landing-form.mjs: edit docs/landing-form/livhold-journey-form.html and re-run) -->
 <section class="lh-form" id="tell-us" aria-labelledby="lh-form-title">
   <style>
     .lh-form {
@@ -241,7 +224,7 @@
   (function () {
     /* ---------- FILL THESE IN (Patrik) ---------- */
     var CONFIG = {
-      endpoint:     "",                                  // where answers are POSTed as JSON, e.g. https://<ref>.supabase.co/rest/v1/journey_signups . Empty = preview mode, nothing is sent.
+      endpoint:     "https://livhold.com/api/journey-signup",                                  // where answers are POSTed as JSON, e.g. https://<ref>.supabase.co/rest/v1/journey_signups . Empty = preview mode, nothing is sent.
       headers:      {},                                  // extra request headers, e.g. Supabase: { apikey: "<anon key>", Authorization: "Bearer <anon key>", Prefer: "return=minimal" }
       privacy:      "https://livhold.com/privacy",       // needs a section covering this form (launch emails + call invites)
       terms:        "https://livhold.com/terms",
@@ -360,56 +343,5 @@
   })();
   </script>
 </section>
-<!-- ===================== COPY TO HERE ===================== -->
-
-</div>
-
-<script>
-/* PREVIEW ONLY: state buttons replay each scenario in place (no page reload, so it works inside sandboxed previews) */
-(function () {
-  var f = document.getElementById("lh-form"), btn = f.querySelector(".lh-submit");
-  var defaultDone = document.getElementById("lh-done-text").textContent,
-      defaultTitle = document.getElementById("lh-done-title").innerHTML;
-  function reset() {
-    window.LH_PREVIEW_FAIL = false;
-    f.reset();
-    document.getElementById("lh-ask").hidden = false;
-    document.getElementById("lh-done").hidden = true;
-    document.getElementById("lh-done-text").textContent = defaultDone;
-    document.getElementById("lh-done-title").innerHTML = defaultTitle;
-    document.getElementById("lh-alert").hidden = true;
-    f.querySelectorAll(".lh-msg").forEach(function (m) { m.hidden = true; m.textContent = ""; });
-    f.querySelectorAll(".lh-invalid").forEach(function (x) { x.classList.remove("lh-invalid"); });
-    document.getElementById("lh-email").setAttribute("aria-invalid", "false");
-    btn.disabled = false; btn.textContent = "Count me in";
-  }
-  function pick(v) { f.querySelector('input[value="' + v + '"]').checked = true; }
-  function play(pv) {
-    reset();
-    document.querySelectorAll("[data-pv]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.pv === pv); });
-    if (pv !== "failed") document.getElementById("tell-us").scrollIntoView({ block: "start" });
-    if (!pv) return;
-    if (pv === "missing") { pick("next_3_months"); document.getElementById("lh-email").value = "petra@gmail"; }
-    else {
-      pick("next_3_months"); pick("3_6_months");
-      document.getElementById("lh-name").value = "Anna";
-      document.getElementById("lh-email").value = "anna@example.com";
-      document.getElementById("lh-plan").value = "A shared Google Sheet and a lot of WhatsApp.";
-    }
-    if (pv === "sentcall") document.getElementById("lh-call").checked = true;
-    if (pv === "missing") btn.click();
-    else if (pv === "failed") window.LH_PREVIEW.showFailed();
-    else window.LH_PREVIEW.showSent(pv === "sentcall");
-  }
-  document.querySelectorAll("[data-pv]").forEach(function (b) {
-    b.setAttribute("aria-pressed", b.dataset.pv === "");
-    b.onclick = function () { play(b.dataset.pv); };
-  });
-})();
-/* PREVIEW ONLY: on the live page, make the hero link an anchor: <a href="#tell-us">Leaving later? Tell us when →</a> */
-document.querySelectorAll("[data-open-form]").forEach(function (b) {
-  b.onclick = function () { document.getElementById("tell-us").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); };
-});
-</script>
-</body>
-</html>
+<!-- lh-form:end -->
+</div></div><footer><div class="footer-brand"><div class="footer-brand-main"><img src="assets/logo.png" alt=""><span class="wordmark">livhold</span></div><span class="footer-tagline">the living journey, held together</span></div><nav class="footer-links" aria-label="Footer navigation"><a href="https://livhold.com">livhold.com</a><a href="https://livhold.com/privacy">Privacy</a><a href="https://livhold.com/terms">Terms</a></nav><div class="footer-legal"><span>© 2026 Livhold</span><span>All rights reserved.</span></div></footer></section></main><script src="app.js?v=3"></script></body></html>

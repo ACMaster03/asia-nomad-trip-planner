@@ -9,7 +9,10 @@ the repo, so a future change can be re-checked instead of re-guessed.
 commit.** Nothing here is collected for advertising, sold, or shared with a third
 party for its own purposes — every "shared" answer below is No.
 
-Last checked against the code: **2026-09-14**.
+Last checked against the code: **2026-09-14**. Rewritten on **2026-10-03** with `/privacy`:
+approximate location declared (the itinerary and check-ins are where the traveller is, at city
+level, and the sign-in sessions keep an IP), and app interactions declared ahead of the #120
+logging, by Patrik's decision. **Update the form in Play Console to match.**
 
 `/privacy` gained "If you join the list on journey.livhold.com" on 2026-10-01: a form on the
 landing page (migration 44, `docs/landing-form/`), not in the app. Nothing in the app collects
@@ -37,6 +40,8 @@ group and excluded from the proxy matcher in `src/proxy.ts`, so they do.
 | Messages → **Other in-app messages** | App functionality | Optional | `check_ins.comment`, `notes.body`, the `notes` columns on stays/transport/segments |
 | App info and performance → *(nothing)* | — | — | no crash SDK, no performance SDK |
 | Device or other IDs → **Device or other IDs** | App functionality | Optional | `user_push_subscriptions.endpoint` — see the judgment call below |
+| Location → **Approximate location** | App functionality | Required | itinerary cities (`segments`) and check-in places, typed by the traveller; the IP in `auth.sessions`. Never from the device. |
+| App activity → **App interactions** | Analytics | Required | #120: one mark per follower (or follow link) per day the feed was opened, kept 12 months; sign-up source and setup steps per account. Own database, no SDK. |
 
 ### The one judgment call: push endpoints
 
@@ -54,9 +59,9 @@ is unusually short for a travel product.
 
 | Category | Why it is No | Evidence |
 |---|---|---|
-| **Location** (precise or approximate) | The app never asks the device where it is. A check-in is placed by the city the traveller picked from a list. | no `navigator.geolocation` anywhere in `product/src` |
+| **Location → Precise location** | The app never asks the device where it is. A check-in is placed by the city the traveller picked from a list. | no `navigator.geolocation` anywhere in `product/src` |
 | **Location, via photo metadata** | Photos are re-encoded through a canvas before upload, which drops all EXIF — GPS, camera, timestamp. What leaves the phone is pixels. | `lib/trips/media.ts` → `compressImage()`: `drawImage` then `canvas.toBlob('image/jpeg')` |
-| **App activity / analytics** | There is no analytics, attribution, or advertising SDK in the bundle. | no `@vercel/analytics`, Sentry, gtag, PostHog, Plausible in `package.json` or `src` |
+| **Analytics or advertising SDKs** | The usage counts above live in our own database. There is no analytics, attribution, or advertising SDK in the bundle. | no `@vercel/analytics`, Sentry, gtag, PostHog, Plausible in `package.json` or `src` |
 | **Financial → payment info** | The app takes no money. | no payment provider anywhere |
 | **Contacts, calendar, SMS, call logs, health, audio, files** | Never requested. | — |
 

@@ -5,7 +5,137 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-03
+
+### DECIDED — Patrik, 3 Oct: the app moves to app.livhold.com, the landing page takes livhold.com
+
+One repository, a folder and a Vercel project each: `landing/` serves livhold.com (and the blog
+later, in the same project), `product/` serves app.livhold.com (and is the origin the Android
+TWA will wrap), `ios/` is unchanged apart from its web address. journey.livhold.com redirects to
+livhold.com. Why now: a TWA is tied to one origin, and none is built yet. The five users sign in
+again and reinstall; Patrik accepts that. Done from Patrik's machine; the brief, order of work,
+risks and test list are in `docs/APP-MOVE-BRIEF.md`.
+- **Patrik, same day:** the legal pages (`/privacy`, `/terms`, `/delete-account`) stay in the
+  app at app.livhold.com, and livhold.com redirects to them; `/privacy`'s heading "If you join
+  the list on journey.livhold.com" may change to livhold.com.
+- **iOS:** `ios/Livhold/Auth/Backend.swift`, `production.web` becomes `https://app.livhold.com`
+  when the move lands (where a password reset opens); not before.
+
+### BUILT — journey.livhold.com moves to this repository (`landing/`), waiting on Patrik
+
+Petra, 3 Oct: the landing page on ChatGPT's hosting (`chatgpt.site`, behind Cloudflare)
+showed her "Sorry, you have been blocked" on a VPN placed in Vietnam, and loaded once she
+moved the VPN to Budapest. Travellers in Asia on a VPN are the audience; nobody on our side
+could see or change who got blocked. Her export (static HTML, CSS, JS, images) is now in
+`landing/public/`, served as is by a Vercel project of its own (`landing/vercel.json`, Root
+Directory `landing`, rebuilds only on changes under `landing/`).
+- **Changed from the export:** links go to `https://livhold.com` (not `www`, which only
+  redirects); fonts are served from `landing/public/fonts/` instead of Google Fonts, so a
+  visitor's browser calls no one but the site (the policy names no font host); the list form,
+  the hero link and the footer's Privacy and Terms are in (`node tools/landing-form.mjs` now
+  writes the form into the page as well as the paste file); the page's text shadow is off
+  inside the form; `buttons.html` and `button-lab.css` (Petra's button lab) left out.
+- **Why this also closes a gap:** `/privacy` names Vercel as the host and nothing for the
+  landing page; on ChatGPT's hosting, OpenAI and Cloudflare saw every visit unnamed.
+- **Waiting on Patrik:** (1) create the Vercel project from this repository with Root
+  Directory `landing` (a preview link, nothing public); (2) after Petra checks the preview,
+  move the `journey` DNS record from ChatGPT's hosting to that project. Reversible in minutes.
+- **Photos (Petra's yes, 3 Oct):** the twelve the page never loads are gone; the rest are at
+  most 2200 px wide (the portrait two 2000 px), JPEG quality 80, the globe 900 px, the logo
+  192 px, the share card a 74 KB JPEG. What a visitor downloads went from about 8.3 MB of
+  images to about 3.7 MB.
+- **Checked:** served locally; at 390 px and 1440 px every font loads from the site, no request
+  leaves it, no sideways scroll; the hero link scrolls to the form; an empty submit shows the
+  three messages. **Not run:** a real submission from the new address (needs the project).
+- **iOS:** nothing. The landing page is web only.
+
+### IN REVIEW — the legal pages finished (#5, #123; Patrik, 3 Oct)
+
+Patrik: be done with the legal pages; #5 and #123 done, #128 if it can be. Decided in the chat:
+
+- **EU representative: Patrik himself**: "Patrik Grohmann, Őzgida utca 16-20, 1025 Budapest,
+  Hungary, support@keepyourhabits.com", on livhold.com and keepyourhabits.com (WebLandingPage
+  #46; that policy stays version 2.0). This replaces the
+  28 Sep designation of Petra. Patrik: he lives and is tax resident in Hungary and manages the
+  Ltd from there; no spending on legal before the apps show revenue; a separate representative
+  "in due time". Claude's caution, recorded: a director naming himself as the company's
+  representative is unlikely to satisfy Article 27 as written (the role is a contact separate
+  from the controller); the stronger footing is the reading further down, that a company run
+  from Hungary is established in the EU and needs no representative at all. Patrik accepts the
+  risk: "if somebody has a problem with that, I'll deal with it." No mandate needed now.
+- **Mailbox: support@keepyourhabits.com** on both sites, the landing form and the store listings.
+  Patrik: privacy@ was never set up and will not be; support@ works.
+- **Reminder switch:** the page keeps "you can switch them off" (the policy states how we will
+  operate, 2 Oct); #150 builds it.
+- **Usage data (#123) published now**, ahead of #120's code: the days a feed was opened (one mark
+  per follower or follow link per day, deleted after 12 months, the 12 is Claude's default),
+  sign-up source, setup steps completed; own database, no analytics company. Lawful basis:
+  legitimate interests, stated with the sign-in records and request logs. #120 must build to
+  that description.
+
+Also in the pull request: `/terms` no longer says the app exports files (twice; #152 was closed);
+"Not your location" became "Not your device's location", with a paragraph saying itinerary
+cities and check-ins are city-level location (taken from #101, whose 90-day session purge and
+migration 42 stay there); Apple's push service named for the iPhone app. `PLAY-DATA-SAFETY.md` and
+`APP-STORE-PRIVACY.md` now declare approximate (coarse) location and app interactions (product
+interaction, analytics): **both store forms need updating by hand to match.**
+
+Still open after the merge: the Art. 30 record (company compliance notes live in the
+Habit_Tracker repo; `Company_KYH_Ltd.md` there still names Petra); #128 in both store consoles (needs a
+public phone number). No notice to account holders is due for #120: pre-release, Patrik is the only account (Patrik, 3 Oct).
+
+iOS: the App Store privacy questionnaire changes (Coarse Location, Product Interaction); when the
+iOS app logs feed opens or sign-up source for #120, it follows the same rule (one mark a day, own
+database, no SDK). Rule and file: `docs/APP-STORE-PRIVACY.md`.
+
 ## 2026-10-02
+
+### LIVE — the /privacy wording of #151 (#155, Patrik's "go", 2 Oct)
+
+Merged on Patrik's "go": "We'll go over this once before we do a public release of the
+application; until then, this should be more than enough." That pass is issue #156, a
+checklist of every promise the page makes (#150, #5, data requests by hand, the "do not
+email" note, erasure, #123/#120, #119). #151 closed with the merge, #152 closed as not
+planned, #150 is high priority. Verified after the Vercel build with a fetch of
+livhold.com/privacy from Vercel's side: the six changed sentences are served, no glued
+letters. Nobody has read the three changed paragraphs in Safari yet; #140 covers that bug
+class on every screen.
+
+iOS: nothing changes in the app. The promise the page now makes, every reminder email
+switchable in notification settings, is #150 on the web and the switches the iOS app is
+building.
+
+### DECIDED — the policy states how we will operate, not how we operate today (Patrik, 2 Oct)
+
+Patrik on the five statements of #151: "write the privacy policy that is enough and is good,
+cover ourselves, but not weeks developing features for it." One wording pull request on
+`/privacy`, and each promise it makes gets an issue that must land before people see the site:
+- **Sign-in sessions** keep the connection address and the user agent (`auth.sessions`), and
+  the providers keep short-lived request logs: now said under "Your account". The warning in
+  `docs/APP-STORE-PRIVACY.md` is replaced by the same sentence.
+- **Reminder emails** (stay deadlines, subscription charges) are named as part of the
+  service, "you can switch them off in your notification settings". That switch is #150,
+  high priority, before launch; "nothing is sent until someone switches it on" now covers
+  only push and the follower digests, which is what the code does.
+- **Unsubscribe** stops the emails at once and the address stays as a "do not email" note
+  (migration 17's soft delete), deleted too on request. The page no longer says "deletes the
+  record".
+- **Export** is not built and not promised (#152 closed, not planned): a copy of your data,
+  trip and money entries as files, comes by writing to privacy@keepyourhabits.com, answered
+  within one month, by hand. Patrik: "if there are more requests than we think, we add the
+  outlet."
+- **Fact check, invitations:** not emailed. Nothing in the app or the functions sends an
+  invite email: `createInvite` writes a row (migration 25), and `pending_invites()` /
+  `accept_invite()` match the signed-in email, so the invited person sees the trip the next
+  time they sign in; follow links (28) are copied and shared by the traveller. The Resend
+  line now reads "sign-in links, the follower digests and reminders about your own bookings".
+- **Account deletion** stays "a real erasure rather than a request that goes into a queue"
+  (the code does that: `purgeTripMedia`, then the rows). A 30-day grace period was mused, not
+  decided; nothing changes until it is.
+
+iOS: the policy promises every reminder email and notification is switchable per person.
+The iOS app is building its notification switches now (Patrik, 2 Oct); the web follows in
+#150. Nothing else in this entry changes app behaviour.
 
 ### DECIDED — Patrik's week is three Livhold days; build-in-public and X dropped (Patrik, 2 Oct)
 

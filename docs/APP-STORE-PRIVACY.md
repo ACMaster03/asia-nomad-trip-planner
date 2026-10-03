@@ -4,7 +4,9 @@ Apple's App Privacy questionnaire is a third declaration of the same facts as `/
 and [`PLAY-DATA-SAFETY.md`](PLAY-DATA-SAFETY.md), which carries the evidence for each row.
 **If either of those changes, this file changes in the same commit.**
 
-Filled for the iOS app (`com.livhold.app`), 2026-09-26.
+Filled for the iOS app (`com.livhold.app`), 2026-09-26. Rewritten on 2026-10-03 with `/privacy`:
+Coarse Location and Product Interaction are now collected (see the two rows marked new).
+**Update the questionnaire in App Store Connect to match.**
 
 `/privacy` gained "If you join the list on journey.livhold.com" on 2026-10-01: a form on the
 landing page (migration 44, `docs/landing-form/`), not in the app. Nothing in the app collects
@@ -27,12 +29,14 @@ below is No.
 | Financial Info → **Other Financial Info** | App Functionality | the money ledger: amounts, categories, notes |
 | User Content → **Photos or Videos** | App Functionality | photos attached to check-ins |
 | User Content → **Other User Content** | App Functionality | itinerary, stays/transport (incl. booking links, notes), check-in comments, post comments, reactions |
+| Location → **Coarse Location** (new) | App Functionality | itinerary cities and check-in places the traveller types, and the session IP (see Logs); never from the device |
+| Usage Data → **Product Interaction** (new) | Analytics | #120: the days a follower opened the feed (one mark a day, kept 12 months), sign-up source, setup steps completed; own database, no SDK |
 
 ## Data NOT collected
 
-Location (precise and coarse) · Health & Fitness · Payment Info · Credit Info · Contacts ·
+Precise Location · Health & Fitness · Payment Info · Credit Info · Contacts ·
 Emails or Text Messages · Audio · Gameplay · Customer Support · Browsing History ·
-Search History · Purchases · Usage Data (product interaction, advertising, other) ·
+Search History · Purchases · Usage Data (advertising, other) ·
 Diagnostics (crash, performance, other) · Sensitive Info · Surroundings · Body · Other Data.
 
 ## Logs (checked on staging, 2026-09-26)
@@ -44,8 +48,9 @@ Diagnostics (crash, performance, other) · Sensitive Info · Surroundings · Bod
 | `alert_log`, digest `confirm_sent_at` / `last_sent_at` | what the service sent, to which address, when (dedupe) | none beyond Email Address |
 | Supabase / Vercel platform logs | request logs with IP, short retention, operations only | none (not analysed per user) |
 
-⚠ **`/privacy` does not mention IP addresses, sessions or logs at all.** Under GDPR an IP
-address is personal data, so the policy needs a line on it regardless of the store labels.
+Since 2 Oct 2026 `/privacy` names them, under "Your account": the connection address and the
+kind of browser or app, kept while signed in, plus the providers' short-lived request logs. Under
+GDPR an IP address is personal data, so the line is needed regardless of the store labels.
 
 ## What would make these answers false on iOS
 
@@ -53,6 +58,8 @@ address is personal data, so the policy needs a line on it regardless of the sto
   image** (drop EXIF/GPS) exactly like `compressImage()` on the web. A `PhotosPicker` item
   uploaded as-is carries GPS coordinates → Location becomes collected.
 - **Diagnostics / Usage Data.** Adding Sentry, Crashlytics, TelemetryDeck or any analytics.
+  Product Interaction is declared for #120's counts in our own database; a third-party SDK
+  would also change "Used to track you?" and the policy's "no analytics company".
 - **Purchases.** Adding in-app purchase for premium (#64).
 - **Precise Location via live position**, if check-ins ever start reading GPS.
 
