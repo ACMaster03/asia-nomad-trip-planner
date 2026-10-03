@@ -5,6 +5,43 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-03
+
+### IN REVIEW — the legal pages finished, apart from Petra's details (#5, #123; Patrik, 3 Oct)
+
+Patrik: be done with the legal pages; #5 and #123 done, #128 if it can be. Decided in the chat:
+
+- **EU representative: Petra** (as on 28 Sep), not Patrik: he is the Ltd's sole director, and
+  the role is a contact separate from the controller. `entity.ts` now has three fields (name,
+  Hungarian postal address, email); they stay orange markers until Petra gives them and the
+  written mandate from the Ltd is signed. The open question further down (whether a company run
+  from Hungary is established in the EU, which would make Article 27 moot and bring in the NAIH)
+  is not settled by this; naming a representative is the safe side.
+- **Mailbox:** `privacy@keepyourhabits.com` stays, on the page and in the store trader listings.
+- **Reminder switch:** the page keeps "you can switch them off" (the policy states how we will
+  operate, 2 Oct); #150 builds it.
+- **Usage data (#123) published now**, ahead of #120's code: the days a feed was opened (one mark
+  per follower or follow link per day, deleted after 12 months, the 12 is Claude's default),
+  sign-up source, setup steps completed; own database, no analytics company. Lawful basis:
+  legitimate interests, stated with the sign-in records and request logs. #120 must build to
+  that description.
+
+Also in the pull request: `/terms` no longer says the app exports files (twice; #152 was closed);
+"Not your location" became "Not your device's location", with a paragraph saying itinerary
+cities and check-ins are city-level location (taken from #101, whose 90-day session purge and
+migration 42 stay there); Apple's push service named for the iPhone app. `PLAY-DATA-SAFETY.md` and
+`APP-STORE-PRIVACY.md` now declare approximate (coarse) location and app interactions (product
+interaction, analytics): **both store forms need updating by hand to match.**
+
+Still open after the merge: Petra's three details; the mandate from the Ltd; the Art. 30 record
+(company compliance notes live in the Habit_Tracker repo); #128 in both store consoles (needs a
+public phone number); the "Changes" section promises account holders a notice before new
+collection takes effect, so the usage counts need that notice before #120 ships.
+
+iOS: the App Store privacy questionnaire changes (Coarse Location, Product Interaction); when the
+iOS app logs feed opens or sign-up source for #120, it follows the same rule (one mark a day, own
+database, no SDK). Rule and file: `docs/APP-STORE-PRIVACY.md`.
+
 ## 2026-10-02
 
 ### LIVE — the /privacy wording of #151 (#155, Patrik's "go", 2 Oct)

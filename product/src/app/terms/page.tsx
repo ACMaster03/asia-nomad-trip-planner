@@ -101,10 +101,10 @@ export default function TermsPage() {
           otherwise.
         </p>
         <p>
-          <b className="font-semibold text-tx">Keep your own copy of anything you cannot lose.</b> The
-          app exports your trip and your money ledger as files for exactly this reason. We take
-          reasonable care with your data, but a trip you would grieve over belongs in a second place
-          as well.
+          <b className="font-semibold text-tx">Keep your own copy of anything you cannot lose.</b> Write
+          to <LegalValue value={LEGAL.contactEmail} /> and we send your trip and your money entries
+          as files within one month. We take reasonable care with your data, but a trip you would
+          grieve over belongs in a second place as well.
         </p>
         <p>
           The service is free today. If a paid tier ever arrives, existing accounts will be told
@@ -130,7 +130,7 @@ export default function TermsPage() {
         </p>
         <p>
           If a trip you had joined but did not own is deleted by its owner, it goes for you too.
-          Export anything you want to keep before that happens.
+          Keep your own copy of anything from it you want to hold on to.
         </p>
       </Section>
 

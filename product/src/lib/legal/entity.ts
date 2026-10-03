@@ -2,9 +2,9 @@
 // both read this, so there is a single thing to edit and no chance of the two
 // pages disagreeing about who operates the service.
 //
-// ⚠ ONE VALUE IS STILL UNSET: `euRepresentative`. That one is not a missing
-// fact but a missing appointment — nobody has been engaged yet — so it stays a
-// marker until the real name and address exist. See docs/NOTES.md.
+// The EU representative's details are the last values to arrive: Petra was
+// designated on 2026-09-28 (docs/NOTES.md), and her name, postal address and
+// email go in below once the written mandate from the Ltd is signed.
 //
 // Anything still starting with `TODO_` renders on the page as a loud inline
 // marker rather than quietly printing the token (see `LegalValue`), so an
@@ -45,17 +45,18 @@ export const LEGAL = {
   dataRegion: 'Ireland',
 
   /**
-   * EU/EEA representative under Article 27 of the EU GDPR.
+   * EU representative under Article 27 of the EU GDPR. Decided by Patrik on
+   * 2026-09-28: Petra, a natural person established in Hungary (Art. 4(17),
+   * Art. 27(3)). Not Patrik: he is the Ltd's sole director, and the role exists
+   * to give people in the EEA a contact separate from the controller.
    *
-   * REQUIRED, not optional, and not yet appointed. A UK company with no EEA
-   * establishment that offers a service to people in the EEA must appoint one
-   * and NAME IT IN THIS PRIVACY NOTICE — and this app's users and followers are
-   * in Hungary, so the condition is plainly met rather than arguable.
-   *
-   * Until it is appointed the policy shows a marker here, which is the honest
-   * state: the obligation exists and is unmet. See docs/NOTES.md.
+   * Her name, a Hungarian postal address and an email are what Art. 13(1)(a)
+   * asks the notice to give. The written mandate from the Ltd comes first; the
+   * page names her once it is signed. An unset value stays a marker.
    */
-  euRepresentative: 'TODO_EU_REPRESENTATIVE',
+  euRepresentative: 'TODO_EU_REPRESENTATIVE_NAME',
+  euRepresentativeAddress: 'TODO_EU_REPRESENTATIVE_ADDRESS',
+  euRepresentativeEmail: 'TODO_EU_REPRESENTATIVE_EMAIL',
 
   /**
    * The list on journey.livhold.com (migration 44, docs/landing-form): how the
@@ -79,7 +80,7 @@ export const LEGAL = {
    * Shown as "Last updated". Bump it whenever the substance changes — Play
    * reviewers and users both read this as the freshness signal.
    */
-  lastUpdated: '2 October 2026',
+  lastUpdated: '3 October 2026',
 } as const
 
 export function isUnset(value: string): boolean {
