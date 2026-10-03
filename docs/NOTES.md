@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
-### IN PROGRESS — app.livhold.com, step 1: the `landing` Vercel project (#163)
+### LIVE — app.livhold.com, step 1: journey.livhold.com on the `landing` Vercel project (#163)
 
 The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`).
 - **Done, 3 Oct:** Vercel project `landing` (`prj_1QkkNcCb7GWA2SKcvzBGojgPEN8M`), linked to this
@@ -43,10 +43,16 @@ The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`
   `custom-domains.chatgpt.site` with a 60-second TTL; Vercel already holds a `*.livhold.com`
   certificate, so the move opens no certificate gap. The app is served at the apex
   (`www` 308s to `livhold.com`), as the brief says.
-- **Next:** Petra checks the preview on her phone and laptop (a real form submission there
-  writes a real row to production's `journey_signups`). Then, on Patrik's "go": add
-  `journey.livhold.com` to `landing` and delete the `journey` CNAME. Rollback: recreate the
-  CNAME `journey → custom-domains.chatgpt.site`.
+- **Live, 3 Oct ~13:20 UTC:** #165 merged on Patrik's "go" (the form-first page, the list for
+  updates, `/privacy` to match; both builds READY, no runtime errors). Patrik deleted the
+  `journey` CNAME, then `journey.livhold.com` was added to `landing` (a minute or so in
+  between, while Vercel's nameservers still mostly gave the old CNAME). Checked right after:
+  both nameservers answer with Vercel's addresses; `https://journey.livhold.com` answers 200
+  from Vercel with the `*.livhold.com` certificate and the merged page (consent `2026-10-03`);
+  CSS, fonts, images, `robots.txt` and `sitemap.xml` load. Rollback: recreate the CNAME
+  `journey → custom-domains.chatgpt.site` (ChatGPT's hosting may have let the domain go).
+- **Still to do for step 1:** open it on a VPN placed in Vietnam (the reason for the move), and
+  Petra's look on her phone and laptop.
 - **iOS:** nothing; `ios/` does not use journey.livhold.com.
 
 ### DECIDED — Patrik, 3 Oct: the app moves to app.livhold.com, the landing page takes livhold.com

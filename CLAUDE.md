@@ -123,8 +123,10 @@ Petra is new to software work; Patrik is not. The product conventions are in
   #119.
 - 3 Oct: journey.livhold.com leaves ChatGPT's hosting (Cloudflare there blocked Petra on a
   Vietnam VPN). Petra's site is in `landing/` (its README), with the list form written in by
-  `tools/landing-form.mjs`, so nothing is pasted by hand any more. Waiting on Patrik: a
-  Vercel project with Root Directory `landing`, then the `journey` DNS record moved to it.
+  `tools/landing-form.mjs`, so nothing is pasted by hand any more. Live since 3 Oct on the
+  Vercel project `landing` (Root Directory `landing`), form first ("Start your journey"
+  scrolls to it), the list for update emails (#165). When it sends people straight to the
+  app: Patrik and Petra, the Sunday review of 25 Oct.
   Patrik decided the same day: the app moves to app.livhold.com and the landing page (blog
   later) takes livhold.com, one repository, a Vercel project per folder. Done from his
   machine, before any Android TWA work: `docs/APP-MOVE-BRIEF.md`.
