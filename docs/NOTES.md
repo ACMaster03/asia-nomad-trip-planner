@@ -16,7 +16,9 @@ The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`
   per-deployment addresses ask for one). Checked at 375 px: every file comes from the site
   itself, no console errors, no sideways scroll; the links still point at `livhold.com`
   (`/dashboard`, `/privacy`, `/terms`) and the canonical at `journey.livhold.com`, which is right
-  until step 5.
+  until step 5. The form works from there: Patrik sent one at 05:29 UTC, the app answered 204,
+  and the row (source `direct`) was in production's `journey_signups`; he deleted it the same
+  minute by `tools/db.sh --prod sql`, one row.
 - **Checked before the DNS move:** `livhold.com` is on Vercel DNS; `journey` is a CNAME to
   `custom-domains.chatgpt.site` with a 60-second TTL; Vercel already holds a `*.livhold.com`
   certificate, so the move opens no certificate gap. The app is served at the apex
