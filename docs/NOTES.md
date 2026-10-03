@@ -7,6 +7,26 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
+### IN PROGRESS — app.livhold.com, step 1: the `landing` Vercel project (#163)
+
+The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`).
+- **Done, 3 Oct:** Vercel project `landing` (`prj_1QkkNcCb7GWA2SKcvzBGojgPEN8M`), linked to this
+  repository, Root Directory `landing`, production branch `main`. The first build (e2d4895, #162)
+  is READY at `landing-eight-mu-61.vercel.app`, which opens without a Vercel login (the longer
+  per-deployment addresses ask for one). Checked at 375 px: every file comes from the site
+  itself, no console errors, no sideways scroll; the links still point at `livhold.com`
+  (`/dashboard`, `/privacy`, `/terms`) and the canonical at `journey.livhold.com`, which is right
+  until step 5.
+- **Checked before the DNS move:** `livhold.com` is on Vercel DNS; `journey` is a CNAME to
+  `custom-domains.chatgpt.site` with a 60-second TTL; Vercel already holds a `*.livhold.com`
+  certificate, so the move opens no certificate gap. The app is served at the apex
+  (`www` 308s to `livhold.com`), as the brief says.
+- **Next:** Petra checks the preview on her phone and laptop (a real form submission there
+  writes a real row to production's `journey_signups`). Then, on Patrik's "go": add
+  `journey.livhold.com` to `landing` and delete the `journey` CNAME. Rollback: recreate the
+  CNAME `journey → custom-domains.chatgpt.site`.
+- **iOS:** nothing; `ios/` does not use journey.livhold.com.
+
 ### DECIDED — Patrik, 3 Oct: the app moves to app.livhold.com, the landing page takes livhold.com
 
 One repository, a folder and a Vercel project each: `landing/` serves livhold.com (and the blog
