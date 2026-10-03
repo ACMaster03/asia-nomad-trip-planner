@@ -7,6 +7,48 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
+### DECIDED — Patrik, 3 Oct: the app moves to app.livhold.com, the landing page takes livhold.com
+
+One repository, a folder and a Vercel project each: `landing/` serves livhold.com (and the blog
+later, in the same project), `product/` serves app.livhold.com (and is the origin the Android
+TWA will wrap), `ios/` is unchanged apart from its web address. journey.livhold.com redirects to
+livhold.com. Why now: a TWA is tied to one origin, and none is built yet. The five users sign in
+again and reinstall; Patrik accepts that. Done from Patrik's machine; the brief, order of work,
+risks and test list are in `docs/APP-MOVE-BRIEF.md`.
+- **Patrik, same day:** the legal pages (`/privacy`, `/terms`, `/delete-account`) stay in the
+  app at app.livhold.com, and livhold.com redirects to them; `/privacy`'s heading "If you join
+  the list on journey.livhold.com" may change to livhold.com.
+- **iOS:** `ios/Livhold/Auth/Backend.swift`, `production.web` becomes `https://app.livhold.com`
+  when the move lands (where a password reset opens); not before.
+
+### BUILT — journey.livhold.com moves to this repository (`landing/`), waiting on Patrik
+
+Petra, 3 Oct: the landing page on ChatGPT's hosting (`chatgpt.site`, behind Cloudflare)
+showed her "Sorry, you have been blocked" on a VPN placed in Vietnam, and loaded once she
+moved the VPN to Budapest. Travellers in Asia on a VPN are the audience; nobody on our side
+could see or change who got blocked. Her export (static HTML, CSS, JS, images) is now in
+`landing/public/`, served as is by a Vercel project of its own (`landing/vercel.json`, Root
+Directory `landing`, rebuilds only on changes under `landing/`).
+- **Changed from the export:** links go to `https://livhold.com` (not `www`, which only
+  redirects); fonts are served from `landing/public/fonts/` instead of Google Fonts, so a
+  visitor's browser calls no one but the site (the policy names no font host); the list form,
+  the hero link and the footer's Privacy and Terms are in (`node tools/landing-form.mjs` now
+  writes the form into the page as well as the paste file); the page's text shadow is off
+  inside the form; `buttons.html` and `button-lab.css` (Petra's button lab) left out.
+- **Why this also closes a gap:** `/privacy` names Vercel as the host and nothing for the
+  landing page; on ChatGPT's hosting, OpenAI and Cloudflare saw every visit unnamed.
+- **Waiting on Patrik:** (1) create the Vercel project from this repository with Root
+  Directory `landing` (a preview link, nothing public); (2) after Petra checks the preview,
+  move the `journey` DNS record from ChatGPT's hosting to that project. Reversible in minutes.
+- **Photos (Petra's yes, 3 Oct):** the twelve the page never loads are gone; the rest are at
+  most 2200 px wide (the portrait two 2000 px), JPEG quality 80, the globe 900 px, the logo
+  192 px, the share card a 74 KB JPEG. What a visitor downloads went from about 8.3 MB of
+  images to about 3.7 MB.
+- **Checked:** served locally; at 390 px and 1440 px every font loads from the site, no request
+  leaves it, no sideways scroll; the hero link scrolls to the form; an empty submit shows the
+  three messages. **Not run:** a real submission from the new address (needs the project).
+- **iOS:** nothing. The landing page is web only.
+
 ### IN REVIEW — the legal pages finished (#5, #123; Patrik, 3 Oct)
 
 Patrik: be done with the legal pages; #5 and #123 done, #128 if it can be. Decided in the chat:

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Builds docs/landing-form/livhold-journey-form.paste.html, the block to paste
-// into the hosted journey.livhold.com page, from livhold-journey-form.html,
-// the preview Petra signed off. Only the part between the COPY markers goes
-// out, with CONFIG.endpoint filled in. The preview keeps its empty endpoint
+// Builds the list form for journey.livhold.com from livhold-journey-form.html,
+// the preview Petra signed off: the part between the COPY markers, with
+// CONFIG.endpoint filled in, goes into landing/public/index.html (between its
+// lh-form markers) and into docs/landing-form/livhold-journey-form.paste.html. The preview keeps its empty endpoint
 // (nothing is sent from a preview, and its state buttons keep working); the
 // paste never ships without one (an empty endpoint fakes success).
 //
@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 
 const SRC = new URL('../docs/landing-form/livhold-journey-form.html', import.meta.url)
 const OUT = new URL('../docs/landing-form/livhold-journey-form.paste.html', import.meta.url)
+const PAGE = new URL('../landing/public/index.html', import.meta.url)
 // The app's endpoint (product/src/app/api/journey-signup/route.ts). The apex:
 // www.livhold.com answers with a redirect, which a cross-origin POST cannot follow.
 const ENDPOINT = 'https://livhold.com/api/journey-signup'
@@ -32,3 +33,11 @@ writeFileSync(
     filled,
 )
 console.log(`wrote ${OUT.pathname}`)
+
+const page = readFileSync(PAGE, 'utf8')
+const start = page.indexOf('<!-- lh-form:start')
+const end = page.indexOf('<!-- lh-form:end -->')
+if (start < 0 || end < start) throw new Error('lh-form:start / lh-form:end markers not found in the landing page')
+const startEnd = page.indexOf('-->', start) + 3
+writeFileSync(PAGE, page.slice(0, startEnd) + '\n' + filled + page.slice(end))
+console.log(`wrote ${PAGE.pathname}`)
