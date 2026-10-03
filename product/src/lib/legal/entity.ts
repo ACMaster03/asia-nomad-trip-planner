@@ -2,10 +2,6 @@
 // both read this, so there is a single thing to edit and no chance of the two
 // pages disagreeing about who operates the service.
 //
-// The EU representative's details are the last values to arrive: Petra was
-// designated on 2026-09-28 (docs/NOTES.md), and her name, postal address and
-// email go in below once the written mandate from the Ltd is signed.
-//
 // Anything still starting with `TODO_` renders on the page as a loud inline
 // marker rather than quietly printing the token (see `LegalValue`), so an
 // unfinished page cannot be mistaken for a finished one in review.
@@ -45,18 +41,15 @@ export const LEGAL = {
   dataRegion: 'Ireland',
 
   /**
-   * EU representative under Article 27 of the EU GDPR. Decided by Patrik on
-   * 2026-09-28: Petra, a natural person established in Hungary (Art. 4(17),
-   * Art. 27(3)). Not Patrik: he is the Ltd's sole director, and the role exists
-   * to give people in the EEA a contact separate from the controller.
-   *
-   * Her name, a Hungarian postal address and an email are what Art. 13(1)(a)
-   * asks the notice to give. The written mandate from the Ltd comes first; the
-   * page names her once it is signed. An unset value stays a marker.
+   * EU representative under Article 27 of the EU GDPR. Patrik's decision,
+   * 3 Oct 2026: himself, the Ltd's director, who lives in Hungary, until a
+   * separate representative is worth paying for (revisit when the apps earn).
+   * Replaces the 28 Sep designation of Petra. The same line is on
+   * keepyourhabits.com/privacy (WebLandingPage, src/config/legal.ts).
    */
-  euRepresentative: 'TODO_EU_REPRESENTATIVE_NAME',
-  euRepresentativeAddress: 'TODO_EU_REPRESENTATIVE_ADDRESS',
-  euRepresentativeEmail: 'TODO_EU_REPRESENTATIVE_EMAIL',
+  euRepresentative: 'Patrik Grohmann',
+  euRepresentativeAddress: 'Őzgida utca 16-20, 1025 Budapest, Hungary',
+  euRepresentativeEmail: 'privacy@keepyourhabits.com',
 
   /**
    * The list on journey.livhold.com (migration 44, docs/landing-form): how the

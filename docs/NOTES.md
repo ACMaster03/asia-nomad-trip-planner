@@ -7,16 +7,20 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
-### IN REVIEW — the legal pages finished, apart from Petra's details (#5, #123; Patrik, 3 Oct)
+### IN REVIEW — the legal pages finished (#5, #123; Patrik, 3 Oct)
 
 Patrik: be done with the legal pages; #5 and #123 done, #128 if it can be. Decided in the chat:
 
-- **EU representative: Petra** (as on 28 Sep), not Patrik: he is the Ltd's sole director, and
-  the role is a contact separate from the controller. `entity.ts` now has three fields (name,
-  Hungarian postal address, email); they stay orange markers until Petra gives them and the
-  written mandate from the Ltd is signed. The open question further down (whether a company run
-  from Hungary is established in the EU, which would make Article 27 moot and bring in the NAIH)
-  is not settled by this; naming a representative is the safe side.
+- **EU representative: Patrik himself**: "Patrik Grohmann, Őzgida utca 16-20, 1025 Budapest,
+  Hungary, privacy@keepyourhabits.com", on livhold.com and keepyourhabits.com (WebLandingPage
+  #46; that policy stays version 2.0, its privacy contact moves to privacy@). This replaces the
+  28 Sep designation of Petra. Patrik: he lives and is tax resident in Hungary and manages the
+  Ltd from there; no spending on legal before the apps show revenue; a separate representative
+  "in due time". Claude's caution, recorded: a director naming himself as the company's
+  representative is unlikely to satisfy Article 27 as written (the role is a contact separate
+  from the controller); the stronger footing is the reading further down, that a company run
+  from Hungary is established in the EU and needs no representative at all. Patrik accepts the
+  risk: "if somebody has a problem with that, I'll deal with it." No mandate needed now.
 - **Mailbox:** `privacy@keepyourhabits.com` stays, on the page and in the store trader listings.
 - **Reminder switch:** the page keeps "you can switch them off" (the policy states how we will
   operate, 2 Oct); #150 builds it.
@@ -33,8 +37,8 @@ migration 42 stay there); Apple's push service named for the iPhone app. `PLAY-D
 `APP-STORE-PRIVACY.md` now declare approximate (coarse) location and app interactions (product
 interaction, analytics): **both store forms need updating by hand to match.**
 
-Still open after the merge: Petra's three details; the mandate from the Ltd; the Art. 30 record
-(company compliance notes live in the Habit_Tracker repo); #128 in both store consoles (needs a
+Still open after the merge: the Art. 30 record (company compliance notes live in the
+Habit_Tracker repo; `Company_KYH_Ltd.md` there still names Petra); #128 in both store consoles (needs a
 public phone number); the "Changes" section promises account holders a notice before new
 collection takes effect, so the usage counts need that notice before #120 ships.
 
