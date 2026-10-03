@@ -21,7 +21,9 @@ the eight.
 has the other four, with nothing planned on them. His build-in-public posts on
 Threads or X are dropped, not moved to Petra. The goal numbers move from
 Monday to Sunday, before the review. Artur and Angelina's call moves from
-week 1 to week 2. Week 1 has no interview quota.
+week 1 to week 2. Week 1 has no interview quota. 3 Oct: the form is no
+longer pasted; the landing page is in the repository and goes live with a
+Vercel project and a DNS change (week 2, Patrik).
 
 ---
 
@@ -117,8 +119,10 @@ sentence, a contact address).
 - Artur and Angelina moved to week 2 (Patrik, 2 Oct): the path screens get
   simplified from the #122 walk first. No interview quota this week; the
   routines start in week 2.
-- The form: backend live on livhold.com since 2 Oct (#136); Patrik pastes it
-  into the hosted page, then one real submission.
+- The form: backend live on livhold.com since 2 Oct (#136). Since 3 Oct the
+  page itself is in the repository (`landing/`) with the form written in, so
+  nothing is pasted: it goes live when Patrik creates the `landing` Vercel
+  project and moves the journey DNS record to it. Then one real submission.
 - Petra: Search Console checked, blog section up, press kit drafted.
 - Patrik: goal query written; follower login persistence started.
 - First blog post: "What September in Bangkok cost us", numbers from Money.
@@ -140,6 +144,10 @@ sentence, a contact address).
   here?" at each stop. They are testers one and two.
 - First shorts published (the September numbers as the hook).
 - Patrik: MVP path audited with a fresh account; login persistence done.
+- Patrik: the `landing` Vercel project and the journey DNS record, so the form
+  is live (`docs/APP-MOVE-BRIEF.md`, step 1; Petra checks the preview first).
+  The rest of the move, the app to app.livhold.com, has no week yet; Patrik
+  places it, before the freeze or after 30 November.
 - Petra: start editing the Bangkok month video.
 
 **Week 3 · 12 – 18 Oct**
