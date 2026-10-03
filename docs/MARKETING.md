@@ -367,6 +367,151 @@ searchable and lasts, with Instagram and TikTok shorts feeding it.
   self-explanatory before strangers meet them.
 - The routines are in `docs/PLAN-OCT-NOV-2026.md` and on the shared page.
 
+## Bangkok content — script starts (2026-10-03)
+
+Petra's brainstorm with Claude on 3 Oct, Patrik's format idea the same day.
+These are starts to write from, not finished scripts. Petra owns the content
+and the voice of it; Patrik's format is proposed, her call.
+
+**The direction.** One month, one city, with the receipt. September already
+happened and has numbers in it; nothing needs inventing. Every piece answers
+one question a person asks the night before they leave. The three questions
+are the three doors: "what does a month there actually cost" (money), "how
+did you choose where to go next" (plan), "how do your parents cope" (family).
+
+**The test for any idea.** Would someone leaving for Bangkok next month save
+it? "Ten things to see in Bangkok" fails: thousands exist and the person we
+want is not a tourist. "Our room cost this much, and here is what you get for
+it" passes.
+
+### Petra's material (3 Oct)
+
+- **The money lines that surprised her:** clothes; the whole month with the
+  rent included; how much goes in 7-Eleven without noticing; and Budapest
+  against Bangkok, the same month at two prices. The last one is the press
+  hook: "how can a young couple afford it" is the question, and the
+  comparison is the answer nobody expects.
+- **The family door in one screenshot:** she posted a check-in about her
+  health and her mother commented "I hope you feel better now 🥰". Her mother
+  comments on almost everything and adds a heart. The kind of post nobody
+  puts on Instagram, and the people who actually care answered. Ask her
+  mother before showing it, since it is her name on screen; the check-in can
+  be blurred and only the comment shown if Petra keeps the health part
+  private.
+- **What nobody told them:** download a translator app, nobody spoke English;
+  and Grab.
+- **Clips on hand:** the apartment, a night market, the first time in the big
+  malls, taxi rides.
+- **Title.** Petra's idea: "A month in Bangkok for a young couple, no
+  gatekeeping", for the curiosity ("how can they afford it") and the promise
+  of real numbers. Decided direction: keep the hook, move the promise. The
+  YouTube title carries the number, since the number is the proof: "A month
+  in Bangkok as a couple: it cost us X Ft, rent included." The thumbnail
+  shows the total in big digits and both faces. "No gatekeeping" goes into
+  the TikTok and Reels captions, where that phrase lives. Hungarian shape,
+  Petra's to phrase: "Egy hónap Bangkokban, párként: ennyibe került".
+
+### The month video, seven parts
+
+Eight to twelve minutes, Hungarian spoken, English subtitles, YouTube.
+
+1. The first ten seconds: the total on the Money screen, and "here is every
+   line, and the one that surprised us".
+2. Why Bangkok, and the dates. The globe. Short.
+3. Where we lived: the apartment clips, the rent, what you get for it.
+4. A normal day: the night market, 7-Eleven, Grab rides. Money's daily pace
+   on screen. The 7-Eleven line is the funny one.
+5. The surprise: clothes. The mall clips, the moment they walked in.
+6. Budapest and Bangkok, the same month, two prices.
+7. The people at home: the mother's comment, thirty seconds. Then what they
+   would change, the move to Hanoi, and the total once more on the screen.
+
+### Six shorts, in this order
+
+One number each, under a minute, upright, cut from the same takes. The same
+file to YouTube Shorts, Instagram and TikTok.
+
+1. The total, rent included.
+2. Budapest against Bangkok.
+3. "We did not plan to spend X on clothes. Then we walked into the mall."
+4. How X baht a day disappears in 7-Eleven.
+5. Two apps before you land: a translator and Grab. Taxi clips.
+6. What my mum sees.
+
+### Four Monday posts
+
+Hungarian first, English too, Substack plus the site's blog section.
+
+1. Every line of the month.
+2. Where we lived, and what we would do differently, with the two apps.
+3. How our mothers follow us, published with the video.
+4. Budapest against Bangkok, on its own: that one is the press pitch.
+
+Everything else from Bangkok comes from the same material: the five
+press-kit photos, the Hungarian group posts told as a story with the forint
+total in the first line, and the Bangkok facts in Reddit answers.
+
+### Patrik's format: the street interview (proposed 3 Oct, Petra's call)
+
+Someone asks Petra, as if meeting her on the street in Hanoi. The questions,
+as Patrik wrote them:
+
+> Sorry, do you live here? · Where did you come from? (Bangkok) · What was
+> living in Bangkok like? · Wow, you stayed there for a month? What do your
+> parents think about this? · They are lucky that you keep them in the loop,
+> and what did it cost to live for a month in Bangkok? · Did you home cook or
+> dine out? How was your apartment? · Would you recommend it to your friends?
+> · Anything you regret doing or not doing? · How did you land on Hanoi and
+> where are you off to next? · If you want to have more insight into what
+> travelling in Asia looks like, follow for more!
+
+Why it works: a rhythm viewers know, the three doors in one piece (cost,
+parents, Hanoi), "Do you live here?" answered with "for two months" is the
+chapter on the move in one exchange, and it records the six shorts in one
+sitting, each question its own cut. It is a series: the same questions in
+every city, about the city before.
+
+Three changes before filming, Claude's advice, confidence high on the first:
+
+1. **Who asks.** The genre is known to be staged. Either the caption says
+   who is asking ("Patrik asks Petra what everyone asks us") or a real
+   stranger from the dinner asks. No pretend stranger: it breaks "we".
+2. **The cost comes first in the short cut.** Cold-open on the total, then
+   "Sorry, do you live here?". The long cut can keep the order above.
+3. **The ending is ours.** Not "follow for more!"; calm, not loud. "Next
+   month, Hanoi, same questions, real numbers."
+
+Smaller: "They are lucky that you keep them in the loop" is the interviewer
+praising the product. Ask "How do they keep up?" instead, so the app appears
+in Petra's answer, and her mother's comment does the rest.
+
+Answer starts, from Petra's material, for her to put into her own words:
+
+- Do you live here? — "For two months. We came from Bangkok."
+- What was it like? — the apartment, the malls, the night market; nobody
+  spoke English, so a translator app and Grab on day one.
+- What do your parents think? How do they keep up? — "They follow us in the
+  app. My mum comments on everything; when I was ill she wrote 'I hope you
+  feel better now'."
+- What did it cost? — "X Ft for the two of us, rent included. Less (or more)
+  than a month in Budapest."
+- Cook or dine out? The apartment? — the night market, 7-Eleven "where X
+  baht a day disappears"; the rent and what you get for it.
+- Recommend it? — yes, with the two apps.
+- Regret? — the clothes. The malls.
+- Hanoi, and next? — the shortlist and the globe; next is open.
+- Close: "Next month, Hanoi, same questions, real numbers."
+
+### Next steps
+
+1. Petra: open Money, All entries, and write down September's total and the
+   five biggest lines. That is the skeleton of every script above.
+2. Petra: find last year's Budapest numbers, rent and groceries at least,
+   for the comparison.
+3. Decide: the health check-in shown, or only the comment.
+4. Claude writes the spoken parts with Petra from the five lines; one calm
+   take per part, nothing polished.
+
 ## The loop inside the product — round 6, DECIDED 2026-09-28
 
 The channels above bring the first stranger. The loop is what turns one
