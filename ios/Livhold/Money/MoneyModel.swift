@@ -23,7 +23,9 @@ struct MoneyModel {
     }
 
     struct PlanRow: Identifiable {
-        enum StayLabel { case booked, unpaid, draft, estimate, none }
+        /// Paid only once the charge date has passed (Patrik, 3 Oct, #149);
+        /// booked covers a charge still ahead. Idea: on the plan, not booked.
+        enum StayLabel { case paid, booked, idea, estimate, none }
         let seg: Segment
         let nights: Int
         let nightsIn: Int
@@ -39,9 +41,12 @@ struct MoneyModel {
     }
 
     struct BookingRow: Identifiable {
-        enum Status { case paid, unpaid, unbooked }
+        /// Paid: its entry is dated today or before. Scheduled: its entry is
+        /// dated ahead. Unpaid: booked, no entry yet.
+        enum Status { case paid, scheduled, unpaid, unbooked }
         let id: String
         let isStay: Bool
+        let segId: String?
         let label: String
         let amount: Double
         let date: String?
@@ -55,28 +60,31 @@ struct MoneyModel {
         var total: Double { all.reduce(0) { $0 + $1.amount } }
         var toPay: Double { all.filter { $0.status == .unpaid }.reduce(0) { $0 + $1.amount } }
         var notBooked: Double { all.filter { $0.status == .unbooked }.reduce(0) { $0 + $1.amount } }
-        func paid(before today: String) -> Double {
-            all.filter { $0.status == .paid && ($0.date ?? "") <= today }.reduce(0) { $0 + $1.amount }
-        }
-        func scheduled(after today: String) -> Double {
-            all.filter { $0.status == .paid && ($0.date ?? "") > today }.reduce(0) { $0 + $1.amount }
-        }
+        var paid: Double { all.filter { $0.status == .paid }.reduce(0) { $0 + $1.amount } }
+        var scheduled: Double { all.filter { $0.status == .scheduled }.reduce(0) { $0 + $1.amount } }
     }
 
     struct Projection {
         let spent: Double
         let scheduled: Double
         let ahead: Double
-        let unpaidStays: Double
+        /// Booked stays with no entry yet.
+        let staysToPay: Double
+        /// Stays on the plan but not booked, and stops priced at the city's average.
+        let staysEstimated: Double
         let transportToPay: Double
         let subsAhead: Double
         let remainingNights: Int
         /// Days between the last planned stop and the journey's end, at the daily
         /// pace plus the average night's stay so far (Patrik, 29 Sep: the cap is for
-        /// the whole journey, so what it's compared with has to be too).
+        /// the whole journey, so what it's compared with has to be too). Before
+        /// departure they are counted but not priced (Patrik, 3 Oct, #149 Q6).
         let unplannedDays: Int
         let unplanned: Double
         var daysAhead: Int { remainingNights + unplannedDays }
+        var unpaidStays: Double { staysToPay + staysEstimated }
+        /// Charged later or not yet: entries dated ahead and bookings with no entry.
+        var toPay: Double { scheduled + staysToPay + transportToPay }
         var projected: Double { spent + scheduled + ahead + unpaidStays + transportToPay + subsAhead + unplanned }
     }
 
@@ -96,6 +104,8 @@ struct MoneyModel {
     struct Day: Identifiable {
         let date: String
         var byFamily: [Family: Double] = [:]
+        /// Expenses kept out of the daily average: drawn striped, never averaged.
+        var other: Double = 0
         var total: Double { byFamily.values.reduce(0, +) }
         var id: String { date }
     }
@@ -123,6 +133,11 @@ struct MoneyModel {
     let subscriptions: [Subscription]
     let tripStart: String?
     let tripEnd: String?
+    /// Where the planned stops end.
+    let planEnd: String?
+
+    /// Before departure (#149): an estimate for the planned nights, no daily charts.
+    var beforeDeparture: Bool { tripStart.map { today < $0 } ?? false }
 
     var cap: Double? { (state.meta.budgetCap ?? 0) > 0 ? state.meta.budgetCap : nil }
     var tripDay: Int? { Journey.tripDay(state.meta, today: today) }
@@ -138,7 +153,10 @@ struct MoneyModel {
         self.rates = rates
         tripStart = state.meta.startDate
         let included = state.segments.filter(\.inPlan)
-        tripEnd = state.meta.endDate ?? included.map(\.depart).filter { !$0.isEmpty }.max()
+        let planEnd = included.map(\.depart).filter { !$0.isEmpty }.max()
+        self.planEnd = planEnd
+        tripEnd = state.meta.endDate ?? planEnd
+        let before = tripStart.map { today < $0 } ?? false
 
         // moneyModel.ts currentStop: arrive ≤ today ≤ depart, earliest arrival first.
         current = included
@@ -155,11 +173,11 @@ struct MoneyModel {
         self.pace = pace
         let plan = Self.planByStop(state, ledger, rates, cities: cities, today: today, pace: pace.perDay)
         self.plan = plan
-        let bookings = Self.bookingsSummary(state, ledger, rates)
+        let bookings = Self.bookingsSummary(state, ledger, rates, today: today)
         self.bookings = bookings
 
         var subsAhead = 0.0
-        if let end = tripEnd {
+        if let end = before ? planEnd : tripEnd {
             let from = Days.add(today, 1)
             for sub in subscriptions {
                 subsAhead += Double(Subscriptions.charges(sub, from: from, to: end).count) * Journey.toBase(sub.amount, sub.cur, rates)
@@ -185,16 +203,22 @@ struct MoneyModel {
         let settled = expenses.filter { $0.date <= today }
         let spent = settled.reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, rates) }
         let scheduled = expenses.filter { $0.date > today }.reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, rates) }
+        // A stay's money once: its entry (spent or scheduled) when there is one,
+        // else the booking, else the plan's estimate.
+        let planned = Set(plan.map(\.seg.id))
+        let stayRows = bookings.stays.filter { $0.segId.map(planned.contains) ?? false }
         projection = Projection(
             spent: spent,
             scheduled: scheduled,
             ahead: plan.reduce(0) { $0 + Double($1.remaining) * $1.rate },
-            unpaidStays: plan.filter { $0.stayLabel != .booked }.reduce(0) { $0 + $1.stay },
+            staysToPay: stayRows.filter { $0.status == .unpaid }.reduce(0) { $0 + $1.amount },
+            staysEstimated: stayRows.filter { $0.status == .unbooked }.reduce(0) { $0 + $1.amount }
+                + plan.filter { $0.stayLabel == .estimate }.reduce(0) { $0 + $1.stay },
             transportToPay: bookings.transport.filter { $0.status == .unpaid }.reduce(0) { $0 + $1.amount },
             subsAhead: subsAhead,
             remainingNights: plan.reduce(0) { $0 + $1.remaining },
             unplannedDays: unplannedDays,
-            unplanned: Double(unplannedDays) * (dayRate + nightRate)
+            unplanned: before ? 0 : Double(unplannedDays) * (dayRate + nightRate)
         )
 
         // beyondEveryday
@@ -258,10 +282,13 @@ struct MoneyModel {
                 stay = stays.reduce(0) { $0 + Journey.toBase(Journey.stayTotal($1, seg), $1.cur, rates) }
                 let booked = stays.filter { Journey.isBooked($0.status) }
                 if booked.isEmpty {
-                    label = .draft
+                    label = .idea
                 } else {
-                    let paid = booked.allSatisfy { st in ledger.contains { $0.source?.key == "stay:\(st.id)" } }
-                    label = paid ? .booked : .unpaid
+                    // Paid once its entry's date has passed, not when the entry exists.
+                    let paid = booked.allSatisfy { st in
+                        ledger.contains { $0.source?.key == "stay:\(st.id)" && !$0.date.isEmpty && $0.date <= today }
+                    }
+                    label = paid ? .paid : .booked
                 }
             } else if let city {
                 stay = city.accom[tier] * usd * Double(nights)
@@ -274,19 +301,23 @@ struct MoneyModel {
 
     // MARK: bookings
 
-    static func bookingsSummary(_ state: TripState, _ ledger: [LedgerEntry], _ rates: [String: Double]) -> Bookings {
-        let paidKeys = Set(ledger.compactMap { $0.source?.key })
+    static func bookingsSummary(_ state: TripState, _ ledger: [LedgerEntry], _ rates: [String: Double], today: String) -> Bookings {
+        // A booking's entry dated ahead is a charge to come, not a payment (#149).
+        var entryDates: [String: String] = [:]
+        for e in ledger { if let k = e.source?.key { entryDates[k] = max(entryDates[k] ?? "", e.date) } }
         func status(_ booked: Bool, _ key: String) -> BookingRow.Status {
-            !booked ? .unbooked : (paidKeys.contains(key) ? .paid : .unpaid)
+            guard booked else { return .unbooked }
+            guard let d = entryDates[key] else { return .unpaid }
+            return !d.isEmpty && d <= today ? .paid : .scheduled
         }
         let segs = Dictionary(state.segments.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let stays = state.stays.filter { $0.include == true }.map { st in
-            BookingRow(id: st.id, isStay: true, label: st.name,
+            BookingRow(id: st.id, isStay: true, segId: st.segId, label: st.name,
                        amount: Journey.toBase(Journey.stayTotal(st, segs[st.segId]), st.cur, rates),
                        date: st.chargeDate, status: status(Journey.isBooked(st.status), "stay:\(st.id)"))
         }
         let transport = state.transport.filter { $0.include != false }.map { t in
-            BookingRow(id: t.id, isStay: false, label: "\(t.type) \(t.from) → \(t.to)",
+            BookingRow(id: t.id, isStay: false, segId: nil, label: "\(t.type) \(t.from) → \(t.to)",
                        amount: Journey.toBase(t.price, t.cur, rates),
                        // Dated like its entry in All entries: when the card was charged,
                        // else the travel date. The travel date alone called a flight paid
@@ -356,8 +387,10 @@ struct MoneyModel {
             order.append(d)
             d = Days.add(d, 1)
         }
-        for e in ledger where e.isExpense && isEverydayRow(e) && days[e.date] != nil {
-            days[e.date]!.byFamily[Categories.family(e.category), default: 0] += Journey.toBase(e.amount, e.currency, rates)
+        for e in ledger where e.isExpense && days[e.date] != nil {
+            let v = Journey.toBase(e.amount, e.currency, rates)
+            if isEverydayRow(e) { days[e.date]!.byFamily[Categories.family(e.category), default: 0] += v }
+            else { days[e.date]!.other += v }
         }
         return order.compactMap { days[$0] }
     }
@@ -408,6 +441,72 @@ struct MoneyModel {
     }
 
     var currentPlan: PlanRow? { current.flatMap { cur in plan.first { $0.seg.id == cur.id } } }
+
+    struct Upcoming: Identifiable {
+        enum Opens { case entry(LedgerEntry), stay(String), transport(String) }
+        let id: String
+        let title: String
+        let category: String
+        let date: String
+        let amount: Double
+        /// The stop a stay belongs to; nil for anything else.
+        let city: String?
+        let atCheckIn: Bool
+        let opens: Opens
+    }
+
+    /// Every charge dated after today but the subscriptions, soonest first (#149,
+    /// Upcoming charges): entries dated ahead, and booked stays and legs with no
+    /// entry yet, on the day they're charged.
+    var upcoming: [Upcoming] {
+        let segs = Dictionary(state.segments.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let stays = Dictionary(state.stays.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let legs = Dictionary(state.transport.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        func stayCity(_ id: String) -> String? { stays[id].flatMap { segs[$0.segId]?.city } }
+        func atCheckIn(_ id: String) -> Bool { stays[id]?.chargeAtCheckIn == true }
+
+        var rows: [Upcoming] = []
+        for e in ledger where e.isExpense && !e.date.isEmpty && e.date > today && e.source?.kind != "sub" && !e.orphaned {
+            let opens: Upcoming.Opens
+            switch e.source?.kind {
+            case "stay": opens = .stay(e.source!.id)
+            case "transport": opens = .transport(e.source!.id)
+            default: opens = .entry(e)
+            }
+            let isStay = e.source?.kind == "stay"
+            rows.append(Upcoming(id: e.id, title: e.note.isEmpty ? Categories.label(e.category) : e.note, category: e.category,
+                                 date: e.date, amount: Journey.toBase(e.amount, e.currency, rates),
+                                 city: isStay ? stayCity(e.source!.id) : nil, atCheckIn: isStay && atCheckIn(e.source!.id), opens: opens))
+        }
+        for b in bookings.all where b.status == .unpaid {
+            if b.isStay {
+                guard let st = stays[b.id] else { continue }
+                let d = [st.chargeAtCheckIn == true ? st.checkIn : st.chargeDate, st.checkIn, segs[st.segId]?.arrive]
+                    .compactMap { $0 }.first { !$0.isEmpty }
+                guard let d, d > today else { continue }
+                rows.append(Upcoming(id: "stay:\(b.id)", title: b.label, category: "stays", date: d, amount: b.amount,
+                                     city: segs[st.segId]?.city, atCheckIn: st.chargeAtCheckIn == true, opens: .stay(b.id)))
+            } else {
+                guard let t = legs[b.id], let d = b.date, d > today else { continue }
+                rows.append(Upcoming(id: "transport:\(b.id)", title: "\(t.from) → \(t.to)", category: "transport", date: d,
+                                     amount: b.amount, city: nil, atCheckIn: false, opens: .transport(b.id)))
+            }
+        }
+        return rows.sorted { $0.date != $1.date ? $0.date < $1.date : $0.amount > $1.amount }
+    }
+
+    /// Transport legs on the plan that aren't booked: counted in no figure.
+    var unbookedLegs: [TransportLeg] {
+        let ids = Set(bookings.transport.filter { $0.status == .unbooked }.map(\.id))
+        return state.transport.filter { ids.contains($0.id) }
+    }
+
+    /// Everything dated before departure day, once the journey is under way.
+    var beforeDepartureSpent: Double {
+        guard let start = tripStart, start <= today else { return 0 }
+        return ledger.filter { $0.isExpense && !$0.date.isEmpty && $0.date < start }
+            .reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, rates) }
+    }
 
     /// Hand-typed entries up to today, newest first (LatestStrip.tsx).
     var latest: [LedgerEntry] {

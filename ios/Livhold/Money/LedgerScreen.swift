@@ -7,7 +7,7 @@ import SwiftUI
 // at once and works with no signal.
 
 struct LedgerScreen: View {
-    /// "beyond", a filter, a day ("2026-09-20") to open on, "cat:<id>", or a group
+    /// "beyond", "before" (what was bought before departure), a filter, a day ("2026-09-20") to open on, "cat:<id>", or a group
     /// and the days Where it goes showed ("fam:food:2026-09-15:2026-09-28").
     let focus: String?
 
@@ -36,6 +36,8 @@ struct LedgerScreen: View {
     /// A family and its days, from a row of Where it goes: the entries behind its amount.
     @State private var family: Family?
     @State private var span: (from: String, to: String)?
+    /// Only what's dated before this day: departure day, from Money's "Before departure" row.
+    @State private var before: String?
     @State private var query = ""
     @State private var comingOpen = false
     @State private var didFocus = false
@@ -65,6 +67,7 @@ struct LedgerScreen: View {
             guard !didFocus else { return }
             didFocus = true
             if focus == "beyond" { filter = .beyond }
+            if focus == "before" { before = store.trip?.state.meta.startDate }
             if let focus, focus.hasPrefix("cat:") { category = String(focus.dropFirst(4)) }
             if let focus, focus.hasPrefix("fam:") {
                 let parts = focus.split(separator: ":").map(String.init)
@@ -89,7 +92,7 @@ struct LedgerScreen: View {
         return ScrollViewReader { proxy in
             List {
                 Section {
-                    if !query.trimmed.isEmpty || filter != .all || category != nil || family != nil { summary(past, model) }
+                    if !query.trimmed.isEmpty || filter != .all || category != nil || family != nil || before != nil { summary(past, model) }
                     if !coming.isEmpty { comingUp(coming, model) }
                 }
                 .listRowBackground(Color.clear)
@@ -139,6 +142,7 @@ struct LedgerScreen: View {
             if let category, e.category != category { return false }
             if let family, Categories.family(e.category) != family { return false }
             if let span, e.date < span.from || e.date > span.to { return false }
+            if let before, e.date.isEmpty || e.date >= before { return false }
             switch filter {
             case .all: break
             case .everyday: guard e.isExpense && isEverydayRow(e) else { return false }
@@ -169,6 +173,24 @@ struct LedgerScreen: View {
         let used = counts.sorted { $0.value > $1.value || ($0.value == $1.value && $0.key < $1.key) }.map(\.key)
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
+                if before != nil {
+                    Button {
+                        withAnimation(Motion.quick) { before = nil }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Text("Before departure")
+                            Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
+                        }
+                        .font(.sans(13, weight: .semibold))
+                        .foregroundStyle(Palette.ac)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Palette.acSoft, in: .capsule)
+                        .overlay(Capsule().strokeBorder(Palette.acLine, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint(Text("Shows every day"))
+                }
                 if let family {
                     Button {
                         withAnimation(Motion.quick) { self.family = nil; span = nil }

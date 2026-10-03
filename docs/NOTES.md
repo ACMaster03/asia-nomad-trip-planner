@@ -5,6 +5,56 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-03
+
+### BUILT — iPhone Money before departure, Upcoming charges, "paid" only once charged, striped bars (Patrik, 3 Oct, #149)
+
+Agreed over four mock rounds (https://claude.ai/artifact/E9QEm4g2faCthxYxBHfohn), then
+"go build it". On the iPhone only; the web follows in the one pass.
+
+- **Before departure** (today before the start date) the top card is **Estimated total**
+  for the planned nights only: a bar against the cap, then Paid · Still to pay · Day to day
+  · (Stays not booked yet) · Subscriptions to the plan's end, the **Cap** as a row, and
+  "Left for 138 unplanned days ≈ 1.4 M Ft / after 13 Dec · ≈ 10 120 Ft a day". Over the
+  cap it says by how much, nothing else. The days after the plan are **not priced**
+  before departure (Q6); on the road they are, as before. No switch, no Daily spend or
+  Where it goes, no line about them. Unbooked legs: "Bangkok → Hanoi isn't booked yet, so
+  it isn't counted." Fine print: "city averages from June 2026"; it becomes "checked
+  regularly" once #148 dates and checks the prices.
+- **Order before departure:** Estimated total · Upcoming charges · Latest · Plan by stop ·
+  Bookings · Subscriptions. On the road: top card · Upcoming charges · Latest · the charts ·
+  Plan · Bookings · Subscriptions.
+- **Upcoming charges** (everywhere): every charge dated after today except subscriptions,
+  three soonest, the total in the corner, each opening its booking's form (a typed entry
+  opens the entry form).
+- **"Paid" only once the charge date has passed**, everywhere: a booking whose entry is
+  dated ahead is "booked"/scheduled. Bookings reads "1 paid · 2 booked". Plan by stop rows
+  say the nights only; the breakdown says "Mid average, 10 200 Ft a day" (or "Your pace,
+  …"), then "Stay, paid / booked / idea / city average". Amounts never wrap.
+  How it adds up before departure: Spent so far · Scheduled & to pay · N nights ahead ·
+  Subscriptions to {plan end} · The planned journey, and "The 138 days after it aren't
+  counted yet." (Q9: both summaries stay.)
+- **Daily spend:** entries kept out of the daily average draw their bar too, striped, on top
+  of what counts; the legend explains stripes only while one is in view. The average still
+  ignores them. The Bangkok → Hanoi day (30 Sep) is no longer empty.
+- **Departure and travel days:** the switch opens on Journey when there's no stop today; on
+  the road the Journey view has "Before departure · 1 073 017 Ft ›", opening All entries
+  filtered to the days before departure (a chip clears it).
+- Projection maths: a stay's money counts once (its entry if it has one, spent or
+  scheduled; else the booking; else the estimate). Before the fix, a stay whose charge was
+  dated ahead counted as paid.
+
+Checked in the sample journey on 19 Aug, 31 Aug and 2 Oct, English and Hungarian. The
+sample's entry list is static, so on 19 Aug its September entries count as "still to pay"
+(1 165 035 Ft instead of the real 758 540): fixture noise, not a rule. No new writes, so no
+staging round.
+
+Open: Plan by stop on the road still waits for its unlock (a week of pace) on new journeys,
+so it shows before departure and disappears on day 1 until then. Patrik to decide.
+
+**iOS:** this is the iOS entry (`MoneyModel.upcoming`, `beforeDeparture`, `Bookings` status
+`.scheduled`, `TopCard.estimate`). **Web differs now:** all of the above.
+
 ## 2026-10-02
 
 ### DECIDED — iOS first, the web follows in one pass; leaving a tab closes its pages (Patrik, 2 Oct)
