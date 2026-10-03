@@ -27,7 +27,8 @@ import { LEGAL } from '@/lib/legal/entity'
 //   #120 (usage counts, own database)  follower opens per day, sign-up source,
 //                                      setup steps; described here ahead of the
 //                                      code by Patrik's decision (3 Oct 2026)
-//   auth.sessions (Supabase Auth)      IP and user agent per signed-in session
+//   auth.sessions (Supabase Auth)      IP and user agent per signed-in session;
+//   migration 42                       purge-idle-sessions deletes it after 90 days idle
 //   migration 44 + api/journey-signup  the list form on journey.livhold.com:
 //                                      what it stores, insert-only, 12-month purge
 
@@ -66,7 +67,7 @@ export default function PrivacyPage() {
           <li>A first name, if you give one, so your name rather than your address appears to people you plan with.</li>
           <li>
             When you sign in, the address your connection comes from and the kind of browser or app
-            you use, kept while you stay signed in. The services we run on also keep ordinary request
+            you use, kept until you sign out on that device or stop using the app on it for 90 days. The services we run on also keep ordinary request
             logs for a short time, for security and to find faults; nobody reads them per person.
           </li>
         </ul>
@@ -263,6 +264,10 @@ export default function PrivacyPage() {
           Your content stays until you delete it. Delete a trip and its contents and photos go with
           it. Revoke a follow link and that address stops working immediately for everyone holding
           it.
+        </p>
+        <p>
+          A signed-in device, with the address it connected from, is forgotten when you sign out on
+          it, or after 90 days without using the app on it. You then simply sign in again.
         </p>
         <p>
           Deleting your account, from <span className="font-medium text-tx">Account → Delete account</span>,
