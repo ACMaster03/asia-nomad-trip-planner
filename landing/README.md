@@ -20,7 +20,8 @@ Changed from the ChatGPT export: links go to `https://livhold.com` (the `www` ad
 redirects there); the hero link "Leaving later? Tell us when →", the form, and Privacy and
 Terms in the footer were added (`docs/landing-form/README.md`); the form has no text shadow
 (the closing section gives its own text one); the button-directions page
-(`buttons.html`, `button-lab.css`) and the export's deploy note were left out.
+(`buttons.html`, `button-lab.css`), the export's deploy note and twelve photos the page never
+loads were left out; the rest were made smaller (at most 2200 px wide, JPEG quality 80).
 
 To look at it locally: `cd landing/public && python3 -m http.server 8765`, then
 `http://localhost:8765`.

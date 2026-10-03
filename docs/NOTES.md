@@ -26,8 +26,10 @@ Directory `landing`, rebuilds only on changes under `landing/`).
 - **Waiting on Patrik:** (1) create the Vercel project from this repository with Root
   Directory `landing` (a preview link, nothing public); (2) after Petra checks the preview,
   move the `journey` DNS record from ChatGPT's hosting to that project. Reversible in minutes.
-- **Not done:** the images are 13 MB in all (largest 1.5 MB); compressing them would speed the
-  page on a phone abroad. Petra's call.
+- **Photos (Petra's yes, 3 Oct):** the twelve the page never loads are gone; the rest are at
+  most 2200 px wide (the portrait two 2000 px), JPEG quality 80, the globe 900 px, the logo
+  192 px, the share card a 74 KB JPEG. What a visitor downloads went from about 8.3 MB of
+  images to about 3.7 MB.
 - **Checked:** served locally; at 390 px and 1440 px every font loads from the site, no request
   leaves it, no sideways scroll; the hero link scrolls to the form; an empty submit shows the
   three messages. **Not run:** a real submission from the new address (needs the project).
