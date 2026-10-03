@@ -75,7 +75,7 @@ Suggested home in the repo: `docs/landing-form/`.
 5. **Fill in `CONFIG`** at the top of the form's script:
    - `endpoint`: `https://<project-ref>.supabase.co/rest/v1/journey_signups`
    - `headers`: `{ apikey: "<anon key>", Authorization: "Bearer <anon key>", Prefer: "return=minimal" }`
-   - `privacy`, `terms` and `privacyEmail` are already set (livhold.com/privacy, livhold.com/terms, privacy@keepyourhabits.com).
+   - `privacy`, `terms` and `privacyEmail` are already set (livhold.com/privacy, livhold.com/terms, support@keepyourhabits.com).
 6. **Footer of journey.livhold.com:** add "Privacy" and "Terms" links. There are none today.
 7. **Deletion job:** delete rows older than the retention period you choose in section 4 (e.g. a scheduled `delete from journey_signups where created_at < now() - interval '12 months'`).
 8. **Test before merging:** one real submission lands in the table; empty submit shows all three messages; a blocked endpoint shows "That didn't go through" and keeps the answers; check at phone width.
@@ -94,7 +94,7 @@ The current policy (livhold.com/privacy, "Last updated 16 September 2026") cover
 >
 > We use this for three things only: to email you when Livhold opens to everyone, to understand how people plan long trips, and, only if you ticked the box, to get in touch about a call. We don't use it for advertising, we don't sell it, and we don't add you to anything else.
 >
-> We're allowed to hold it because you gave it to us for these reasons (your consent). You can withdraw that consent at any time: use the unsubscribe link in any email, or write to privacy@keepyourhabits.com and we'll delete your answers.
+> We're allowed to hold it because you gave it to us for these reasons (your consent). You can withdraw that consent at any time: use the unsubscribe link in any email, or write to support@keepyourhabits.com and we'll delete your answers.
 >
 > If we talk on a call, we take short written notes. We don't record calls unless we ask you first and you say yes.
 

@@ -21,7 +21,12 @@ import { LEGAL } from '@/lib/legal/entity'
 //   supabase/functions/_shared/resend  transactional email leaves via Resend
 //   product/vercel.json                functions pinned to dub1 (Dublin)
 //   (absent) navigator.geolocation     the app never asks the device where it is
-//   (absent) any analytics SDK         nothing measures the reader
+//                                      (but itinerary cities and check-ins ARE the
+//                                      user's location at city level: said so)
+//   (absent) any analytics SDK         no third party measures the reader
+//   #120 (usage counts, own database)  follower opens per day, sign-up source,
+//                                      setup steps; described here ahead of the
+//                                      code by Patrik's decision (3 Oct 2026)
 //   auth.sessions (Supabase Auth)      IP and user agent per signed-in session
 //   migration 44 + api/journey-signup  the list form on journey.livhold.com:
 //                                      what it stores, insert-only, 12-month purge
@@ -77,6 +82,12 @@ export default function PrivacyPage() {
           <li>Check-ins: the place, a rating, your comment, and when it happened.</li>
           <li>Photos you attach to a check-in.</li>
         </ul>
+        <p>
+          Put together, the cities in your itinerary and your check-ins say where you are, at the
+          level of a city, and when. That is your location in the ordinary sense, and we treat it
+          that way: it comes from what you chose to enter, never from your device, and followers
+          see only what you share with them.
+        </p>
         <p className="font-semibold text-tx">Sharing</p>
         <ul className="list-disc space-y-1 pl-5">
           <li>Who you invited to a trip and whether they can edit or only view.</li>
@@ -92,6 +103,29 @@ export default function PrivacyPage() {
             needed to encrypt a message to it. It identifies a browser on a device, not you.
           </li>
         </ul>
+        <p className="font-semibold text-tx">How the app is used</p>
+        <p>
+          To develop {LEGAL.product} and to check whether it works for the people using it, we count
+          a few things in our own database:
+        </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            The days a journey&apos;s feed was opened by its followers: one mark per follower, or per
+            follow link, per day, never each tap or what was looked at.
+          </li>
+          <li>
+            How you found {LEGAL.product} when you signed up: a follow link (and the journey it led to),
+            an invitation from a travel partner, the list on journey.livhold.com, or none of these.
+          </li>
+          <li>Which steps of setting up a journey you have completed.</li>
+        </ul>
+        <p>
+          If you open a follow link without an account, the mark belongs to the link, not to you:
+          it records that the link was opened that day, and nothing that identifies who opened it.
+          The daily marks are deleted after 12 months. How you signed up and your setup steps stay
+          with your account and go when it is deleted. None of it is sold, shared, or sent to an
+          analytics company.
+        </p>
       </Section>
 
       <Section id="journey-list" title="If you join the list on journey.livhold.com">
@@ -121,8 +155,9 @@ export default function PrivacyPage() {
         <p>This list is as much the point as the one above it.</p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <b className="font-semibold text-tx">Not your location.</b> The app never asks your
-            device where it is. A check-in is placed by the city you picked, not by GPS.
+            <b className="font-semibold text-tx">Not your device&apos;s location.</b> The app never
+            asks your device where it is: no GPS, no Wi-Fi or cell positioning. A check-in is placed
+            by the city you picked, not by where your phone is.
           </li>
           <li>
             <b className="font-semibold text-tx">Not the location in your photos.</b>
@@ -130,10 +165,10 @@ export default function PrivacyPage() {
             {" Photos are re-encoded on your phone before upload, which discards the camera's embedded data (GPS coordinates, camera model, timestamp), so what leaves your device is the picture and nothing else."}
           </li>
           <li>
-            <b className="font-semibold text-tx">No analytics and no tracking.</b> There is no
-            analytics service, no advertising identifier, no third-party tracker and no cookie
-            banner, because there is nothing to consent to. The only cookies are the ones that keep
-            you signed in.
+            <b className="font-semibold text-tx">No analytics service and no tracking.</b> The
+            counts above are kept in our own database. There is no analytics company, no advertising
+            identifier, no third-party tracker and no cookie banner, because there is nothing to
+            consent to. The only cookies are the ones that keep you signed in.
           </li>
           <li>
             <b className="font-semibold text-tx">No payment details.</b> The app takes no money, so
@@ -154,6 +189,12 @@ export default function PrivacyPage() {
           consent: nothing is sent until someone switches it on, and a single tap switches it back
           off.
         </p>
+        <p>
+          The sign-in records, the request logs and the usage counts rest on our legitimate
+          interests: keeping accounts secure, finding faults, and knowing whether the app is
+          working well enough to keep building. Each is the smallest record that does the job, and
+          you can object to it by writing to <LegalValue value={LEGAL.contactEmail} />.
+        </p>
       </Section>
 
       <Section id="processors" title="Who else touches it">
@@ -173,9 +214,10 @@ export default function PrivacyPage() {
             is going to.
           </li>
           <li>
-            <b className="font-semibold text-tx">Your browser&apos;s push service</b>: if you turn
-            push on, the notification travels through the service your browser uses (Google,
-            Mozilla or Apple, depending on the browser). The content is encrypted to your device.
+            <b className="font-semibold text-tx">Push services</b>: if you turn push on, the
+            notification travels through the service your browser uses (Google, Mozilla or Apple,
+            depending on the browser), or through Apple&apos;s push service in the iPhone app. The content is encrypted to your
+            device.
           </li>
           <li>
             <b className="font-semibold text-tx">For the list on journey.livhold.com</b>: Supabase
@@ -259,8 +301,9 @@ export default function PrivacyPage() {
         </p>
         <p>
           Our representative in the EU, for the purposes of Article 27 of the EU GDPR,
-          is <LegalValue value={LEGAL.euRepresentative} />. People in the EEA may contact them about
-          anything on this page as an alternative to contacting us directly.
+          is <LegalValue value={LEGAL.euRepresentative} />, <LegalValue value={LEGAL.euRepresentativeAddress} />,
+          at <LegalValue value={LEGAL.euRepresentativeEmail} />. People in the EEA may contact our
+          representative about anything on this page instead of contacting us directly.
         </p>
       </Section>
 
