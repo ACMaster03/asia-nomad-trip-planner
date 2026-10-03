@@ -1,0 +1,21 @@
+{
+  "name": "Livhold",
+  "short_name": "Livhold",
+  "description": "Plan longer trips together and hold every part of the journey in one place.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f2ea",
+  "theme_color": "#3f5a3e",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

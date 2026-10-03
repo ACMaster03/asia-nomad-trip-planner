@@ -5,6 +5,34 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-03
+
+### BUILT — journey.livhold.com moves to this repository (`landing/`), waiting on Patrik
+
+Petra, 3 Oct: the landing page on ChatGPT's hosting (`chatgpt.site`, behind Cloudflare)
+showed her "Sorry, you have been blocked" on a VPN placed in Vietnam, and loaded once she
+moved the VPN to Budapest. Travellers in Asia on a VPN are the audience; nobody on our side
+could see or change who got blocked. Her export (static HTML, CSS, JS, images) is now in
+`landing/public/`, served as is by a Vercel project of its own (`landing/vercel.json`, Root
+Directory `landing`, rebuilds only on changes under `landing/`).
+- **Changed from the export:** links go to `https://livhold.com` (not `www`, which only
+  redirects); fonts are served from `landing/public/fonts/` instead of Google Fonts, so a
+  visitor's browser calls no one but the site (the policy names no font host); the list form,
+  the hero link and the footer's Privacy and Terms are in (`node tools/landing-form.mjs` now
+  writes the form into the page as well as the paste file); the page's text shadow is off
+  inside the form; `buttons.html` and `button-lab.css` (Petra's button lab) left out.
+- **Why this also closes a gap:** `/privacy` names Vercel as the host and nothing for the
+  landing page; on ChatGPT's hosting, OpenAI and Cloudflare saw every visit unnamed.
+- **Waiting on Patrik:** (1) create the Vercel project from this repository with Root
+  Directory `landing` (a preview link, nothing public); (2) after Petra checks the preview,
+  move the `journey` DNS record from ChatGPT's hosting to that project. Reversible in minutes.
+- **Not done:** the images are 13 MB in all (largest 1.5 MB); compressing them would speed the
+  page on a phone abroad. Petra's call.
+- **Checked:** served locally; at 390 px and 1440 px every font loads from the site, no request
+  leaves it, no sideways scroll; the hero link scrolls to the form; an empty submit shows the
+  three messages. **Not run:** a real submission from the new address (needs the project).
+- **iOS:** nothing. The landing page is web only.
+
 ## 2026-10-02
 
 ### LIVE — the /privacy wording of #151 (#155, Patrik's "go", 2 Oct)
