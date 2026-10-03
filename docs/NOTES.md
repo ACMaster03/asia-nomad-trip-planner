@@ -137,6 +137,17 @@ iOS: the policy promises every reminder email and notification is switchable per
 The iOS app is building its notification switches now (Patrik, 2 Oct); the web follows in
 #150. Nothing else in this entry changes app behaviour.
 
+### DECIDED — Patrik's week is three Livhold days; build-in-public and X dropped (Patrik, 2 Oct)
+
+Patrik has three days a week for Livhold; the job has the other four, with nothing planned on
+them. His build-in-public posts (Threads or X, Mon/Wed/Fri) are dropped, not moved to Petra:
+they reach founders, not the people we are after, and Petra's ten hours already cover the blog,
+the shorts, Reddit and the Hungarian groups. The goal numbers move from Monday to Sunday, before
+the review. Artur and Angelina's watching test moves from week 1 to week 2, after the #122
+fresh-account walk and the path-screen fixes. Week 1 has no interview quota. Recorded in
+`docs/PLAN-OCT-NOV-2026.md` (the change line, both routines, weeks 1 and 2) and
+`docs/MARKETING.md` (channels, decisions); the shared page follows.
+
 ### CHECKED — /privacy against the code, claim by claim (Patrik's ask, 2 Oct): five issues
 
 Patrik, closing the round: "do another check on anything that we may have not complied to
