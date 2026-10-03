@@ -15,6 +15,9 @@ TWA will wrap), `ios/` is unchanged apart from its web address. journey.livhold.
 livhold.com. Why now: a TWA is tied to one origin, and none is built yet. The five users sign in
 again and reinstall; Patrik accepts that. Done from Patrik's machine; the brief, order of work,
 risks and test list are in `docs/APP-MOVE-BRIEF.md`.
+- **Patrik, same day:** the legal pages (`/privacy`, `/terms`, `/delete-account`) stay in the
+  app at app.livhold.com, and livhold.com redirects to them; `/privacy`'s heading "If you join
+  the list on journey.livhold.com" may change to livhold.com.
 - **iOS:** `ios/Livhold/Auth/Backend.swift`, `production.web` becomes `https://app.livhold.com`
   when the move lands (where a password reset opens); not before.
 

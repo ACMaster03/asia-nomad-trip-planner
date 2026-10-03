@@ -83,8 +83,8 @@ the apex).
   to the final addresses. Do not rely on a redirect: a reviewer may reject one.
 - The comments in `product/src/proxy.ts`, `api/journey-signup/route.ts`, `lib/journey/signup.ts`
   and `app/privacy/page.tsx` that say journey.livhold.com. `/privacy`'s heading "If you join the
-  list on journey.livhold.com" becomes livhold.com. That is a wording change in the policy:
-  Patrik's "go".
+  list on journey.livhold.com" becomes livhold.com (Patrik's "go", 3 Oct). Move "Last
+  updated" to the day it goes live.
 - Sign in with Apple on the web: `product/src/app/login/page.tsx` mentions Apple. If the web
   flow uses an Apple Services ID, register `app.livhold.com` as a domain and return URL with
   Apple. Not checked.
@@ -104,8 +104,8 @@ the apex).
   installed the app would keep the old worker and keep serving the cached app on livhold.com.
   Serve a `landing/public/sw.js` that deletes every cache, unregisters itself and reloads its
   open windows. [Likely; test it on a phone with the app installed before the switch.]
-- **Legal pages.** Recommendation: they stay in the app (`app.livhold.com/privacy`, `/terms`,
-  `/delete-account`), and livhold.com redirects to them. Patrik decides.
+- **Legal pages stay in the app** (Patrik, 3 Oct): `app.livhold.com/privacy`, `/terms`,
+  `/delete-account`; livhold.com redirects to them, and the landing footer links straight there.
 
 ## Risks
 
