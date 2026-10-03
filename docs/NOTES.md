@@ -19,6 +19,11 @@ The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`
   until step 5. The form works from there: Patrik sent one at 05:29 UTC, the app answered 204,
   and the row (source `direct`) was in production's `journey_signups`; he deleted it the same
   minute by `tools/db.sh --prod sql`, one row.
+- **Petra's first look, through Patrik (3 Oct):** "Leaving later? Tell us when" was too quiet;
+  its underline and arrow are now the page's mauve (`#de9ba7`, as "held together."). On the
+  phone, "Available on the web · iOS & Android coming soon" sat on top of "Scroll into your next
+  chapter"; the hero line is gone (Patrik: iOS is on its way, Android does not matter now). The
+  closing section's "Open the web app · iOS & Android coming soon" stays until Patrik says.
 - **Checked before the DNS move:** `livhold.com` is on Vercel DNS; `journey` is a CNAME to
   `custom-domains.chatgpt.site` with a 60-second TTL; Vercel already holds a `*.livhold.com`
   certificate, so the move opens no certificate gap. The app is served at the apex
