@@ -7,6 +7,21 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-02
 
+### LIVE — the /privacy wording of #151 (#155, Patrik's "go", 2 Oct)
+
+Merged on Patrik's "go": "We'll go over this once before we do a public release of the
+application; until then, this should be more than enough." That pass is issue #156, a
+checklist of every promise the page makes (#150, #5, data requests by hand, the "do not
+email" note, erasure, #123/#120, #119). #151 closed with the merge, #152 closed as not
+planned, #150 is high priority. Verified after the Vercel build with a fetch of
+livhold.com/privacy from Vercel's side: the six changed sentences are served, no glued
+letters. Nobody has read the three changed paragraphs in Safari yet; #140 covers that bug
+class on every screen.
+
+iOS: nothing changes in the app. The promise the page now makes, every reminder email
+switchable in notification settings, is #150 on the web and the switches the iOS app is
+building.
+
 ### DECIDED — the policy states how we will operate, not how we operate today (Patrik, 2 Oct)
 
 Patrik on the five statements of #151: "write the privacy policy that is enough and is good,

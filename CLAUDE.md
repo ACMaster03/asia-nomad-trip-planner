@@ -132,7 +132,8 @@ Petra is new to software work; Patrik is not. The product conventions are in
   The wording went out as one pull request (sessions keep IP and user agent; reminders are
   part of the service, switchable in settings, which is #150, high priority; unsubscribe
   keeps a "do not email" note; a copy of your data comes by email to privacy@, by hand, so
-  #152 is closed; invitations are not emailed, they are rows matched at sign-in).
+  #152 is closed; invitations are not emailed, they are rows matched at sign-in). It is live
+  since 2 Oct (#155, Patrik's "go"); the once-more pass before the public release is #156.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
