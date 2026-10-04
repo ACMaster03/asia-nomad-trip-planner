@@ -253,8 +253,9 @@ export default function PrivacyPage() {
           you write to us.
         </p>
         <p>
-          Followers never see money, private notes, bookings or exact positions. They see the route,
-          the dates, check-ins and the comments shared with them.
+          Followers never see money, private notes, bookings or exact positions. They see the route
+          and how you travel between stops (plane, train, bus, ferry or other), the dates, check-ins
+          and the comments shared with them.
         </p>
       </Section>
 
