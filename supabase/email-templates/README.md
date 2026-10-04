@@ -46,8 +46,10 @@ appends `?code=…`, and `product/src/app/auth/callback` exchanges it.
   which verifies server-side and has no such constraint.
 - **Redirect allowlist.** Every origin the app is served from needs its
   `/auth/callback` in Auth → URL Configuration, because `emailRedirectTo` is built from
-  `window.location.origin`. Both `livhold.com` and `www.livhold.com` are listed today
-  (as `…/auth/callback**` — the wildcard matters, see `docs/NOTES.md` 2026-09-18).
+  `window.location.origin`. `app.livhold.com/**` is listed since 4 Oct (#163), next to the
+  old `livhold.com` and `www.livhold.com` entries, which go a quiet week after the switch
+  (`…/auth/callback**` — the wildcard matters, see `docs/NOTES.md` 2026-09-18). The logo
+  in both templates loads from `app.livhold.com/brand/`, where the app's files live.
 - **Leave passwords out of these emails.** Signing up never involves one: a password is
   opt-in, set later from Account → Password by someone already signed in, and
   `signInWithPassword` only works for an account that has set one. *Confirm signup* used

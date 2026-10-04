@@ -15,7 +15,8 @@ the landing page later moves to livhold.com itself or the app moves to a subdoma
 
 ## How it works
 
-1. The form posts the answers as JSON to `https://livhold.com/api/journey-signup`
+1. The form posts the answers as JSON to `https://app.livhold.com/api/journey-signup` (the
+   app's own address since step 3 of `docs/APP-MOVE-BRIEF.md`; `livhold.com` before)
    (`product/src/app/api/journey-signup/route.ts`). Nothing but that address is in
    the page: no Supabase key, no table name.
 2. The endpoint checks the answers (`product/src/lib/journey/signup.ts`, the same

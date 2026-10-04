@@ -22,8 +22,8 @@ it, so no answer below changes.
 
 | Field | Value | Status |
 |---|---|---|
-| Privacy policy | `https://www.livhold.com/privacy` | live once merged |
-| Account deletion | `https://www.livhold.com/delete-account` | live once merged |
+| Privacy policy | `https://app.livhold.com/privacy` | live since 4 Oct (#163); the console still says www.livhold.com until step 6 |
+| Account deletion | `https://app.livhold.com/delete-account` | live since 4 Oct (#163); the console still says www.livhold.com until step 6 |
 
 Both must answer over HTTPS **with no sign-in**. They are outside the `(app)`
 group and excluded from the proxy matcher in `src/proxy.ts`, so they do.

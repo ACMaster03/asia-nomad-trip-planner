@@ -2,13 +2,13 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { parseSignup } from '@/lib/journey/signup'
 
-// Where the journey.livhold.com list form sends its answers (docs/landing-form).
+// Where the landing page's list form sends its answers (docs/landing-form).
 //
-// That page is hosted outside this repo, so the form cannot share the app's
-// Supabase client: it POSTs JSON here, cross-origin, and this route writes the
-// row. Which is also why the endpoint, not the page, holds the Supabase
-// details: nothing but this URL is pasted into the hosted page, and the page
-// can move (to livhold.com itself, say) without the form changing.
+// That page is its own Vercel project (landing/, on livhold.com from step 5 of
+// docs/APP-MOVE-BRIEF.md), so the form cannot share the app's Supabase client:
+// it POSTs JSON here, to app.livhold.com, cross-origin, and this route writes
+// the row. Which is also why the endpoint, not the page, holds the Supabase
+// details: nothing but this URL is in the page.
 //
 // No session, no cookies, no CSRF token: the request comes from a visitor who
 // has no account, possibly from inside a sandboxed embed whose Origin reads

@@ -107,11 +107,15 @@ split, and invisible to anyone who already has an account.
 
 Also check:
 
-- **Authentication → URL Configuration → Site URL** must be
-  `https://www.livhold.com`. `{{ .SiteURL }}` builds the link above, and the
-  apex `livhold.com` 308-redirects to `www`, so anything else sends people to
-  the wrong origin.
-- **Redirect URLs** should include `https://www.livhold.com/**`.
+- **Site URL and Redirect URLs are code now:** `site_url` and
+  `additional_redirect_urls` in `supabase/config.toml`, pushed with
+  `tools/auth-config.sh`, never set in the dashboard. Since step 3 of
+  `docs/APP-MOVE-BRIEF.md` (#163) the Site URL is `https://app.livhold.com`, and
+  the list carries `https://app.livhold.com/**` next to the old livhold.com
+  entries until a quiet week after the switch. (What this section said in
+  September, `www.livhold.com` as the Site URL, is out of date twice over: by
+  October `www` redirected to the apex, and the templates use
+  `{{ .ConfirmationURL }}`.)
 
 ### While you are in there
 

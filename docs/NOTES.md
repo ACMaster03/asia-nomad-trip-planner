@@ -125,6 +125,44 @@ the merge and sees their trip's name, travellers, budget cap, start date and cur
 
 ## 2026-10-03
 
+### IN REVIEW — app.livhold.com, step 3: the code and the emails point at app.livhold.com (#163)
+
+Each place in the brief's list was read before it changed; what changed:
+- `supabase/config.toml`: `site_url = "https://app.livhold.com"` (the allow-list keeps the old
+  entries). Goes live only when Patrik pushes it (`tools/auth-config.sh --prod push`, then
+  `--staging`, which only differs in its own `site_url`): the push also carries the two
+  templates below, so expect `site_url` and the two template contents to move, nothing else.
+- `supabase/email-templates/` (both): the logo loads from `app.livhold.com/brand/`, where the
+  app's files are; `livhold.com/brand/` stops existing at the switch.
+- `supabase/functions/digest` and `digest-send`: `FALLBACK_SITE` is app.livhold.com. The live
+  value is the `SITE_URL` secret: Patrik sets it to `https://app.livhold.com` and redeploys both.
+  Both now have a `[functions.<slug>] verify_jwt = false` block in `config.toml`, so the
+  redeploy cannot switch the JWT check back on (cron and unsubscribe calls carry no JWT).
+  After it: an unsigned `curl -X POST` to each must answer 403 or 400, never 401.
+  `stay-deadline-alerts` and `subscription-alerts` were checked: no links, only the sender.
+  Push notifications carry relative paths (`/money`, `/itinerary`, `/post/…`), so they open
+  wherever the service worker lives.
+- `product/src/lib/legal/entity.ts`: `origin` is `https://app.livhold.com` (shown on
+  `/delete-account` as where to sign in).
+- The list form: `tools/landing-form.mjs` posts to `https://app.livhold.com/api/journey-signup`
+  (CORS checked there: `OPTIONS` 204), and its Privacy and Terms links and the landing footer's
+  go to app.livhold.com. The footer's "livhold.com" link is `/`, the page itself, so it never
+  opens the app's sign-up. The JSON-LD app `url` is app.livhold.com.
+- `docs/PLAY-DATA-SAFETY.md`: the URLs are app.livhold.com; the Play Console changes in step 6.
+  `docs/APP-STORE-PRIVACY.md` carries no URL (the brief thought it did).
+- Comments in `proxy.ts`, `api/journey-signup/route.ts`, `lib/journey/signup.ts`, the test, and
+  `docs/AUTH-EMAIL-TEMPLATE.md`'s outdated "Site URL must be www" guidance.
+- **Left for step 5 on purpose:** the landing page's canonical, `og:` addresses, `robots.txt`
+  and `sitemap.xml` (journey.livhold.com until livhold.com serves the page), and `/privacy`'s
+  "the list on journey.livhold.com" (four places) with "Last updated".
+- **iOS:** two changes for the iOS agent, both safe from now (app.livhold.com serves the app
+  and signs in since 4 Oct): `ios/Livhold/Auth/Backend.swift`, `production.web` →
+  `https://app.livhold.com` (where a password reset lands); and five strings in
+  `ios/Livhold/Localizable.xcstrings` (English and Hungarian) that send people to "livhold.com"
+  ("Start a journey on livhold.com…", "Change these on livhold.com for now.", "Add or remove
+  currencies on livhold.com.") → app.livhold.com, since livhold.com is the landing page after
+  step 5. Also `ios/README.md`'s privacy URL. Needs a new build before the switch.
+
 ### LIVE — app.livhold.com, step 2: app.livhold.com next to livhold.com (#163)
 
 Checked on 4 Oct before changing anything:

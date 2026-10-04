@@ -67,8 +67,9 @@ max_indexes = 5
 
 [auth]
 enabled = true
-# Prod's own origin. Overridden for staging below.
-site_url = "https://www.livhold.com"
+# Prod's own origin: the app at app.livhold.com since step 3 of docs/APP-MOVE-BRIEF.md
+# (#163); livhold.com is the landing page from step 5. Overridden for staging below.
+site_url = "https://app.livhold.com"
 # Every origin an auth redirect may land on. The `**` entries matter: an exact
 # `/auth/callback` does NOT match `/auth/callback?next=…`, and without a match
 # Supabase silently sends the person to site_url — signed in, but with the
@@ -193,6 +194,16 @@ max_frequency = "5s"
 # already correct (verified by probe) and adding them from assumption could
 # change a working one on its next deploy. Add a block when you next touch one.
 [functions.subscription-alerts]
+verify_jwt = false
+
+# Added 4 Oct 2026 for their step 3 redeploy (#163): digest-send is called by pg_cron
+# with x-cron-secret (it answered 403 to an unsigned probe on 2026-09-20, so its JWT
+# check is off today); digest takes one-click unsubscribe POSTs from mail clients,
+# which carry no JWT (its header says it is deployed with --no-verify-jwt).
+[functions.digest]
+verify_jwt = false
+
+[functions.digest-send]
 verify_jwt = false
 
 # --- per-target differences -------------------------------------------------

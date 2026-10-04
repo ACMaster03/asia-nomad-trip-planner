@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds the list form for journey.livhold.com from livhold-journey-form.html,
+// Builds the list form for the landing page (landing/) from livhold-journey-form.html,
 // the preview Petra signed off: the part between the COPY markers, with
 // CONFIG.endpoint filled in, goes into landing/public/index.html (between its
 // lh-form markers) and into docs/landing-form/livhold-journey-form.paste.html. The preview keeps its empty endpoint
@@ -14,9 +14,10 @@ import { readFileSync, writeFileSync } from 'node:fs'
 const SRC = new URL('../docs/landing-form/livhold-journey-form.html', import.meta.url)
 const OUT = new URL('../docs/landing-form/livhold-journey-form.paste.html', import.meta.url)
 const PAGE = new URL('../landing/public/index.html', import.meta.url)
-// The app's endpoint (product/src/app/api/journey-signup/route.ts). The apex:
-// www.livhold.com answers with a redirect, which a cross-origin POST cannot follow.
-const ENDPOINT = 'https://livhold.com/api/journey-signup'
+// The app's endpoint (product/src/app/api/journey-signup/route.ts), on the app's own
+// address since step 3 of docs/APP-MOVE-BRIEF.md: from step 5 livhold.com is the landing
+// page, and a redirect is something a cross-origin POST cannot follow.
+const ENDPOINT = 'https://app.livhold.com/api/journey-signup'
 
 const html = readFileSync(SRC, 'utf8')
 const from = html.indexOf('<!-- ===================== COPY FROM HERE')

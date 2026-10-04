@@ -52,7 +52,7 @@ export const LEGAL = {
   euRepresentativeEmail: 'support@keepyourhabits.com',
 
   /**
-   * The list on journey.livhold.com (migration 44, docs/landing-form): how the
+   * The list on the landing page (migration 44, docs/landing-form): how the
    * list is USED, each named in "Who else touches it". Decided by Patrik on
    * 2 Oct 2026: the automated email when Livhold opens goes through Resend,
    * already a processor here (a hand-written round from the mailbox instead,
@@ -70,7 +70,7 @@ export const LEGAL = {
   /** Product name as users see it. */
   product: 'Livhold',
   /** Public origin, used in copy and for the canonical policy URL. */
-  origin: 'https://www.livhold.com',
+  origin: 'https://app.livhold.com',
   /**
    * Shown as "Last updated". Bump it whenever the substance changes — Play
    * reviewers and users both read this as the freshness signal.

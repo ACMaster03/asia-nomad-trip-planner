@@ -22,7 +22,7 @@ import { hasCronSecret } from '../_shared/cronAuth.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const FROM = Deno.env.get('ALERTS_FROM') ?? 'Livhold <hello@livhold.com>'
-const FALLBACK_SITE = 'https://www.livhold.com'
+const FALLBACK_SITE = 'https://app.livhold.com'
 const SITE = (Deno.env.get('SITE_URL') ?? FALLBACK_SITE).replace(/\/+$/, '')
 
 const sb = createClient(

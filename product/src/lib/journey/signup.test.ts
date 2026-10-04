@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { parseSignup } from './signup.ts'
 
-// What the form on journey.livhold.com sends (docs/landing-form), every field.
+// What the landing page's form sends (docs/landing-form), every field.
 const full = {
   when: 'next_3_months',
   length: '3_6_months',
