@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
-### PREPARED — app.livhold.com, step 2: app.livhold.com next to livhold.com (#163)
+### LIVE — app.livhold.com, step 2: app.livhold.com next to livhold.com (#163)
 
 Checked on 4 Oct before changing anything:
 - **Supabase, both projects:** the live config matches `supabase/config.toml` (the redirect
@@ -27,11 +27,13 @@ Checked on 4 Oct before changing anything:
   `https://livhold.com/brand/livhold-mark.png` (step 3: app.livhold.com); and step 5's
   redirects must cover `product/public` too (`/brand`, `/icons`, `/vendor`, `offline.html`),
   not only the routes in `product/src/app`, or emails already sent lose their logo.
-- **To do on Patrik's "go":** add `app.livhold.com` to the Vercel project
-  `asia-nomad-trip-planner` (livhold.com stays); then `tools/auth-config.sh --staging push`,
-  then `--prod push`, each reporting exactly one moved field (`uri_allow_list`). Test: sign in
-  at app.livhold.com by email code; make a follow link and an invite there and open them.
-  Rollback: remove the domain; push the file without the line.
+- **Done 4 Oct on Patrik's "go":** `app.livhold.com` added to the Vercel project
+  `asia-nomad-trip-planner` (livhold.com stays; `/`, `/login`, `/privacy`, the manifest and the
+  email logo answer there). Patrik ran `tools/auth-config.sh --staging push` and `--prod push`:
+  each moved exactly one field, `uri_allow_list`, 206 → 233 characters. Patrik's test: signed
+  in at app.livhold.com by email code and stayed there; a follow link and an invite made there
+  start with `https://app.livhold.com/` and open. Rollback: remove the domain; push the file
+  without the line. **Until this is on `main`, a config push from `main` drops the line.**
 - **iOS:** nothing yet; `production.web` changes in step 3.
 
 ### LIVE — app.livhold.com, step 1: journey.livhold.com on the `landing` Vercel project (#163)
