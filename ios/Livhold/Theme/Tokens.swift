@@ -42,6 +42,19 @@ enum Palette {
     static let paleBlue = Color(light: RGBA(174, 195, 214), dark: RGBA(174, 195, 214))
     static let paper = Color(light: RGBA(245, 242, 234), dark: RGBA(245, 242, 234))
     static let blush = Color(light: RGBA(247, 230, 233), dark: RGBA(247, 230, 233))
+    // the globe (A+, iOS #166; mock round 5, 3 Oct 2026). The route is --ac2Deep.
+    static let globeOcean = Color(light: RGBA(214, 225, 228), dark: RGBA(24, 33, 42))
+    static let globeLand = Color(light: RGBA(201, 212, 186), dark: RGBA(44, 55, 47))
+    static let globeMine = Color(light: RGBA(143, 168, 138), dark: RGBA(74, 97, 72))
+    static let globeBorder = Color(light: RGBA(63, 90, 62, 0.22), dark: RGBA(216, 224, 229, 0.1))
+    static let globeShore = Color(light: RGBA(255, 255, 255, 0.75), dark: RGBA(174, 195, 214, 0.12))
+    static let globeGlow = Color(light: RGBA(246, 214, 178, 0.75), dark: RGBA(127, 163, 125, 0.32))
+    static let globeHalo = Color(light: RGBA(240, 238, 233, 0.9), dark: RGBA(18, 22, 26, 0.85))
+    static let globeNameContinent = Color(light: RGBA(31, 42, 36, 0.5), dark: RGBA(216, 224, 229, 0.52))
+    static let globeNameCountry = Color(light: RGBA(31, 42, 36, 0.52), dark: RGBA(216, 224, 229, 0.55))
+    static let globeNameMine = Color(light: RGBA(47, 74, 46), dark: RGBA(169, 203, 165))
+    static let globeNameSea = Color(light: RGBA(52, 92, 112, 0.62), dark: RGBA(174, 195, 214, 0.6))
+    static let globeNameLand = Color(light: RGBA(31, 42, 36, 0.46), dark: RGBA(216, 224, 229, 0.45))
     // landscape washes — 2a login/invite only, 2b milestones; grammar in handoff README
     static let washInk = Color(light: RGBA(31, 42, 36), dark: RGBA(216, 224, 229))
 
@@ -81,6 +94,18 @@ enum Palette {
         ("paleBlue", paleBlue),
         ("paper", paper),
         ("blush", blush),
+        ("globeOcean", globeOcean),
+        ("globeLand", globeLand),
+        ("globeMine", globeMine),
+        ("globeBorder", globeBorder),
+        ("globeShore", globeShore),
+        ("globeGlow", globeGlow),
+        ("globeHalo", globeHalo),
+        ("globeNameContinent", globeNameContinent),
+        ("globeNameCountry", globeNameCountry),
+        ("globeNameMine", globeNameMine),
+        ("globeNameSea", globeNameSea),
+        ("globeNameLand", globeNameLand),
         ("washInk", washInk),
     ]
 }

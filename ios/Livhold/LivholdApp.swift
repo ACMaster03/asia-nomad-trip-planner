@@ -27,6 +27,19 @@ private struct RootView: View {
     @Environment(AuthStore.self) private var auth
 
     var body: some View {
+        #if DEBUG
+        // `-globePreview YES`: the globe on its own, no sign-in needed (#166).
+        if UserDefaults.standard.bool(forKey: "globePreview") {
+            GlobePreviewScreen(canClose: false)
+        } else {
+            app
+        }
+        #else
+        app
+        #endif
+    }
+
+    private var app: some View {
         Group {
             switch auth.phase {
             case .restoring:
