@@ -67,8 +67,9 @@ max_indexes = 5
 
 [auth]
 enabled = true
-# Prod's own origin. Overridden for staging below.
-site_url = "https://www.livhold.com"
+# Prod's own origin: the app at app.livhold.com since step 3 of docs/APP-MOVE-BRIEF.md
+# (#163); livhold.com is the landing page from step 5. Overridden for staging below.
+site_url = "https://app.livhold.com"
 # Every origin an auth redirect may land on. The `**` entries matter: an exact
 # `/auth/callback` does NOT match `/auth/callback?next=…`, and without a match
 # Supabase silently sends the person to site_url — signed in, but with the

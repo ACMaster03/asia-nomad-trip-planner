@@ -1,5 +1,5 @@
-// The list form on journey.livhold.com (docs/landing-form). That page is hosted
-// outside this repo, so the form POSTs its answers to /api/journey-signup and
+// The list form on the landing page (landing/, docs/landing-form). That page is
+// its own Vercel project, so the form POSTs its answers to /api/journey-signup and
 // this module decides what a submission may contain. Everything the form
 // checks in the browser is checked again here, and the table's own constraints
 // (migration 44) are the last line: a row that gets past all three is one a

@@ -13,11 +13,12 @@ people this page is for, and nobody could see or change who got blocked.
   `node tools/landing-form.mjs`, which rewrites both the page and the paste file.
 - **Fonts** (Lora, Work Sans, SIL Open Font License) are served from `public/fonts/`, Latin
   and Latin Extended only, so a visitor's browser calls no one but this site and, when the
-  form is sent, `livhold.com`. The policy names no font host; keep it that way.
+  form is sent, `app.livhold.com`. The policy names no font host; keep it that way.
 - **Image credits**: `ASSET-CREDITS.md`.
 
-Changed from the ChatGPT export: links go to `https://livhold.com` (the `www` address only
-redirects there); the hero link "Leaving later? Tell us when →", the form, and Privacy and
+Changed from the ChatGPT export: the app's links go to `https://app.livhold.com` (since step 3
+of `docs/APP-MOVE-BRIEF.md`; the form first since #165, so only Privacy, Terms and the form's
+endpoint); the hero link "Leaving later? Tell us when →", the form, and Privacy and
 Terms in the footer were added (`docs/landing-form/README.md`); the form has no text shadow
 (the closing section gives its own text one); the button-directions page
 (`buttons.html`, `button-lab.css`), the export's deploy note and twelve photos the page never
