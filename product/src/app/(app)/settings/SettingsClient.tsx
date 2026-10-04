@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { useOnline } from '@/lib/useOnline'
@@ -165,24 +165,25 @@ export default function SettingsClient() {
   const [startDate, setStartDate] = useState('')
   const [baseCurrency, setBaseCurrency] = useState('HUF')
   const [saved, setSaved] = useState(false)
-  const loadedVer = useRef<string | null>(null)
+  const [loadedVer, setLoadedVer] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!trip.data) return
-    // hydrate the draft only when the server version actually changes — a background
-    // refetch (or post-save invalidate) must not overwrite in-progress keystrokes.
-    if (loadedVer.current === trip.data.updated_at) return
-    loadedVer.current = trip.data.updated_at
+  // Hydrate the draft only when the server version actually changes — a background
+  // refetch (or post-save invalidate) must not overwrite in-progress keystrokes.
+  // Done while rendering, not in an effect, so the form never paints a frame of
+  // its defaults first (React's "adjusting state when a prop changes").
+  if (trip.data && trip.data.updated_at !== loadedVer) {
+    setLoadedVer(trip.data.updated_at)
     // Legacy/hand-seeded trips can lack meta entirely — keep the form on its
     // defaults instead of crashing the whole screen.
     const m = trip.data.state?.meta
-    if (!m) return
-    setName(m.tripName)
-    setTravelers(m.travelers)
-    setBudgetCap(m.budgetCap)
-    setStartDate(m.startDate)
-    setBaseCurrency(m.baseCurrency)
-  }, [trip.data])
+    if (m) {
+      setName(m.tripName)
+      setTravelers(m.travelers)
+      setBudgetCap(m.budgetCap)
+      setStartDate(m.startDate)
+      setBaseCurrency(m.baseCurrency)
+    }
+  }
 
   if (tripId === null) return <CreateTripEmptyState />
   if (trip.isPending)

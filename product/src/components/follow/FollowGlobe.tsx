@@ -101,7 +101,6 @@ export default function FollowGlobe({ route, currentCity, todayISO, lastSeenCity
       instRef.current = null
     }
     // build once — data updates flow through the effect below
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -153,7 +152,6 @@ export default function FollowGlobe({ route, currentCity, todayISO, lastSeenCity
       ? { lat: (focus.lat as number) - 8, lng: focus.lng as number }
       : null
     applyFocus()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route, currentCity, todayISO, lastSeenCity, stale])
 
   return <div ref={boxRef} className="h-full w-full" aria-label="Trip route globe" />

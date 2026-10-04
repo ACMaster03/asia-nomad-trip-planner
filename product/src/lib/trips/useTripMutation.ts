@@ -33,6 +33,7 @@ export function useTripMutation() {
     retryDelay: writeRetryDelay,
     // the param is unused (see comment below) but its type drives useMutation's
     // TVariables inference — mutate(updater) stops compiling without it.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mutationFn: async (_updater: StateUpdater) => {
       // onMutate (which runs first) has ALREADY applied this mutation's updater
       // to the cache, and `scope` guarantees mutations never interleave — so the
