@@ -7,6 +7,36 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-04
 
+### DECIDED — Patrik, 4 Oct: followers see each leg's mode; the replay plays only when something happens (#166)
+
+**Followers see how you travel.** The follower's globe draws each leg with its vehicle. Migration
+45 (`45-follower-leg-modes.sql`, BUILT, not applied) adds `legs` to `_trip_summary_core`: each
+leg's `from`, `to`, `date` and `mode`. The mode is one of flight, train, bus, ferry or other,
+mapped from the typed `type` ("Plane" reads as flight, anything typed by hand as other). Nothing
+else from a leg crosses: no provider, price, time, booking link, notes, status or via. The same
+core feeds the link page without an account, so those viewers get the modes too. /privacy says
+so ("how you travel between stops"), last updated 4 Oct. The test plan, `45-TESTPLAN.sql`,
+passed in a throwaway Postgres, and fails when a private field is added. Order: staging, the
+test plan there, then production.
+
+**When the globe animates.** It opens still, on the route, every other time. The Replay button
+stays for anyone who wants the replay.
+- **The whole journey, once, for the traveller only:** when planning starts, meaning the first
+  time the globe shows after onboarding (the new-journey wizard). It does not play again when
+  you open Trip.
+- **Each arrival, once, for travellers and followers alike:** when you reach a stop, the leg
+  into it plays the next time the globe shows: the vehicle by its mode, then the stamp on the
+  stop. "Reached" means the stop's arrival date has come, or an "Arrived in X" event, whichever
+  is first. A follower who opens the journey days later still sees the latest arrival once.
+- **Once** is kept on the device. A second phone may show it once more, which is harmless.
+- **Reduce Motion:** no flight, only the stamp.
+
+iOS: the globe view (#166) takes the journey's legs with their mode. Your own journey reads them
+from `state.transport`; a followed one reads them from `followed_trip_summary().legs` (after
+migration 45). It auto-plays only in the two cases above. It remembers per journey on the
+device: "intro played" (travellers only) and the last stop whose arrival it played. Everything
+else opens still, and Replay plays on demand.
+
 ### DECIDED — Patrik, 3 Oct: where the globe lives on iOS (#166, #167)
 
 The globe has one job now: it shows one journey. The traveller sees their own. A follower
