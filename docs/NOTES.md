@@ -7,6 +7,33 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-03
 
+### PREPARED — app.livhold.com, step 2: app.livhold.com next to livhold.com (#163)
+
+Checked on 4 Oct before changing anything:
+- **Supabase, both projects:** the live config matches `supabase/config.toml` (the redirect
+  allow-list is the file's six entries, 206 characters on both; the only fields moved since
+  the last snapshot are the 26 Sep push, which the file carries). So a push of the file with
+  one added line, `https://app.livhold.com/**`, moves the allow-list and nothing else. Staging
+  has no list of its own, so it gets the same line.
+- **The web app builds every sign-in, follow and invite link from the address it is open on**
+  (`window.location.origin` in `login`, `follow`, `invite`, `settings`, `account`); nothing in
+  `proxy.ts` or `next.config.ts` checks the host. So app.livhold.com works as soon as Vercel
+  serves it and the allow-list has it.
+- **Sign in with Apple on the web does not exist** (deferred 6 Aug, `login/page.tsx`); Apple is
+  native iOS only, checked against the bundle id `com.livhold.app`, not a web address. The
+  brief's "register app.livhold.com with Apple" is not needed, and step 2's test is the email
+  code and the password.
+- **Found for later steps (not in the brief):** both auth emails load the logo from
+  `https://livhold.com/brand/livhold-mark.png` (step 3: app.livhold.com); and step 5's
+  redirects must cover `product/public` too (`/brand`, `/icons`, `/vendor`, `offline.html`),
+  not only the routes in `product/src/app`, or emails already sent lose their logo.
+- **To do on Patrik's "go":** add `app.livhold.com` to the Vercel project
+  `asia-nomad-trip-planner` (livhold.com stays); then `tools/auth-config.sh --staging push`,
+  then `--prod push`, each reporting exactly one moved field (`uri_allow_list`). Test: sign in
+  at app.livhold.com by email code; make a follow link and an invite there and open them.
+  Rollback: remove the domain; push the file without the line.
+- **iOS:** nothing yet; `production.web` changes in step 3.
+
 ### LIVE — app.livhold.com, step 1: journey.livhold.com on the `landing` Vercel project (#163)
 
 The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`).
