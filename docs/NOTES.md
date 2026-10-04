@@ -87,6 +87,9 @@ Each place in the brief's list was read before it changed; what changed:
   app's files are; `livhold.com/brand/` stops existing at the switch.
 - `supabase/functions/digest` and `digest-send`: `FALLBACK_SITE` is app.livhold.com. The live
   value is the `SITE_URL` secret: Patrik sets it to `https://app.livhold.com` and redeploys both.
+  Both now have a `[functions.<slug>] verify_jwt = false` block in `config.toml`, so the
+  redeploy cannot switch the JWT check back on (cron and unsubscribe calls carry no JWT).
+  After it: an unsigned `curl -X POST` to each must answer 403 or 400, never 401.
   `stay-deadline-alerts` and `subscription-alerts` were checked: no links, only the sender.
   Push notifications carry relative paths (`/money`, `/itinerary`, `/post/…`), so they open
   wherever the service worker lives.

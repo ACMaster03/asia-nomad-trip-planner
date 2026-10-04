@@ -196,6 +196,16 @@ max_frequency = "5s"
 [functions.subscription-alerts]
 verify_jwt = false
 
+# Added 4 Oct 2026 for their step 3 redeploy (#163): digest-send is called by pg_cron
+# with x-cron-secret (it answered 403 to an unsigned probe on 2026-09-20, so its JWT
+# check is off today); digest takes one-click unsubscribe POSTs from mail clients,
+# which carry no JWT (its header says it is deployed with --no-verify-jwt).
+[functions.digest]
+verify_jwt = false
+
+[functions.digest-send]
+verify_jwt = false
+
 # --- per-target differences -------------------------------------------------
 # Selected by project ref: `supabase config push --project-ref <ref>` applies the
 # remote whose project_id matches. Everything not repeated here is inherited.
