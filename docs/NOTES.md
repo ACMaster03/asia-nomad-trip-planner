@@ -5,6 +5,75 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-04
+
+### DECIDED — Patrik, 3 Oct: where the globe lives on iOS (#166, #167)
+
+The globe has one job now: it shows one journey. The traveller sees their own. A follower
+sees the same globe, read-only, with someone else's journey in it. Showing the people you
+follow on your own globe is a separate, later feature (MARKETING.md: "the north star for
+later. It needs a population.").
+
+1. **One globe component, and its input is one journey.** It has two modes: editable (your
+   own journey) and read-only (a journey you follow). Built in #166.
+2. **Trip stays as built.** The globe sits behind the Trip timeline and shows your route and
+   the flight replay only. There is no people layer on it.
+3. **The Map tab is removed on iOS.** A tab exists only when it has something in it: Trip and
+   Money appear once you have a journey.
+4. **The follower's view.** A follower is a person with no journey. They have Home only, and
+   Home is the feed.
+   - At the top of Home: one card per journey they follow, with who, where and what's next
+     ("Petra and Patrik · Hanoi, day 4 · next Da Nang, 2 Dec"), and the latest check-in.
+   - Tapping the card opens that journey: the Trip screen in read-only mode, with the globe
+     behind and the timeline over it, no edit controls, pushed from Home with a back button.
+   - Tapping a check-in in the feed opens the same screen, flown to that stop.
+   - The follow link lands on that screen directly.
+   - Following two journeys means two cards, each opening its own globe, and one route at a
+     time.
+   - What a follower may see of a journey is unchanged from today.
+5. **A follower who becomes a traveller loses nothing (#130).** Trip and Money tabs appear,
+   with their own globe. The people cards stay on Home and still open the read-only journey
+   screens. The two globes do not mix.
+6. **Home order: whichever is live goes first.**
+   - Between your journey's start and end dates, your own stop card is on top, with your
+     people below.
+   - Before and after those dates, your people are on top, and your journey sits below with
+     "plan your journey".
+7. **The people layer (globe mock rounds 6 and 7) waits until after 30 November**, alongside
+   #126. This reverses the round 6 note that the globe build must include it. The build is
+   split in two: the route globe for any journey now (#166), the people layer later (#167).
+8. **When the people layer is built, the round 7 design stands.** It is a toggle inside the
+   Layers button (#63). The control appears only once you follow someone with a visible
+   journey; there is no "while you are on a trip" condition.
+9. **Meet-ups come as text first.** An overlap is a line on the stop ("Kim is here too, until
+   15 Oct"), not a marker (#9: the overlap is the feature, the drawn route is the picture).
+
+Rejected:
+- A people globe opened from a Home card: with under ten journeys, it is a route globe with
+  one dot.
+- The people layer mixed into Trip's planning globe by default.
+- Bringing the Map tab back.
+
+Found while recording this: a follower's data is `followed_trip_summary` (migration 33). It
+holds the trip name, dates, stops (city, country, arrive, depart, lat/lng) and the
+travellers' first names. Check-ins come from `following_feed`. There are no legs, transport
+types, stays, bookings or costs. So the read-only Trip screen is a reduced timeline, and its
+replay draws lines without a vehicle type. Showing transport types to followers would change
+what they see, which is Patrik's call. The follow link reaches the app only once the app has
+Associated Domains and the domain serves `apple-app-site-association` (app.livhold.com after
+#163); until then, it opens the web. Both points are written into #166.
+
+The look itself (A+ with place names by zoom, in English and Hungarian) was decided on 3 Oct
+in the mock rounds. The mocks are linked from #166. The fonts and Hungarian names still wait
+on Petra's check of round 5.
+
+iOS: `ios/Livhold/Shell/TabRouter.swift` loses `.map`, and `MapScreen` in
+`StandInScreens.swift` goes. Trip and Money tabs show only when the person has a journey.
+Follower Home is as in point 4, with the order in point 6. The globe is one view: it takes a
+journey and is editable or read-only. The read-only Trip screen is built on
+`followed_trip_summary` and `following_feed`, never on table reads. There is no people layer
+until #167.
+
 ## 2026-10-03
 
 ### IN PROGRESS — app.livhold.com, step 1: the `landing` Vercel project (#163)
