@@ -76,7 +76,36 @@ until #167.
 
 ## 2026-10-03
 
-### IN PROGRESS — app.livhold.com, step 1: the `landing` Vercel project (#163)
+### LIVE — app.livhold.com, step 2: app.livhold.com next to livhold.com (#163)
+
+Checked on 4 Oct before changing anything:
+- **Supabase, both projects:** the live config matches `supabase/config.toml` (the redirect
+  allow-list is the file's six entries, 206 characters on both; the only fields moved since
+  the last snapshot are the 26 Sep push, which the file carries). So a push of the file with
+  one added line, `https://app.livhold.com/**`, moves the allow-list and nothing else. Staging
+  has no list of its own, so it gets the same line.
+- **The web app builds every sign-in, follow and invite link from the address it is open on**
+  (`window.location.origin` in `login`, `follow`, `invite`, `settings`, `account`); nothing in
+  `proxy.ts` or `next.config.ts` checks the host. So app.livhold.com works as soon as Vercel
+  serves it and the allow-list has it.
+- **Sign in with Apple on the web does not exist** (deferred 6 Aug, `login/page.tsx`); Apple is
+  native iOS only, checked against the bundle id `com.livhold.app`, not a web address. The
+  brief's "register app.livhold.com with Apple" is not needed, and step 2's test is the email
+  code and the password.
+- **Found for later steps (not in the brief):** both auth emails load the logo from
+  `https://livhold.com/brand/livhold-mark.png` (step 3: app.livhold.com); and step 5's
+  redirects must cover `product/public` too (`/brand`, `/icons`, `/vendor`, `offline.html`),
+  not only the routes in `product/src/app`, or emails already sent lose their logo.
+- **Done 4 Oct on Patrik's "go":** `app.livhold.com` added to the Vercel project
+  `asia-nomad-trip-planner` (livhold.com stays; `/`, `/login`, `/privacy`, the manifest and the
+  email logo answer there). Patrik ran `tools/auth-config.sh --staging push` and `--prod push`:
+  each moved exactly one field, `uri_allow_list`, 206 → 233 characters. Patrik's test: signed
+  in at app.livhold.com by email code and stayed there; a follow link and an invite made there
+  start with `https://app.livhold.com/` and open. Rollback: remove the domain; push the file
+  without the line. **Until this is on `main`, a config push from `main` drops the line.**
+- **iOS:** nothing yet; `production.web` changes in step 3.
+
+### LIVE — app.livhold.com, step 1: journey.livhold.com on the `landing` Vercel project (#163)
 
 The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`).
 - **Done, 3 Oct:** Vercel project `landing` (`prj_1QkkNcCb7GWA2SKcvzBGojgPEN8M`), linked to this
@@ -112,10 +141,16 @@ The move is tracked on #163 with the brief's checklist (`docs/APP-MOVE-BRIEF.md`
   `custom-domains.chatgpt.site` with a 60-second TTL; Vercel already holds a `*.livhold.com`
   certificate, so the move opens no certificate gap. The app is served at the apex
   (`www` 308s to `livhold.com`), as the brief says.
-- **Next:** Petra checks the preview on her phone and laptop (a real form submission there
-  writes a real row to production's `journey_signups`). Then, on Patrik's "go": add
-  `journey.livhold.com` to `landing` and delete the `journey` CNAME. Rollback: recreate the
-  CNAME `journey → custom-domains.chatgpt.site`.
+- **Live, 3 Oct ~13:20 UTC:** #165 merged on Patrik's "go" (the form-first page, the list for
+  updates, `/privacy` to match; both builds READY, no runtime errors). Patrik deleted the
+  `journey` CNAME, then `journey.livhold.com` was added to `landing` (a minute or so in
+  between, while Vercel's nameservers still mostly gave the old CNAME). Checked right after:
+  both nameservers answer with Vercel's addresses; `https://journey.livhold.com` answers 200
+  from Vercel with the `*.livhold.com` certificate and the merged page (consent `2026-10-03`);
+  CSS, fonts, images, `robots.txt` and `sitemap.xml` load. Rollback: recreate the CNAME
+  `journey → custom-domains.chatgpt.site` (ChatGPT's hosting may have let the domain go).
+- **Still to do for step 1:** open it on a VPN placed in Vietnam (the reason for the move), and
+  Petra's look on her phone and laptop.
 - **iOS:** nothing; `ios/` does not use journey.livhold.com.
 
 ### DECIDED — Patrik, 3 Oct: the app moves to app.livhold.com, the landing page takes livhold.com

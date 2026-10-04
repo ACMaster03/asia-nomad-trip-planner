@@ -80,6 +80,9 @@ additional_redirect_urls = [
   "https://livhold.com/auth/confirm",
   "https://livhold.com/auth/callback**",
   "https://www.livhold.com/auth/callback**",
+  # The app's address from step 5 of docs/APP-MOVE-BRIEF.md (#163). Added next to
+  # the old ones on 4 Oct; the livhold.com entries go a quiet week after the switch.
+  "https://app.livhold.com/**",
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
