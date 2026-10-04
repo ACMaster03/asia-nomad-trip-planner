@@ -107,6 +107,22 @@ journey and is editable or read-only. The read-only Trip screen is built on
 `followed_trip_summary` and `following_feed`, never on table reads. There is no people layer
 until #167.
 
+## 2026-10-04
+
+### IN REVIEW — `eslint src` is clean again (SettingsClient)
+
+`npx eslint src` failed on `main` with one error: Settings (`SettingsClient.tsx`) copied the
+loaded trip into its draft fields inside a `useEffect` (react-hooks: setState in an effect).
+The copy now happens while rendering, guarded by the loaded `updated_at` held in state, so
+the rule holds and the form no longer paints one frame of its defaults before the trip's
+values. Same rule as before: only a new server version overwrites the draft, never a
+refetch of the same one. Also gone: two unused `eslint-disable` lines in `FollowGlobe.tsx`,
+and the unused-parameter warning in `useTripMutation.ts` (the parameter stays: it types
+`mutate`). `tsc`, `npm test` (165) and `next build` pass. Not checked on a signed-in
+Settings page: there is no dev preview for it; Patrik or Petra opens Settings once after
+the merge and sees their trip's name, travellers, budget cap, start date and currency.
+- **iOS:** nothing; web-only lint.
+
 ## 2026-10-03
 
 ### LIVE — app.livhold.com, step 2: app.livhold.com next to livhold.com (#163)
