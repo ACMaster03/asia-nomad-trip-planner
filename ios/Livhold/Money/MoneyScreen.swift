@@ -226,8 +226,8 @@ extension String {
 
 // MARK: - top card
 
-/// Today, this stop or the whole journey (Patrik, 27 Sep, #114: a switch to try
-/// on the phone before the web picks one). Journey is mock version A.
+/// This stop or the whole journey (Patrik, 27 Sep, #114); before departure, the
+/// estimate alone (#149). Journey is the money-on-the-road mock's version B (4 Oct).
 private struct TopCard: View {
     let model: MoneyModel
 
@@ -235,6 +235,9 @@ private struct TopCard: View {
     enum View: String, CaseIterable, Identifiable { case here = "Here", journey = "Journey"; var id: Self { self } }
     @AppStorage("money.topView") private var view: View = .journey
     @Environment(TabRouter.self) private var router
+    @Environment(\.colorScheme) private var scheme
+    /// Spent so far, opened to where it was spent.
+    @State private var spentOpen = false
 
     /// A travel day has no stop, so it opens on Journey (#149); the switch still works.
     @State private var travelPick: View?
@@ -268,62 +271,96 @@ private struct TopCard: View {
         .sensoryFeedback(.selection, trigger: shown)
     }
 
+    // MARK: parts and the ring
+
+    /// One row under the headline and its arc on the ring, in the same order.
+    struct Part: Identifiable {
+        let id: String
+        let title: Text
+        let value: Double
+        let color: Color
+        var hatched = false
+        /// An estimate reads "≈"; money already spent or booked reads in full.
+        var approx = true
+    }
+
+    private func ring(_ parts: [Part], spent: Double) -> some SwiftUI.View {
+        Button { router.paths[.money, default: []].append(.moneySettings) } label: {
+            BudgetRing(arcs: parts.map { .init(value: $0.value, color: $0.color, hatched: $0.hatched) },
+                       budget: model.cap, spent: spent)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens Money settings")
+    }
+
+    private func partRow(_ part: Part) -> some SwiftUI.View {
+        legendRow(part.title, part.approx ? MoneyText.approx(part.value, model.base) : MoneyText.full(part.value, model.base),
+                  swatch: part.color, hatched: part.hatched)
+    }
+
+    /// The budget, then what's left in it or how far over it the estimate goes:
+    /// a fact, amber when over, never red. Before departure what's left goes to
+    /// the days nothing is planned for (#149 Q6).
+    @ViewBuilder private func budgetRows(_ p: MoneyModel.Projection, total: Double, unplanned: Bool) -> some SwiftUI.View {
+        if let cap = model.cap {
+            Divider().overlay(Palette.ln)
+            Button { router.paths[.money, default: []].append(.moneySettings) } label: {
+                legendRow(Text("Budget"), MoneyText.full(cap, model.base), swatch: nil)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens Money settings")
+            let left = cap - total
+            if left < 0 {
+                legendRow(Text("Over budget"), MoneyText.approx(-left, model.base), swatch: Palette.warn, bold: true, tone: Palette.warn)
+            } else if unplanned, p.unplannedDays > 0, let end = model.planEnd {
+                VStack(spacing: 2) {
+                    legendRow(Text("Left for \(p.unplannedDays) unplanned days"), MoneyText.approx(left, model.base), swatch: nil, bold: true)
+                    legendRow(Text("after \(Days.short(end))"), String(localized: "\(MoneyText.approx(left / Double(p.unplannedDays), model.base)) a day"),
+                              swatch: nil, small: true)
+                }
+            } else {
+                legendRow(Text("Left in the budget"), MoneyText.approx(left, model.base), swatch: nil, bold: true)
+            }
+        }
+    }
+
     // MARK: before departure
 
-    /// Estimated total for the planned nights, its parts against the cap, and
-    /// what the cap leaves for the days nothing is planned for (Patrik, 3 Oct,
-    /// #149 rounds 1–4). The unplanned days aren't priced; no "a day less" advice.
+    /// Estimated total for the planned nights, its parts on the ring against the
+    /// budget, and what the budget leaves for the days nothing is planned for
+    /// (Patrik, 3 Oct, #149; the ring instead of the bar, 4 Oct). The unplanned
+    /// days aren't priced; no "a day less" advice.
     private var estimate: some SwiftUI.View {
         let p = model.projection
         let nights = model.plan.reduce(0) { $0 + $1.nights }
-        let parts: [(LocalizedStringKey, Double, Color, Bool)] = [
-            ("Paid", p.spent, Palette.ac, false),
-            ("Still to pay", p.toPay, Palette.ac2, false),
-            ("Day to day", p.ahead, Palette.ln3, true),
-            ("Stays not booked yet", p.staysEstimated, Palette.warnLine, true),
-            ("Subscriptions", p.subsAhead, Palette.tx3, true),
-        ].filter { $0.1 > 0 || $0.0 == "Paid" }
-        let whole = max(model.cap ?? 0, p.projected)
+        let parts = [
+            Part(id: "paid", title: Text("Paid"), value: p.spent, color: Palette.ac, approx: false),
+            Part(id: "due", title: Text("Still to pay"), value: p.toPay, color: Palette.ac2, approx: false),
+            Part(id: "ahead", title: Text("Day to day"), value: p.ahead, color: Palette.ln3),
+            Part(id: "stays", title: Text("Stays not booked yet"), value: p.staysEstimated, color: Palette.warnLine),
+            Part(id: "subs", title: Text("Subscriptions"), value: p.subsAhead, color: Palette.tx3),
+        ].filter { $0.value > 0 || $0.id == "paid" }
         return VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                CardLabel("Estimated total")
-                big(MoneyText.approx(p.projected, model.base), value: p.projected)
-                if nights > 0, let end = model.planEnd {
-                    Text("the \(nights) planned nights, to \(Days.short(end))")
-                        .font(.sans(13)).foregroundStyle(Palette.tx2)
-                } else {
-                    Text("Add stops on Trip and their nights are estimated here.")
-                        .font(.sans(13)).foregroundStyle(Palette.tx2)
-                }
-            }
-            if whole > 0 {
-                GeometryReader { geo in
-                    HStack(spacing: 2) {
-                        ForEach(parts.indices, id: \.self) { i in
-                            Rectangle().fill(parts[i].2)
-                                .frame(width: max(2, geo.size.width * parts[i].1 / whole))
-                        }
-                        Spacer(minLength: 0)
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    CardLabel("Estimated total")
+                    big(MoneyText.approx(p.projected, model.base), value: p.projected)
+                    if nights > 0, let end = model.planEnd {
+                        Text("the \(nights) planned nights, to \(Days.short(end))")
+                            .font(.sans(13)).foregroundStyle(Palette.tx2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text("Add stops on Trip and their nights are estimated here.")
+                            .font(.sans(13)).foregroundStyle(Palette.tx2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .background(Palette.tr)
-                    .clipShape(.rect(cornerRadius: 5))
                 }
-                .frame(height: 10)
-                .accessibilityHidden(true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                ring(parts, spent: p.spent)
             }
             VStack(spacing: 7) {
-                ForEach(parts.indices, id: \.self) { i in
-                    legendRow(Text(parts[i].0), parts[i].3 ? MoneyText.approx(parts[i].1, model.base) : MoneyText.full(parts[i].1, model.base), swatch: parts[i].2)
-                }
-                if let cap = model.cap {
-                    Divider().overlay(Palette.ln)
-                    Button { router.paths[.money, default: []].append(.moneySettings) } label: {
-                        legendRow(Text("Cap"), MoneyText.full(cap, model.base), swatch: nil)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityHint("Opens Money settings")
-                    capLeft(cap, p)
-                }
+                ForEach(parts) { partRow($0) }
+                budgetRows(p, total: p.projected, unplanned: true)
             }
             if let leg = model.unbookedLegs.first {
                 (model.unbookedLegs.count == 1
@@ -341,31 +378,26 @@ private struct TopCard: View {
         }
     }
 
-    /// What the cap leaves for the unplanned days, or by how much the plan is over it: a fact, no advice.
-    @ViewBuilder private func capLeft(_ cap: Double, _ p: MoneyModel.Projection) -> some SwiftUI.View {
-        let left = cap - p.projected
-        if left < 0 {
-            legendRow(Text("Over the cap"), MoneyText.approx(-left, model.base), swatch: nil, bold: true, tone: Palette.warn)
-        } else if p.unplannedDays > 0, let end = model.planEnd {
-            VStack(spacing: 2) {
-                legendRow(Text("Left for \(p.unplannedDays) unplanned days"), MoneyText.approx(left, model.base), swatch: nil, bold: true)
-                legendRow(Text("after \(Days.short(end))"), String(localized: "\(MoneyText.approx(left / Double(p.unplannedDays), model.base)) a day"),
-                          swatch: nil, small: true)
-            }
-        } else {
-            legendRow(Text("Left under the cap"), MoneyText.approx(left, model.base), swatch: nil, bold: true)
-        }
-    }
-
     /// A label cut short before its amount ever wraps (#149: amounts keep their currency on one line).
-    private func legendRow(_ title: Text, _ value: String, swatch: Color?, bold: Bool = false, small: Bool = false, tone: Color = Palette.tx) -> some SwiftUI.View {
+    private func legendRow(_ title: Text, _ value: String, swatch: Color?, hatched: Bool = false, bold: Bool = false,
+                           small: Bool = false, tone: Color = Palette.tx, chevron: Double? = nil) -> some SwiftUI.View {
         HStack(spacing: 8) {
-            if let swatch { RoundedRectangle(cornerRadius: 2.5).fill(swatch).frame(width: 9, height: 9) }
+            if let swatch {
+                RoundedRectangle(cornerRadius: 2.5)
+                    .fill(hatched ? AnyShapeStyle(Stripes.paint(swatch, scheme)) : AnyShapeStyle(swatch))
+                    .frame(width: 9, height: 9)
+            }
             title.lineLimit(1).truncationMode(.tail)
                 .foregroundStyle(small ? Palette.tx3 : (bold ? tone : Palette.tx2))
             Spacer(minLength: 8)
             Text(value).fixedSize()
                 .foregroundStyle(small ? Palette.tx3 : tone)
+            if let chevron {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Palette.tx3)
+                    .rotationEffect(.degrees(chevron))
+            }
         }
         .font(.sans(small ? 12.5 : 14, weight: bold ? .semibold : .regular))
         .contentShape(.rect)
@@ -401,137 +433,137 @@ private struct TopCard: View {
 
     // MARK: journey
 
+    /// Where the journey lands, headline beside the ring, and the parts that add
+    /// up to it, each a row and an arc (Patrik, 4 Oct, money-on-the-road mock,
+    /// version B: no "+" or "=", people don't like maths). Spent so far opens to
+    /// where it was spent. Until the projection unlocks (a week of pace on new
+    /// journeys), only what's spent and what's still to pay.
     private var journey: some SwiftUI.View {
         let p = model.projection
+        let projecting = model.unlocks.projection
+        var parts = [
+            Part(id: "due", title: Text("Still to pay"), value: p.toPay, color: Palette.ac2, approx: false),
+        ]
+        if projecting {
+            parts += [
+                Part(id: "ahead", title: Text("Day to day, \(p.remainingNights) nights"), value: p.ahead, color: Palette.ln3),
+                Part(id: "stays", title: Text("Stays not booked yet"), value: p.staysEstimated, color: Palette.warnLine),
+                Part(id: "after", title: Text("After the plan, \(p.unplannedDays) days"), value: p.unplanned, color: Palette.ln3, hatched: true),
+                Part(id: "subs", title: Text("Subscriptions"), value: p.subsAhead, color: Palette.tx3),
+            ]
+        }
+        parts = parts.filter { $0.value > 0 }
+        let spentPart = Part(id: "spent", title: Text("Spent so far"), value: p.spent, color: Palette.ac, approx: false)
+        let total = projecting ? p.projected : p.spent + p.toPay
         return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
-                    CardLabel(verbatim: spentLabel)
-                    big(MoneyText.short(p.spent, model.base), value: p.spent)
-                    // Committed, not paid: entries dated ahead and bookings with no
-                    // entry yet, the same money Bookings calls "to pay" (Patrik, 29 Sep).
-                    let unpaid = p.scheduled + model.bookings.toPay
-                    if unpaid > 0 {
-                        Text("+ \(MoneyText.approx(unpaid, model.base)) not paid yet")
-                            .font(.sans(13)).foregroundStyle(Palette.tx2)
-                            .fixedSize(horizontal: false, vertical: true)
+                    if projecting {
+                        CardLabel("Lands near")
+                        big(MoneyText.approx(p.projected, model.base), value: p.projected)
+                    } else {
+                        CardLabel("Spent so far")
+                        big(MoneyText.short(p.spent, model.base), value: p.spent)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                ring(p)
+                ring([spentPart] + parts, spent: p.spent)
             }
-            HStack(alignment: .top, spacing: 12) {
-                paceTile
-                if model.unlocks.projection {
-                    tile("Lands near", MoneyText.approx(p.projected, model.base), capLine(p.projected), tone: over(p.projected) ? Palette.warn : Palette.tx2)
+            VStack(spacing: 7) {
+                spentRow(spentPart)
+                ForEach(parts) { partRow($0) }
+                if projecting {
+                    budgetRows(p, total: total, unplanned: false)
+                } else if let cap = model.cap {
+                    Divider().overlay(Palette.ln)
+                    legendRow(Text("Budget"), MoneyText.full(cap, model.base), swatch: nil)
                 }
             }
-            if model.unlocks.projection, let lessLine = lessPerDay(p) {
+            if projecting, let lessLine = lessPerDay(p) {
                 Text(lessLine).font(.sans(13)).foregroundStyle(Palette.warn)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            // What was bought before departure, one row (#149).
-            if model.beforeDepartureSpent > 0 {
-                Divider().overlay(Palette.ln)
-                NavigationLink(value: Route.moneyEntries("before")) {
-                    HStack {
-                        (Text("Before departure · ") + Text(MoneyText.full(model.beforeDepartureSpent, model.base)).foregroundColor(Palette.tx))
-                            .font(.sans(13.5)).foregroundStyle(Palette.tx2)
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.tx3)
-                    }
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-            }
-            if model.unlocks.beyond, model.beyondTotal > 0 {
-                Divider().overlay(Palette.ln)
-                NavigationLink(value: Route.moneyEntries("beyond")) {
-                    HStack {
-                        Text("+ \(MoneyText.short(model.beyondTotal, model.base)) beyond the everyday")
-                            .font(.sans(13.5)).foregroundStyle(Palette.tx2)
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.tx3)
-                    }
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-            }
+            Divider().overlay(Palette.ln)
+            paceLine
         }
     }
 
-    /// The cap as a ring (Patrik, 27 Sep, instead of a bar with no words): the
-    /// solid arc is spent, the pale one where the journey lands, the full circle
-    /// the cap; the middle says how much is spent. With no cap it measures the
-    /// spend against where the journey lands. A tap opens the cap in Settings → Money.
-    @ViewBuilder private func ring(_ p: MoneyModel.Projection) -> some SwiftUI.View {
-        let projected = model.unlocks.projection ? p.projected : nil
-        if let whole = model.cap ?? projected, whole > 0 {
-            let isOver = (projected ?? p.spent) > whole
-            let tint = isOver ? Palette.warn : Palette.ac
-            Button { router.paths[.money, default: []].append(.moneySettings) } label: {
-                VStack(spacing: 5) {
-                    ZStack {
-                        Circle().stroke(Palette.tr, lineWidth: 9)
-                        if let projected, model.cap != nil {
-                            Circle().trim(from: 0, to: min(1, projected / whole))
-                                .stroke(tint.opacity(0.3), style: StrokeStyle(lineWidth: 9, lineCap: .round))
-                                .rotationEffect(.degrees(-90))
-                        }
-                        Circle().trim(from: 0, to: min(1, p.spent / whole))
-                            .stroke(tint, style: StrokeStyle(lineWidth: 9, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
-                        VStack(spacing: 0) {
-                            Text("\(Int((p.spent / whole * 100).rounded()))%")
-                                .font(.sans(19, weight: .semibold)).foregroundStyle(Palette.tx)
-                                .contentTransition(.numericText())
-                            Text("spent").font(.sans(11)).foregroundStyle(Palette.tx2)
-                        }
-                    }
-                    .frame(width: 88, height: 88)
-                    .animation(Motion.settle, value: p.spent)
-                    (model.cap != nil ? Text("of your cap") : Text("of where it lands"))
-                        .font(.sans(11.5)).foregroundStyle(Palette.tx2)
-                        .fixedSize()
-                }
-                .contentShape(.rect)
+    /// Spent so far, and under it where: before departure, each stop by date,
+    /// between stops (Patrik, 4 Oct). Each opens All entries on those days.
+    private func spentRow(_ part: Part) -> some SwiftUI.View {
+        let breakdown = model.spentParts
+        return VStack(spacing: 6) {
+            Button { withAnimation(Motion.settle) { spentOpen.toggle() } } label: {
+                legendRow(part.title, MoneyText.full(part.value, model.base), swatch: part.color,
+                          chevron: breakdown.isEmpty ? nil : (spentOpen ? 180 : 0))
             }
             .buttonStyle(.plain)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(model.cap.map { String(localized: "Budget cap \(MoneyText.full($0, model.base)), \(Int((p.spent / $0 * 100).rounded()))% spent") }
-                                ?? String(localized: "\(Int((p.spent / whole * 100).rounded()))% of where the journey lands"))
-            .accessibilityHint("Opens Money settings")
+            .disabled(breakdown.isEmpty)
+            .accessibilityHint(spentOpen ? "Hides where it was spent" : "Shows where it was spent")
+            if spentOpen {
+                VStack(spacing: 0) {
+                    ForEach(breakdown) { s in
+                        NavigationLink(value: Route.moneyEntries(focus(s))) {
+                            HStack(spacing: 8) {
+                                spentTitle(s).lineLimit(1).truncationMode(.tail).foregroundStyle(Palette.tx2)
+                                Spacer(minLength: 8)
+                                Text(MoneyText.full(s.total, model.base)).fixedSize().foregroundStyle(Palette.tx)
+                                Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(Palette.tx3)
+                            }
+                            .font(.sans(13))
+                            .padding(.vertical, 6)
+                            .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 2)
+                .background(Palette.canvas, in: .rect(cornerRadius: 10))
+                .padding(.leading, 17)
+                .expands()
+            }
         }
     }
 
-    private var spentLabel: String {
-        if let day = model.tripDay { return String(localized: "Spent so far · \(day) days") }
-        return model.tripStart != nil ? String(localized: "Spent so far · before departure") : String(localized: "Spent so far")
+    private func spentTitle(_ s: MoneyModel.SpentPart) -> Text {
+        switch s.kind {
+        case .before: Text("Before departure")
+        case .between: Text("Between stops")
+        case .stop: s.isCurrent ? Text("\(s.city ?? "") so far") : Text(verbatim: s.city ?? "")
+        }
     }
 
-    @ViewBuilder private var paceTile: some SwiftUI.View {
+    private func focus(_ s: MoneyModel.SpentPart) -> String? {
+        switch s.kind {
+        case .before: "before"
+        case .between: nil
+        case .stop: s.from.flatMap { from in s.to.map { "span:\(from):\($0)" } }
+        }
+    }
+
+    /// The everyday pace: at this stop after three days there, else since departure.
+    private var paceLine: some SwiftUI.View {
+        let title: Text
+        let value: String
         if let perDay = model.pace.perDay {
-            let detail: String = model.pace.scope == .stop
-                ? (model.current.map { String(localized: "everyday, in \($0.city)") } ?? String(localized: "everyday, in this stop"))
-                : String(localized: "everyday, since departure")
-            tile("Per day", MoneyText.full(perDay, model.base), detail)
-        } else if let day = model.tripDay {
-            tile("Per day", String(localized: "measuring…"), String(localized: "\(min(day, 3)) of 3 days"))
+            title = model.pace.scope == .stop
+                ? (model.current.map { Text("Your pace in \($0.city)") } ?? Text("Your pace at this stop"))
+                : Text("Your pace since departure")
+            value = String(localized: "\(MoneyText.full(perDay, model.base)) a day")
         } else {
-            tile("Per day", String(localized: "measuring…"), String(localized: "starts on departure day"))
+            title = Text("Your pace")
+            value = model.tripDay.map { String(localized: "measuring, \(min($0, 3)) of 3 days") } ?? String(localized: "measuring…")
         }
+        return HStack(spacing: 8) {
+            title.lineLimit(1).foregroundStyle(Palette.tx2)
+            Spacer(minLength: 8)
+            Text(value).fixedSize().fontWeight(.semibold).foregroundStyle(Palette.tx)
+        }
+        .font(.sans(13.5))
     }
 
-    private func over(_ projected: Double) -> Bool { model.cap.map { projected > $0 } ?? false }
-
-    private func capLine(_ projected: Double) -> String? {
-        guard let cap = model.cap else {
-            return String(localized: "\(model.plan.reduce(0) { $0 + $1.nights }) planned nights")
-        }
-        if projected > cap { return String(localized: "about \(String(MoneyText.approx(projected - cap, model.base).dropFirst(2))) over your cap") }
-        return String(localized: "\(Int((projected / cap * 100).rounded()))% of your cap")
-    }
-
-    /// Over the cap: what a day would need to cost less, amber, never red (Patrik, 27 Sep).
+    /// Over the budget: what a day would need to cost less, amber, never red (Patrik, 27 Sep).
     private func lessPerDay(_ p: MoneyModel.Projection) -> String? {
         guard let cap = model.cap, p.projected > cap, p.daysAhead > 0 else { return nil }
         let less = (p.projected - cap) / Double(p.daysAhead)
@@ -555,6 +587,23 @@ private struct TopCard: View {
                          tone: row.stayLabel == .idea || row.stayLabel == .none ? Palette.warn : Palette.tx2)
                 }
                 StopBar(row: row)
+                // What this stop cost beyond the everyday, by date (Patrik, 4 Oct: off
+                // the Journey card, onto the stop's).
+                let beyond = model.beyondEveryday(at: row.seg)
+                if beyond > 0 {
+                    Divider().overlay(Palette.ln)
+                    NavigationLink(value: Route.moneyEntries("beyond:\(row.seg.arrive):\(min(model.today, row.seg.depart))")) {
+                        HStack {
+                            Text("+ \(MoneyText.full(beyond, model.base)) beyond the everyday here")
+                                .font(.sans(13.5)).foregroundStyle(Palette.tx2)
+                                .lineLimit(1).minimumScaleFactor(0.85)
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.tx3)
+                        }
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         } else {
             VStack(alignment: .leading, spacing: 6) {
@@ -999,22 +1048,7 @@ private struct DailySpendCard: View {
     }
 
     /// Diagonal lines for the part of a bar outside the daily average.
-    static func stripes(_ scheme: ColorScheme) -> ImagePaint {
-        let ink = UIColor(Palette.ac).resolvedColor(with: UITraitCollection(userInterfaceStyle: scheme == .dark ? .dark : .light))
-        let image = UIGraphicsImageRenderer(size: CGSize(width: 6, height: 6)).image { ctx in
-            ink.withAlphaComponent(0.18).setFill()
-            ctx.fill(CGRect(x: 0, y: 0, width: 6, height: 6))
-            ink.setStroke()
-            let path = UIBezierPath()
-            path.lineWidth = 1.6
-            for o in stride(from: -6.0, through: 6.0, by: 6.0) {
-                path.move(to: CGPoint(x: o, y: 6))
-                path.addLine(to: CGPoint(x: o + 6, y: 0))
-            }
-            path.stroke()
-        }
-        return ImagePaint(image: Image(uiImage: image))
-    }
+    static func stripes(_ scheme: ColorScheme) -> ImagePaint { Stripes.paint(Palette.ac, scheme) }
 
     /// A ledger day as the start of that day on the phone's calendar, which is
     /// what the chart's day bins use.
@@ -1835,7 +1869,7 @@ private struct TrackQuestion: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Track what you spend on this journey?").font(.serif(23)).foregroundStyle(Palette.tx)
-            Text("Log what you spend as you go. Money works out what a day costs and where the journey lands against your cap.")
+            Text("Log what you spend as you go. Money works out what a day costs and where the journey lands against your budget.")
                 .font(.sans(15)).foregroundStyle(Palette.tx2)
             VStack(spacing: 0) {
                 row("A daily pace", "after 3 days")
@@ -1877,5 +1911,96 @@ private struct TrackQuestion: View {
                 self.error = error.localizedDescription
             }
         }
+    }
+}
+
+/// Diagonal lines on a pale ground of the same colour: what's outside the daily
+/// average on the chart, the days after the plan on the ring.
+enum Stripes {
+    static func paint(_ color: Color, _ scheme: ColorScheme) -> ImagePaint {
+        let ink = UIColor(color).resolvedColor(with: UITraitCollection(userInterfaceStyle: scheme == .dark ? .dark : .light))
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 6, height: 6)).image { ctx in
+            ink.withAlphaComponent(0.18).setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 6, height: 6))
+            ink.setStroke()
+            let path = UIBezierPath()
+            path.lineWidth = 1.6
+            for o in stride(from: -6.0, through: 6.0, by: 6.0) {
+                path.move(to: CGPoint(x: o, y: 6))
+                path.addLine(to: CGPoint(x: o + 6, y: 0))
+            }
+            path.stroke()
+        }
+        return ImagePaint(image: Image(uiImage: image))
+    }
+}
+
+/// The budget as a ring (Patrik, 27 Sep; parts on it, 4 Oct): each part an arc
+/// in row order, the full circle the budget. Past the budget the parts stop at
+/// full and the rest runs on as an amber lap outside, the centre saying by how
+/// much. With no budget the circle is the whole and the centre says what's spent.
+struct BudgetRing: View {
+    struct Arc { let value: Double; let color: Color; var hatched = false }
+    let arcs: [Arc]
+    let budget: Double?
+    let spent: Double
+    @Environment(\.colorScheme) private var scheme
+
+    private static let width: CGFloat = 10
+
+    var body: some View {
+        let total = arcs.reduce(0) { $0 + $1.value }
+        let whole = max(budget ?? total, 1)
+        let over = budget.map { total - $0 } ?? 0
+        let gap = arcs.count > 1 ? 0.006 : 0
+        ZStack {
+            Circle().stroke(Palette.tr, lineWidth: Self.width)
+            ForEach(arcs.indices, id: \.self) { i in
+                let start = arcs[..<i].reduce(0) { $0 + $1.value } / whole
+                let end = min(1, start + arcs[i].value / whole)
+                if end - gap > start {
+                    Circle().trim(from: start, to: end - gap)
+                        .stroke(arcs[i].hatched ? AnyShapeStyle(Stripes.paint(arcs[i].color, scheme)) : AnyShapeStyle(arcs[i].color),
+                                lineWidth: Self.width)
+                        .rotationEffect(.degrees(-90))
+                }
+            }
+            if over > 0, let budget {
+                Circle().trim(from: 0, to: min(1, over / budget))
+                    .stroke(Palette.warn, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .padding(-11)
+            }
+            VStack(spacing: 0) {
+                if over > 0 {
+                    Text(verbatim: "+" + MoneyText.compact(over))
+                        .font(.sans(17, weight: .semibold)).foregroundStyle(Palette.warn)
+                    Text("over budget").font(.sans(10.5)).foregroundStyle(Palette.tx2)
+                } else if budget != nil {
+                    Text(verbatim: "\(Int((total / whole * 100).rounded()))%")
+                        .font(.sans(19, weight: .semibold)).foregroundStyle(Palette.tx)
+                    Text("of budget").font(.sans(10.5)).foregroundStyle(Palette.tx2)
+                } else {
+                    Text(verbatim: "\(Int((spent / whole * 100).rounded()))%")
+                        .font(.sans(19, weight: .semibold)).foregroundStyle(Palette.tx)
+                    Text("spent").font(.sans(10.5)).foregroundStyle(Palette.tx2)
+                }
+            }
+            .contentTransition(.numericText())
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .padding(.horizontal, Self.width + 2)
+        }
+        .frame(width: 96, height: 96)
+        .padding(13)
+        .animation(Motion.settle, value: total)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibility(total: total, over: over))
+    }
+
+    private func accessibility(total: Double, over: Double) -> String {
+        guard let budget else { return String(localized: "\(Int((spent / max(total, 1) * 100).rounded()))% spent") }
+        if over > 0 { return String(localized: "\(MoneyText.compact(over)) over budget") }
+        return String(localized: "\(Int((total / budget * 100).rounded()))% of budget")
     }
 }

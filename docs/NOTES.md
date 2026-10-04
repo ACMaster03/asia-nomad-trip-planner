@@ -5,6 +5,47 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-04
+
+### BUILT — iPhone Money top card on the road: Lands near and its parts on the ring, Budget (Patrik, 3–4 Oct, #114)
+
+Patrik and Petra on the 3 Oct build: on the road the Journey card showed Spent so far,
+"+ not paid yet", "Before departure ›" and "+ beyond the everyday ›", and no two of them
+added up. Two mock rounds (https://claude.ai/artifact/WEYVMz5TqT65WDBfsLQpwo), decided:
+
+- **Journey view = version B:** "Lands near ≈ …" as the headline, vertically centred beside
+  the ring (the ring keeps its size; no "to 30 Apr" line). Under it, rows with swatches and
+  no "+"/"=" ("people don't like maths"): Spent so far · Still to pay · Day to day, N nights
+  · (Stays not booked yet) · After the plan, N days (hatched) · Subscriptions, then Budget
+  and "Left in the budget" or "Over budget" (amber), the "a day less" line when over, and
+  "Your pace in Hanoi". The rows add up to the headline. Until the projection unlocks (a
+  week of pace on new journeys) the headline is Spent so far, with only Still to pay.
+- **The ring:** each row an arc in row order, the full circle the budget. Over budget the
+  parts stop at full and the rest runs on as an amber lap outside the ring, the centre
+  saying "+1.3 M over budget" (Patrik picked this of three). Before departure the ring
+  replaces the bar too.
+- **Spent so far opens** (a drop-down) to where it was spent: Before departure, each stop
+  by date, the current one "so far", and Between stops when a day falls outside every
+  stop. They add up to Spent so far. A travel day belongs to the stop you arrive at; each
+  row opens All entries on those days. #159 (each booking on its stop) will move bookings
+  charged early to their own stop.
+- **"Budget", not "cap"**, on Money, Home and Settings ("Költségkeret" on its own row in
+  Hungarian, "Keret" where it's short).
+- **Before departure** is no longer a row on the card: it's an always-there chip in All
+  entries once the journey has started.
+- **"+ beyond the everyday" leaves the Journey card** and closes the stop view: "+ 617 050 Ft
+  beyond the everyday here ›", by date (Q3), opening All entries on the stop's days.
+- "· 34 days" left the Spent so far label.
+
+Also fixed: the Daily spend legend ran into the day panel on some screens (FlowLayout
+reported the widest line as its width, e63a01f).
+
+Checked in the sample journey on 19 Aug, 31 Aug (over budget), 29 Sep and 2 Oct, English
+and Hungarian. No writes.
+
+**iOS:** this is the iOS entry (`TopCard.journey`, `BudgetRing`, `MoneyModel.spentParts`,
+`owner(of:)`, `beyondEveryday(at:)`). **Web differs now:** all of the above.
+
 ## 2026-10-03
 
 ### BUILT — iPhone Money before departure, Upcoming charges, "paid" only once charged, striped bars (Patrik, 3 Oct, #149)

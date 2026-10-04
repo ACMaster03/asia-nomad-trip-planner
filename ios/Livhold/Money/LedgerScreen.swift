@@ -7,7 +7,9 @@ import SwiftUI
 // at once and works with no signal.
 
 struct LedgerScreen: View {
-    /// "beyond", "before" (what was bought before departure), a filter, a day ("2026-09-20") to open on, "cat:<id>", or a group
+    /// "beyond", "before" (what was bought before departure), "span:<from>:<to>"
+    /// (a stop's days, from Spent so far), "beyond:<from>:<to>" (a stop's beyond
+    /// the everyday), a filter, a day ("2026-09-20") to open on, "cat:<id>", or a group
     /// and the days Where it goes showed ("fam:food:2026-09-15:2026-09-28").
     let focus: String?
 
@@ -68,6 +70,11 @@ struct LedgerScreen: View {
             didFocus = true
             if focus == "beyond" { filter = .beyond }
             if focus == "before" { before = store.trip?.state.meta.startDate }
+            if let focus, focus.hasPrefix("span:") || focus.hasPrefix("beyond:") {
+                let parts = focus.split(separator: ":").map(String.init)
+                if parts.count == 3 { span = (parts[1], parts[2]) }
+                if parts.first == "beyond" { filter = .beyond }
+            }
             if let focus, focus.hasPrefix("cat:") { category = String(focus.dropFirst(4)) }
             if let focus, focus.hasPrefix("fam:") {
                 let parts = focus.split(separator: ":").map(String.init)
@@ -92,7 +99,7 @@ struct LedgerScreen: View {
         return ScrollViewReader { proxy in
             List {
                 Section {
-                    if !query.trimmed.isEmpty || filter != .all || category != nil || family != nil || before != nil { summary(past, model) }
+                    if !query.trimmed.isEmpty || filter != .all || category != nil || family != nil || span != nil || before != nil { summary(past, model) }
                     if !coming.isEmpty { comingUp(coming, model) }
                 }
                 .listRowBackground(Color.clear)
@@ -173,32 +180,37 @@ struct LedgerScreen: View {
         let used = counts.sorted { $0.value > $1.value || ($0.value == $1.value && $0.key < $1.key) }.map(\.key)
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                if before != nil {
+                // Always there once the journey has started (Patrik, 4 Oct: where he
+                // looked for it); before departure everything would be in it.
+                if let start = model.tripStart, start <= model.today {
+                    let on = before != nil
                     Button {
-                        withAnimation(Motion.quick) { before = nil }
+                        withAnimation(Motion.quick) { before = on ? nil : start }
                     } label: {
                         HStack(spacing: 5) {
                             Text("Before departure")
-                            Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
+                            if on { Image(systemName: "xmark").font(.system(size: 9, weight: .bold)) }
                         }
-                        .font(.sans(13, weight: .semibold))
-                        .foregroundStyle(Palette.ac)
+                        .font(.sans(13, weight: on ? .semibold : .regular))
+                        .foregroundStyle(on ? Palette.ac : Palette.tx2)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .background(Palette.acSoft, in: .capsule)
-                        .overlay(Capsule().strokeBorder(Palette.acLine, lineWidth: 1))
+                        .background(on ? Palette.acSoft : Palette.fill, in: .capsule)
+                        .overlay(Capsule().strokeBorder(on ? Palette.acLine : .clear, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityHint(Text("Shows every day"))
+                    .accessibilityHint(on ? Text("Shows every day") : Text("Shows what was bought before departure"))
                 }
-                if let family {
+                if family != nil || span != nil {
                     Button {
                         withAnimation(Motion.quick) { self.family = nil; span = nil }
                     } label: {
                         HStack(spacing: 5) {
-                            RoundedRectangle(cornerRadius: 3).fill(family.color).frame(width: 9, height: 9)
-                            Text(family.label)
-                            if let span { Text(verbatim: "· \(Days.short(span.from)) – \(Days.short(span.to))") }
+                            if let family {
+                                RoundedRectangle(cornerRadius: 3).fill(family.color).frame(width: 9, height: 9)
+                                Text(family.label)
+                            }
+                            if let span { Text(verbatim: (family != nil ? "· " : "") + "\(Days.short(span.from)) – \(Days.short(span.to))") }
                             Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
                         }
                         .font(.sans(13, weight: .semibold))

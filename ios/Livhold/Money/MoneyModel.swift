@@ -501,10 +501,63 @@ struct MoneyModel {
         return state.transport.filter { ids.contains($0.id) }
     }
 
-    /// Everything dated before departure day, once the journey is under way.
-    var beforeDepartureSpent: Double {
-        guard let start = tripStart, start <= today else { return 0 }
-        return ledger.filter { $0.isExpense && !$0.date.isEmpty && $0.date < start }
+    struct SpentPart: Identifiable {
+        enum Kind { case before, stop, between }
+        let id: String
+        let kind: Kind
+        /// The stop's city; nil for before departure and between stops.
+        let city: String?
+        let from: String?
+        let to: String?
+        let total: Double
+        let isCurrent: Bool
+    }
+
+    /// The stop a day belongs to: the one whose dates hold it, the later one on a
+    /// travel day (you move to the stop you move to, as on Trip). Nil between stops.
+    func owner(of date: String) -> Segment? {
+        state.segments.filter(\.inPlan)
+            .filter { !$0.arrive.isEmpty && !$0.depart.isEmpty && $0.arrive <= date && date <= $0.depart }
+            .max { $0.arrive < $1.arrive }
+    }
+
+    /// Spent so far, by where it was spent (Patrik, 4 Oct): before departure,
+    /// then each stop by date, then anything between stops. The parts add up
+    /// to the projection's spent. #159 will move each booking to its stop.
+    var spentParts: [SpentPart] {
+        let settled = ledger.filter { $0.isExpense && !$0.date.isEmpty && $0.date <= today }
+        var before = 0.0, between = 0.0
+        var byStop: [String: Double] = [:]
+        for e in settled {
+            let v = Journey.toBase(e.amount, e.currency, rates)
+            if let start = tripStart, e.date < start { before += v }
+            else if let seg = owner(of: e.date) { byStop[seg.id, default: 0] += v }
+            else { between += v }
+        }
+        var parts: [SpentPart] = []
+        if before > 0 {
+            parts.append(SpentPart(id: "before", kind: .before, city: nil, from: nil, to: tripStart.map { Days.add($0, -1) },
+                                   total: before, isCurrent: false))
+        }
+        let stops = state.segments.filter(\.inPlan)
+            .filter { !$0.arrive.isEmpty && $0.arrive <= today }
+            .sorted { $0.arrive < $1.arrive }
+        for seg in stops where byStop[seg.id, default: 0] > 0 || seg.id == current?.id {
+            // Its days end the day before the next stop begins: a travel day is the next stop's.
+            var to = seg.depart.isEmpty ? today : min(seg.depart, today)
+            if let next = stops.first(where: { $0.arrive > seg.arrive }), next.arrive <= to { to = Days.add(next.arrive, -1) }
+            parts.append(SpentPart(id: seg.id, kind: .stop, city: seg.city, from: seg.arrive, to: to,
+                                   total: byStop[seg.id, default: 0], isCurrent: seg.id == current?.id))
+        }
+        if between > 0 {
+            parts.append(SpentPart(id: "between", kind: .between, city: nil, from: nil, to: nil, total: between, isCurrent: false))
+        }
+        return parts
+    }
+
+    /// Spending at this stop kept out of the daily average, up to today (the stop view's last line).
+    func beyondEveryday(at seg: Segment) -> Double {
+        ledger.filter { $0.isExpense && !$0.date.isEmpty && $0.date <= today && !isEverydayRow($0) && owner(of: $0.date)?.id == seg.id }
             .reduce(0) { $0 + Journey.toBase($1.amount, $1.currency, rates) }
     }
 
@@ -546,6 +599,16 @@ enum MoneyText {
     static func approx(_ n: Double, _ cur: String) -> String {
         let step: Double = abs(n) >= 100_000 ? 100 : (abs(n) >= 10_000 ? 10 : 1)
         return "≈ " + short((n / step).rounded() * step, cur)
+    }
+
+    /// The ring's centre, no currency: "400 k", "1.2 M".
+    static func compact(_ n: Double) -> String {
+        let loc = L10n.isEnglish ? Locale(identifier: "en_US") : L10n.locale
+        if abs(n) >= 1_000_000 {
+            return (n / 1_000_000).formatted(.number.precision(.fractionLength(0...1)).locale(loc)) + " M"
+        }
+        if abs(n) >= 1_000 { return "\(Int((n / 1_000).rounded())) k" }
+        return "\(Int(n.rounded()))"
     }
 
     /// The plain number without currency ("465 800"), for tight rows.

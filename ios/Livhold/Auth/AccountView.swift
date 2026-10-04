@@ -22,7 +22,7 @@ struct AccountView: View {
                 } header: {
                     Text("This journey")
                 } footer: {
-                    Text("Name, dates, home, the budget cap and exchange rates.")
+                    Text("Name, dates, home, the budget and exchange rates.")
                 }
             }
             Section {

@@ -60,7 +60,7 @@ struct TripSettingsScreen: View {
 
                 Section {
                     HStack {
-                        Text("Budget cap")
+                        Text("Budget")
                         Spacer()
                         TextField("None", text: $capText)
                             .keyboardType(.numberPad)

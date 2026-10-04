@@ -435,9 +435,9 @@ private struct EstimateCard: View {
                     ProgressTrack(value: min(1, total / cap), tint: total > cap ? Palette.warn : Palette.ac).padding(.top, 10)
                     Group {
                         if total > cap {
-                            Text("of \(MoneyText.full(cap, model.base)) cap · ") + Text("\(MoneyText.full(total - cap, model.base)) over").foregroundColor(Palette.warn).bold()
+                            Text("of \(MoneyText.full(cap, model.base)) budget · ") + Text("\(MoneyText.full(total - cap, model.base)) over").foregroundColor(Palette.warn).bold()
                         } else {
-                            Text("of \(MoneyText.full(cap, model.base)) cap · ") + Text("\(MoneyText.full(cap - total, model.base)) left").foregroundColor(Palette.ac2Deep).bold()
+                            Text("of \(MoneyText.full(cap, model.base)) budget · ") + Text("\(MoneyText.full(cap - total, model.base)) left").foregroundColor(Palette.ac2Deep).bold()
                         }
                     }
                     .font(.sans(14)).foregroundStyle(Palette.tx2).padding(.top, 6)
@@ -497,7 +497,7 @@ private struct AfterJourney: View {
                     figure(String(localized: "Check-ins"), "\(checkIns)", tone: Palette.ac2)
                     figure(String(localized: "Spent"), MoneyText.short(spent, base))
                     if let left {
-                        figure(left >= 0 ? String(localized: "Under cap") : String(localized: "Over cap"),
+                        figure(left >= 0 ? String(localized: "Under budget") : String(localized: "Over budget"),
                                MoneyText.short(abs(left), base), tone: left >= 0 ? Palette.ac2 : Palette.warn)
                     } else {
                         Color.clear.frame(height: 1)

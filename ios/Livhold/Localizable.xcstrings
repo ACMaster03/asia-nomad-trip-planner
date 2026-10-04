@@ -243,12 +243,32 @@
         }
       }
     },
+    "%@ over budget": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kereten felül"
+          }
+        }
+      }
+    },
     "%@ received": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ bevétel"
+          }
+        }
+      }
+    },
+    "%@ so far": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ eddig"
           }
         }
       }
@@ -1092,6 +1112,7 @@
       }
     },
     "%lld of 3 days": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -1112,6 +1133,7 @@
       }
     },
     "%lld planned nights": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "variations": {
@@ -1205,8 +1227,15 @@
         }
       }
     },
-    "%lld%%": {
-      "shouldTranslate": false
+    "%lld%% of budget": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a keret %lld%%-a"
+          }
+        }
+      }
     },
     "%lld%% of the everyday": {
       "localizations": {
@@ -1219,6 +1248,7 @@
       }
     },
     "%lld%% of where the journey lands": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -1228,12 +1258,12 @@
         }
       }
     },
-    "%lld%% of your cap": {
+    "%lld%% spent": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "a keret %lld%%-a"
+            "value": "%lld%% elköltve"
           }
         }
       }
@@ -1291,6 +1321,7 @@
       }
     },
     "+ %@ beyond the everyday": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -1300,7 +1331,18 @@
         }
       }
     },
+    "+ %@ beyond the everyday here": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ %@ a mindennapin túl itt"
+          }
+        }
+      }
+    },
     "+ %@ not paid yet": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -1653,6 +1695,44 @@
         }
       }
     },
+    "After the plan, %lld days": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A terv után, %lld nap"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After the plan, %#@days@"
+          },
+          "substitutions": {
+            "days": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg day"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg days"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "All": {
       "localizations": {
         "hu": {
@@ -1925,16 +2005,6 @@
         }
       }
     },
-    "Before departure · ": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Indulás előtt · "
-          }
-        }
-      }
-    },
     "Before there’s a pace, the nights use the city’s average from the catalogue. Transport still to pay and the subscriptions ahead are added once, under “How it adds up”.": {
       "localizations": {
         "hu": {
@@ -1960,7 +2030,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Két megálló között"
+            "value": "Megállók között"
           }
         }
       }
@@ -2067,38 +2137,11 @@
       }
     },
     "Budget": {
-      "extractionState": "stale",
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keret"
-          }
-        }
-      }
-    },
-    "Budget cap": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Költségkeret"
-          }
-        }
-      }
-    },
-    "Budget cap %@, %lld%% spent": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Budget cap %1$@, %2$lld%% spent"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Költségkeret %1$@, %2$lld%% elköltve"
           }
         }
       }
@@ -2185,16 +2228,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Még nem módosítható"
-          }
-        }
-      }
-    },
-    "Cap": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keret"
           }
         }
       }
@@ -2791,6 +2824,44 @@
           "stringUnit": {
             "state": "translated",
             "value": "A napi költségek 2026. júniusi városi átlagokból számolódnak. Ez hozzávetőleges becslés: hogy valójában mennyit költesz, az attól függ, hogyan utazol."
+          }
+        }
+      }
+    },
+    "Day to day, %lld nights": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Napi költségek, %lld éjszaka"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day to day, %#@nights@"
+          },
+          "substitutions": {
+            "nights": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg night"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg nights"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3645,6 +3716,16 @@
         }
       }
     },
+    "Hides where it was spent": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elrejti, hol költöttétek"
+          }
+        }
+      }
+    },
     "Hold the ring to read a group": {
       "localizations": {
         "hu": {
@@ -3963,12 +4044,6 @@
     },
     "Left for %lld unplanned days": {
       "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld tervezetlen napra marad"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -3996,10 +4071,16 @@
               }
             }
           }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tervezetlen napra marad"
+          }
         }
       }
     },
-    "Left under the cap": {
+    "Left in the budget": {
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -4043,7 +4124,7 @@
         }
       }
     },
-    "Log what you spend as you go. Money works out what a day costs and where the journey lands against your cap.": {
+    "Log what you spend as you go. Money works out what a day costs and where the journey lands against your budget.": {
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -4242,7 +4323,7 @@
         }
       }
     },
-    "Name, dates, home, the budget cap and exchange rates.": {
+    "Name, dates, home, the budget and exchange rates.": {
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -4939,22 +5020,12 @@
         }
       }
     },
-    "Over cap": {
+    "Over budget": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keret felett"
-          }
-        }
-      }
-    },
-    "Over the cap": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keret felett"
+            "value": "Kereten felül"
           }
         }
       }
@@ -5000,6 +5071,7 @@
       }
     },
     "Per day": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -5532,6 +5604,26 @@
         }
       }
     },
+    "Shows what was bought before departure": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az indulás előtt vásároltakat mutatja"
+          }
+        }
+      }
+    },
+    "Shows where it was spent": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megmutatja, hol költöttétek"
+          }
+        }
+      }
+    },
     "Sign in": {
       "localizations": {
         "hu": {
@@ -5684,6 +5776,7 @@
       }
     },
     "Spent so far · %lld days": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "variations": {
@@ -5712,6 +5805,7 @@
       }
     },
     "Spent so far · before departure": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -6509,7 +6603,7 @@
         }
       }
     },
-    "Under cap": {
+    "Under budget": {
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -6857,6 +6951,46 @@
         }
       }
     },
+    "Your pace": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tempód"
+          }
+        }
+      }
+    },
+    "Your pace at this stop": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tempód ezen a megállón"
+          }
+        }
+      }
+    },
+    "Your pace in %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tempód: %@"
+          }
+        }
+      }
+    },
+    "Your pace since departure": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tempód az indulás óta"
+          }
+        }
+      }
+    },
     "Your pace, %@ a day": {
       "localizations": {
         "hu": {
@@ -6890,16 +7024,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Itt vagy · %1$lld. éjszaka / %2$lld"
-          }
-        }
-      }
-    },
-    "about %@ over your cap": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "kb. %@ a keret felett"
           }
         }
       }
@@ -7220,6 +7344,7 @@
       }
     },
     "everyday, in %@": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -7230,6 +7355,7 @@
       }
     },
     "everyday, in this stop": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -7240,6 +7366,7 @@
       }
     },
     "everyday, since departure": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -7403,6 +7530,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "étkezések, utcai kaja, éttermek"
+          }
+        }
+      }
+    },
+    "measuring, %lld of 3 days": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mérés, %lld / 3 nap"
           }
         }
       }
@@ -7574,7 +7711,7 @@
         }
       }
     },
-    "of %@ cap · ": {
+    "of %@ budget · ": {
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -7584,22 +7721,23 @@
         }
       }
     },
-    "of where it lands": {
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "a várható végösszegből"
-          }
-        }
-      }
-    },
-    "of your cap": {
+    "of budget": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "a keretből"
+          }
+        }
+      }
+    },
+    "of where it lands": {
+      "extractionState": "stale",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a várható végösszegből"
           }
         }
       }
@@ -7678,6 +7816,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld nap alatt"
+          }
+        }
+      }
+    },
+    "over budget": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kereten felül"
           }
         }
       }
@@ -7836,6 +7984,7 @@
       }
     },
     "starts on departure day": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
