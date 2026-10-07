@@ -1,18 +1,24 @@
-# S-01 — "For those of you that travel often, how do you…" (full title to add)
+# S-01 — "For those of you that travel often, how do you keep track of reservation details for multiple trips?"
 
 - Link: https://www.reddit.com/r/femaletravelers/comments/1wuszk7/for_those_of_you_that_travel_often_how_do_you/
 - Where: r/femaletravelers
 - Thread date: 1 Oct 2026 (the first comments read "19h ago" on 2 Oct)
 - Captured: 2 Oct 2026 by Petra. Part 1 from a screenshot (the TripIt branch); part 2 the whole comment section, pasted as text.
-- Size: the post's upvotes are not visible; about 80 comments
+- Size: 26 upvotes, 96 comments (seen 7 Oct; about 80 when captured on 2 Oct)
 - Jobs: plan (keeping bookings in order); diary comes up once
 - In one line: a question to people who travel often about how they keep their bookings and plans in order. Most answer with email folders, a calendar, a document or paper. The two apps named are TripIt and Wanderlog.
 
 ## The post
 
-Not captured yet. The question itself was not pasted. From the answers: the poster has
-several trips coming ("for 7 trips though an app might be easier", a commenter). One
-commenter suspected the post was placed to promote an app.
+Captured 7 Oct 2026 by Petra, from a screenshot. Flair: Discussion. The poster is marked
+"Top 1% Poster" in the subreddit.
+
+> "I have 7 trips planned but having trouble keeping track of flights, rental cars, cruise
+> bookings, hotels, etc. is there an app for this?"
+
+Seven separate trips, each a mix of flights, cars, a cruise and hotels: a frequent
+traveller juggling many short trips, not one long journey. One commenter suspected the
+post was placed to promote an app.
 
 ## What people said
 
