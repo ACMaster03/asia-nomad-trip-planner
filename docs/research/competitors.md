@@ -66,6 +66,31 @@ email, a calendar, a spreadsheet, paper. In S-01 those beat every app.
 - Price people mention: none
 - Sources: S-01
 
+## TravelSpend
+
+- What it is, as people describe it: a travel expense app that "tracks everything", for several cards and cash.
+- Who uses it, from the threads: one long-term traveller in S-03 who updates it once a day.
+- Praised for:
+  - "I use multiple cards and cash so I use an app called TravelSpend - tracks everything - I don't find it annoying to update it once a day" — S-03 [2]
+- Complained about:
+  - nothing about the app; a reader suspected the comment was an ad: "The - - makes me wonder if this is an ad" — S-03 [2]
+- Price people mention: none
+- Sources: S-03
+
+## dEssence
+
+- What it is, as people describe it: named only by its own maker in S-03: a place to park booking confirmations, with reminders on the dates money comes due. Self-promotion, with a link.
+- Who uses it, from the threads: nobody else mentions it.
+- Praised for: nothing from users
+- Complained about: nothing
+- Price people mention: none
+- Sources: S-03
+
+## Someone building one (S-03)
+
+- The S-03 poster says they are "thinking about building something around this problem" and asked about card imports. Not an app yet; worth a look now and then.
+- Sources: S-03
+
 ## The non-apps
 
 What people use instead of a travel app. In S-01 these are the majority.
@@ -110,3 +135,12 @@ What people use instead of a travel app. In S-01 these are the majority.
 
 - 3 in S-01, all at one upvote or below; they paste screenshots and let the chat build the list.
 - "I just send in screenshots of my trips and bookings and it compiles them for me." — S-01 [1]
+
+### A number in the head, and the bank (S-03)
+
+- The most common answer in S-03, money only: a rough daily number, then the bank or the card bill to check.
+- "I basically have a rough daily budget in my head for regular expenses." — S-03 [1]
+- "I put it in a separate account so I can see what is left." — S-03 [1]
+- "I use my bank app, has all my currencies and pockets and how much I've allotted each month" — S-03 [1]
+- "Everything goes on the credit card so we could see each month if the habits were starting to slip" — S-03 [1]
+- Where it fails: "cash transactions and hidden currency conversion fees … seem to vanish" — S-03 [0]

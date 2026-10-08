@@ -24,6 +24,18 @@ For what they fear: "locked into an app", "if my phone got lost", "no internet",
 
 ## Rounds
 
+### Round 3 — 8 Oct 2026, the first money thread (S-03). Patrik decides.
+
+- **New:** typing every purchase is the friction people name (N-14); nobody named a tool
+  that imports from cards, and the S-03 poster is building one. The usual habit is a rough
+  daily number plus a monthly look at the bank (N-15), with big one-offs kept apart (N-16).
+- **Repeats:** S-02 again, "budget in mind", no tool. Three sources now point the same way:
+  long-term travellers estimate more than they log.
+- **What we would change:** Livhold already matches N-16 (the daily-average switch) and
+  half of N-15. Card import (N-14) is a big build and a bank-data question (see the PSD2
+  notes on the budget suite); not before the 31 Oct freeze. Worth asking on calls whether
+  a "rough number" mode with fewer entries would keep people who stop logging.
+
 ### Round 2 — 7 Oct 2026, Petra's first day in the Facebook groups. Patrik decides.
 
 - **Repeats, Petra's observation (not yet captured as sources):** in the nomad groups the

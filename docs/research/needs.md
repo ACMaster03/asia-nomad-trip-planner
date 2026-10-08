@@ -186,3 +186,72 @@ Jobs: `plan` · `money` · `follow` · `diary` · `other`.
 - Apps that do it, as people say: TripIt, used sideways; paper
 - Livhold today: partly. Home has reminders with a date. Cash owed is not a thing.
 - Decision: open
+
+## N-14 — Purchases come in from the cards; typing every coffee is what makes people stop
+
+- Job: money
+- Heard in: S-03
+- Quotes:
+  - "I would always prefer the automated card tracking. Manually logging every coffee is very exhausting, especially for long trips." — S-03 [0]
+  - "The daily entry is what makes people drop the app, not the maths." — S-03 [1] (said in a comment that promotes its own product)
+  - "We used a spreadsheet for the first couple of months, which was pretty tedious to be honest." — S-03 [1]
+  - Against: "I don't find it annoying to update it once a day" — S-03 [2], of TravelSpend
+- Apps that do it, as people say: none named; the poster says "not too many options for it"
+- Livhold today: does not. Every expense is typed by hand on Money.
+- Decision: open
+
+## N-15 — A rough daily number and a monthly check, not every purchase
+
+- Job: money
+- Heard in: S-03 (and S-02, "budget in mind", no tool)
+- Quotes:
+  - "I basically have a rough daily budget in my head for regular expenses." — S-03 [1]
+  - "Some days I spend less, some days more, and I just try to keep the average around that amount." — S-03 [1]
+  - "Then I check my bank account to see how much I actually spent over the month." — S-03 [1]
+  - "Rough daily number plus a look at the bank balance once a week beats logging every coffee, for me." — S-03 [1] (self-promotion comment)
+- Apps that do it, as people say: none; the bank app and the head
+- Livhold today: partly. Money works from a daily average and projects from it, but the average is built from typed entries.
+- Decision: open
+
+## N-16 — Big one-off costs kept apart from the day-to-day spending
+
+- Job: money
+- Heard in: S-03
+- Quotes:
+  - "I also keep a separate amount in mind for bigger or extraordinary expenses, like tours or things I pay for once but use for a month, because I don't think it makes much sense to count those as part of one day's spending." — S-03 [1]
+  - "Anything already designated stays in a different account (hotels, tickets)." — S-03 [1]
+- Apps that do it, as people say: a second bank account
+- Livhold today: does. Each expense has "Exclude from the daily average" (#36, live with #96), and stays and transport sit on the Bookings card, outside the daily pace.
+- Decision: open
+
+## N-17 — Cash and currency fees should not vanish from the total
+
+- Job: money
+- Heard in: S-03
+- Quotes:
+  - "the biggest budget destroyers are cash transactions and hidden currency conversion fees. All these seem to vanish from our budget trackers." — S-03 [0]
+  - "I use multiple cards and cash so I use an app called TravelSpend - tracks everything" — S-03 [2]
+- Apps that do it, as people say: TravelSpend, for cash and several cards
+- Livhold today: partly. Cash can be typed like any expense, in its own currency. Conversion fees are not a thing of their own; to check how Patrik and Petra record them.
+- Decision: open
+
+## N-18 — Watch closely at the start, to learn if the budget is realistic, then relax
+
+- Job: money
+- Heard in: S-03
+- Quotes:
+  - "Once we could see that we were sticking to the budget we stopped doing it." — S-03 [1]
+  - "I do think it's a pretty good idea to keep a close eye on it as you start, even if it is just to check if your intial budget is realistic." — S-03 [1]
+- Apps that do it, as people say: a spreadsheet, then the monthly credit card bill
+- Livhold today: partly. The Track spending question lets someone not track at all, but nothing invites tracking for the first weeks only.
+- Decision: open
+
+## N-19 — Pre-booked costs with money still due mid-trip
+
+- Job: money
+- Heard in: S-03
+- Quotes:
+  - "Pre-booked things bend a budget worst, a deposit paid months back with the balance due mid trip." — S-03 [1] (self-promotion comment; weigh lightly)
+- Apps that do it, as people say: dEssence, named only by its maker
+- Livhold today: partly. The Bookings card shows stays and transport as paid and still to pay.
+- Decision: open
