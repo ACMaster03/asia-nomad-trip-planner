@@ -125,7 +125,28 @@ the merge and sees their trip's name, travellers, budget cap, start date and cur
 
 ## 2026-10-03
 
-### IN REVIEW — app.livhold.com, step 3: the code and the emails point at app.livhold.com (#163)
+### LIVE — app.livhold.com, step 3: the code and the emails point at app.livhold.com (#163)
+
+**Live, 10 Oct** (#170 merged 4 Oct on Patrik's "go"; the Supabase half ran on 10 Oct, Patrik
+at the CLI, guided):
+- `tools/auth-config.sh --staging push`: 2 fields moved (both templates, +4 characters each:
+  the logo's `app.`); staging keeps `site_url = http://localhost:3000`. `--prod push`: 3 fields,
+  `site_url` `https://www.livhold.com` → `https://app.livhold.com` and the two templates.
+- `supabase secrets set SITE_URL=https://app.livhold.com` on production: its SHA-256 in
+  `secrets list` matches that address (checked without reading the value).
+- `digest` v11 and `digest-send` v12 deployed from this repository's root (the new
+  `verify_jwt = false` blocks): `functions list` shows `verify_jwt=false` on both; an unsigned
+  POST answers 400 (`digest`, "unknown action") and 403 (`digest-send`), the functions' own
+  gates, never the platform's 401.
+- Vercel: journey.livhold.com's form posts to `app.livhold.com/api/journey-signup` and links
+  Privacy and Terms there; app.livhold.com's `/delete-account` says "Sign in at app.livhold.com".
+- Patrik's tests: a sign-in email asked for on app.livhold.com shows the logo and signs in on
+  app.livhold.com; the form on journey.livhold.com said "You're on the list" and stored one
+  row (03:03:46 UTC, source `direct`, consent `2026-10-03`), deleted by its id the same hour.
+- **Still open from step 3:** the iOS changes below (not in #176, the iOS globe slice of
+  10 Oct).
+
+Before going live, as built:
 
 Each place in the brief's list was read before it changed; what changed:
 - `supabase/config.toml`: `site_url = "https://app.livhold.com"` (the allow-list keeps the old
