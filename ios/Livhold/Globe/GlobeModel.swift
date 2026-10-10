@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import simd
+import UIKit
 
 /// One journey, as the globe draws it (#166). The same shape for your own journey
 /// and for one you follow: the caller turns a trip (or `followed_trip_summary`) into
@@ -16,6 +17,8 @@ struct GlobeJourney: Equatable, Sendable {
         let lon: Double
         let lat: Double
         let kind: Kind
+        /// The trip's segment, for your own journey: a tap on the stop finds its card.
+        var id: String? = nil
         var at: SIMD3<Float> { GlobeData.unit(lon: lon, lat: lat) }
     }
 
@@ -63,28 +66,39 @@ final class GlobeModel {
     // MARK: - Views
 
     /// The whole journey, home left out, centred and as close as it fits.
-    static func journeyCamera(_ j: GlobeJourney) -> GlobeCamera {
+    static func journeyCamera(_ j: GlobeJourney, cy: Double = 0.42) -> GlobeCamera {
         let pts = j.stops.filter { $0.kind != .home }.map(\.at)
-        guard !pts.isEmpty else { return worldCamera(j) }
+        guard !pts.isEmpty else { return worldCamera(j, cy: cy) }
         let c = simd_normalize(pts.reduce(SIMD3<Float>(repeating: 0), +))
         let spread = pts.map { Globe.angle($0, c) }.max() ?? 0
         let k = min(2.2, max(0.8, 0.30 / sin(max(0.02, min(1.4, spread)))))
-        return GlobeCamera(looking: c, k: k)
+        return GlobeCamera(looking: c, k: k, cy: cy)
     }
 
     /// Far out, with home in the picture.
-    static func worldCamera(_ j: GlobeJourney) -> GlobeCamera {
+    static func worldCamera(_ j: GlobeJourney, cy: Double = 0.42) -> GlobeCamera {
         let pts = j.stops.map(\.at)
-        guard !pts.isEmpty else { return GlobeCamera(lon: 62, lat: 26, k: 0.9) }
+        guard !pts.isEmpty else { return GlobeCamera(lon: 62, lat: 26, k: 0.9, cy: cy) }
         var c = pts.reduce(SIMD3<Float>(repeating: 0), +)
         if simd_length(c) < 1e-3 { c = pts[0] }
-        var cam = GlobeCamera(looking: c, k: 0.9)
+        var cam = GlobeCamera(looking: c, k: 0.9, cy: cy)
         cam.lat = max(-30, min(35, cam.lat))
         return cam
     }
 
-    func goJourney() { fly(to: Self.journeyCamera(journey)) }
-    func goWorld() { fly(to: Self.worldCamera(journey)) }
+    /// The journey, with the globe's centre at `cy` (or where it is now).
+    func goJourney(cy: Double? = nil, duration: TimeInterval = 0.9) {
+        fly(to: Self.journeyCamera(journey, cy: cy ?? frame(at: .now).camera.cy), duration: duration)
+    }
+
+    func goWorld() { fly(to: Self.worldCamera(journey, cy: frame(at: .now).camera.cy)) }
+
+    /// A new journey (the trip changed): the camera stays where it is unless asked.
+    func update(_ j: GlobeJourney, reframe: Bool = false) {
+        guard j != journey else { return }
+        journey = j
+        if reframe, animation == nil { camera = Self.journeyCamera(j, cy: camera.cy) }
+    }
 
     func fly(to target: GlobeCamera, duration: TimeInterval = 0.9) {
         let from = frame(at: .now).camera
@@ -99,23 +113,46 @@ final class GlobeModel {
         stop()
     }
 
+    /// Ends a replay at once, where it would have ended (the screen went away).
+    func finish() {
+        guard let a = animation else { return }
+        camera = a.end
+        stop()
+    }
+
     // MARK: - Replays
 
-    /// The whole journey, leg by leg (after onboarding, and on Replay).
-    func replayJourney() {
-        guard !journey.stops.isEmpty else { return }
-        guard !reduceMotion else { stop(); camera = Self.journeyCamera(journey); return }
-        let script = Script(journey: journey, legs: Array(journey.legs.indices), settleTo: Self.journeyCamera(journey))
-        start(Animation(kind: .replay(script), start: .now, duration: script.duration, end: script.settleTo))
+    /// When a replay ends, and when its last move (back to the whole journey) begins:
+    /// Trip's timeline rises during that move.
+    struct Playback {
+        var duration: TimeInterval = 0
+        var settleStart: TimeInterval = 0
+    }
+
+    /// The whole journey, leg by leg (after onboarding, and on Replay). It flies at the
+    /// globe's centre now, and settles with it at `settleCy` (Trip's header), if given.
+    @discardableResult
+    func replayJourney(settleCy: Double? = nil) -> Playback {
+        let cy = frame(at: .now).camera.cy
+        let settle = Self.journeyCamera(journey, cy: settleCy ?? cy)
+        guard !journey.legs.isEmpty else { fly(to: settle); return Playback(duration: 0.9, settleStart: 0) }
+        guard !reduceMotion else { stop(); camera = settle; return Playback() }
+        let script = Script(journey: journey, legs: Array(journey.legs.indices), settleTo: settle, cy: cy)
+        start(Animation(kind: .replay(script), start: .now, duration: script.duration, end: settle), haptics: script.landings)
+        return Playback(duration: script.duration, settleStart: script.settleStart)
     }
 
     /// One leg, the one just arrived by (the Arrived tap, then each follower once).
     /// With Reduce Motion, only the stamp on the stop.
-    func replayArrival(leg i: Int) {
-        guard journey.legs.indices.contains(i) else { return }
-        let settle = Self.journeyCamera(journey)
-        let script = Script(journey: journey, legs: [i], settleTo: settle, stampOnly: reduceMotion)
-        start(Animation(kind: .replay(script), start: .now, duration: script.duration, end: reduceMotion ? camera : settle))
+    @discardableResult
+    func replayArrival(leg i: Int, settleCy: Double? = nil) -> Playback {
+        guard journey.legs.indices.contains(i) else { return Playback() }
+        let cy = frame(at: .now).camera.cy
+        let settle = Self.journeyCamera(journey, cy: settleCy ?? cy)
+        let script = Script(journey: journey, legs: [i], settleTo: settle, stampOnly: reduceMotion, cy: cy)
+        let end = reduceMotion ? camera : settle
+        start(Animation(kind: .replay(script), start: .now, duration: script.duration, end: end), haptics: script.landings)
+        return Playback(duration: script.duration, settleStart: script.settleStart)
     }
 
     // MARK: - Frames
@@ -156,20 +193,42 @@ final class GlobeModel {
     }
 
     private var endTask: Task<Void, Never>?
+    private var hapticTask: Task<Void, Never>?
 
-    private func start(_ a: Animation) {
+    private func start(_ a: Animation, haptics: [Script.Landing] = []) {
         animation = a
         endTask?.cancel()
+        hapticTask?.cancel()
         endTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(a.duration))
             guard !Task.isCancelled, let self else { return }
             self.camera = a.end
             self.animation = nil
         }
+        guard !haptics.isEmpty else { return }
+        hapticTask = Task {
+            // A light tap as each stop is stamped, firmer on the last; a soft one on a stop
+            // not reached yet (the replay also flies the plan ahead). iOS skips them when
+            // the phone's System Haptics are off.
+            let light = UIImpactFeedbackGenerator(style: .light)
+            let soft = UIImpactFeedbackGenerator(style: .soft)
+            let medium = UIImpactFeedbackGenerator(style: .medium)
+            light.prepare()
+            var t: TimeInterval = 0
+            for (n, l) in haptics.enumerated() {
+                try? await Task.sleep(for: .seconds(max(0, l.at - t)))
+                guard !Task.isCancelled else { return }
+                t = l.at
+                if l.ahead { soft.impactOccurred(intensity: 0.6) }
+                else if n == haptics.count - 1 { medium.impactOccurred() }
+                else { light.impactOccurred() }
+            }
+        }
     }
 
     private func stop() {
         endTask?.cancel()
+        hapticTask?.cancel()
         animation = nil
     }
 }
@@ -183,19 +242,27 @@ struct Script {
         case settle(duration: Double)
     }
 
+    /// A stop being stamped: seconds into the replay, and whether it is still ahead.
+    struct Landing { let at: TimeInterval; let ahead: Bool }
+
     let segments: [Segment]
     let legs: [Int]
     let settleTo: GlobeCamera
     let stampOnly: Bool
+    /// The globe's centre on screen while flying.
+    let cy: Double
     let duration: TimeInterval
+    let settleStart: TimeInterval
+    let landings: [Landing]
     /// Stops the replay reveals (hidden until stamped).
     let revealed: Set<Int>
     let firstStop: Int
 
-    init(journey j: GlobeJourney, legs: [Int], settleTo: GlobeCamera, stampOnly: Bool = false) {
+    init(journey j: GlobeJourney, legs: [Int], settleTo: GlobeCamera, stampOnly: Bool = false, cy: Double = 0.42) {
         self.legs = legs
         self.settleTo = settleTo
         self.stampOnly = stampOnly
+        self.cy = cy
         var segs: [Segment] = []
         if stampOnly {
             segs = [.settle(duration: 0.9)]
@@ -211,16 +278,24 @@ struct Script {
                 segs.append(.leg(i, theta: th, duration: 1.1 + 2.6 * sqrt(th / .pi)))
                 segs.append(.hold(stop: leg.to, duration: 0.65))
             }
-            segs.append(.settle(duration: 1.2))
+            // a little longer when it also carries the globe back up into Trip's header
+            segs.append(.settle(duration: abs(settleTo.cy - cy) > 0.01 ? 1.4 : 1.2))
             // the whole journey reveals every stop after the first; one arrival only its stop
             revealed = Set(legs.map { j.legs[$0].to }).subtracting([first])
         }
         segments = segs
-        duration = segs.reduce(0) { t, s in
+        var t: TimeInterval = 0, settleAt: TimeInterval = 0
+        var lands: [Landing] = stampOnly ? legs.prefix(1).map { Landing(at: 0, ahead: j.legs[$0].upcoming) } : []
+        for s in segs {
             switch s {
-            case let .hold(_, d), let .leg(_, _, d), let .settle(d): t + d
+            case let .hold(_, d): t += d
+            case let .leg(i, _, d): t += d; lands.append(Landing(at: t, ahead: j.legs[i].upcoming))
+            case let .settle(d): settleAt = t; t += d
             }
         }
+        duration = t
+        settleStart = settleAt
+        landings = lands
     }
 
     func frame(at e: Double, journey j: GlobeJourney, fallback: GlobeCamera) -> GlobeModel.Frame {
@@ -234,11 +309,11 @@ struct Script {
             return f
         }
         var t = e
-        var cam = GlobeCamera(looking: j.stops[firstStop].at, k: GlobeModel.cityK)
+        var cam = GlobeCamera(looking: j.stops[firstStop].at, k: GlobeModel.cityK, cy: cy)
         for s in segments {
             switch s {
             case let .hold(stop, d):
-                cam = GlobeCamera(looking: j.stops[stop].at, k: GlobeModel.cityK)
+                cam = GlobeCamera(looking: j.stops[stop].at, k: GlobeModel.cityK, cy: cy)
                 if t <= d { f.camera = cam; break }
                 t -= d
                 continue
@@ -249,7 +324,7 @@ struct Script {
                     hidden.remove(leg.to)
                     ages[leg.to] = t - d
                     t -= d
-                    cam = GlobeCamera(looking: j.stops[leg.to].at, k: GlobeModel.cityK)
+                    cam = GlobeCamera(looking: j.stops[leg.to].at, k: GlobeModel.cityK, cy: cy)
                     continue
                 }
                 let u = t / d, pe = Ease.cubicInOut(u)
@@ -259,7 +334,7 @@ struct Script {
                 let k = u < 0.35 ? GlobeModel.cityK + (kMid - GlobeModel.cityK) * Ease.cubicInOut(u / 0.35)
                     : u > 0.65 ? kMid + (GlobeModel.cityK - kMid) * Ease.cubicInOut((u - 0.65) / 0.35) : kMid
                 progress[i] = pe
-                f.camera = GlobeCamera(looking: pos, k: k)
+                f.camera = GlobeCamera(looking: pos, k: k, cy: cy)
                 f.vehicle = (i, pos, Globe.slerp(a, b, min(1, pe + 0.004)))
                 break
             case let .settle(d):

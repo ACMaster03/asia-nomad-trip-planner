@@ -222,6 +222,22 @@
         }
       }
     },
+    "%@ next, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ next, %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "következő: %1$@, %2$@"
+          }
+        }
+      }
+    },
     "%@ not booked yet": {
       "extractionState": "stale",
       "localizations": {
@@ -1697,12 +1713,6 @@
     },
     "After the plan, %lld days": {
       "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A terv után, %lld nap"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -1729,6 +1739,12 @@
                 }
               }
             }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A terv után, %lld nap"
           }
         }
       }
@@ -1970,6 +1986,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Átlagosan naponta"
+          }
+        }
+      }
+    },
+    "Back to the timeline": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vissza az idővonalhoz"
           }
         }
       }
@@ -2445,6 +2471,16 @@
         }
       }
     },
+    "Close": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezárás"
+          }
+        }
+      }
+    },
     "Clothes": {
       "localizations": {
         "hu": {
@@ -2830,12 +2866,6 @@
     },
     "Day to day, %lld nights": {
       "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Napi költségek, %lld éjszaka"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -2862,6 +2892,12 @@
                 }
               }
             }
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Napi költségek, %lld éjszaka"
           }
         }
       }
@@ -3555,6 +3591,7 @@
         }
       }
     },
+    "Földgömb": {},
     "Gear": {
       "localizations": {
         "hu": {
@@ -3601,6 +3638,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adomány"
+          }
+        }
+      }
+    },
+    "Globe": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Földgömb"
+          }
+        }
+      }
+    },
+    "Globe with the route: %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Földgömb az útvonallal: %@"
           }
         }
       }
@@ -4930,6 +4987,17 @@
         }
       }
     },
+    "Open the globe": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Földgömb megnyitása"
+          }
+        }
+      }
+    },
+    "Open the globe (#166)": {},
     "Opens Money": {
       "localizations": {
         "hu": {
@@ -4956,6 +5024,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Megnyitja az Útiterv oldalt"
+          }
+        }
+      }
+    },
+    "Opens the globe": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megnyitja a földgömböt"
           }
         }
       }
@@ -5383,6 +5461,16 @@
         }
       }
     },
+    "Replay the journey": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az utazás újrajátszása"
+          }
+        }
+      }
+    },
     "Resume this subscription": {
       "localizations": {
         "hu": {
@@ -5569,6 +5657,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lemondottak (%lld)"
+          }
+        }
+      }
+    },
+    "Show the journey": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az utazás mutatása"
+          }
+        }
+      }
+    },
+    "Show the world": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A világ mutatása"
           }
         }
       }
@@ -6371,6 +6479,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Idő"
+          }
+        }
+      }
+    },
+    "Timeline": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idővonal"
           }
         }
       }

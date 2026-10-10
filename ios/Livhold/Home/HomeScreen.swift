@@ -144,6 +144,12 @@ private struct OnTheRoad: View {
                 Button {
                     events.arrivedCities.insert(Journey.normCity(cur.city))
                     Task { await store.recordArrived(city: cur.city) }
+                    // Patrik, 10 Oct: Trip comes forward and its globe flies the leg in (#166).
+                    let city = cur.city
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(350))
+                        router.playArrival(city: city)
+                    }
                 } label: {
                     Label("Arrived in \(cur.city)", systemImage: "airplane.arrival")
                         .font(.sans(16, weight: .semibold))

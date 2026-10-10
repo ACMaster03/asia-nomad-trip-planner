@@ -13,6 +13,17 @@ struct TripScreen: View {
     @State private var planning = false
 
     var body: some View {
+        if store.phase == .ready, let trip = store.trip {
+            TripWithGlobe(trip: trip) { planning = true }
+                .sheet(isPresented: $planning) {
+                    NewJourneySheet().environment(store)
+                }
+        } else {
+            plain
+        }
+    }
+
+    private var plain: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -69,10 +80,12 @@ struct TripScreen: View {
     }
 }
 
-private struct TripTimeline: View {
+struct TripTimeline: View {
     let trip: TripRow
     /// Opens the new-journey form.
     let planNext: () -> Void
+    /// Off under the globe, where the header sits over the globe instead.
+    var showsHeader = true
 
     @Environment(TripStore.self) private var store
 
@@ -95,7 +108,7 @@ private struct TripTimeline: View {
                         lookBack: { withAnimation(Motion.settle) { proxy.scrollTo("timeline", anchor: .top) } }
                     )
                 }
-                header.id("timeline")
+                if showsHeader { TripHeader(trip: trip, today: today).id("timeline") } else { Color.clear.frame(height: 0).id("timeline") }
                 if !store.canEdit { ViewerNotice().padding(.bottom, 12) }
                 savedCopyLine
                 if let notice = store.saveNotice {
@@ -128,7 +141,19 @@ private struct TripTimeline: View {
         }
     }
 
-    private var header: some View {
+}
+
+/// The day, the journey's name and the gear: on top of the timeline, or over the globe.
+struct TripHeader: View {
+    let trip: TripRow
+    let today: String
+    var showsGear = true
+    /// Over the globe: a soft canvas-coloured glow keeps the words readable on land and sea.
+    var onGlobe = false
+
+    private var state: TripState { trip.state }
+
+    var body: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 let kicker = Journey.kicker(state, today: today)
@@ -143,15 +168,22 @@ private struct TripTimeline: View {
                     .font(.serif(28))
                     .foregroundStyle(Palette.tx)
             }
+            .shadow(color: onGlobe ? Palette.canvas : .clear, radius: 4)
+            .shadow(color: onGlobe ? Palette.canvas.opacity(0.8) : .clear, radius: 10)
             Spacer()
-            NavigationLink(value: Route.tripSettings) {
-                Image(systemName: "gearshape")
+            if showsGear {
+                NavigationLink(value: Route.tripSettings) {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.icon)
+                .accessibilityLabel("Trip settings")
             }
-            .buttonStyle(.icon)
-            .accessibilityLabel("Trip settings")
         }
         .padding(.bottom, 12)
     }
+}
+
+private extension TripTimeline {
 
     /// No signal, or a refresh failed, while the saved copy is still here: say so,
     /// quietly, and how old it is.

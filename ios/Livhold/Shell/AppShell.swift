@@ -50,7 +50,11 @@ struct AppShell: View {
         // The saved journey shows at once; the server's copy follows, and again
         // every time the app comes back to the front (the web refetches on focus).
         .task(id: auth.userId) {
-            if let id = auth.userId { await trips.start(userId: id) }
+            if let id = auth.userId {
+                await trips.start(userId: id)
+            } else if TripStore.fixtureWithoutSignIn {
+                await trips.start(userId: "fixture")
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await trips.refresh() } }

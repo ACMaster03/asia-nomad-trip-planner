@@ -4,10 +4,13 @@ import simd
 
 /// Where the globe looks: the point at its centre and how close. `k` = 1 fits the
 /// globe to the width of the view; the mock's Journey view is about 2.2, a city 2.7.
+/// `cy` is where the globe's centre sits on screen, as a share of the height: it is
+/// part of the camera so the globe can glide between Trip's header and full screen.
 struct GlobeCamera: Equatable, Sendable {
     var lon: Double
     var lat: Double
     var k: Double
+    var cy: Double = 0.42
 
     static let minK = 0.7
     static let maxK = 9.0
@@ -15,17 +18,19 @@ struct GlobeCamera: Equatable, Sendable {
     var center: SIMD3<Float> { GlobeData.unit(lon: lon, lat: lat) }
 
     /// A camera looking straight at `v`.
-    init(looking v: SIMD3<Float>, k: Double) {
+    init(looking v: SIMD3<Float>, k: Double, cy: Double = 0.42) {
         let n = simd_normalize(v)
         lon = Double(atan2(n.y, n.x)) * 180 / .pi
         lat = Double(asin(max(-1, min(1, n.z)))) * 180 / .pi
         self.k = k
+        self.cy = cy
     }
 
-    init(lon: Double, lat: Double, k: Double) {
+    init(lon: Double, lat: Double, k: Double, cy: Double = 0.42) {
         self.lon = lon
         self.lat = lat
         self.k = k
+        self.cy = cy
     }
 
     /// Part of the way from `a` to `b`, along the shorter way round.
@@ -33,7 +38,7 @@ struct GlobeCamera: Equatable, Sendable {
         var dl = b.lon - a.lon
         while dl > 180 { dl -= 360 }
         while dl < -180 { dl += 360 }
-        return GlobeCamera(lon: a.lon + dl * t, lat: a.lat + (b.lat - a.lat) * t, k: a.k + (b.k - a.k) * t)
+        return GlobeCamera(lon: a.lon + dl * t, lat: a.lat + (b.lat - a.lat) * t, k: a.k + (b.k - a.k) * t, cy: a.cy + (b.cy - a.cy) * t)
     }
 }
 
@@ -46,15 +51,15 @@ struct GlobeProjector {
     /// How far from the centre of view (in radians) anything can still be on screen.
     let reach: Float
 
-    /// `centerY` is where the globe's centre sits, as a share of the height; the card
-    /// over the bottom of the screen is why it is above the middle.
-    init(camera: GlobeCamera, size: CGSize, centerY: CGFloat = 0.42) {
+    /// The globe's centre sits at `camera.cy` of the height: above the middle, for the
+    /// card over the bottom of the screen, or high up in Trip's header.
+    init(camera: GlobeCamera, size: CGSize) {
         let l = camera.lon * .pi / 180, p = camera.lat * .pi / 180
         f = SIMD3(Float(cos(p) * cos(l)), Float(cos(p) * sin(l)), Float(sin(p)))
         e = SIMD3(Float(-sin(l)), Float(cos(l)), 0)
         n = SIMD3(Float(-sin(p) * cos(l)), Float(-sin(p) * sin(l)), Float(cos(p)))
         r = size.width / 2 * camera.k
-        let x0 = size.width / 2, y0 = size.height * centerY
+        let x0 = size.width / 2, y0 = size.height * CGFloat(camera.cy)
         cx = x0
         cy = y0
         let far = [CGPoint(x: 0, y: 0), CGPoint(x: size.width, y: 0), CGPoint(x: 0, y: size.height), CGPoint(x: size.width, y: size.height)]

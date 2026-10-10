@@ -56,6 +56,16 @@ final class TripStore {
     /// For screens that skip the network in fixture builds (Home's trip events).
     static var isFixture: Bool { usesFixture }
 
+    /// `-tripFixture YES -skipSignIn YES` (debug): the app on the fixture with nobody
+    /// signed in, for screenshots of Trip, Home and Money.
+    static var fixtureWithoutSignIn: Bool {
+        #if DEBUG
+        usesFixture && UserDefaults.standard.bool(forKey: "skipSignIn")
+        #else
+        false
+        #endif
+    }
+
     /// Call when the signed-in user is known: shows the saved copy, then refreshes.
     func start(userId: String) async {
         self.userId = userId

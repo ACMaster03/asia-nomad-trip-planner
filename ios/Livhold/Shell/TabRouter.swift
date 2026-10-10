@@ -13,6 +13,16 @@ final class TabRouter {
     /// scrolls to its top when it changes.
     private(set) var scrollToTop: [AppTab: Int] = [:]
     var checkInOpen = false
+    /// Something Trip's globe should play as soon as Trip shows (#166): the leg into
+    /// a stop just arrived in, from Home's Arrived button.
+    var globeRequest: GlobeRequest?
+
+    /// Arrived on Home: Trip comes forward at its start, and its globe plays the leg.
+    func playArrival(city: String) {
+        globeRequest = .arrival(city: city)
+        paths[.trip] = []
+        select(.trip)
+    }
 
     /// Every tap on a tab lands here, including a tap on the tab you're already on:
     /// the first re-tap goes back to the tab's start, the next one scrolls to the top.
@@ -73,6 +83,10 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .map: "map"
         }
     }
+}
+
+enum GlobeRequest: Equatable {
+    case arrival(city: String)
 }
 
 /// Every screen a tab can push. Pushing by value keeps each tab's stack a plain list.
