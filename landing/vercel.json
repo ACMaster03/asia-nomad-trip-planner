@@ -4,6 +4,7 @@
   "outputDirectory": "public",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- .",
   "cleanUrls": false,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/sw.js",
