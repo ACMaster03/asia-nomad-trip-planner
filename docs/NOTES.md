@@ -33,6 +33,13 @@ iOS: the follower's Trip is `TripWithGlobe` fed by `followed_trip_summary()` (ro
 stops, travellers) and the feed's check-ins. Places come from the summary's `lat`/`lng`, then
 GlobePlaces. "Once" per arrival is kept per journey on the phone (the last `arrived` event id).
 
+Built: #184 (merged into `feat/ios-foundation` 10 Oct), TestFlight build 25, with Home's feed (#130).
+The globe frame is `GlobeScaffold`, shared by both Trips. As built (my readings, Patrik can change
+them): a check-in sits under the stop whose dates hold its day, and on a travel day one posted before
+that day's arrival goes to the stop before; a new arrival replays only within a week of it; without
+a journey of your own the tab bar goes. Not yet: photos on check-ins, a real follower account on a
+phone, Petra's check of the Hungarian.
+
 ### IN REVIEW — app.livhold.com, step 5a: the landing project ready for livhold.com (#163)
 
 Patrik, 10 Oct: the switch goes 5a (this) → a rehearsal of the kill switch on a phone →
