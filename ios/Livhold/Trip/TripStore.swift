@@ -72,6 +72,11 @@ final class TripStore {
         tracking = MoneyPrefsCache.tracking(userId: userId) ?? .unknown
         cityCosts = MoneyPrefsCache.cities(userId: userId)
         #if DEBUG
+        // `-noJourney YES` on top: an account with no journey (a follower, #130).
+        if Self.usesFixture, UserDefaults.standard.bool(forKey: "noJourney") {
+            phase = .empty
+            return
+        }
         if Self.usesFixture {
             trip = TripFixture.trip(today: Days.today())
             cityCosts = TripFixture.cities

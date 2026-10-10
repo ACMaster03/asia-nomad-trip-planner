@@ -42,6 +42,42 @@ extension GlobeJourney {
         self.init(stops: stops, legs: legs, countries: countries, homeCountry: homeCountry)
     }
 
+    /// A journey you follow: its stops from the first one (no home, #166), joined by the
+    /// legs the travellers typed (45, 46), else guessed by distance as for your own.
+    /// Where the catalogue knows a city its place comes with the summary.
+    @MainActor init(followed f: FollowedJourney, today: String, places: GlobePlaces) {
+        var stops: [Stop] = []
+        var legs: [Leg] = []
+        var countries: Set<String> = []
+        for (i, seg) in f.stops.enumerated() {
+            let r = f.route[i]
+            let p: (lat: Double, lng: Double, country: String?)? =
+                if let lat = r.lat, let lng = r.lng { (lat, lng, nil) }
+                else { places.place(seg.city).map { ($0.lat, $0.lng, $0.country) } }
+            guard let p else { continue }
+            let kind: Kind
+            if Journey.isCurrent(seg, today: today) { kind = .now }
+            else if !seg.depart.isEmpty, seg.depart <= today { kind = .past }
+            else { kind = .next }
+            let here = stops.count
+            stops.append(Stop(name: seg.city, lon: p.lng, lat: p.lat, kind: kind, id: seg.id))
+            if let c = Self.naturalEarthName(seg.country.isEmpty ? p.country : seg.country) { countries.insert(c) }
+            guard here > 0, stops[here - 1].at != stops[here].at else { continue }
+            let typed = f.leg(into: i)
+            let date = typed?.date ?? seg.arrive
+            let mode = typed?.mode.flatMap(Mode.init(rawValue:))
+                ?? (Globe.angle(stops[here - 1].at, stops[here].at) > 0.094 ? .flight : .other)
+            legs.append(Leg(from: here - 1, to: here, mode: mode, upcoming: date.isEmpty || date > today))
+        }
+        self.init(stops: stops, legs: legs, countries: countries, homeCountry: nil)
+    }
+
+    /// The names a followed journey needs placed: stops the catalogue couldn't place.
+    static func wanted(_ f: FollowedJourney) -> [(city: String, country: String?)] {
+        f.stops.enumerated().filter { f.route[$0.offset].lat == nil }
+            .map { ($0.element.city, $0.element.country.isEmpty ? nil : $0.element.country) }
+    }
+
     /// The names the trip needs placed: home and every stop in the plan.
     static func wanted(_ state: TripState) -> [(city: String, country: String?)] {
         let tl = Journey.timeline(state)

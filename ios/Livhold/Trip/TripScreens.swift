@@ -247,8 +247,9 @@ private extension TripTimeline {
 
 // MARK: - rail
 
-/// The line down the left and the node on it. Web `Rail`.
-private struct Rail: View {
+/// The line down the left and the node on it. Web `Rail`. A followed journey's
+/// timeline uses it too.
+struct Rail: View {
     enum Line { case solid, booked, dashed }
     enum Node { case home, stop, current, maybe }
 

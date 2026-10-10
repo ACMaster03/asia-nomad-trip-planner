@@ -103,4 +103,6 @@ enum Route: Hashable {
     case moneySubscriptions
     /// Every reminder, from Home.
     case reminders
+    /// A journey you follow, read-only (#166); optionally opened on one of its posts.
+    case followed(String, String?)
 }

@@ -6,6 +6,10 @@ import SwiftUI
 // turns and zooms, with two round buttons (World, Replay) and a card at the bottom
 // that brings the timeline back. Replays play with the globe open, and the timeline
 // rises again while the globe settles.
+//
+// One frame, two journeys: `GlobeScaffold` is the globe, the header, the timeline
+// sheet and the moves; your own Trip (`TripWithGlobe`) and a journey you follow
+// (Follow/FollowedTripScreen.swift) fill it in.
 
 /// The whole-journey replay after onboarding: once per journey, on this phone.
 enum GlobeIntro {
@@ -16,6 +20,16 @@ enum GlobeIntro {
     static func markPlayed(tripId: String) { UserDefaults.standard.set("played", forKey: key(tripId)) }
 }
 
+/// What a screen asks its globe to do; the scaffold does it and clears the request.
+enum GlobePlay: Equatable {
+    /// The whole journey, leg by leg.
+    case journey
+    /// One leg, into a stop just arrived in.
+    case arrival(leg: Int)
+    /// Open on one stop and stay there (a check-in from the feed).
+    case focus(stop: Int)
+}
+
 struct TripWithGlobe: View {
     let trip: TripRow
     /// Opens the new-journey form.
@@ -23,22 +37,116 @@ struct TripWithGlobe: View {
 
     @Environment(TripStore.self) private var store
     @Environment(TabRouter.self) private var router
+    @State private var play: GlobePlay?
+    private let places = GlobePlaces.shared
+    private var today: String { Days.today() }
+
+    var body: some View {
+        let journey = GlobeJourney(state: trip.state, today: today, places: places)
+        GlobeScaffold(
+            journey: journey,
+            title: trip.name ?? trip.state.meta.tripName ?? String(localized: "Your journey"),
+            tab: .trip,
+            play: $play,
+            refresh: { await store.refresh() },
+            header: { open in TripHeader(trip: trip, today: today, showsGear: !open, onGlobe: true) },
+            timeline: { TripTimeline(trip: trip, planNext: planNext, showsHeader: false) },
+            peek: { _ in peek }
+        )
+        .onChange(of: router.globeRequest, initial: true) { handleRequest(journey) }
+        .onChange(of: router.selection) { maybeIntro(journey) }
+        .onChange(of: journey, initial: true) { _, j in maybeIntro(j) }
+        .task(id: trip.state.segments.map(\.city).joined(separator: "|") + (trip.state.meta.homeBase ?? "")) {
+            await places.resolve(GlobeJourney.wanted(trip.state))
+        }
+    }
+
+    private var peek: some View {
+        let state = trip.state
+        let cur = Journey.current(in: state, today: today)
+        let next = state.segments.filter(\.inPlan).sorted { $0.arrive < $1.arrive }.first { $0.arrive > today }
+        var lines: [String] = []
+        if let cur {
+            let p = Journey.progress(cur, today: today)
+            lines.append(String(localized: "Night \(p.night) of \(p.nights)"))
+        }
+        if let next { lines.append(String(localized: "\(next.city) next, \(Days.short(next.arrive))")) }
+        return GlobePeekText(title: cur?.city ?? next?.city ?? (trip.name ?? state.meta.tripName ?? ""),
+                             line: lines.joined(separator: " · "))
+    }
+
+    private func handleRequest(_ j: GlobeJourney) {
+        guard case .arrival(let city) = router.globeRequest else { return }
+        router.globeRequest = nil
+        guard let leg = j.legs.lastIndex(where: { Journey.sameCity(j.stops[$0.to].name, city) }) else { return }
+        play = .arrival(leg: leg)
+    }
+
+    /// The whole journey, once, the first time Trip shows a route after the new-journey form.
+    private func maybeIntro(_ j: GlobeJourney) {
+        guard router.selection == .trip, store.canEdit, GlobeIntro.isPending(tripId: trip.id),
+              !j.legs.isEmpty, play == nil else { return }
+        GlobeIntro.markPlayed(tripId: trip.id)
+        play = .journey
+    }
+}
+
+/// The peek card's words: the stop, and one line under it.
+struct GlobePeekText: View {
+    var kicker: String? = nil
+    let title: String
+    var line: String = ""
+    var quote: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let kicker {
+                Text(verbatim: kicker)
+                    .font(.sans(11, weight: .semibold)).textCase(.uppercase).tracking(0.8)
+                    .foregroundStyle(Palette.ac2)
+            }
+            Text(verbatim: title).font(.serif(19)).foregroundStyle(Palette.tx)
+            if !line.isEmpty {
+                Text(verbatim: line).font(.sans(13)).foregroundStyle(Palette.tx2)
+            }
+            if let quote, !quote.isEmpty {
+                Text(verbatim: "“\(quote)”").font(.sans(13)).foregroundStyle(Palette.tx2).lineLimit(2)
+            }
+        }
+    }
+}
+
+/// The globe in the header, the timeline over it, and the open globe.
+struct GlobeScaffold<Header: View, Timeline: View, Peek: View>: View {
+    let journey: GlobeJourney
+    /// The compact bar's name, once the timeline covers the globe.
+    let title: String
+    /// Re-tapping this tab scrolls back up to the globe.
+    let tab: AppTab
+    @Binding var play: GlobePlay?
+    let refresh: () async -> Void
+    /// Over the globe, closed (`false`) and open (`true`).
+    @ViewBuilder let header: (_ open: Bool) -> Header
+    @ViewBuilder let timeline: () -> Timeline
+    /// The open globe's card; given the stop it was opened on, if any.
+    @ViewBuilder let peek: (_ focused: Int?) -> Peek
+
+    @Environment(TabRouter.self) private var router
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var globe = GlobeModel(journey: GlobeJourney(stops: [], legs: [], countries: [], homeCountry: nil))
     @State private var open = false
     @State private var playing = false
     @State private var world = false
+    @State private var focused: Int?
     @State private var scrollY: CGFloat = 0
     /// Where the globe's centre sits in the header, as a share of the screen's height.
     @State private var cyHeader = 0.235
-    private let places = GlobePlaces.shared
+    @State private var scrollProxy: ScrollViewProxy?
 
-    private static let cyOpen = 0.40
-    private var today: String { Days.today() }
+    private static var cyOpen: Double { 0.40 }
 
     var body: some View {
-        let journey = GlobeJourney(state: trip.state, today: today, places: places)
         GeometryReader { geo in
             let full = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
             let header = max(240, geo.size.height * 0.40)
@@ -46,20 +154,16 @@ struct TripWithGlobe: View {
                 ZStack(alignment: .top) {
                     Palette.canvas.ignoresSafeArea()
                     globeLayer(header: header)
-                    timeline(header: header, full: full, proxy: proxy)
+                    timelineLayer(header: header, full: full, proxy: proxy)
                     compactBar(visible: !open && scrollY > header - 70, proxy: proxy)
                     if open { openOverlay(proxy: proxy) }
                 }
-                .onChange(of: router.scrollToTop[.trip]) {
+                .onChange(of: router.scrollToTop[tab]) {
                     if open { close() }
                     withAnimation(Motion.settle) { proxy.scrollTo("globe-top", anchor: .top) }
                 }
-                .onChange(of: router.globeRequest, initial: true) { handleRequest(proxy) }
-                .onChange(of: router.selection) { maybeIntro(proxy) }
-                .onChange(of: journey, initial: true) { _, j in
-                    sync(j)
-                    maybeIntro(proxy)
-                }
+                .onChange(of: journey, initial: true) { _, j in sync(j) }
+                .onChange(of: play, initial: true) { run(proxy) }
                 .onChange(of: header, initial: true) {
                     // The header's middle, a little low: the route sits under the title.
                     cyHeader = Double((geo.safeAreaInsets.top + header * 0.55) / max(1, full))
@@ -68,9 +172,6 @@ struct TripWithGlobe: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .task(id: trip.state.segments.map(\.city).joined(separator: "|") + (trip.state.meta.homeBase ?? "")) {
-            await places.resolve(GlobeJourney.wanted(trip.state))
-        }
         .onDisappear { globe.finish() }
     }
 
@@ -93,16 +194,14 @@ struct TripWithGlobe: View {
         .accessibilityHidden(!open)
     }
 
-    @State private var scrollProxy: ScrollViewProxy?
-
-    private func timeline(header: CGFloat, full: CGFloat, proxy: ScrollViewProxy) -> some View {
+    private func timelineLayer(header: CGFloat, full: CGFloat, proxy: ScrollViewProxy) -> some View {
         ScrollView {
             VStack(spacing: 0) {
                 // The header: the journey's name over the globe, and the whole of it a tap
                 // target that opens the globe. A drag here scrolls the timeline.
                 ZStack(alignment: .top) {
                     Color.clear
-                    TripHeader(trip: trip, today: today, onGlobe: true)
+                    self.header(false)
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
                     openPill
@@ -119,7 +218,7 @@ struct TripWithGlobe: View {
                 .onGeometryChange(for: CGFloat.self) { -$0.frame(in: .scrollView).minY } action: { scrollY = $0 }
 
                 VStack(alignment: .leading, spacing: 0) {
-                    TripTimeline(trip: trip, planNext: planNext, showsHeader: false)
+                    timeline()
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 18)
@@ -136,7 +235,7 @@ struct TripWithGlobe: View {
         .scrollIndicators(.hidden)
         .refreshable {
             guard Connectivity.shared.isOnline else { return }
-            await store.refresh()
+            await refresh()
         }
         .offset(y: open ? full : 0)
         .allowsHitTesting(!open)
@@ -157,7 +256,7 @@ struct TripWithGlobe: View {
     /// Once the timeline covers the globe: the name, and a way back to the globe.
     private func compactBar(visible: Bool, proxy: ScrollViewProxy) -> some View {
         HStack {
-            Text(trip.name ?? trip.state.meta.tripName ?? String(localized: "Your journey"))
+            Text(verbatim: title)
                 .font(.serif(17))
                 .foregroundStyle(Palette.tx)
                 .lineLimit(1)
@@ -186,18 +285,21 @@ struct TripWithGlobe: View {
     private func openOverlay(proxy: ScrollViewProxy) -> some View {
         VStack(spacing: 0) {
             HStack(alignment: .top) {
-                TripHeader(trip: trip, today: today, showsGear: false, onGlobe: true)
+                header(true)
                 Spacer(minLength: 12)
                 VStack(spacing: 10) {
                     RoundGlobeButton(symbol: world ? "point.topleft.down.to.point.bottomright.curvepath" : "globe",
                                      label: world ? "Show the journey" : "Show the world") {
                         world.toggle()
+                        focused = nil
                         world ? globe.goWorld() : globe.goJourney()
                     }
                     RoundGlobeButton(symbol: "airplane", label: "Replay the journey", tint: Palette.ac2Deep) {
                         world = false
+                        focused = nil
                         globe.replayJourney()
                     }
+                    .disabled(globe.journey.legs.isEmpty)
                 }
                 .disabled(playing)
             }
@@ -214,23 +316,8 @@ struct TripWithGlobe: View {
     }
 
     private var peekCard: some View {
-        let state = trip.state
-        let cur = Journey.current(in: state, today: today)
-        let next = state.segments.filter(\.inPlan).sorted { $0.arrive < $1.arrive }.first { $0.arrive > today }
-        let title = cur?.city ?? next?.city ?? (trip.name ?? state.meta.tripName ?? "")
-        var lines: [String] = []
-        if let cur {
-            let p = Journey.progress(cur, today: today)
-            lines.append(String(localized: "Night \(p.night) of \(p.nights)"))
-        }
-        if let next { lines.append(String(localized: "\(next.city) next, \(Days.short(next.arrive))")) }
-        return HStack(alignment: .center, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.serif(19)).foregroundStyle(Palette.tx)
-                if !lines.isEmpty {
-                    Text(lines.joined(separator: " · ")).font(.sans(13)).foregroundStyle(Palette.tx2)
-                }
-            }
+        HStack(alignment: .center, spacing: 10) {
+            peek(focused)
             Spacer()
             HStack(spacing: 4) {
                 Text("Timeline")
@@ -266,13 +353,35 @@ struct TripWithGlobe: View {
     private func close() {
         guard open else { return }
         world = false
+        focused = nil
         withAnimation(Motion.settle) { open = false }
         globe.goJourney(cy: cyHeader, duration: 0.65)
     }
 
-    /// A replay after onboarding or after Arrived: open, play, and as the globe settles
+    /// Does what the screen asked for, once.
+    private func run(_ proxy: ScrollViewProxy) {
+        guard let request = play else { return }
+        play = nil
+        sync(journey)
+        switch request {
+        case .journey:
+            replay(proxy) { cy in globe.replayJourney(settleCy: cy) }
+        case .arrival(let leg):
+            guard globe.journey.legs.indices.contains(leg) else { return }
+            replay(proxy) { cy in globe.replayArrival(leg: leg, settleCy: cy) }
+        case .focus(let stop):
+            guard !playing else { return }
+            world = false
+            proxy.scrollTo("globe-top", anchor: .top)
+            withAnimation(Motion.settle) { open = true }
+            focused = stop
+            globe.goStop(stop, cy: Self.cyOpen)
+        }
+    }
+
+    /// A replay after onboarding or after an arrival: open, play, and as the globe settles
     /// back on the whole journey the timeline rises again (round 3).
-    private func play(_ proxy: ScrollViewProxy, _ run: @escaping (Double) -> GlobeModel.Playback) {
+    private func replay(_ proxy: ScrollViewProxy, _ run: @escaping (Double) -> GlobeModel.Playback) {
         guard !playing else { return }
         playing = true
         let wasOpen = open
@@ -282,28 +391,12 @@ struct TripWithGlobe: View {
             let pb = run(cyHeader)
             try? await Task.sleep(for: .seconds(pb.settleStart))
             world = false
+            focused = nil
             withAnimation(.smooth(duration: 0.55)) { open = false }
             try? await Task.sleep(for: .seconds(max(0, pb.duration - pb.settleStart)))
             if !globe.isAnimating, abs(globe.camera.cy - cyHeader) > 0.005 { globe.goJourney(cy: cyHeader, duration: 0.4) }
             playing = false
         }
-    }
-
-    private func handleRequest(_ proxy: ScrollViewProxy) {
-        guard case .arrival(let city) = router.globeRequest else { return }
-        router.globeRequest = nil
-        let j = GlobeJourney(state: trip.state, today: today, places: places)
-        sync(j)
-        guard let leg = j.legs.lastIndex(where: { Journey.sameCity(j.stops[$0.to].name, city) }) else { return }
-        play(proxy) { cy in globe.replayArrival(leg: leg, settleCy: cy) }
-    }
-
-    /// The whole journey, once, the first time Trip shows a route after the new-journey form.
-    private func maybeIntro(_ proxy: ScrollViewProxy) {
-        guard router.selection == .trip, store.canEdit, GlobeIntro.isPending(tripId: trip.id),
-              !globe.journey.legs.isEmpty, !playing else { return }
-        GlobeIntro.markPlayed(tripId: trip.id)
-        play(proxy) { cy in globe.replayJourney(settleCy: cy) }
     }
 }
 
