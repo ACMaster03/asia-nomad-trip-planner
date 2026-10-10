@@ -22,8 +22,9 @@ Mock: https://claude.ai/artifact/RRpEeKaQa3Yk2MEugfMLdU (round 1).
   ("4 more check-ins in Bangkok"), with their comment count and Comment.
 - **No home on a follower's globe:** it starts at the first stop. Migration 46 sends followers
   only the legs between two stops of the plan: 45 sent every leg, and the first one's `from`
-  ("Budapest → Bangkok") told a follower where you live. Applied on staging 10 Oct with
-  46-TESTPLAN.sql passing; production: Patrik.
+  ("Budapest → Bangkok") told a follower where you live. Live on staging and production
+  since 10 Oct (Patrik ran production); 46-TESTPLAN.sql held on both. 45-TESTPLAN.sql no longer
+  holds after 46 (its Hoi An leg is not a stop).
 - **Mute** sits in a "…" menu on the journey, where the gear is on your own. Unfollow stays out
   of it (my reading: it belongs on the person, later).
 - An arrival plays once per phone on the follower's next look (4 Oct), with the same haptics.
