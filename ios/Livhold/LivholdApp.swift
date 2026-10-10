@@ -31,6 +31,9 @@ private struct RootView: View {
         // `-globePreview YES`: the globe on its own, no sign-in needed (#166).
         if UserDefaults.standard.bool(forKey: "globePreview") {
             GlobePreviewScreen(canClose: false)
+        } else if TripStore.fixtureWithoutSignIn {
+            // `-tripFixture YES -skipSignIn YES`: the app on the fixture, for screenshots.
+            AppShell()
         } else {
             app
         }
