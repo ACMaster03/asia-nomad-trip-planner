@@ -5,6 +5,39 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-10
+
+### DECIDED — Patrik, 10 Oct: the globe sits on top of Trip (A), with round buttons (#166, #63)
+
+Mock: https://claude.ai/artifact/GGLZnQNwzRkZThNzmcGDmY (round 3).
+
+- **A, the globe on top.** The globe fills the top of Trip and the timeline scrolls up over it,
+  as one ordinary scroll. In that header the globe takes a tap only, never a drag: a tap opens it
+  full screen, where it turns and zooms. A card at the bottom ("Hanoi · night 11 of 44",
+  "Timeline ⌃") brings the timeline back. Once the timeline covers the globe, a slim bar with the
+  trip's name and a Globe button takes its place, and the globe stops drawing.
+- **Not B.** B was the timeline as a sheet over a full-screen globe (#63's idea). Its cost was a
+  hand-made sheet (the system sheet covers the tab bar), about 1 to 2 extra days.
+- **Buttons from B.** On the open globe the trip's name stays top left. Two round buttons sit
+  top right, in place of round 1's chips under the title: World/Journey, and Replay, drawn as a
+  plane. No compass, since the globe never rolls and north is always up. No Layers button until
+  people come (#167). Night shading is always on, with no switch.
+- **Animations** play with the globe open: the onboarding replay, the Arrived leg, and a
+  follower's first look after an arrival (the 4 Oct rules). As the globe settles, the timeline
+  rises to its usual place, so the replay ends on the globe and the timeline together. Replay
+  on demand leaves the globe open.
+- **Arrived** on Check in switches to Trip and plays the leg there.
+- **Haptics:** every landing (each stamp) gives a light tap, the last one a little firmer.
+  With Reduce Motion, the stamp still taps.
+- **Tapping a stop** on the open globe folds it and scrolls to that stop's card.
+
+Open, asked in the mock: whether a tap is enough to open the globe (no pull-down, which competes
+with pull-to-refresh); whether a follower's Trip opens with the globe open.
+
+iOS: Trip gets the globe as a header above the timeline (`ios/Livhold/Globe/`, #166); the
+globe is drawn only while some of it shows. Landings use `.sensoryFeedback(.impact(weight:
+.light))`, the last `.medium`; the system's haptics setting is respected.
+
 ## 2026-10-04
 
 ### DECIDED — Patrik, 4 Oct: followers see each leg's mode; the replay plays only when something happens (#166)
