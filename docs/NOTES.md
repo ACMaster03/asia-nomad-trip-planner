@@ -7,6 +7,38 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-10
 
+### IN REVIEW — app.livhold.com, step 5a: the landing project ready for livhold.com (#163)
+
+Patrik, 10 Oct: the switch goes 5a (this) → a rehearsal of the kill switch on a phone →
+step 4 (the five users) → 5b (the domains move, and the wording that names livhold.com).
+- **Redirects** (`landing/vercel.json`): every route folder of `product/src/app` and its
+  `(app)` group, every file and folder of `product/public`, `/manifest.webmanifest` and
+  `/_next` answer 308 to the same path on `https://app.livhold.com`, query kept. Each folder
+  has two entries, the bare path and `/:path+` below it, because `/:path*` added a trailing
+  slash (`/dashboard` → `…/dashboard/`, one more hop in the app). `cleanUrls` is off (it turned
+  `/offline.html` into `/offline` before the redirect ran; `index.html` is the only page) and
+  `trailingSlash: false` strips `/dashboard/` to `/dashboard` first (it answered 404).
+  Probed on the preview: `/dashboard?x=1`, `/money/entries`, `/follow/<t>?auto=all`,
+  `/privacy?x=1`, `/auth/callback?next=/account`, `/offline.html`, `/brand/…`, `/_next/…` all
+  308 to the same path and query on app.livhold.com; `/`, the CSS, fonts, images, `robots.txt`,
+  `sitemap.xml` and `sw.js` answer 200 from the landing project.
+- **`landing/redirects.test.mjs`** (`node --test landing/redirects.test.mjs` from the root, now
+  in CLAUDE.md's checks): fails when an app folder or public file has no redirect (checked by
+  adding a dummy screen folder), when a landing file would redirect, when `cleanUrls` is back.
+- **`landing/public/sw.js`, the kill switch:** takes over from the app's old worker on phones
+  that installed the app from livhold.com, deletes every cache, unregisters, reloads the open
+  windows. Served `no-cache, no-store`. The page never registers it. [Likely; the rehearsal
+  proves it.]
+- **On merge nothing changes for anyone:** the landing project serves only journey.livhold.com,
+  where nobody has the app's worker; `journey.livhold.com/dashboard` now goes to the app.
+- **The rehearsal, after the merge:** a spare name, `rehearsal.livhold.com`, on the app project;
+  Patrik opens it on his phone (and adds it to the Home Screen) so the app's worker installs
+  there; then the name moves to the landing project and he opens it again: it should show the
+  landing page after at most one reload, also from the Home Screen icon. Then the name goes.
+- **Left for 5b, merged at the switch:** canonical, `og:` addresses, `robots.txt`, `sitemap.xml`
+  → livhold.com; `/privacy`'s "the list on journey.livhold.com" and "Last updated".
+- **iOS:** nothing new. Still open from step 3: `Backend.swift` and five strings.
+
 ### DECIDED — Patrik, 10 Oct: the globe sits on top of Trip (A), with round buttons (#166, #63)
 
 Mock: https://claude.ai/artifact/GGLZnQNwzRkZThNzmcGDmY (round 3).

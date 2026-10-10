@@ -3,5 +3,334 @@
   "framework": null,
   "outputDirectory": "public",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- .",
-  "cleanUrls": true
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/_next",
+      "destination": "https://app.livhold.com/_next",
+      "permanent": true
+    },
+    {
+      "source": "/_next/:path+",
+      "destination": "https://app.livhold.com/_next/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/account",
+      "destination": "https://app.livhold.com/account",
+      "permanent": true
+    },
+    {
+      "source": "/account/:path+",
+      "destination": "https://app.livhold.com/account/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/api",
+      "destination": "https://app.livhold.com/api",
+      "permanent": true
+    },
+    {
+      "source": "/api/:path+",
+      "destination": "https://app.livhold.com/api/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/auth",
+      "destination": "https://app.livhold.com/auth",
+      "permanent": true
+    },
+    {
+      "source": "/auth/:path+",
+      "destination": "https://app.livhold.com/auth/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/brand",
+      "destination": "https://app.livhold.com/brand",
+      "permanent": true
+    },
+    {
+      "source": "/brand/:path+",
+      "destination": "https://app.livhold.com/brand/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard",
+      "destination": "https://app.livhold.com/dashboard",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard/:path+",
+      "destination": "https://app.livhold.com/dashboard/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/delete-account",
+      "destination": "https://app.livhold.com/delete-account",
+      "permanent": true
+    },
+    {
+      "source": "/delete-account/:path+",
+      "destination": "https://app.livhold.com/delete-account/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/dev",
+      "destination": "https://app.livhold.com/dev",
+      "permanent": true
+    },
+    {
+      "source": "/dev/:path+",
+      "destination": "https://app.livhold.com/dev/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/digest",
+      "destination": "https://app.livhold.com/digest",
+      "permanent": true
+    },
+    {
+      "source": "/digest/:path+",
+      "destination": "https://app.livhold.com/digest/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/follow",
+      "destination": "https://app.livhold.com/follow",
+      "permanent": true
+    },
+    {
+      "source": "/follow/:path+",
+      "destination": "https://app.livhold.com/follow/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/goodbye",
+      "destination": "https://app.livhold.com/goodbye",
+      "permanent": true
+    },
+    {
+      "source": "/goodbye/:path+",
+      "destination": "https://app.livhold.com/goodbye/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/icons",
+      "destination": "https://app.livhold.com/icons",
+      "permanent": true
+    },
+    {
+      "source": "/icons/:path+",
+      "destination": "https://app.livhold.com/icons/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/invite",
+      "destination": "https://app.livhold.com/invite",
+      "permanent": true
+    },
+    {
+      "source": "/invite/:path+",
+      "destination": "https://app.livhold.com/invite/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/itinerary",
+      "destination": "https://app.livhold.com/itinerary",
+      "permanent": true
+    },
+    {
+      "source": "/itinerary/:path+",
+      "destination": "https://app.livhold.com/itinerary/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/journeys",
+      "destination": "https://app.livhold.com/journeys",
+      "permanent": true
+    },
+    {
+      "source": "/journeys/:path+",
+      "destination": "https://app.livhold.com/journeys/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/knowledge",
+      "destination": "https://app.livhold.com/knowledge",
+      "permanent": true
+    },
+    {
+      "source": "/knowledge/:path+",
+      "destination": "https://app.livhold.com/knowledge/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/live",
+      "destination": "https://app.livhold.com/live",
+      "permanent": true
+    },
+    {
+      "source": "/live/:path+",
+      "destination": "https://app.livhold.com/live/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/login",
+      "destination": "https://app.livhold.com/login",
+      "permanent": true
+    },
+    {
+      "source": "/login/:path+",
+      "destination": "https://app.livhold.com/login/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/map",
+      "destination": "https://app.livhold.com/map",
+      "permanent": true
+    },
+    {
+      "source": "/map/:path+",
+      "destination": "https://app.livhold.com/map/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/money",
+      "destination": "https://app.livhold.com/money",
+      "permanent": true
+    },
+    {
+      "source": "/money/:path+",
+      "destination": "https://app.livhold.com/money/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/people",
+      "destination": "https://app.livhold.com/people",
+      "permanent": true
+    },
+    {
+      "source": "/people/:path+",
+      "destination": "https://app.livhold.com/people/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/post",
+      "destination": "https://app.livhold.com/post",
+      "permanent": true
+    },
+    {
+      "source": "/post/:path+",
+      "destination": "https://app.livhold.com/post/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/privacy",
+      "destination": "https://app.livhold.com/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/privacy/:path+",
+      "destination": "https://app.livhold.com/privacy/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/reminders",
+      "destination": "https://app.livhold.com/reminders",
+      "permanent": true
+    },
+    {
+      "source": "/reminders/:path+",
+      "destination": "https://app.livhold.com/reminders/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/settings",
+      "destination": "https://app.livhold.com/settings",
+      "permanent": true
+    },
+    {
+      "source": "/settings/:path+",
+      "destination": "https://app.livhold.com/settings/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/terms",
+      "destination": "https://app.livhold.com/terms",
+      "permanent": true
+    },
+    {
+      "source": "/terms/:path+",
+      "destination": "https://app.livhold.com/terms/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/vendor",
+      "destination": "https://app.livhold.com/vendor",
+      "permanent": true
+    },
+    {
+      "source": "/vendor/:path+",
+      "destination": "https://app.livhold.com/vendor/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/welcome",
+      "destination": "https://app.livhold.com/welcome",
+      "permanent": true
+    },
+    {
+      "source": "/welcome/:path+",
+      "destination": "https://app.livhold.com/welcome/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/file.svg",
+      "destination": "https://app.livhold.com/file.svg",
+      "permanent": true
+    },
+    {
+      "source": "/globe.svg",
+      "destination": "https://app.livhold.com/globe.svg",
+      "permanent": true
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "destination": "https://app.livhold.com/manifest.webmanifest",
+      "permanent": true
+    },
+    {
+      "source": "/next.svg",
+      "destination": "https://app.livhold.com/next.svg",
+      "permanent": true
+    },
+    {
+      "source": "/offline.html",
+      "destination": "https://app.livhold.com/offline.html",
+      "permanent": true
+    },
+    {
+      "source": "/vercel.svg",
+      "destination": "https://app.livhold.com/vercel.svg",
+      "permanent": true
+    },
+    {
+      "source": "/window.svg",
+      "destination": "https://app.livhold.com/window.svg",
+      "permanent": true
+    }
+  ]
 }

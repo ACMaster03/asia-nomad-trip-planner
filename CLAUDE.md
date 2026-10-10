@@ -155,7 +155,8 @@ Petra is new to software work; Patrik is not. The product conventions are in
 ## Running the checks
 
 From `product/`: `npm ci`, then `npx tsc --noEmit`, `npx eslint src`,
-`npm test`, `npx next build --webpack`. The dev server and the build accept
+`npm test`, `npx next build --webpack`. From the repository root, `node --test landing/redirects.test.mjs`
+checks that every app route redirects from livhold.com to app.livhold.com. The dev server and the build accept
 placeholder values for `NEXT_PUBLIC_SUPABASE_URL` and
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Dev-only preview routes render screens from
 fixtures without a sign-in: `/dev/trip-preview`, `/dev/money-preview`,
