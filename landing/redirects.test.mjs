@@ -44,12 +44,18 @@ function expected() {
 
 test('every app path redirects to app.livhold.com, path kept, permanent', () => {
   for (const path of expected()) {
-    const dir = path.endsWith('/')
-    const source = dir ? `/${path}:path*` : `/${path}`
-    const r = sources.get(source)
-    assert.ok(r, `no redirect for ${source} in landing/vercel.json`)
-    assert.equal(r.destination, dir ? `${APP}/${path}:path*` : `${APP}/${path}`)
-    assert.equal(r.permanent, true, `${source} must be permanent (308)`)
+    // A folder needs two: the bare path (`/dashboard`, no trailing slash added) and
+    // everything below it (`/dashboard/…`).
+    const name = path.replace(/\/$/, '')
+    const pairs = path.endsWith('/')
+      ? [[`/${name}`, `${APP}/${name}`], [`/${name}/:path+`, `${APP}/${name}/:path+`]]
+      : [[`/${name}`, `${APP}/${name}`]]
+    for (const [source, destination] of pairs) {
+      const r = sources.get(source)
+      assert.ok(r, `no redirect for ${source} in landing/vercel.json`)
+      assert.equal(r.destination, destination)
+      assert.equal(r.permanent, true, `${source} must be permanent (308)`)
+    }
   }
 })
 
@@ -59,8 +65,13 @@ test('the landing page keeps its own root and files', () => {
     for (const own of OWN) assert.notEqual(source, `/${own}`)
   }
   for (const name of readdirSync(new URL('landing/public', root))) {
-    assert.ok(!sources.has(`/${name}`) && !sources.has(`/${name}/:path*`), `${name} is a landing file and must not redirect`)
+    assert.ok(!sources.has(`/${name}`) && !sources.has(`/${name}/:path+`), `${name} is a landing file and must not redirect`)
   }
+})
+
+test('no clean-URL rewriting gets ahead of the redirects', () => {
+  // cleanUrls turned /offline.html into /offline on this project before the redirect ran.
+  assert.notEqual(cfg.cleanUrls, true)
 })
 
 test('sw.js is served fresh', () => {
