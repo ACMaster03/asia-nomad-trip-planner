@@ -7,6 +7,32 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-10
 
+### DECIDED — Patrik, 10 Oct: a journey you follow opens as your own Trip does (#166, #130)
+
+Mock: https://claude.ai/artifact/RRpEeKaQa3Yk2MEugfMLdU (round 1).
+
+- **A, the same layout as your own Trip.** A follower's Home is the feed: a card per followed
+  journey (who, where, what's next, the latest check-in), then the check-ins. The card opens
+  the journey's Trip, read-only: the globe on top, the timeline under it, with no gear, prices,
+  stays or "+ Add". Not B, which opened on the full globe and cost a tap every visit to reach
+  the check-ins.
+- **A check-in in the feed** opens the globe flown to its stop, with the check-in on the card
+  at the bottom.
+- **Check-ins live under their stop** in the timeline: the latest open, the rest folded
+  ("4 more check-ins in Bangkok"), with their comment count and Comment.
+- **No home on a follower's globe:** it starts at the first stop. Migration 46 sends followers
+  only the legs between two stops of the plan: 45 sent every leg, and the first one's `from`
+  ("Budapest → Bangkok") told a follower where you live. Live on staging and production
+  since 10 Oct (Patrik ran production); 46-TESTPLAN.sql held on both. 45-TESTPLAN.sql no longer
+  holds after 46 (its Hoi An leg is not a stop).
+- **Mute** sits in a "…" menu on the journey, where the gear is on your own. Unfollow stays out
+  of it (my reading: it belongs on the person, later).
+- An arrival plays once per phone on the follower's next look (4 Oct), with the same haptics.
+
+iOS: the follower's Trip is `TripWithGlobe` fed by `followed_trip_summary()` (route, legs between
+stops, travellers) and the feed's check-ins. Places come from the summary's `lat`/`lng`, then
+GlobePlaces. "Once" per arrival is kept per journey on the phone (the last `arrived` event id).
+
 ### IN REVIEW — app.livhold.com, step 5a: the landing project ready for livhold.com (#163)
 
 Patrik, 10 Oct: the switch goes 5a (this) → a rehearsal of the kill switch on a phone →
