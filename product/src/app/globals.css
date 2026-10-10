@@ -47,6 +47,19 @@
   --paleBlue: #aec3d6;
   --paper: #f5f2ea;
   --blush: #f7e6e9;
+  /* the globe (A+, iOS #166; mock round 5, 3 Oct 2026). The route is --ac2Deep. */
+  --globeOcean: #d6e1e4;
+  --globeLand: #c9d4ba;
+  --globeMine: #8fa88a;
+  --globeBorder: rgba(63, 90, 62, 0.22);
+  --globeShore: rgba(255, 255, 255, 0.75);
+  --globeGlow: rgba(246, 214, 178, 0.75);
+  --globeHalo: rgba(240, 238, 233, 0.9);
+  --globeNameContinent: rgba(31, 42, 36, 0.5);
+  --globeNameCountry: rgba(31, 42, 36, 0.52);
+  --globeNameMine: #2f4a2e;
+  --globeNameSea: rgba(52, 92, 112, 0.62);
+  --globeNameLand: rgba(31, 42, 36, 0.46);
   /* landscape washes — 2a login/invite only, 2b milestones; grammar in handoff README */
   --washLogin: url("/brand/livhold-login-bg.jpg") bottom/cover no-repeat #f0efe7;
   --washLight: url("/brand/livhold-login-bg-light.jpg") bottom/cover no-repeat #f0efe7;
@@ -88,6 +101,18 @@
   --fill2: rgba(216, 224, 229, 0.1);
   --catGrocery: #9fb89a;
   --catActivity: #d9a07c;
+  --globeOcean: #18212a;
+  --globeLand: #2c372f;
+  --globeMine: #4a6148;
+  --globeBorder: rgba(216, 224, 229, 0.1);
+  --globeShore: rgba(174, 195, 214, 0.12);
+  --globeGlow: rgba(127, 163, 125, 0.32);
+  --globeHalo: rgba(18, 22, 26, 0.85);
+  --globeNameContinent: rgba(216, 224, 229, 0.52);
+  --globeNameCountry: rgba(216, 224, 229, 0.55);
+  --globeNameMine: #a9cba5;
+  --globeNameSea: rgba(174, 195, 214, 0.6);
+  --globeNameLand: rgba(216, 224, 229, 0.45);
   --washLogin: url("/brand/livhold-login-bg-dark.png") bottom/cover no-repeat #161a18;
   --washLight: url("/brand/livhold-login-bg-light-dark.png") bottom/cover no-repeat #161a18;
   --washInk: #d8e0e5;

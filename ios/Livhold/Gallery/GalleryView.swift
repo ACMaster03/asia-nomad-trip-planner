@@ -10,6 +10,7 @@ struct GalleryView: View {
     @State private var note = ""
     @State private var toast: String?
     @State private var sheetOpen = false
+    @State private var globeOpen = false
 
     var body: some View {
         ScrollView {
@@ -24,6 +25,10 @@ struct GalleryView: View {
                     Notice(text: "Free cancellation ends tomorrow at 12:00.", kind: .warn)
                 }
                 section("Input") { Field(placeholder: "Add a note", text: $note) }
+                section("Globe") {
+                    Button("Open the globe (#166)") { globeOpen = true }
+                        .font(.sans(15, weight: .medium))
+                }
                 section("Tab bar") {
                     // A sample only: the real bar belongs to the app shell (Shell/AppShell.swift).
                     GlassTabBar(selection: $tab) { toast = "Checked in to Da Lat" }
@@ -51,6 +56,7 @@ struct GalleryView: View {
         .livholdText()
         .toast($toast)
         .sheet(isPresented: $sheetOpen) { sampleSheet }
+        .fullScreenCover(isPresented: $globeOpen) { GlobePreviewScreen() }
     }
 
     // MARK: sections

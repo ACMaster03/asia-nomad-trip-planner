@@ -1,0 +1,889 @@
+{
+ "_source": "The iOS globe's place names (Patrik, 3 Oct 2026; mock round 5). tools/globe-data.mjs reads this file. Hungarian seas, regions and islands are hand translations awaiting Petra's check.",
+ "continents": [
+  [
+   "ASIA",
+   47,
+   90
+  ],
+  [
+   "EUROPE",
+   52,
+   16
+  ],
+  [
+   "AFRICA",
+   6,
+   20
+  ],
+  [
+   "NORTH AMERICA",
+   46,
+   -100
+  ],
+  [
+   "SOUTH AMERICA",
+   -14,
+   -60
+  ],
+  [
+   "OCEANIA",
+   -25,
+   134
+  ],
+  [
+   "ANTARCTICA",
+   -76,
+   30
+  ]
+ ],
+ "oceans": [
+  [
+   "Pacific Ocean",
+   8,
+   165,
+   30
+  ],
+  [
+   "Pacific Ocean",
+   5,
+   -130,
+   30
+  ],
+  [
+   "Atlantic Ocean",
+   28,
+   -42,
+   26
+  ],
+  [
+   "Atlantic Ocean",
+   -22,
+   -18,
+   26
+  ],
+  [
+   "Indian Ocean",
+   -20,
+   80,
+   28
+  ],
+  [
+   "Arctic Ocean",
+   80,
+   10,
+   50
+  ],
+  [
+   "Southern Ocean",
+   -58,
+   100,
+   60
+  ]
+ ],
+ "places": [
+  [
+   "Bay of Bengal",
+   15,
+   88.5,
+   1.6,
+   "sea"
+  ],
+  [
+   "Arabian Sea",
+   15,
+   64,
+   1.6,
+   "sea"
+  ],
+  [
+   "Mediterranean Sea",
+   34.6,
+   19,
+   1.8,
+   "sea"
+  ],
+  [
+   "Caribbean Sea",
+   15,
+   -75,
+   1.8,
+   "sea"
+  ],
+  [
+   "Gulf of Mexico",
+   25,
+   -90,
+   2,
+   "sea"
+  ],
+  [
+   "Philippine Sea",
+   19,
+   132,
+   2,
+   "sea"
+  ],
+  [
+   "Coral Sea",
+   -17,
+   154,
+   2,
+   "sea"
+  ],
+  [
+   "Tasman Sea",
+   -38,
+   160,
+   2,
+   "sea"
+  ],
+  [
+   "Red Sea",
+   20.5,
+   38.4,
+   3.2,
+   "sea"
+  ],
+  [
+   "Black Sea",
+   43.2,
+   34.5,
+   2.8,
+   "sea"
+  ],
+  [
+   "Caspian Sea",
+   42,
+   50.6,
+   2.8,
+   "sea"
+  ],
+  [
+   "North Sea",
+   56,
+   3,
+   3,
+   "sea"
+  ],
+  [
+   "Baltic Sea",
+   57.5,
+   19.5,
+   3.2,
+   "sea"
+  ],
+  [
+   "Yellow Sea",
+   35.5,
+   123.5,
+   3,
+   "sea"
+  ],
+  [
+   "Andaman Sea",
+   11,
+   96.4,
+   3.2,
+   "sea"
+  ],
+  [
+   "Gulf of Thailand",
+   9.8,
+   101.6,
+   4.2,
+   "sea"
+  ],
+  [
+   "Java Sea",
+   -5.2,
+   111,
+   3.2,
+   "sea"
+  ],
+  [
+   "Celebes Sea",
+   3.8,
+   122,
+   3.6,
+   "sea"
+  ],
+  [
+   "Banda Sea",
+   -5.8,
+   127.5,
+   3.6,
+   "sea"
+  ],
+  [
+   "Timor Sea",
+   -11.5,
+   127,
+   3.4,
+   "sea"
+  ],
+  [
+   "Mozambique Channel",
+   -18,
+   41.5,
+   2.8,
+   "sea"
+  ],
+  [
+   "Gulf of Guinea",
+   2,
+   4,
+   2.6,
+   "sea"
+  ],
+  [
+   "Hudson Bay",
+   59.5,
+   -86,
+   2.2,
+   "sea"
+  ],
+  [
+   "Bering Sea",
+   58,
+   -178,
+   2.2,
+   "sea"
+  ],
+  [
+   "Sahara",
+   23.5,
+   11,
+   1.25,
+   "land"
+  ],
+  [
+   "Namib",
+   -23.6,
+   15.3,
+   3,
+   "land"
+  ],
+  [
+   "Kalahari",
+   -23,
+   22.5,
+   2.6,
+   "land"
+  ],
+  [
+   "Gobi",
+   43,
+   105,
+   2.2,
+   "land"
+  ],
+  [
+   "Taklamakan",
+   38.8,
+   83,
+   3,
+   "land"
+  ],
+  [
+   "Amazon",
+   -4.5,
+   -63,
+   1.6,
+   "land"
+  ],
+  [
+   "Patagonia",
+   -46,
+   -69,
+   2.4,
+   "land"
+  ],
+  [
+   "Atacama",
+   -24,
+   -69.6,
+   3.4,
+   "land"
+  ],
+  [
+   "Andes",
+   -30,
+   -70,
+   2.8,
+   "land"
+  ],
+  [
+   "Himalaya",
+   28.8,
+   84.5,
+   3.2,
+   "land"
+  ],
+  [
+   "Alps",
+   46.4,
+   10,
+   4.2,
+   "land"
+  ],
+  [
+   "Siberia",
+   65,
+   118,
+   1.6,
+   "land"
+  ],
+  [
+   "Outback",
+   -25,
+   133,
+   2.6,
+   "land"
+  ],
+  [
+   "Arabian Desert",
+   21.5,
+   49,
+   2.6,
+   "land"
+  ],
+  [
+   "Congo Basin",
+   -1,
+   21,
+   2.6,
+   "land"
+  ],
+  [
+   "Mekong Delta",
+   9.8,
+   105.7,
+   6,
+   "land"
+  ],
+  [
+   "Borneo",
+   1,
+   114.2,
+   2.6,
+   "land"
+  ],
+  [
+   "Sumatra",
+   -0.4,
+   101.6,
+   2.8,
+   "land"
+  ],
+  [
+   "Java",
+   -7.4,
+   110.4,
+   3.4,
+   "land"
+  ],
+  [
+   "Sulawesi",
+   -2,
+   120.8,
+   3.2,
+   "land"
+  ],
+  [
+   "New Guinea",
+   -4.6,
+   138.5,
+   2.4,
+   "land"
+  ],
+  [
+   "Bali",
+   -8.36,
+   115.1,
+   7,
+   "land"
+  ],
+  [
+   "Lombok",
+   -8.6,
+   116.35,
+   9,
+   "land"
+  ],
+  [
+   "Luzon",
+   16.6,
+   121.1,
+   4.2,
+   "land"
+  ],
+  [
+   "Mindanao",
+   7.6,
+   124.9,
+   4.2,
+   "land"
+  ],
+  [
+   "Honshu",
+   36.8,
+   138.6,
+   3.8,
+   "land"
+  ],
+  [
+   "Hokkaido",
+   43.4,
+   142.8,
+   4.2,
+   "land"
+  ],
+  [
+   "Hainan",
+   19.2,
+   109.7,
+   5,
+   "land"
+  ],
+  [
+   "Phu Quoc",
+   10.22,
+   103.96,
+   8,
+   "land"
+  ],
+  [
+   "Tasmania",
+   -42,
+   146.6,
+   4,
+   "land"
+  ],
+  [
+   "Sicily",
+   37.5,
+   14.1,
+   5,
+   "land"
+  ],
+  [
+   "Sardinia",
+   40.1,
+   9.0,
+   5.5,
+   "land"
+  ],
+  [
+   "Crete",
+   35.2,
+   24.9,
+   6,
+   "land"
+  ],
+  [
+   "Corsica",
+   42.15,
+   9.1,
+   6.5,
+   "land"
+  ],
+  [
+   "Tierra del Fuego",
+   -54,
+   -68.8,
+   4,
+   "land"
+  ]
+ ],
+ "rename": {
+  "United States of America": "United States",
+  "Dem. Rep. Congo": "DR Congo",
+  "S. Sudan": "South Sudan",
+  "Central African Rep.": "C. African Rep."
+ },
+ "anchor": {
+  "Hungary": [
+   19.3,
+   46.55
+  ],
+  "Vietnam": [
+   107.9,
+   14.3
+  ],
+  "Indonesia": [
+   119.8,
+   -5.9
+  ],
+  "Antarctica": null,
+  "Malaysia": [
+   101.9,
+   4.2
+  ],
+  "Russia": [
+   96,
+   62.5
+  ],
+  "Canada": [
+   -103,
+   58
+  ],
+  "Norway": [
+   9.5,
+   61.6
+  ],
+  "United States of America": [
+   -99,
+   39.5
+  ],
+  "France": [
+   2.4,
+   46.7
+  ],
+  "Japan": [
+   138.4,
+   36.2
+  ],
+  "Philippines": [
+   122.6,
+   12.4
+  ],
+  "Chile": [
+   -71.2,
+   -32
+  ],
+  "Laos": [
+   102.3,
+   19.6
+  ],
+  "Thailand": [
+   100.9,
+   15.6
+  ],
+  "Cambodia": [
+   104.9,
+   12.7
+  ]
+ },
+ "skip": [
+  "Fr. S. Antarctic Lands",
+  "Heard I. and McDonald Is.",
+  "Ashmore and Cartier Is."
+ ],
+ "huCountry": {
+  "Zimbabwe": "Zimbabwe",
+  "Zambia": "Zambia",
+  "Yemen": "Jemen",
+  "Vietnam": "Vietnám",
+  "Venezuela": "Venezuela",
+  "Vatican": "Vatikán",
+  "Vanuatu": "Vanuatu",
+  "Uzbekistan": "Üzbegisztán",
+  "Uruguay": "Uruguay",
+  "Micronesia": "Mikronézia",
+  "Marshall Is.": "Marshall-szigetek",
+  "N. Mariana Is.": "Északi-Mariana-szigetek",
+  "U.S. Virgin Is.": "Amerikai Virgin-szigetek",
+  "Guam": "Guam",
+  "American Samoa": "Amerikai Szamoa",
+  "Puerto Rico": "Puerto Rico",
+  "United States of America": "Egyesült Államok",
+  "S. Geo. and the Is.": "Déli-Georgia és Déli-Sandwich-szigetek",
+  "Br. Indian Ocean Ter.": "Brit Indiai-óceáni Terület",
+  "Saint Helena": "Szent Ilona",
+  "Pitcairn Is.": "Pitcairn-szigetek",
+  "Anguilla": "Anguilla",
+  "Falkland Is.": "Falkland-szigetek",
+  "Cayman Is.": "Kajmán-szigetek",
+  "Bermuda": "Bermuda",
+  "British Virgin Is.": "Brit Virgin-szigetek",
+  "Turks and Caicos Is.": "Turks- és Caicos-szigetek",
+  "Montserrat": "Montserrat",
+  "Jersey": "Jersey",
+  "Guernsey": "Guernsey",
+  "Isle of Man": "Man",
+  "United Kingdom": "Egyesült Királyság",
+  "United Arab Emirates": "Egyesült Arab Emírségek",
+  "Ukraine": "Ukrajna",
+  "Uganda": "Uganda",
+  "Turkmenistan": "Türkmenisztán",
+  "Turkey": "Törökország",
+  "Tunisia": "Tunézia",
+  "Trinidad and Tobago": "Trinidad és Tobago",
+  "Tonga": "Tonga",
+  "Togo": "Togo",
+  "Timor-Leste": "Kelet-Timor",
+  "Thailand": "Thaiföld",
+  "Tanzania": "Tanzánia",
+  "Tajikistan": "Tádzsikisztán",
+  "Taiwan": "Kínai Köztársaság",
+  "Syria": "Szíria",
+  "Switzerland": "Svájc",
+  "Sweden": "Svédország",
+  "eSwatini": "Szváziföld",
+  "Suriname": "Suriname",
+  "S. Sudan": "Dél-Szudán",
+  "Sudan": "Szudán",
+  "Sri Lanka": "Srí Lanka",
+  "Spain": "Spanyolország",
+  "South Korea": "Dél-Korea",
+  "South Africa": "Dél-Afrika",
+  "Somalia": "Szomália",
+  "Somaliland": "Szomáliföld",
+  "Solomon Is.": "Salamon-szigetek",
+  "Slovakia": "Szlovákia",
+  "Slovenia": "Szlovénia",
+  "Singapore": "Szingapúr",
+  "Sierra Leone": "Sierra Leone",
+  "Seychelles": "Seychelle-szigetek",
+  "Serbia": "Szerbia",
+  "Senegal": "Szenegál",
+  "Saudi Arabia": "Szaúd-Arábia",
+  "São Tomé and Principe": "São Tomé és Príncipe",
+  "San Marino": "San Marino",
+  "Samoa": "Szamoa",
+  "St. Vin. and Gren.": "Saint Vincent és a Grenadine-szigetek",
+  "Saint Lucia": "Saint Lucia",
+  "St. Kitts and Nevis": "Saint Kitts és Nevis",
+  "Rwanda": "Ruanda",
+  "Russia": "Oroszország",
+  "Romania": "Románia",
+  "Qatar": "Katar",
+  "Portugal": "Portugália",
+  "Poland": "Lengyelország",
+  "Philippines": "Fülöp-szigetek",
+  "Peru": "Peru",
+  "Paraguay": "Paraguay",
+  "Papua New Guinea": "Pápua Új-Guinea",
+  "Panama": "Panama",
+  "Palau": "Palau",
+  "Pakistan": "Pakisztán",
+  "Oman": "Omán",
+  "Norway": "Norvégia",
+  "North Korea": "Észak-Korea",
+  "Nigeria": "Nigéria",
+  "Niger": "Niger",
+  "Nicaragua": "Nicaragua",
+  "New Zealand": "Új-Zéland",
+  "Niue": "Niue",
+  "Cook Is.": "Cook-szigetek",
+  "Netherlands": "Hollandia",
+  "Aruba": "Aruba",
+  "Curaçao": "Curaçao",
+  "Nepal": "Nepál",
+  "Nauru": "Nauru",
+  "Namibia": "Namíbia",
+  "Mozambique": "Mozambik",
+  "Morocco": "Marokkó",
+  "W. Sahara": "Nyugat-Szahara",
+  "Montenegro": "Montenegró",
+  "Mongolia": "Mongólia",
+  "Moldova": "Moldova",
+  "Monaco": "Monaco",
+  "Mexico": "Mexikó",
+  "Mauritius": "Mauritius",
+  "Mauritania": "Mauritánia",
+  "Malta": "Málta",
+  "Mali": "Mali",
+  "Maldives": "Maldív-szigetek",
+  "Malaysia": "Malajzia",
+  "Malawi": "Malawi",
+  "Madagascar": "Madagaszkár",
+  "Luxembourg": "Luxemburg",
+  "Lithuania": "Litvánia",
+  "Liechtenstein": "Liechtenstein",
+  "Libya": "Líbia",
+  "Liberia": "Libéria",
+  "Lesotho": "Lesotho",
+  "Lebanon": "Libanon",
+  "Latvia": "Lettország",
+  "Laos": "Laosz",
+  "Kyrgyzstan": "Kirgizisztán",
+  "Kuwait": "Kuvait",
+  "Kosovo": "Koszovó",
+  "Kiribati": "Kiribati",
+  "Kenya": "Kenya",
+  "Kazakhstan": "Kazahsztán",
+  "Jordan": "Jordánia",
+  "Japan": "Japán",
+  "Jamaica": "Jamaica",
+  "Italy": "Olaszország",
+  "Israel": "Izrael",
+  "Palestine": "Palesztina",
+  "Ireland": "Írország",
+  "Iraq": "Irak",
+  "Iran": "Irán",
+  "Indonesia": "Indonézia",
+  "India": "India",
+  "Iceland": "Izland",
+  "Hungary": "Magyarország",
+  "Honduras": "Honduras",
+  "Haiti": "Haiti",
+  "Guyana": "Guyana",
+  "Guinea-Bissau": "Bissau-Guinea",
+  "Guinea": "Guinea",
+  "Guatemala": "Guatemala",
+  "Grenada": "Grenada",
+  "Greece": "Görögország",
+  "Ghana": "Ghána",
+  "Germany": "Németország",
+  "Georgia": "Grúzia",
+  "Gambia": "Gambia",
+  "Gabon": "Gabon",
+  "France": "Franciaország",
+  "St. Pierre and Miquelon": "Saint-Pierre és Miquelon",
+  "Wallis and Futuna Is.": "Wallis és Futuna",
+  "St-Martin": "Saint-Martin",
+  "St-Barthélemy": "Saint-Barthélemy",
+  "Fr. Polynesia": "Francia Polinézia",
+  "New Caledonia": "Új-Kaledónia",
+  "Fr. S. Antarctic Lands": "Francia déli és antarktiszi területek",
+  "Åland": "Åland",
+  "Finland": "Finnország",
+  "Fiji": "Fidzsi-szigetek",
+  "Ethiopia": "Etiópia",
+  "Estonia": "Észtország",
+  "Eritrea": "Eritrea",
+  "Eq. Guinea": "Egyenlítői-Guinea",
+  "El Salvador": "Salvador",
+  "Egypt": "Egyiptom",
+  "Ecuador": "Ecuador",
+  "Dominican Rep.": "Dominikai K.",
+  "Dominica": "Dominikai Közösség",
+  "Djibouti": "Dzsibuti",
+  "Greenland": "Grönland",
+  "Faeroe Is.": "Feröer",
+  "Denmark": "Dánia",
+  "Czechia": "Csehország",
+  "N. Cyprus": "Észak-Ciprus",
+  "Cyprus": "Ciprus",
+  "Cuba": "Kuba",
+  "Croatia": "Horvátország",
+  "Côte d'Ivoire": "Elefántcsontpart",
+  "Costa Rica": "Costa Rica",
+  "Dem. Rep. Congo": "Kongói DK",
+  "Congo": "Kongó",
+  "Comoros": "Comore-szigetek",
+  "Colombia": "Kolumbia",
+  "China": "Kína",
+  "Macao": "Makaó",
+  "Hong Kong": "Hongkong",
+  "Chile": "Chile",
+  "Chad": "Csád",
+  "Central African Rep.": "Közép-Afrika",
+  "Cabo Verde": "Zöld-foki-szk.",
+  "Canada": "Kanada",
+  "Cameroon": "Kamerun",
+  "Cambodia": "Kambodzsa",
+  "Myanmar": "Mianmar",
+  "Burundi": "Burundi",
+  "Burkina Faso": "Burkina Faso",
+  "Bulgaria": "Bulgária",
+  "Brunei": "Brunei",
+  "Brazil": "Brazília",
+  "Botswana": "Botswana",
+  "Bosnia and Herz.": "Bosznia-Hercegovina",
+  "Bolivia": "Bolívia",
+  "Bhutan": "Bhután",
+  "Benin": "Benin",
+  "Belize": "Belize",
+  "Belgium": "Belgium",
+  "Belarus": "Fehéroroszország",
+  "Barbados": "Barbados",
+  "Bangladesh": "Banglades",
+  "Bahrain": "Bahrein",
+  "Bahamas": "Bahama-szigetek",
+  "Azerbaijan": "Azerbajdzsán",
+  "Austria": "Ausztria",
+  "Australia": "Ausztrália",
+  "Indian Ocean Ter.": "Ausztrál Indiai-óceáni Terület",
+  "Heard I. and McDonald Is.": "Heard-sziget és McDonald-szigetek",
+  "Norfolk Island": "Norfolk-sziget",
+  "Ashmore and Cartier Is.": "Ashmore- és Cartier-szigetek",
+  "Armenia": "Örményország",
+  "Argentina": "Argentína",
+  "Antigua and Barb.": "Antigua és Barbuda",
+  "Angola": "Angola",
+  "Andorra": "Andorra",
+  "Algeria": "Algéria",
+  "Albania": "Albánia",
+  "Afghanistan": "Afganisztán",
+  "Siachen Glacier": "Siachen-gleccser",
+  "Antarctica": "Antarktika",
+  "Sint Maarten": "Sint Maarten",
+  "Macedonia": "Észak-Macedónia"
+ },
+ "huPlace": {
+  "ASIA": "ÁZSIA",
+  "EUROPE": "EURÓPA",
+  "AFRICA": "AFRIKA",
+  "NORTH AMERICA": "ÉSZAK-AMERIKA",
+  "SOUTH AMERICA": "DÉL-AMERIKA",
+  "OCEANIA": "ÓCEÁNIA",
+  "ANTARCTICA": "ANTARKTISZ",
+  "Pacific Ocean": "Csendes-óceán",
+  "Atlantic Ocean": "Atlanti-óceán",
+  "Indian Ocean": "Indiai-óceán",
+  "Arctic Ocean": "Jeges-tenger",
+  "Southern Ocean": "Déli-óceán",
+  "Bay of Bengal": "Bengáli-öböl",
+  "Arabian Sea": "Arab-tenger",
+  "Mediterranean Sea": "Földközi-tenger",
+  "Caribbean Sea": "Karib-tenger",
+  "Gulf of Mexico": "Mexikói-öböl",
+  "Philippine Sea": "Fülöp-tenger",
+  "Coral Sea": "Korall-tenger",
+  "Tasman Sea": "Tasman-tenger",
+  "Red Sea": "Vörös-tenger",
+  "Black Sea": "Fekete-tenger",
+  "Caspian Sea": "Kaszpi-tenger",
+  "North Sea": "Északi-tenger",
+  "Baltic Sea": "Balti-tenger",
+  "Yellow Sea": "Sárga-tenger",
+  "Andaman Sea": "Andamán-tenger",
+  "Gulf of Thailand": "Thai-öböl",
+  "Java Sea": "Jávai-tenger",
+  "Celebes Sea": "Celebesz-tenger",
+  "Banda Sea": "Banda-tenger",
+  "Timor Sea": "Timor-tenger",
+  "Mozambique Channel": "Mozambiki-csatorna",
+  "Gulf of Guinea": "Guineai-öböl",
+  "Hudson Bay": "Hudson-öböl",
+  "Bering Sea": "Bering-tenger",
+  "Sahara": "Szahara",
+  "Namib": "Namib",
+  "Kalahari": "Kalahári",
+  "Gobi": "Góbi",
+  "Taklamakan": "Takla-Makán",
+  "Amazon": "Amazónia",
+  "Patagonia": "Patagónia",
+  "Atacama": "Atacama",
+  "Andes": "Andok",
+  "Himalaya": "Himalája",
+  "Alps": "Alpok",
+  "Siberia": "Szibéria",
+  "Outback": "Outback",
+  "Arabian Desert": "Arab-sivatag",
+  "Congo Basin": "Kongó-medence",
+  "Mekong Delta": "Mekong-delta",
+  "Borneo": "Borneó",
+  "Sumatra": "Szumátra",
+  "Java": "Jáva",
+  "Sulawesi": "Celebesz",
+  "New Guinea": "Új-Guinea",
+  "Bali": "Bali",
+  "Lombok": "Lombok",
+  "Luzon": "Luzon",
+  "Mindanao": "Mindanao",
+  "Honshu": "Honsú",
+  "Hokkaido": "Hokkaidó",
+  "Hainan": "Hajnan",
+  "Phu Quoc": "Phú Quốc",
+  "Tasmania": "Tasmánia",
+  "Sicily": "Szicília",
+  "Sardinia": "Szardínia",
+  "Crete": "Kréta",
+  "Corsica": "Korzika",
+  "Tierra del Fuego": "Tűzföld"
+ }
+}
