@@ -93,6 +93,14 @@ final class GlobeModel {
 
     func goWorld() { fly(to: Self.worldCamera(journey, cy: frame(at: .now).camera.cy)) }
 
+    /// Close on one stop, its neighbours still in view: a check-in opened from the feed.
+    func goStop(_ i: Int, cy: Double? = nil, duration: TimeInterval = 1.1) {
+        guard journey.stops.indices.contains(i) else { return goJourney(cy: cy, duration: duration) }
+        let whole = Self.journeyCamera(journey)
+        let k = min(GlobeCamera.maxK, max(4.8, whole.k * 2.4))
+        fly(to: GlobeCamera(looking: journey.stops[i].at, k: k, cy: cy ?? frame(at: .now).camera.cy), duration: duration)
+    }
+
     /// A new journey (the trip changed): the camera stays where it is unless asked.
     func update(_ j: GlobeJourney, reframe: Bool = false) {
         guard j != journey else { return }

@@ -17,6 +17,7 @@ struct HomeScreen: View {
     @Environment(AuthStore.self) private var auth
     @Environment(TripStore.self) private var store
     @Environment(TabRouter.self) private var router
+    @Environment(FollowStore.self) private var follows
     @State private var planning = false
     @State private var events = HomeEvents()
 
@@ -38,6 +39,12 @@ struct HomeScreen: View {
         }
         .sheet(isPresented: $planning) { NewJourneySheet().environment(store) }
         .task(id: store.trip?.id) { events = await store.homeEvents() }
+        .refreshable {
+            guard Connectivity.shared.isOnline else { return }
+            async let people: Void = follows.refresh()
+            await store.refresh()
+            await people
+        }
     }
 
     @ViewBuilder private var content: some View {
@@ -55,19 +62,47 @@ struct HomeScreen: View {
             Notice(verbatim: store.error ?? String(localized: "Couldn’t load your journey."), kind: .warn)
             Button("Try again") { Task { await store.refresh() } }.buttonStyle(.primary)
         case .empty:
-            header(eyebrow: Self.longDate(today), title: greeting, sub: nil)
-            NoJourneyCard { planning = true }
+            // A follower with no journey: Home is the feed of their people (#130).
+            if follows.hasAny {
+                header(eyebrow: Self.longDate(today), title: greeting,
+                       sub: String(localized: "The people you follow, as they go."))
+                FollowingSection(today: today)
+                PlanOwnRow { planning = true }
+            } else {
+                header(eyebrow: Self.longDate(today), title: greeting, sub: nil)
+                NoJourneyCard { planning = true }
+            }
         case .ready:
             if let trip = store.trip {
                 let state = trip.state
-                if let start = state.meta.startDate, !start.isEmpty, today < start {
-                    BeforeJourney(trip: trip, today: today, header: header)
-                } else if Journey.isFinished(state, today: today) {
-                    AfterJourney(trip: trip, checkIns: events.checkIns, header: header) { planning = true }
+                let before = state.meta.startDate.map { !$0.isEmpty && today < $0 } ?? false
+                let after = Journey.isFinished(state, today: today)
+                // Whichever is live goes first (Patrik, 3 Oct): your stop card during your
+                // journey's dates, your people before and after it while theirs is under way.
+                let peopleFirst = (before || after) && follows.anyLive(today: today)
+                let top: HomeHeader = peopleFirst ? headerWithPeople(today) : header
+                if before {
+                    BeforeJourney(trip: trip, today: today, header: top)
+                } else if after {
+                    AfterJourney(trip: trip, checkIns: events.checkIns, header: top) { planning = true }
                 } else {
-                    OnTheRoad(trip: trip, today: today, events: $events, header: header)
+                    OnTheRoad(trip: trip, today: today, events: $events, header: top)
+                }
+                if !peopleFirst {
+                    FollowingSection(today: today).padding(.top, 8)
                 }
             }
+        }
+    }
+
+    /// The header, then the journeys you follow right under it.
+    private func headerWithPeople(_ today: String) -> HomeHeader {
+        { eyebrow, title, sub in
+            AnyView(VStack(alignment: .leading, spacing: 12) {
+                header(eyebrow: eyebrow, title: title, sub: sub)
+                FollowingSection(today: today)
+                    .padding(.bottom, 8)
+            })
         }
     }
 

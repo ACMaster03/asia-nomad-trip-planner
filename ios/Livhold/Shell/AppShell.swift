@@ -11,6 +11,7 @@ struct AppShell: View {
     @State private var trips = TripStore()
     @State private var editor = TripEditor()
     @State private var money = MoneyEditor()
+    @State private var follows = FollowStore()
     @Namespace private var checkInZoom
     @Environment(AuthStore.self) private var auth
     @Environment(\.scenePhase) private var scenePhase
@@ -31,9 +32,17 @@ struct AppShell: View {
         // scroll views inside the navigation stacks (the last card ended under the
         // bar), so each screen keeps the room itself: see `reservesTabBar()`.
         .overlay(alignment: .bottom) {
-            // Stays down behind the keyboard instead of riding up on it.
-            GlassTabBar(selection: router.selectionBinding) { router.checkInOpen = true }
-                .ignoresSafeArea(.keyboard, edges: .bottom)
+            // Stays down behind the keyboard instead of riding up on it. Without a journey
+            // of your own there is Home only (3 Oct): a follower's first journey brings the rest.
+            if trips.phase != .empty {
+                GlassTabBar(selection: router.selectionBinding) { router.checkInOpen = true }
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Motion.settle, value: trips.phase == .empty)
+        .onChange(of: trips.phase) { _, phase in
+            if phase == .empty, router.selection != .home { router.select(.home) }
         }
         // A subscription charge the app added, until tapped: on Home and Money,
         // where the web shows it too.
@@ -46,18 +55,26 @@ struct AppShell: View {
         .environment(trips)
         .environment(editor)
         .environment(money)
+        .environment(follows)
         .environment(\.checkInZoom, checkInZoom)
         // The saved journey shows at once; the server's copy follows, and again
         // every time the app comes back to the front (the web refetches on focus).
         .task(id: auth.userId) {
             if let id = auth.userId {
+                async let people: Void = follows.start(userId: id)
                 await trips.start(userId: id)
+                await people
             } else if TripStore.fixtureWithoutSignIn {
+                async let people: Void = follows.start(userId: "fixture")
                 await trips.start(userId: "fixture")
+                await people
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await trips.refresh() } }
+            if phase == .active {
+                Task { await trips.refresh() }
+                Task { await follows.refresh() }
+            }
         }
         .sheet(isPresented: $router.checkInOpen) {
             CheckInSheet()
@@ -143,6 +160,7 @@ private struct TabStack: View {
             SubscriptionsScreen()
                 .modifier(ZoomDestination(id: "subscriptions", namespace: zoom))
         case .reminders: RemindersScreen()
+        case .followed(let tripId, let focus): FollowedTripScreen(tripId: tripId, focus: focus)
         }
     }
 }
