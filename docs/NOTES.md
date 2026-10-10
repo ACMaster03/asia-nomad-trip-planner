@@ -10,14 +10,14 @@ when a decision needs to survive the conversation it was made in.
 ### DECIDED — Patrik, 4 Oct: followers see each leg's mode; the replay plays only when something happens (#166)
 
 **Followers see how you travel.** The follower's globe draws each leg with its vehicle. Migration
-45 (`45-follower-leg-modes.sql`, BUILT, not applied) adds `legs` to `_trip_summary_core`: each
+45 (`45-follower-leg-modes.sql`, live on staging and production since 10 Oct) adds `legs` to `_trip_summary_core`: each
 leg's `from`, `to`, `date` and `mode`. The mode is one of flight, train, bus, ferry or other,
 mapped from the typed `type` ("Plane" reads as flight, anything typed by hand as other). Nothing
 else from a leg crosses: no provider, price, time, booking link, notes, status or via. The same
 core feeds the link page without an account, so those viewers get the modes too. /privacy says
 so ("how you travel between stops"), last updated 4 Oct. The test plan, `45-TESTPLAN.sql`,
-passed in a throwaway Postgres, and fails when a private field is added. Order: staging, the
-test plan there, then production.
+passed in a throwaway Postgres, and fails when a private field is added. Applied on staging,
+then production (Patrik, 10 Oct); the test plan held on both.
 
 **When the globe animates.** It opens still, on the route, every other time. The Replay button
 stays for anyone who wants the replay.
