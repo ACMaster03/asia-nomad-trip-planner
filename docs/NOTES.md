@@ -34,6 +34,13 @@ Mock: https://claude.ai/artifact/GGLZnQNwzRkZThNzmcGDmY (round 3).
 Open, asked in the mock: whether a tap is enough to open the globe (no pull-down, which competes
 with pull-to-refresh); whether a follower's Trip opens with the globe open.
 
+**Built** (10 Oct): #181, merged into `feat/ios-foundation`, TestFlight build 24. Stops are placed
+from the catalogue's `cities`, then `geo_cities`, and kept on the phone. A leg with no transport
+typed reads as a flight over 600 km, as ground under. Home's Arrived button brings Trip forward
+and plays the leg. Not yet: the follower's read-only Trip with its globe, and removing the Map
+tab (without it the bar is lopsided around Check in: Patrik to decide). Untested until the
+phone: haptics, the frame rate, places for a signed-in account.
+
 iOS: Trip gets the globe as a header above the timeline (`ios/Livhold/Globe/`, #166); the
 globe is drawn only while some of it shows. Landings use `.sensoryFeedback(.impact(weight:
 .light))`, the last `.medium`; the system's haptics setting is respected.
