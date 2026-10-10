@@ -9,8 +9,12 @@ import simd
 /// and only the route layer keeps a slow clock for the pulse on today's stop.
 struct GlobeView: View {
     @Bindable var model: GlobeModel
-    /// Where the centre of the globe sits, as a share of the height.
-    var centerY: CGFloat = 0.42
+    /// Turning and zooming by hand. Off in Trip's header, where a drag scrolls the timeline.
+    var interactive = true
+    /// Covered (Trip's timeline over it): nothing is drawn until it shows again.
+    var paused = false
+    /// A tap on a stop (its index in the journey), while the globe is interactive.
+    var onTapStop: ((Int) -> Void)? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dragFrom: GlobeCamera?
@@ -20,15 +24,16 @@ struct GlobeView: View {
         GeometryReader { geo in
             ZStack {
                 TimelineView(.animation(paused: !model.isAnimating)) { tl in
-                    GlobeMapLayers(model: model, frame: model.frame(at: tl.date), centerY: centerY)
+                    GlobeMapLayers(model: model, frame: model.frame(at: tl.date))
                 }
-                TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion && !model.isAnimating)) { tl in
-                    GlobeRouteLayer(model: model, frame: model.frame(at: tl.date), centerY: centerY,
-                                    now: tl.date, reduceMotion: reduceMotion)
+                TimelineView(.animation(minimumInterval: 1.0 / 30, paused: (reduceMotion || paused) && !model.isAnimating)) { tl in
+                    GlobeRouteLayer(model: model, frame: model.frame(at: tl.date), now: tl.date, reduceMotion: reduceMotion)
                 }
             }
             .contentShape(Rectangle())
-            .gesture(drag(width: geo.size.width).simultaneously(with: pinch))
+            .gesture(drag(width: geo.size.width).simultaneously(with: pinch), including: interactive ? .all : .subviews)
+            .simultaneousGesture(SpatialTapGesture().onEnded { v in tapped(at: v.location, size: geo.size) },
+                                 including: interactive && onTapStop != nil ? .all : .subviews)
         }
         .onAppear { model.reduceMotion = reduceMotion }
         .onChange(of: reduceMotion) { _, v in model.reduceMotion = v }
@@ -39,6 +44,15 @@ struct GlobeView: View {
     private var accessibilitySummary: String {
         let names = model.journey.stops.filter { $0.kind != .home }.map(\.name)
         return String(localized: "Globe with the route: \(names.joined(separator: ", "))")
+    }
+
+    private func tapped(at p: CGPoint, size: CGSize) {
+        let P = GlobeProjector(camera: model.frame(at: .now).camera, size: size)
+        let hit = model.journey.stops.indices
+            .compactMap { i in P.project(model.journey.stops[i].at).map { (i, hypot($0.x - p.x, $0.y - p.y)) } }
+            .filter { $0.1 < 24 }
+            .min { $0.1 < $1.1 }
+        if let (i, _) = hit { onTapStop?(i) }
     }
 
     private func drag(width: CGFloat) -> some Gesture {
@@ -71,12 +85,11 @@ struct GlobeView: View {
 private struct GlobeMapLayers: View {
     let model: GlobeModel
     let frame: GlobeModel.Frame
-    let centerY: CGFloat
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         GeometryReader { geo in
-            let P = GlobeProjector(camera: frame.camera, size: geo.size, centerY: centerY)
+            let P = GlobeProjector(camera: frame.camera, size: geo.size)
             let sun = P.view(sunPoint)
             ZStack {
                 Canvas { ctx, _ in drawMap(ctx, P, sun: sun) }
@@ -260,22 +273,20 @@ private struct GlobeMapLayers: View {
     }
 }
 
-// MARK: - The route, the stops, the vehicle, the compass
+// MARK: - The route, the stops, the vehicle
 
 private struct GlobeRouteLayer: View {
     let model: GlobeModel
     let frame: GlobeModel.Frame
-    let centerY: CGFloat
     let now: Date
     let reduceMotion: Bool
 
     var body: some View {
         Canvas { ctx, size in
-            let P = GlobeProjector(camera: frame.camera, size: size, centerY: centerY)
+            let P = GlobeProjector(camera: frame.camera, size: size)
             drawLegs(ctx, P)
             drawStops(ctx, P, width: size.width)
             drawVehicle(ctx, P)
-            drawCompass(ctx, at: CGPoint(x: size.width - 30, y: 30), r: 15)
         }
         .allowsHitTesting(false)
     }
@@ -382,29 +393,6 @@ private struct GlobeRouteLayer: View {
         c.scaleBy(x: size, y: size)
         c.stroke(shape, with: .color(Palette.globeHalo), style: StrokeStyle(lineWidth: 3 / size, lineJoin: .round))
         c.fill(shape, with: .color(Palette.tx))
-    }
-
-    /// North is always up (the camera never rolls), so the compass only says so.
-    private func drawCompass(_ ctx: GraphicsContext, at o: CGPoint, r: CGFloat) {
-        var c = ctx
-        c.translateBy(x: o.x, y: o.y)
-        c.opacity = 0.8
-        let ink = Palette.tx2
-        c.stroke(Path(ellipseIn: CGRect(x: -r * 0.78, y: -r * 0.78, width: r * 1.56, height: r * 1.56)), with: .color(ink), lineWidth: 0.8)
-        for (off, len) in [(45.0, 0.55), (0.0, 1.0)] {
-            for q in 0..<4 {
-                let a = (off + Double(q) * 90) * .pi / 180 - .pi / 2
-                let w = len == 1 ? 0.13 : 0.1
-                let tip = CGPoint(x: cos(a) * r * len, y: sin(a) * r * len)
-                let l = CGPoint(x: cos(a - .pi / 2) * r * w, y: sin(a - .pi / 2) * r * w)
-                var dark = Path(); dark.move(to: .zero); dark.addLine(to: tip); dark.addLine(to: l); dark.closeSubpath()
-                var light = Path(); light.move(to: .zero); light.addLine(to: tip); light.addLine(to: CGPoint(x: -l.x, y: -l.y)); light.closeSubpath()
-                c.fill(dark, with: .color(ink))
-                c.fill(light, with: .color(Palette.sf))
-                c.stroke(light, with: .color(ink), lineWidth: 0.6)
-            }
-        }
-        c.draw(Text("N").font(GlobeFonts.sans(r * 0.5)).foregroundStyle(ink), at: CGPoint(x: 0, y: -r * 1.2), anchor: .center)
     }
 }
 

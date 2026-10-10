@@ -151,6 +151,8 @@ struct NewJourneySheet: View {
     private func save() async throws {
         try await store.createTrip(id: id, name: name, startDate: start, endDate: end.isEmpty ? nil : end,
                                    homeBase: home, baseCurrency: currency, travelers: travelers)
+        // The whole journey plays once, the first time Trip's globe has a route to fly (#166).
+        GlobeIntro.markPending(tripId: id)
     }
 }
 
