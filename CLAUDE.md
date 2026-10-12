@@ -153,8 +153,12 @@ Petra is new to software work; Patrik is not. The product conventions are in
   bar (the phone's capsule, drawn solid, merged with the cards). Round 1, the frame, is live
   since 12 Oct (#186): the bar's rules from the phone, the three root headers at the
   phone's sizes, 16 px side padding, the start of a web kit in
-  `product/src/components/ui/`. Round 2 is Home: 2a the journey part, 2b the people part.
-  The source of the look is `feat/ios-foundation`, not the `ios/` on `main`.
+  `product/src/components/ui/`. Round 2a, Home's journey part, is live since 12 Oct too
+  (#187): the stop card with its money line, no big Check in button, Money row, tiles or
+  "Explore city costs", the reminders rows as the phone's with each subscription's next
+  charge among them. Round 2b, the people part of Home, is next; then Trip (3a, 3b the
+  globe, 3c the stop page), Money (4a–c), settings (5), motion (6). The source of the
+  look is `feat/ios-foundation`, not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.

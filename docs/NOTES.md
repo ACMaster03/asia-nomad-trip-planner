@@ -7,6 +7,16 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-12
 
+### LIVE — round 2a of the web redesign, Home's journey part, merged with Petra (#187, 12 Oct)
+
+Merged with Petra's "yes" after the what-changes step; Vercel built `ce34008`; Petra checked
+on her phone: the stop card with its money line, the reminders rows with the amounts on the
+right, the Reminders page with a row per subscription, all as described. Activity still sits
+under the reminders, the old way: that is round 2b. Patrik has not yet said whether the
+off-route card (#134) should come back; it is gone as on the phone.
+
+iOS: nothing new.
+
 ### BUILT — round 2a of the web redesign: Home's journey part as on the phone (Petra, 12 Oct)
 
 `DashboardClient.tsx` follows `ios/Livhold/Home/HomeScreen.swift` (mock rounds 1–3, Patrik,
