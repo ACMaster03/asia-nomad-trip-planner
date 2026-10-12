@@ -164,7 +164,7 @@ export default function DashboardClient({
     const figure = (label: string, value: string, tone = 'text-tx') => (
       <div className="min-w-0">
         <div className="text-[11.5px] font-medium uppercase leading-tight tracking-[.096em] text-tx2">{label}</div>
-        <div className={'mt-0.5 text-[22px] font-semibold leading-tight tabular-nums ' + tone}>{value}</div>
+        <div className={'mt-0.5 whitespace-nowrap text-[20px] font-semibold leading-tight tabular-nums ' + tone}>{value}</div>
       </div>
     )
     const row = (href: string, title: string, sub: string) => (
