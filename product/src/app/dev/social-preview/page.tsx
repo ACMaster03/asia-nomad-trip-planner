@@ -20,6 +20,7 @@ export default async function SocialPreviewPage({ searchParams }: { searchParams
   const qc = new QueryClient()
   qc.setQueryData(tk.trip('fixture'), fixtureTrip(new Date().toISOString().slice(0, 10)))
   qc.setQueryData(tk.events('fixture'), fx.ownEvents)
+  qc.setQueryData(tk.travellers('fixture'), [{ id: fx.ME, name: 'Patrik', isOwner: true }, { id: 'partner-uuid', name: 'Petra', isOwner: false }])
   // 'nobody': a follower account whose follow never completed — nothing to show
   qc.setQueryData(tk.following, screen === 'nobody' ? [] : fx.following)
   qc.setQueryData(tk.followers, screen === 'nobody' ? [] : fx.followers)

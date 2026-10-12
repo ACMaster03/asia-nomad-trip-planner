@@ -47,4 +47,6 @@ export const tk = {
   trackSpending: ['track-spending'] as const,
   /** where the signed-in person lives (#58, migration 43), from their profile */
   homeBase: ['home-base'] as const,
+  /** the people who travel on a journey, by first name (migration 47) */
+  travellers: (tripId: string) => ['trip-travellers', tripId] as const,
 }

@@ -18,6 +18,7 @@ import { dismissMeetup, dismissedStore } from '@/lib/map/dismissed'
 import { tk } from '@/lib/trips/keys'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
 import { useTripScope } from '@/lib/trips/TripScope'
+import { fetchTripTravellers } from '@/lib/trips/travellers'
 import { useConfirm } from '@/components/Confirm'
 import { EditEventModal } from '@/app/(app)/live/EditEventModal'
 import { Avatar } from '@/components/ui/Avatar'
@@ -82,6 +83,15 @@ export default function FollowingSection({
     retry: false,
   })
   const feed = useMemo(() => followed.data ?? [], [followed.data])
+  // Who posted your own trip's rows: the travellers' first names (migration 47).
+  const travellers = useQuery({
+    queryKey: tk.travellers(tripId ?? 'none'),
+    queryFn: () => fetchTripTravellers(sb, tripId!),
+    enabled: tripId !== null && own.length > 0,
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+  const nameOf = (author: string) => travellers.data?.find((t) => t.id === author)?.name ?? 'A co-traveller'
   // The summaries behind the cards: the route for "Hanoi, day 41 · next Da Nang".
   const summaries = useFollowedRoutes(following.data, true)
 
@@ -162,7 +172,7 @@ export default function FollowingSection({
             const own = it.source === 'own'
             const e: SharedEvent = own ? ownAsShared(it.event) : it.event
             const summary = own ? undefined : summaries[it.event.trip_id]
-            const who = own ? (userId && it.event.author === userId ? 'You' : 'A co-traveller') : it.label
+            const who = own ? (userId && it.event.author === userId ? 'You' : nameOf(it.event.author)) : it.label
             const s = socialById.get(e.id) ?? { commentCount: 0 }
             return (
               <FeedItem

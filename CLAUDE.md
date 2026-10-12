@@ -156,9 +156,16 @@ Petra is new to software work; Patrik is not. The product conventions are in
   `product/src/components/ui/`. Round 2a, Home's journey part, is live since 12 Oct too
   (#187): the stop card with its money line, no big Check in button, Money row, tiles or
   "Explore city costs", the reminders rows as the phone's with each subscription's next
-  charge among them. Round 2b, the people part of Home, is next; then Trip (3a, 3b the
-  globe, 3c the stop page), Money (4a–c), settings (5), motion (6). The source of the
-  look is `feat/ios-foundation`, not the `ios/` on `main`.
+  charge among them. Round 2b, the people part of Home, is live since 12 Oct as well
+  (#188): "Journeys you follow" and "Latest" as on the phone, the follower's Home, "Where
+  to?". The web keeps four things the phone has not built, for Patrik to keep or drop: own
+  check-ins in Latest with Edit and Delete, the React and Comment chips, the meet-up lines,
+  photo thumbnails. Petra's correction the same day: on the phone, own check-ins will not go
+  under Trip's stops; the Map page may become a feed page for them. Migration 47
+  (`trip_travellers`, names on own rows) waits for Petra to apply it on staging and
+  production. Next: Trip (3a, 3b the globe, 3c the stop page), Money (4a–c), settings (5),
+  motion (6), after the 31 Oct freeze unless Patrik moves them up. The source of the look is
+  `feat/ios-foundation`, not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
