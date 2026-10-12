@@ -162,8 +162,8 @@ Petra is new to software work; Patrik is not. The product conventions are in
   check-ins in Latest with Edit and Delete, the React and Comment chips, the meet-up lines,
   photo thumbnails. Petra's correction the same day: on the phone, own check-ins will not go
   under Trip's stops; the Map page may become a feed page for them. Migration 47
-  (`trip_travellers`, names on own rows) waits for Petra to apply it on staging and
-  production. Next: Trip (3a, 3b the globe, 3c the stop page), Money (4a–c), settings (5),
+  (`trip_travellers`, names on own rows) is live on staging and production since 12 Oct
+  (Petra, guided; #189). Next: Trip (3a, 3b the globe, 3c the stop page), Money (4a–c), settings (5),
   motion (6), after the 31 Oct freeze unless Patrik moves them up. The source of the look is
   `feat/ios-foundation`, not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
