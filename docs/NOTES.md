@@ -33,8 +33,10 @@ when a decision needs to survive the conversation it was made in.
   as they go.", the section, then "Going somewhere yourself? **Plan a journey**" (the wizard in
   a modal). Following nobody: "Where to?" on the journey wash with "+ Plan a journey", and
   under it one line Petra asked for (12 Oct), which the phone's card lacks: "Following someone?
-  Open the link they sent you. Signing in there follows them." The link is the only door, and
-  someone who signed up first would not know. Gone: the old "Got a follow link?" card (the
+  Open the link they sent you and tap Follow." The link is the only door, and someone who
+  signed up first would not know. (Petra's second reading: a first wording, "Signing in there
+  follows them", sounded like a second sign-in; the link's page has a Follow button, and
+  signed in it follows at once.) Gone: the old "Got a follow link?" card (the
   line above replaces it; a follow link finishes by itself, `PendingFollow`), the dismissable
   "Going somewhere yourself?" card and its localStorage flag, the follower pills
   ("Following 5", "4 followers", "3 travelling now": People is on Account), "ACTIVITY · N",

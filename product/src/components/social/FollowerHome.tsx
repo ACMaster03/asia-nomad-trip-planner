@@ -23,6 +23,7 @@ import FollowingSection from './FollowingSection'
 // who signed up first and has the link in a message still needs to know that
 // the link is the door, so "Where to?" carries one line about it (Petra,
 // 12 Oct; the phone's card does not, which is worth the same line there).
+// The link's page has the Follow button: signed in, it follows at once.
 
 export default function FollowerHome({ userEmail, userName, userId }: { userEmail?: string; userName?: string; userId?: string }) {
   const sb = createClient()
@@ -67,7 +68,7 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
           <p className="flex items-start gap-2.5 px-1 pt-1 text-[14px] leading-[1.45] text-tx2">
             <Link2 aria-hidden className="mt-0.5 size-4 flex-none text-ac2" strokeWidth={2} />
             <span>
-              <span className="font-semibold text-tx">Following someone?</span> Open the link they sent you. Signing in there follows them.
+              <span className="font-semibold text-tx">Following someone?</span> Open the link they sent you and tap Follow.
             </span>
           </p>
         </>
