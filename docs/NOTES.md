@@ -5,6 +5,34 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-12
+
+### DECIDED — Petra (continuing for Patrik), 12 Oct: no following of strangers at launch; the last tab becomes your posts and what family said (#130)
+
+Feed mock, round 1: https://claude.ai/artifact/25yPrENkKBxUpMwCQXEn3w (A, quiet, or B, photo
+first: not answered yet).
+
+- **Following stays family and friends.** You follow someone only through the follow link they
+  send you. No search, no list of other nomads, no public profiles, no suggestions: that is how it
+  is built today, and nothing beyond it goes in for launch. #167 (the people you follow on your
+  globe) stays parked after 30 Nov; whether it ever reaches past family is Petra's and Patrik's
+  call.
+- **The Map tab (a placeholder since 10 Oct) becomes your own side of the feed:** your posts,
+  with the reactions and comments your followers left, and who follows you. Anyone you follow
+  sits there too, if you follow someone. Petra's first idea was a Feed tab of the people you
+  follow; most travellers follow nobody, so it would have been empty for them.
+- This changes 3 Oct (#130) for followers who have a journey of their own: their people move off
+  Home into this tab. A follower with no journey of their own still has Home only, and Home is
+  the feed (unchanged).
+- Next: round 2 of the mock, then the build. "What is new on my posts since I last looked" needs
+  one new server call (a migration); everything else exists (`my_followers`, `event_reactors`,
+  `feed_social`, the comment RPCs).
+
+iOS: nothing built yet; #184's Home section for people you follow moves into the new tab when
+round 2 is decided.
+
+---
+
 ## 2026-10-10
 
 ### DECIDED — Patrik, 10 Oct: a journey you follow opens as your own Trip does (#166, #130)
