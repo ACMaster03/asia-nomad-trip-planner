@@ -1,36 +1,29 @@
 'use client'
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { Bell, CalendarClock, ChevronRight, CreditCard } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
-import { beforeYouFly, comingUp, deriveReminders, dueLabel, type ReminderItem } from '@/lib/trips/reminders'
+import { comingUp, deriveReminders, reminderLine, shortDate, type ReminderItem } from '@/lib/trips/reminders'
 import type { TripState } from '@/lib/trips/types'
 
-// Home's two reminder slots (DashboardClient mounts these):
-//   <BeforeYouFly> — pre-trip (frame 07): section header + ＋ Reminder pill,
-//     the deadline card (due-before-start, undone first, max 5) and the
-//     "All reminders · N more later" forward card.
-//   <ComingUp>     — live/arrive/off (frame 08): max 2 soon/overdue rows with
-//     an "All reminders" footer. Ticking toasts and the row leaves Home but
-//     stays under Done on /reminders.
-// Self-contained (own mutation/role/toast) so DashboardClient's insertions
-// stay single lines.
+// Home's reminders card, as the phone draws it (ios/Livhold/Home/HomeScreen.swift
+// RemindersCard, ios/Livhold/Home/Reminders.swift ReminderRow). One card, two
+// names (Patrik, 2 Oct): "Before you fly" before the journey, up to five rows
+// dated before departure; "Coming up" on it, up to two rows due within a week
+// or overdue. Your own reminders tick; money ones carry their amount on the
+// right. When nothing is due the card shrinks to one row that names the next
+// reminder and opens the page, so the door never depends on there being a
+// reminder (#60, Patrik, 27 Sep).
+//
+// On the phone a money row opens the stay's or the subscription's own form.
+// On the web those forms live on Trip and Money, so the row is plain here
+// until round 3c (docs/WEB-IOS-REDESIGN.md).
 
-const kicker = 'text-base font-semibold uppercase tracking-[.12em] text-ac2-deep'
-
-// 26px circle (rig-spec visual) inside a 44px tap target; the negative margin
-// keeps the layout exactly where the bare circle sat (handoff README: 44px min
-// hit targets).
-export function TickCircle({
-  r,
-  canEdit,
-  onTick,
-}: {
-  r: ReminderItem
-  canEdit: boolean
-  onTick: () => void
-}) {
+// A 24px circle (the phone's) inside a 44px tap target; the negative margins
+// keep the layout where the bare circle sits (handoff README: 44px min hit
+// targets). Open: a 2px ring, amber when overdue. Done: filled, with a tick.
+export function TickCircle({ r, canEdit, onTick }: { r: ReminderItem; canEdit: boolean; onTick: () => void }) {
   return (
     <button
       type="button"
@@ -38,12 +31,12 @@ export function TickCircle({
       aria-pressed={r.done}
       disabled={!canEdit}
       onClick={onTick}
-      className="-m-[9px] flex size-11 flex-none items-center justify-center"
+      className="-m-2.5 flex size-11 flex-none items-center justify-center"
     >
       <span
         aria-hidden
         className={
-          'flex h-[26px] w-[26px] items-center justify-center rounded-full text-base font-semibold transition-colors duration-[180ms] ' +
+          'flex size-6 items-center justify-center rounded-full text-[11px] font-bold transition-colors duration-[180ms] ' +
           (r.done ? 'bg-ac text-on' : 'border-2 text-transparent ' + (r.overdue ? 'border-warn' : 'border-ln3'))
         }
       >
@@ -52,8 +45,6 @@ export function TickCircle({
     </button>
   )
 }
-
-const MoneyDot = () => <span aria-hidden className="mt-[9px] h-2 w-2 flex-none rounded-full bg-ac2" />
 
 function useTick(todayIso: string) {
   const mut = useTripMutation()
@@ -69,110 +60,82 @@ function useTick(todayIso: string) {
   }
 }
 
-/* ── pre-trip: "Before you fly" (frame 07) ── */
-export function BeforeYouFly({ state, todayIso }: { state: TripState; todayIso: string }) {
-  const { tick } = useTick(todayIso)
-  const { canEdit } = useTripRole()
-  const all = deriveReminders(state, todayIso)
-  const { pre, laterCount } = beforeYouFly(all, state.meta.startDate)
-  const rows = pre.slice(0, 5)
-
+/** One reminder: your own with a tick circle, a money one with an icon and its amount. */
+function ReminderRow({ r, todayIso, canEdit, onTick }: { r: ReminderItem; todayIso: string; canEdit: boolean; onTick: () => void }) {
+  const Icon = r.kind === 'cancel' ? CalendarClock : CreditCard
   return (
-    <>
-      <div className="mt-1.5 flex items-center justify-between gap-2.5">
-        <span className={kicker}>Before you fly</span>
-        {canEdit && (
-          <Link href="/reminders" className="rounded-full bg-ac2-soft px-[13px] py-[7px] text-base font-semibold text-ac2-deep">
-            ＋ Reminder
-          </Link>
-        )}
-      </div>
-      {rows.length > 0 && (
-        <div className="overflow-hidden rounded-[var(--r)] bg-sf text-tx">
-          {rows.map((r, i) => {
-            const d = new Date(r.due! + 'T00:00:00Z')
-            const mon = d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }).toUpperCase()
-            return (
-              <div
-                key={r.id}
-                className={'flex items-start gap-[13px] px-4 py-[15px] ' + (i === rows.length - 1 ? '' : 'border-b border-ln')}
-              >
-                <span className="min-w-[42px] flex-none text-center">
-                  <span className="block text-[17px] font-semibold">{String(d.getUTCDate()).padStart(2, '0')}</span>
-                  <span className="block text-base tracking-[.08em] text-tx2">{mon}</span>
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className={'block text-base ' + (r.done ? 'font-medium text-tx2' : 'font-semibold')}>{r.title}</span>
-                  <span className="mt-0.5 block text-base text-tx2">{r.sub}</span>
-                </span>
-                {r.kind === 'mine' ? (
-                  <TickCircle r={r} canEdit={canEdit} onTick={() => tick(r.id)} />
-                ) : (
-                  <MoneyDot />
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-      <Link href="/reminders" className="flex items-center gap-3 rounded-[var(--r)] bg-sf p-4 text-tx">
-        <span className="flex-1 text-base font-medium text-tx2">
-          All reminders{laterCount > 0 ? ` · ${laterCount} more later` : ''}
+    <div className="flex items-start gap-3 py-[11px]">
+      {r.kind === 'mine' ? (
+        <TickCircle r={r} canEdit={canEdit} onTick={onTick} />
+      ) : (
+        <span className="flex size-6 flex-none items-center justify-center text-tx3">
+          <Icon aria-hidden className="size-[14px]" strokeWidth={2.2} />
         </span>
-        <ChevronRight aria-hidden className="size-5 text-ac2" />
-      </Link>
-    </>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className={'block text-base font-semibold ' + (r.done ? 'text-tx2' : 'text-tx')}>{r.title}</span>
+        <span className={'mt-0.5 block text-[14px] ' + (r.overdue && !r.done ? 'text-warn' : 'text-tx2')}>
+          {reminderLine(r, todayIso)}
+        </span>
+      </span>
+      {r.amount && (
+        <span className="flex-none pt-px text-right">
+          <span className="block text-[15px] font-semibold tabular-nums text-tx">{r.amount}</span>
+          {r.caption && <span className="block text-[12.5px] text-tx2">{r.caption}</span>}
+        </span>
+      )}
+    </div>
   )
 }
 
-/* ── live / arrive / off: "Coming up" (frame 08) ── */
-export function ComingUp({ state, todayIso }: { state: TripState; todayIso: string }) {
+export function RemindersCard({ state, todayIso, mode }: { state: TripState; todayIso: string; mode: 'beforeYouFly' | 'comingUp' }) {
   const { tick } = useTick(todayIso)
   const { canEdit } = useTripRole()
   const flash = useToast()
 
-  const rows = comingUp(deriveReminders(state, todayIso), todayIso).slice(0, 2)
-  // The way into Reminders during the trip (#60, Patrik, 27 Sep): with nothing
-  // due, the card shrinks to one row instead of leaving, so the door never
-  // depends on there being a reminder. Before departure, BeforeYouFly always
-  // carries its "All reminders" row; this is the same row.
+  const all = deriveReminders(state, todayIso).filter((r) => !r.done)
+  const start = state.meta.startDate
+  const rows =
+    mode === 'beforeYouFly'
+      ? all.filter((r) => r.due !== null && (start ? r.due < start : true)).slice(0, 5)
+      : comingUp(all, todayIso).slice(0, 2)
+
+  // "Reminders · next 14 Oct · iCloud 2 TB ›": nothing is due, but the page is one tap away.
   if (rows.length === 0) {
+    const next = all.find((r) => r.due !== null && r.due >= todayIso)
     return (
-      <Link href="/reminders" className="lv-enter flex items-center gap-3 rounded-[var(--r)] bg-sf p-4 text-tx">
-        <span className="flex-1 text-base font-medium text-tx2">Nothing coming up · All reminders</span>
-        <ChevronRight aria-hidden className="size-5 text-ac2" />
+      <Link href="/reminders" className="lv-enter flex items-center gap-2.5 rounded-[var(--r)] bg-sf px-[18px] py-[15px] text-tx">
+        <Bell aria-hidden className="size-[14px] flex-none text-ac2-deep" strokeWidth={2.4} />
+        <span className="min-w-0 flex-1 truncate text-[15px] text-tx2">
+          <span className="font-semibold text-tx">Reminders</span>
+          {next ? ` · next ${shortDate(next.due!)} · ${next.title}` : ' · nothing coming up'}
+        </span>
+        <ChevronRight aria-hidden className="size-3 flex-none text-tx3" strokeWidth={2.6} />
       </Link>
     )
   }
 
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
-      <div className={kicker}>Coming up</div>
+    <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-0.5 pt-4 text-tx">
+      <div className="pb-1 text-[12.5px] font-semibold uppercase tracking-[.112em] text-ac2-deep">
+        {mode === 'beforeYouFly' ? 'Before you fly' : 'Coming up'}
+      </div>
       {rows.map((r, i) => (
-        <div key={r.id} className={'flex items-start gap-3 pt-3.5 ' + (i === 0 ? 'mt-0' : 'mt-3.5 border-t border-ln')}>
-          {r.kind === 'mine' ? (
-            <TickCircle
-              r={r}
-              canEdit={canEdit}
-              onTick={() => {
-                tick(r.id)
-                flash('Ticked · it’s under Done')
-              }}
-            />
-          ) : (
-            <MoneyDot />
-          )}
-          <span className="min-w-0 flex-1">
-            <span className="block text-[17px] font-semibold">{r.title}</span>
-            <span className={'mt-0.5 block text-base ' + (r.overdue ? 'text-warn' : 'text-tx2')}>
-              {dueLabel(r.due, todayIso)}
-            </span>
-          </span>
+        <div key={r.id} className={i > 0 ? 'border-t border-ln' : ''}>
+          <ReminderRow
+            r={r}
+            todayIso={todayIso}
+            canEdit={canEdit}
+            onTick={() => {
+              tick(r.id)
+              flash('Ticked · it’s under Done')
+            }}
+          />
         </div>
       ))}
-      <Link href="/reminders" className="mt-3.5 flex items-center gap-3 border-t border-ln pt-3.5">
-        <span className="flex-1 text-base font-medium text-ac2-deep">All reminders</span>
-        <ChevronRight aria-hidden className="size-5 text-ac2" />
+      <Link href="/reminders" className="flex items-center gap-3 border-t border-ln py-[13px]">
+        <span className="flex-1 text-[15px] font-medium text-tx2">All reminders</span>
+        <ChevronRight aria-hidden className="size-3 flex-none text-tx3" strokeWidth={2.6} />
       </Link>
     </div>
   )

@@ -181,6 +181,8 @@ The six questions this file first ended with, and the answers.
   surface, and so is everything the later rounds draw where the phone uses a material.
 - 12 Oct, Petra: the web keeps its own tab bar. The phone's floating capsule was tried solid
   and merged with the cards under it; the full-width band keeps the page and the bar apart.
+- 12 Oct: round 2a built, Home's journey part, pull request #187 (pictures of every phase in
+  `docs/web-ios-redesign/round2a-*`). Round 2b, the people part, next.
 - 12 Oct, Patrik: the six answers above. Check in on the bar whenever there is a journey
   went into round 1 the same day.
 - 12 Oct: this file and round 1, by Petra with Claude. Before-and-after pictures of round 1

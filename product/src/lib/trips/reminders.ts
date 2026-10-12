@@ -1,6 +1,7 @@
 import type { TripState } from './types'
 import { fmtMoney, stayNights, toBase } from './format'
 import { isBookedStatus } from './commitment'
+import { isCancelled, nextCharge } from './subscriptions'
 
 // Reminders (handoff frames 25–26, rig: Interactive Phone "REMINDERS").
 //
@@ -8,10 +9,13 @@ import { isBookedStatus } from './commitment'
 //   'mine'  — reminders the user typed (state.reminders). Tickable: ticking
 //             sets doneOn, which removes the row from Home but keeps it on
 //             /reminders under Done.
-//   'money' — DERIVED, never stored: chosen stays with cancelUntil become
-//             "Free cancellation ends", chosen stays with chargeDate become
-//             "Card charged · {amount}". They carry a mauve dot instead of a
-//             tick circle — change the stay and they follow.
+//   money   — DERIVED, never stored, in three kinds as on the phone
+//             (ios/Livhold/Home/Reminders.swift, 12 Oct 2026): 'cancel' for a
+//             booked stay's free cancellation, 'charge' for its card charge,
+//             'subscription' for the NEXT charge of each active subscription
+//             (a monthly one is not twelve reminders). They carry an icon
+//             instead of a tick circle and their amount on the right — change
+//             the stay or the subscription and they follow.
 //
 // Rig rules carried over:
 //   - a money deadline that has passed is history, not an outstanding action —
@@ -20,17 +24,28 @@ import { isBookedStatus } from './commitment'
 //     under Next with the label "no date".
 //   - overdue only applies to undone 'mine' reminders.
 
-export type ReminderKind = 'mine' | 'money'
+export type ReminderKind = 'mine' | 'cancel' | 'charge' | 'subscription'
 
 export interface ReminderItem {
   id: string
   kind: ReminderKind
   title: string
-  sub: string
+  /** The stay a deadline belongs to, before its date on the row's second line. */
+  note?: string
+  /** In the journey's currency, shown on the right. */
+  amount?: string
+  /** Under the amount: "card charge", "subscription". */
+  caption?: string
   due: string | null // ISO date, null = undated ('mine' only)
   done: boolean
   doneOn: string | null // 'mine' only — when it was ticked
   overdue: boolean // 'mine' only, undone + date in the past
+}
+
+/** The row's second line, as on the phone: what it is, then when; or when it was done. */
+export function reminderLine(r: ReminderItem, todayIso: string): string {
+  if (r.done) return `done ${r.doneOn ? shortDate(r.doneOn) : 'just now'}`
+  return [r.note, dueLabel(r.due, todayIso)].filter(Boolean).join(' · ')
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -75,7 +90,6 @@ export function deriveReminders(state: TripState, todayIso: string): ReminderIte
       id: r.id,
       kind: 'mine',
       title: r.title,
-      sub: 'your reminder',
       due,
       done: !!doneOn,
       doneOn,
@@ -101,9 +115,10 @@ export function deriveReminders(state: TripState, todayIso: string): ReminderIte
     if (st.cancelUntil && st.remind !== false && dayDiff(todayIso, st.cancelUntil) >= 0) {
       items.push({
         id: `money-cancel-${st.id}`,
-        kind: 'money',
+        kind: 'cancel',
         title: 'Free cancellation ends',
-        sub: `${name} · ${amount} committed after this`,
+        note: name,
+        amount,
         due: st.cancelUntil,
         done: false,
         doneOn: null,
@@ -113,15 +128,34 @@ export function deriveReminders(state: TripState, todayIso: string): ReminderIte
     if (st.chargeDate && dayDiff(todayIso, st.chargeDate) >= 0) {
       items.push({
         id: `money-charge-${st.id}`,
-        kind: 'money',
-        title: `Card charged · ${amount}`,
-        sub: `${name} · from your booking`,
+        kind: 'charge',
+        title: name,
+        amount,
+        caption: 'card charge',
         due: st.chargeDate,
         done: false,
         doneOn: null,
         overdue: false,
       })
     }
+  }
+
+  // Only the next charge of each subscription: a monthly one is not twelve reminders.
+  for (const sub of state.subscriptions ?? []) {
+    if (isCancelled(sub)) continue
+    const next = nextCharge(sub, todayIso)
+    if (!next) continue
+    items.push({
+      id: `money-sub-${sub.id}`,
+      kind: 'subscription',
+      title: sub.label,
+      amount: fmtMoney(toBase(sub.amount, sub.cur, state.rates), base),
+      caption: 'subscription',
+      due: next,
+      done: false,
+      doneOn: null,
+      overdue: false,
+    })
   }
 
   return items.sort((a, b) => {
