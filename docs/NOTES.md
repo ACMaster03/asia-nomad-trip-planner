@@ -17,10 +17,15 @@ Trip settings; the timing against the 31 Oct freeze. The source of the look is
 `feat/ios-foundation` (TestFlight build 24), not the `ios/` on `main`.
 
 Round 1, the frame, is one pull request. Nothing changes in what you can do.
-- **The tab bar** is the phone's GlassTabBar: a floating frosted capsule 16 px from the sides,
-  at most 520 wide and 64 tall, a hairline and a soft shadow; labels at 11; one green highlight
-  that slides to the tab you pick; the 56 px Check in circle raised in the middle. A browser
-  without `backdrop-filter` gets the plain surface colour. `components/AppNav.tsx`.
+- **The tab bar** takes the phone's GlassTabBar layout: a floating capsule 16 px from the
+  sides, at most 520 wide and 64 tall, a hairline and a soft shadow; labels at 11; one green
+  highlight that slides to the tab you pick; the 56 px Check in circle raised in the middle.
+  `components/AppNav.tsx`.
+- **No glass on the web (Petra, 12 Oct).** The phone's bar is Liquid Glass, Apple's own
+  material, and Apple asks apps not to imitate it; on the web a blurred, see-through bar would
+  be an imitation of the phone's. So the capsule and Money's + are solid surfaces, and the
+  later rounds use solid surfaces where the phone uses its materials (the "Open the globe" pill,
+  the compact bar over the globe).
 - **A tab owns the pages it opens**, as a tab's stack does on the phone: Account, Reminders,
   People, a followed journey and a post keep Home lit; Trip settings keeps Trip; Explore keeps
   Map. Before, those pages lit no tab.
@@ -31,7 +36,7 @@ Round 1, the frame, is one pull request. Nothing changes in what you can do.
 - **Headers** come from `components/ui/PageHeader.tsx`, `IconButton.tsx` and `Avatar.tsx`, the
   start of a web kit mirroring `ios/Livhold/Components/`. Home's date line 16 → 12.5 px; Trip's
   name 25 → 28 and its kicker 13 in plain mauve; Money's name 25 → 30, its line 14 → 13, its +
-  a 42 px frosted circle with the plus in mauve (was 46, soft mauve).
+  a 42 px circle with a hairline and the plus in mauve (was 46, soft mauve).
 - **Spacing**: page side padding 18 → 16 px on every screen (the phone's); 80 px kept free at
   the bottom (was 76; the layout and the map's globe follow); the toast 96 px up (was 88).
 - **Account gets a "‹ Home" link** at the top, like People and a journey: without the bar a
@@ -41,8 +46,8 @@ Round 1, the frame, is one pull request. Nothing changes in what you can do.
   light and dark, are in `docs/web-ios-redesign/round1-*.png` (`main` on the left).
 - Checked: tsc, eslint, the 165 tests, `next build`.
 
-iOS: nothing new. The web copies `GlassTabBar.swift` (its pre-iOS-26 material look, not Liquid
-Glass), `HomeScreen.swift`'s header, `TripScreens.swift`'s TripHeader and `MoneyScreen.swift`'s
+iOS: nothing new. The web copies the layout of `GlassTabBar.swift` (not its glass),
+`HomeScreen.swift`'s header, `TripScreens.swift`'s TripHeader and `MoneyScreen.swift`'s
 header. The rule the phone keeps and the web does not yet: Check in on the bar whenever a
 journey exists (`AppShell.swift`, `trips.phase != .empty`).
 

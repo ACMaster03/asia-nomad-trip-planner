@@ -114,7 +114,9 @@ it: Patrik's call (question 2 below).
 
 - Haptics (a tap on every landing, selection, success). No web equivalent on iOS Safari;
   skipped.
-- Liquid Glass. The web gets a frosted, translucent surface (a blur behind a 75 % white).
+- Liquid Glass. It is Apple's own material and stays on the phone (Petra, 12 Oct): the web
+  takes the layout of the bar and uses solid surfaces wherever the phone uses its materials
+  (the bar, Money's +, the "Open the globe" pill, the compact bar over the globe).
 - Zoom transitions (a card grows into its page). The web's View Transitions API can do a
   cross-fade and, in newer browsers, the zoom. Round 6.
 - Pull to refresh, swipe actions on rows, a long press menu, the system date picker and
@@ -127,7 +129,7 @@ changes and what could go wrong, "go", merge, watch the build, test on the phone
 
 1. **The frame** (this pull request). The floating tab bar as on the phone, hidden until
    you have a journey. The three root headers at the phone's sizes (Home's date line 12.5 px,
-   Trip's name 28 px, Money's name 30 px with the frosted "+"). The start of the kit:
+   Trip's name 28 px, Money's name 30 px with the 42 px "+"). The start of the kit:
    `product/src/components/ui/`. 16 px side padding and the 80 px bottom room on every
    screen. Nothing changes in what you can do.
 2. **Home.** The stop card with the money line and no buttons; Arrived; the first-stop
@@ -166,5 +168,8 @@ changes and what could go wrong, "go", merge, watch the build, test on the phone
 
 ## Record
 
+- 12 Oct, Petra: no glass on the web. Liquid Glass is Apple's material; the web's bar and
+  Money's + are solid surfaces, and so is everything the later rounds draw where the phone
+  uses a material.
 - 12 Oct: this file and round 1, by Petra with Claude. Before-and-after pictures of round 1
   at phone width are in `docs/web-ios-redesign/` (`main` on the left, light and dark).

@@ -256,7 +256,8 @@ export default function MoneyPage() {
   return (
     <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[18px] text-tx min-[900px]:max-w-4xl min-[900px]:grid-cols-2">
       {/* The phone's Money header: the name at 30, one line under it, and the + as a
-          42px frosted circle with a hairline, the plus in mauve. */}
+          42px circle with a hairline, the plus in mauve. Solid, not the phone's glass
+          material (Petra, 2026-10-12). */}
       <PageHeader
         className={wide}
         title="Money"
@@ -269,7 +270,7 @@ export default function MoneyPage() {
               onClick={() => setSheet({ entry: null })}
               aria-label="Add an entry"
               title="Add an entry"
-              className="flex size-[42px] flex-none items-center justify-center rounded-full border border-ln bg-sf/70 text-ac2 backdrop-blur-md"
+              className="flex size-[42px] flex-none items-center justify-center rounded-full border border-ln bg-sf text-ac2"
             >
               <Plus aria-hidden className="size-[18px]" strokeWidth={2.6} />
             </button>

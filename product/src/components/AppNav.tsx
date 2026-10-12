@@ -7,7 +7,7 @@ import { useTripScope } from '@/lib/trips/TripScope'
 
 // Bottom tab bar, drawn as the phone draws it (ios/Livhold/Components/
 // GlassTabBar.swift; Patrik chose it on 2026-09-27 on TestFlight over this
-// file's old solid bar): a floating frosted capsule 16px from the sides, at most
+// file's old solid bar): a floating capsule 16px from the sides, at most
 // 520 wide and 64 tall, four icon+label tabs with one green highlight that
 // slides to the tab you pick, and a raised 56px Check in circle carrying the
 // pin in the middle. The handoff's "1g" structure stands: no More tab; Trip
@@ -30,8 +30,11 @@ import { useTripScope } from '@/lib/trips/TripScope'
 //
 // z-40 + its own stacking context: the map page paints a FIXED globe overlay
 // below the bar — without one the bar rendered UNDER it (dogfood 2026-07-24:
-// "trapped on the map page"). The frosted look needs a translucent surface, so
-// a browser without backdrop-filter gets the solid surface colour instead.
+// "trapped on the map page").
+//
+// The capsule is a solid surface on purpose. The phone's bar is Liquid Glass,
+// Apple's own material, which stays on the phone (Petra, 2026-10-12): the web
+// takes the bar's layout, not its glass.
 
 type Tab = { href: string; label: string; Icon: LucideIcon; owns: string[] }
 
@@ -65,7 +68,7 @@ export function AppNav({ showCheckIn, pathname: forced }: { showCheckIn: boolean
       aria-label="Primary"
       className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[calc(4px+env(safe-area-inset-bottom))] pl-[calc(16px+env(safe-area-inset-left))] pr-[calc(16px+env(safe-area-inset-right))]"
     >
-      <div className="pointer-events-auto relative mx-auto flex h-16 max-w-[520px] items-center rounded-full border border-ln bg-sf px-1.5 shadow-[0_6px_16px_rgba(0,0,0,.12)] supports-[backdrop-filter]:bg-sf/75 supports-[backdrop-filter]:backdrop-blur-xl supports-[backdrop-filter]:backdrop-saturate-150">
+      <div className="pointer-events-auto relative mx-auto flex h-16 max-w-[520px] items-center rounded-full border border-ln bg-sf px-1.5 shadow-[0_6px_16px_rgba(0,0,0,.12)]">
         {/* One highlight that slides to the tab you pick (the phone's matchedGeometryEffect). */}
         {activeAt >= 0 && (
           <span
