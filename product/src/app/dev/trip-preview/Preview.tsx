@@ -3,6 +3,7 @@ import { TripScopeProvider } from '@/lib/trips/TripScope'
 import { MoneyProvider } from '@/lib/trips/Money'
 import { ConfirmProvider } from '@/components/Confirm'
 import { Timeline } from '@/components/trips/Timeline'
+import { AppNav } from '@/components/AppNav'
 
 // The (app) layout's providers, minus auth — see money-preview/Preview.tsx
 // for why ConfirmProvider must be here (useConfirm fails closed).
@@ -14,6 +15,7 @@ export default function Preview() {
           <div className="pb-20">
             <Timeline />
           </div>
+          <AppNav showCheckIn pathname="/itinerary" />
         </ConfirmProvider>
       </MoneyProvider>
     </TripScopeProvider>

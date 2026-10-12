@@ -71,7 +71,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               the other three insets: with viewport-fit=cover (layout.tsx) the
               window reaches the status bar and, in landscape, the notch. All
               four are 0 on a phone without a cutout. */}
-          <div className="min-h-screen pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pt-[env(safe-area-inset-top)] pb-[calc(76px+env(safe-area-inset-bottom))]">
+          <div className="min-h-screen pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pt-[env(safe-area-inset-top)] pb-[calc(80px+env(safe-area-inset-bottom))]">
             {/* Above every screen: an invite is to a trip you cannot navigate to
                 yet, so it has no page of its own to live on. Renders nothing
                 unless you actually have one. */}

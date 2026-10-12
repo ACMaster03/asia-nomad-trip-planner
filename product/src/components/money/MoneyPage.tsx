@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronRight, Plus } from 'lucide-react'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
@@ -253,25 +254,28 @@ export default function MoneyPage() {
   }
 
   return (
-    <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-[18px] pb-6 pt-[18px] text-tx min-[900px]:max-w-4xl min-[900px]:grid-cols-2">
-      <div className={'flex items-start justify-between gap-3 ' + wide}>
-        <div>
-          <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">Money</h1>
-          <p className="mt-0.5 text-[14px] text-tx2">
-            {s.meta.tripName}{day ? ` · day ${day}` : ''}{current ? ` · ${current.city}` : ''}
-          </p>
-        </div>
-        {canEdit && (
-          <button
-            onClick={() => setSheet({ entry: null })}
-            aria-label="Add an entry"
-            title="Add an entry"
-            className="flex size-[46px] flex-none items-center justify-center rounded-full bg-ac2-soft text-ac2-deep"
-          >
-            <Plus aria-hidden className="size-6" />
-          </button>
-        )}
-      </div>
+    <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[18px] text-tx min-[900px]:max-w-4xl min-[900px]:grid-cols-2">
+      {/* The phone's Money header: the name at 30, one line under it, and the + as a
+          42px frosted circle with a hairline, the plus in mauve. */}
+      <PageHeader
+        className={wide}
+        title="Money"
+        titleSize={30}
+        sub={`${s.meta.tripName}${day ? ` · day ${day}` : ''}${current ? ` · ${current.city}` : ''}`}
+        subSize={13}
+        right={
+          canEdit && (
+            <button
+              onClick={() => setSheet({ entry: null })}
+              aria-label="Add an entry"
+              title="Add an entry"
+              className="flex size-[42px] flex-none items-center justify-center rounded-full border border-ln bg-sf/70 text-ac2 backdrop-blur-md"
+            >
+              <Plus aria-hidden className="size-[18px]" strokeWidth={2.6} />
+            </button>
+          )
+        }
+      />
       <div className={wide}><ViewerNotice /></div>
       <div className={wide}>
         <SaveError show={mut.isError} error={mut.error} />

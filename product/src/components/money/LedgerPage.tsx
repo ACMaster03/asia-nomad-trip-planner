@@ -52,7 +52,7 @@ export default function LedgerPage({ day }: { day?: string }) {
   const n = trip.data.ledger.length
 
   return (
-    <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-[18px] pb-6 pt-[10px] text-tx">
+    <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[10px] text-tx">
       <div>
         <Link href="/money" className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep">
           <ChevronLeft aria-hidden className="size-5" />Money

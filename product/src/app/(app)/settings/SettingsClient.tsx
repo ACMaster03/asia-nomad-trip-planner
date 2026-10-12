@@ -187,13 +187,13 @@ export default function SettingsClient() {
 
   if (tripId === null) return <CreateTripEmptyState />
   if (trip.isPending)
-    return <main className="mx-auto max-w-xl px-[18px] pt-[18px] text-base text-tx2">Loading…</main>
+    return <main className="mx-auto max-w-xl px-4 pt-[18px] text-base text-tx2">Loading…</main>
   if (!trip.data)
     // The scoped trip vanished mid-session (deleted, or access revoked). The
     // generic no-access screen points HERE to recover, so this page must keep
     // the switcher usable rather than bouncing to that same screen.
     return (
-      <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+      <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
         <h1 className="font-serif text-[25px] font-semibold">Trip settings</h1>
         <div className="rounded-[var(--r)] border-[1.5px] border-warn-line bg-warn-soft p-4 text-base leading-normal text-tx2">
           <span className="font-semibold text-warn">You no longer have access to the selected trip.</span>{' '}
@@ -224,7 +224,7 @@ export default function SettingsClient() {
   const curList = Object.keys(trip.data.state.rates ?? {}).sort((a, b) => (a === 'HUF' ? -1 : b === 'HUF' ? 1 : a.localeCompare(b)))
 
   return (
-    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
       <div className="flex flex-wrap items-center gap-2.5">
         {/* Back to the Trip screen (frame 27's back-arrow circle). */}
         <Link

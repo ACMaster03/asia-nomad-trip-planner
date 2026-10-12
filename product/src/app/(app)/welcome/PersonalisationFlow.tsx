@@ -273,7 +273,7 @@ export default function PersonalisationFlow() {
         <button onClick={() => setRecap(true)} className="-my-2.5 inline-flex min-h-11 items-center text-base font-medium text-ac2">Skip</button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3.5 px-[18px] pb-6 pt-1">
+      <div className="flex flex-1 flex-col gap-3.5 px-4 pb-6 pt-1">
         <div>
           <div className="text-base uppercase tracking-[.12em] text-ac2">Step {stepIdx + 1} of {steps.length}</div>
           <h1 className="mt-2 font-serif text-[29px] font-semibold leading-[1.15] tracking-[-.01em]">{titles[key].title}</h1>

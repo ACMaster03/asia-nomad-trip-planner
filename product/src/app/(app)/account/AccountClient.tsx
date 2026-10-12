@@ -17,7 +17,7 @@ import {
 import { tk } from '@/lib/trips/keys'
 import { fetchFollowerAccess, fetchMyFollowerCount, fetchMyFollowing, setFollowerAccess } from '@/lib/follow/follows'
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { AccountDeletion } from '@/components/trips/DangerZone'
@@ -727,7 +727,12 @@ export default function AccountClient({
   }
 
   return (
-    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
+      {/* A way back that does not depend on the tab bar: without a journey there is no
+          bar (AppNav), and Account is the one page a follower reaches from Home's avatar. */}
+      <Link href="/dashboard" className="-ml-1 inline-flex min-h-11 items-center gap-1 text-base font-semibold text-ac2">
+        <ChevronLeft className="size-5" aria-hidden /> Home
+      </Link>
       <div>
         <h1 className="font-serif text-[25px] font-semibold">Account</h1>
         <p className="mt-[5px] text-base leading-normal text-tx2">

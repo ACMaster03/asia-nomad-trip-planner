@@ -11,6 +11,8 @@ import { tripDay, tripLength, stopProgress, offRoutePlace } from '@/lib/trips/pr
 import { shortDate, stayCounts, stayForNight } from '@/lib/trips/timeline'
 import { isBookedStatus } from '@/lib/trips/commitment'
 import { useCheckIn } from '@/components/checkin/CheckInProvider'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { AccountAvatar } from '@/components/ui/Avatar'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { moneyUnlocks } from '@/lib/trips/unlocks'
@@ -148,24 +150,10 @@ export default function DashboardClient({
   if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
   if (!trip.data || !s || !b) return <CreateTripEmptyState />
 
-  // The saved first name (Account → Your name) wins over the email initial.
-  const initial = (userName?.trim()[0] ?? userEmail?.trim()[0] ?? '?').toUpperCase()
+  // The phone's Home header: the date in small capitals, the journey's name, one line
+  // under it, and the avatar that opens Account.
   const header = (eyebrow: string, title: string, sub: string) => (
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <div className="text-base font-medium uppercase tracking-[.14em] text-ac2-deep">{eyebrow}</div>
-        <h1 className="mt-1 font-serif text-[28px] font-semibold leading-[1.12] tracking-[-.01em]">{title}</h1>
-        <p className="mt-[5px] text-base text-tx2">{sub}</p>
-      </div>
-      <Link
-        href="/account"
-        aria-label="Account"
-        title={userName || userEmail || 'Account'}
-        className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-ac2-soft text-[17px] font-semibold text-ac2-deep"
-      >
-        {initial}
-      </Link>
-    </div>
+    <PageHeader eyebrow={eyebrow} title={title} sub={sub} right={<AccountAvatar userName={userName} userEmail={userEmail} />} />
   )
 
   /* ── post-trip (frame 10) ── */
@@ -174,7 +162,7 @@ export default function DashboardClient({
     const countries = recap.countries.length
     return (
       <main
-        className="flex min-h-dvh flex-col gap-3 px-[18px] pb-6 pt-[18px]"
+        className="flex min-h-dvh flex-col gap-3 px-4 pb-6 pt-[18px]"
         style={{ background: 'var(--washLight)', color: 'var(--washInk)' }}
       >
         {header(fmtDay(today, true), 'Home again', `${s.meta.tripName} · complete`)}
@@ -224,7 +212,7 @@ export default function DashboardClient({
     const cap = s.meta.budgetCap || 0
     const pct = cap ? Math.min(100, Math.round((b.grand / cap) * 100)) : null
     return (
-      <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+      <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
         {header(fmtDay(today), s.meta.tripName, `${inPlan.length} stops · ${b.totalNights} nights · ${s.meta.travelers} travellers`)}
         {first && (
           <div className={card + ' lv-enter p-5'}>
@@ -332,7 +320,7 @@ export default function DashboardClient({
   }).projection
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-3">
+    <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
       {header(
         fmtDay(today),
         s.meta.tripName,

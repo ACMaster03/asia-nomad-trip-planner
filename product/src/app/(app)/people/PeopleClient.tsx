@@ -58,7 +58,7 @@ export default function PeopleClient({ initialTab }: { initialTab: Tab }) {
   const failed = tab === 'following' ? following.isError : followers.isError
 
   return (
-    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-3">
+    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
       <Link href="/dashboard" className="-ml-1 inline-flex min-h-11 items-center gap-1 text-base font-semibold text-ac2">
         <ChevronLeft className="size-5" aria-hidden /> Home
       </Link>
@@ -98,7 +98,7 @@ export default function PeopleClient({ initialTab }: { initialTab: Tab }) {
       </label>
 
       {(travelling > 0 || chips.length > 0) && (
-        <div className="-mx-[18px] flex gap-1.5 overflow-x-auto px-[18px] pb-0.5">
+        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
           <Chip on={filter.kind === 'all'} onClick={() => setFilter({ kind: 'all' })}>All · {rows.length}</Chip>
           {travelling > 0 && (
             <Chip on={filter.kind === 'travelling'} onClick={() => setFilter({ kind: 'travelling' })}>Travelling · {travelling}</Chip>

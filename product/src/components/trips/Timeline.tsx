@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Bus, Plane, Settings, Ship, TrainFront } from 'lucide-react'
 import NewCountryBanner from './NewCountryBanner'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { IconButton } from '@/components/ui/IconButton'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
@@ -376,17 +378,20 @@ export function Timeline() {
   const openStay = (seg: Segment) => (stay: Stay | null, range: NightRange | null) => setSheet({ kind: 'stay', seg, stay, range })
 
   return (
-    <main className="mx-auto max-w-xl px-[18px] pb-28 pt-[18px]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          {kickerText && <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">{kickerText}</div>}
-          <h1 className="truncate font-serif text-[25px] font-semibold">{s.meta.tripName || 'Trip'}</h1>
-        </div>
-        {/* Trip settings' only door — the gear (nav "1g"): dates, currency, cap, partners, sharing, delete or leave. */}
-        <Link href="/settings" aria-label="Trip settings" className="flex h-[44px] w-[44px] flex-none items-center justify-center rounded-full border border-ln2 bg-sf text-tx2">
-          <Settings aria-hidden className="size-5" strokeWidth={2} />
-        </Link>
-      </div>
+    <main className="mx-auto max-w-xl px-4 pb-28 pt-[18px]">
+      {/* The phone's TripHeader: the kicker, the name, and Trip settings' only door — the
+          gear (nav "1g"): dates, currency, cap, partners, sharing, delete or leave. */}
+      <PageHeader
+        eyebrow={kickerText}
+        tone="mauve"
+        title={s.meta.tripName || 'Trip'}
+        truncate
+        right={
+          <IconButton href="/settings" label="Trip settings">
+            <Settings aria-hidden className="size-[18px]" strokeWidth={2.2} />
+          </IconButton>
+        }
+      />
       <NewCountryBanner state={s} />
       <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />

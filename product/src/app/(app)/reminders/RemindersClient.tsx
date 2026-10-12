@@ -89,7 +89,7 @@ export default function RemindersClient() {
     )
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+    <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
       <div className="flex items-center gap-3">
         <Link
           href="/dashboard"

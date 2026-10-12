@@ -1,6 +1,5 @@
 'use client'
 import { useState, useSyncExternalStore } from 'react'
-import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronRight, Compass, Link2, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -8,6 +7,8 @@ import { fetchMyFollowing } from '@/lib/follow/follows'
 import { tk } from '@/lib/trips/keys'
 import { OnboardingWizard } from '@/components/trips/OnboardingWizard'
 import HomeActivity from './HomeActivity'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { AccountAvatar } from '@/components/ui/Avatar'
 
 // Home for an account with no trip of its own. Someone who came in through a
 // follow link is a follower first: they get the feed of the people they
@@ -63,36 +64,22 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
   // token refresh mid-flight) must not read as "you follow nobody" and send
   // the person off to re-open a follow link they never lost.
   const nobody = following.isSuccess && following.data.length === 0
-  const initial = (userName?.trim()[0] ?? userEmail?.trim()[0] ?? '?').toUpperCase()
   const first = userName?.trim()
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-base font-medium uppercase tracking-[.14em] text-ac2-deep">
-            {nobody ? 'Welcome' : following.isError ? 'Home' : 'Following along'}
-          </div>
-          <h1 className="mt-1 font-serif text-[28px] font-semibold leading-[1.12] tracking-[-.01em]">
-            {first ? `Hello, ${first}` : 'Hello'}
-          </h1>
-          <p className="mt-[5px] text-base text-tx2">
-            {nobody
-              ? 'No trip of your own yet, and nobody followed yet.'
-              : following.isError
-                ? 'Could not load the people you follow.'
-                : 'The people you follow, as they go.'}
-          </p>
-        </div>
-        <Link
-          href="/account"
-          aria-label="Account"
-          title={userName || userEmail || 'Account'}
-          className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-ac2-soft text-[17px] font-semibold text-ac2-deep"
-        >
-          {initial}
-        </Link>
-      </div>
+    <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
+      <PageHeader
+        eyebrow={nobody ? 'Welcome' : following.isError ? 'Home' : 'Following along'}
+        title={first ? `Hello, ${first}` : 'Hello'}
+        sub={
+          nobody
+            ? 'No trip of your own yet, and nobody followed yet.'
+            : following.isError
+              ? 'Could not load the people you follow.'
+              : 'The people you follow, as they go.'
+        }
+        right={<AccountAvatar userName={userName} userEmail={userEmail} />}
+      />
 
       {/* Came in through a follow link but the follow never completed — the
           magic link opened in another browser, or storage was refused. The

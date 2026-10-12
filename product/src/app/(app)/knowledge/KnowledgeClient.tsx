@@ -105,7 +105,7 @@ export default function KnowledgeClient() {
   // Tier 1 and stay readable on the trip screens (frame 22).
   if (!online) {
     return (
-      <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+      <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
         <div className="flex items-center gap-3">
           <Link
             href="/map"
@@ -136,7 +136,7 @@ export default function KnowledgeClient() {
   }
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+    <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
       <div>
         <div className="flex items-center gap-3">
           <Link
