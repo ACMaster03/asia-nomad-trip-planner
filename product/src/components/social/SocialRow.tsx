@@ -128,7 +128,7 @@ export function SocialRow({
 // kinds right under the row; tapping the one you already have clears it. The
 // tally beside the glyph is only there for travellers, because feed_social
 // only sends it to them.
-function ReactChip({
+export function ReactChip({
   mine, glyph, total, tally, onReact, busy,
 }: { mine: string | null; glyph: string | null; total: number; tally?: PostSocial['tally']; onReact: (k: string | null) => void; busy: boolean }) {
   const [open, setOpen] = useState(false)

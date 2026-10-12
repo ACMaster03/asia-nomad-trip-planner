@@ -7,6 +7,46 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-12
 
+### BUILT — round 2b of the web redesign: the people part of Home as on the phone (Petra, 12 Oct)
+
+`components/social/FollowingSection.tsx` replaces `HomeActivity.tsx`, after
+`ios/Livhold/Follow/FollowingHome.swift` (#130; Patrik, 3 Oct); the rules are pure in
+`lib/follow/home.ts` with tests.
+- **"JOURNEYS YOU FOLLOW":** one card per journey, however many of its travellers you follow
+  (`my_following` lists a trip under each; deduped by trip): up to three 26 px avatars, the
+  names as a sentence ("Anna and Tom"), a "LIVE" badge within its dates, the name at 22, the
+  line "Hanoi, day 42 · next Da Nang, 13 Nov" (or "Day 42 · between stops", "Leaves 1 Sep",
+  "Home again", "arrived today by train" on an arrival day), the latest post in one line, and
+  "Open the journey ›". Live ones first, then upcoming, finished, paused ("Sharing is paused
+  for now", dimmed, no link). The line needs the journey's summary, so Home now fetches one
+  `followed_trip_summary` per followed journey (the same cache as the journey page); without
+  it the card shows the current city.
+- **"LATEST":** up to 8 posts, newest first, then "Show older". An arrival is a soft mauve card
+  ("Arrived in Hue", "By train from Hanoi" from the leg's mode: `legs` is typed on
+  `FollowedSummary` now); a check-in is a surface card with the place and its city, the stars,
+  the quote, "N comments". Notes from the people you follow are not posts (as on the phone).
+  "just now" / "2 hours ago" / "yesterday" / "9 Oct", the phone's rule (`whenLabel`).
+- **Placement** as the phone's (Patrik, 3 Oct): after your stop card during your journey;
+  before your own journey, right under the header, before and after your dates when a followed
+  journey is under way (`useFollowedCards().anyLive`); otherwise after your journey.
+- **The follower's Home** (`FollowerHome.tsx`): the date, "Hi, Petra", "The people you follow,
+  as they go.", the section, then "Going somewhere yourself? **Plan a journey**" (the wizard in
+  a modal). Following nobody: "Where to?" on the journey wash with "+ Plan a journey". Gone:
+  "Got a follow link?" (a follow link finishes by itself, `PendingFollow`), the dismissable
+  "Going somewhere yourself?" card and its localStorage flag, the follower pills
+  ("Following 5", "4 followers", "3 travelling now": People is on Account), "ACTIVITY · N",
+  "Only mine", "See all N".
+- **Kept that the phone has not built** (for Patrik): your own trip's rows in Latest, with
+  Edit and Delete, until Trip shows check-ins under their stops (round 3); the React and
+  Comment chips under every post; the meet-up lines (#9); photo thumbnails.
+- Checked: tsc, eslint, the 173 tests (7 new), `next build`; pictures in
+  `docs/web-ios-redesign/round2b-*.png`.
+
+iOS: nothing new. The web's `lib/follow/home.ts` mirrors `FollowStore.journeys(today:)`,
+`FollowedJourney.line(today:)`, `stopIndex(of:)`, `FollowDates.when` and
+`JourneyCard.firstSentence`. One difference to know: the web's Latest carries the viewer's own
+rows and the React/Comment chips; the phone's does not.
+
 ### LIVE — round 2a of the web redesign, Home's journey part, merged with Petra (#187, 12 Oct)
 
 Merged with Petra's "yes" after the what-changes step; Vercel built `ce34008`; Petra checked

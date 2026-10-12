@@ -55,6 +55,11 @@ export function fmtMoneyShort(n: number, currency: string): string {
 
 export const fmtUSD = (n: number) => '$' + Math.round(Number(n) || 0)
 
+/** "Monday 12 October", Home's eyebrow; with the year after the journey. */
+export function longDate(d: Date, withYear = false): string {
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', ...(withYear ? { year: 'numeric' } : {}) })
+}
+
 // Convert an amount in `cur` into the trip's BASE currency. rates are
 // base-per-unit (useTripScreen merges them from fx_rates), so this is already
 // base-correct — only the name used to say HUF.

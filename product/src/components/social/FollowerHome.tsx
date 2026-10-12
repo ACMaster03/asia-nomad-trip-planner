@@ -1,148 +1,107 @@
 'use client'
-import { useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight, Compass, Link2, X } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { fetchMyFollowing } from '@/lib/follow/follows'
 import { tk } from '@/lib/trips/keys'
+import { longDate } from '@/lib/trips/format'
 import { OnboardingWizard } from '@/components/trips/OnboardingWizard'
-import HomeActivity from './HomeActivity'
+import { Modal } from '@/components/trips/Modal'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { AccountAvatar } from '@/components/ui/Avatar'
+import { Waiting } from '@/components/ui/TravelLoader'
+import FollowingSection from './FollowingSection'
 
-// Home for an account with no trip of its own. Someone who came in through a
-// follow link is a follower first: they get the feed of the people they
-// follow and a door to planning a trip, never the onboarding wizard by
-// itself. The header with the account avatar is always there — it is the
-// only way to Account, and so to signing out (Patrik, 2026-09-18: the
-// no-trip screen used to replace it).
+// Home for someone with no journey of their own, as the phone draws it
+// (ios/Livhold/Home/HomeScreen.swift, the empty phase; #126, #130): following
+// people, Home is their journeys and the latest posts, with a quiet door to
+// plan one's own at the bottom. Following nobody, it is "Where to?".
 //
-// The "plan a trip" card can be dismissed; the quieter row at the bottom
-// keeps the door open. Dismissal is per device, in localStorage.
-
-const DISMISS_KEY = 'livhold.planCardDismissed'
-const listeners = new Set<() => void>()
-const subscribe = (fn: () => void) => {
-  listeners.add(fn)
-  return () => {
-    listeners.delete(fn)
-  }
-}
-const readDismissed = () => {
-  try {
-    return window.localStorage.getItem(DISMISS_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-const serverDismissed = () => false
-function dismissPlanCard() {
-  try {
-    window.localStorage.setItem(DISMISS_KEY, '1')
-  } catch {
-    /* private window: the card simply comes back next visit */
-  }
-  listeners.forEach((fn) => fn())
-}
+// A follow link finishes on its own: PendingFollow (the app layout) completes
+// the follow and opens the journey, so nothing here asks for a link.
 
 export default function FollowerHome({ userEmail, userName, userId }: { userEmail?: string; userName?: string; userId?: string }) {
   const sb = createClient()
   const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
-  const dismissed = useSyncExternalStore(subscribe, readDismissed, serverDismissed)
   const [planning, setPlanning] = useState(false)
-
-  if (planning) {
-    // The wizard brings its own full-bleed wash — no page padding here.
-    return (
-      <main>
-        <OnboardingWizard />
-      </main>
-    )
-  }
-
-  // "Nobody" only once the list actually loaded: a failed fetch (offline, a
-  // token refresh mid-flight) must not read as "you follow nobody" and send
-  // the person off to re-open a follow link they never lost.
+  const first = userName?.trim().split(/\s+/)[0]
+  const today = new Date()
+  const todayIso = today.toISOString().slice(0, 10)
   const nobody = following.isSuccess && following.data.length === 0
-  const first = userName?.trim()
+
+  const header = (sub?: string) => (
+    <PageHeader
+      eyebrow={longDate(today)}
+      title={first ? `Hi, ${first}` : 'Hi, traveller'}
+      sub={sub}
+      right={<AccountAvatar userName={userName} userEmail={userEmail} />}
+    />
+  )
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
-      <PageHeader
-        eyebrow={nobody ? 'Welcome' : following.isError ? 'Home' : 'Following along'}
-        title={first ? `Hello, ${first}` : 'Hello'}
-        sub={
-          nobody
-            ? 'No trip of your own yet, and nobody followed yet.'
-            : following.isError
-              ? 'Could not load the people you follow.'
-              : 'The people you follow, as they go.'
-        }
-        right={<AccountAvatar userName={userName} userEmail={userEmail} />}
-      />
-
-      {/* Came in through a follow link but the follow never completed — the
-          magic link opened in another browser, or storage was refused. The
-          link itself still works: signed in, it finishes in one tap. */}
-      {nobody && (
-        <div className="flex gap-3 rounded-[var(--r)] bg-sf p-4">
-          <Link2 className="mt-0.5 size-5 flex-none text-ac2" aria-hidden />
-          <p className="text-base leading-[1.5] text-tx2">
-            <span className="font-semibold text-tx">Got a follow link?</span> Open it again to follow.
-          </p>
-        </div>
-      )}
-
-      {!dismissed && (
-        <section className="relative rounded-[var(--r)] bg-sf p-4">
+      {following.isPending ? (
+        <>
+          {header()}
+          <Waiting label="Getting your people" />
+        </>
+      ) : following.isError ? (
+        <>
+          {header('Could not load the people you follow.')}
           <button
             type="button"
-            onClick={dismissPlanCard}
-            aria-label="Dismiss"
-            className="absolute right-2 top-2 flex size-9 items-center justify-center rounded-full text-tx3"
+            onClick={() => following.refetch()}
+            className="rounded-[var(--r)] bg-sf p-4 text-left text-[15px] leading-[1.5] text-tx2"
           >
-            <X className="size-5" aria-hidden />
+            <span className="font-semibold text-tx">Couldn’t load</span> · tap to try again
           </button>
-          <div className="flex items-start gap-3 pr-8">
-            <Compass className="mt-0.5 size-5 flex-none text-ac2" aria-hidden />
-            <div className="min-w-0 grow">
-              <div className="font-serif text-lg font-semibold">Going somewhere yourself?</div>
-              <p className="mt-0.5 text-base leading-[1.5] text-tx2">
-                Three short steps. Only people you let in see it.
-              </p>
-              <button
-                type="button"
-                onClick={() => setPlanning(true)}
-                className="mt-3 w-full rounded-[calc(var(--r)-3px)] bg-ac py-3 text-base font-semibold text-on"
-              >
-                Plan a trip
-              </button>
-            </div>
-          </div>
-        </section>
+        </>
+      ) : nobody ? (
+        <>
+          {header()}
+          <NoJourneyCard onPlan={() => setPlanning(true)} />
+        </>
+      ) : (
+        <>
+          {header('The people you follow, as they go.')}
+          <FollowingSection today={todayIso} userId={userId} />
+          <PlanOwnRow onPlan={() => setPlanning(true)} />
+        </>
       )}
-
-      {following.isSuccess && <HomeActivity own={[]} ownPending={false} userId={userId} />}
-      {following.isPending && <p className="text-base text-tx2">Loading…</p>}
-      {following.isError && (
-        <button
-          type="button"
-          onClick={() => following.refetch()}
-          className="rounded-[var(--r)] bg-sf p-4 text-left text-base leading-[1.5] text-tx2"
-        >
-          <span className="font-semibold text-tx">Couldn&apos;t load</span> · tap to try again
-        </button>
-      )}
-
-      {dismissed && (
-        <button type="button" onClick={() => setPlanning(true)} className="flex w-full items-center justify-between rounded-[var(--r)] bg-sf p-4 text-left">
-          <span className="flex items-center gap-3">
-            <Compass className="size-5 flex-none text-ac2" aria-hidden />
-            <span className="block text-base font-semibold">Plan a trip of your own</span>
-          </span>
-          <ChevronRight aria-hidden className="size-5 flex-none text-ac2" />
-        </button>
+      {planning && (
+        <Modal title="New journey" onClose={() => setPlanning(false)}>
+          <OnboardingWizard onDone={() => setPlanning(false)} />
+        </Modal>
       )}
     </main>
+  )
+}
+
+/** "Where to?" on the journey wash: the first journey, for someone following nobody. */
+export function NoJourneyCard({ onPlan }: { onPlan: () => void }) {
+  return (
+    <div className="lv-enter rounded-[var(--r)] px-[18px] py-[22px] text-tx lv-journey-wash">
+      <h2 className="font-serif text-[26px] font-semibold leading-[1.15]">Where to?</h2>
+      <p className="mt-1.5 text-[15px] leading-[1.45] text-tx2">
+        Plan your first journey: the stops, the stays and what it all costs, in one place.
+      </p>
+      <button
+        type="button"
+        onClick={onPlan}
+        className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-full bg-ac px-[18px] text-[15px] font-semibold text-on"
+      >
+        <Plus aria-hidden className="size-4" strokeWidth={2.6} /> Plan a journey
+      </button>
+    </div>
+  )
+}
+
+/** "Going somewhere yourself? Plan a journey": the quiet door for a follower. */
+export function PlanOwnRow({ onPlan }: { onPlan: () => void }) {
+  return (
+    <button type="button" onClick={onPlan} className="flex min-h-11 w-full items-center justify-center gap-1 pt-2 text-center text-[15px] text-tx3">
+      Going somewhere yourself? <span className="font-semibold text-ac">Plan a journey</span>
+    </button>
   )
 }
