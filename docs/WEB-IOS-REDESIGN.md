@@ -181,10 +181,14 @@ The six questions this file first ended with, and the answers.
   surface, and so is everything the later rounds draw where the phone uses a material.
 - 12 Oct, Petra: the web keeps its own tab bar. The phone's floating capsule was tried solid
   and merged with the cards under it; the full-width band keeps the page and the bar apart.
-- 12 Oct: round 2b built, the people part of Home, pull request #188 (pictures in
-  `docs/web-ios-redesign/round2b-*`). Kept beyond the phone, for Patrik to keep or drop: your
-  own rows in Latest with Edit and Delete (until round 3), the React and Comment chips, the
-  meet-up lines, photo thumbnails.
+- 12 Oct: round 2b live (#188). Kept beyond the phone, for Patrik to keep or drop: your own
+  rows in Latest with Edit and Delete, the React and Comment chips, the meet-up lines, photo
+  thumbnails. Petra the same day: keep the own rows and name the co-traveller (migration 47,
+  `trip_travellers`), and a "Following someone?" line under "Where to?".
+- 12 Oct, Petra's correction on the phone's plan: your own check-ins will not sit under their
+  stops on the phone's Trip; the Map page may become a feed page for them. Round 3b's "Map page
+  left empty" is therefore open again, and the web's own rows on Home stay until the web has
+  that place.
 - 12 Oct: round 2a built, Home's journey part, pull request #187 (pictures of every phase in
   `docs/web-ios-redesign/round2a-*`). Round 2b, the people part, next.
 - 12 Oct, Patrik: the six answers above. Check in on the bar whenever there is a journey

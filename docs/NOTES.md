@@ -7,6 +7,38 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-12
 
+### BUILT — a co-traveller's check-in on Home carries their name: migration 47 (Petra, 12 Oct)
+
+Petra, following nobody, saw Patrik's check-ins in Home's "Latest" as "A co-traveller": the
+rows of the journey itself include everyone travelling on it, and the web had no way to name
+them (the follower projection's `_traveller_name` is internal). Petra: keep the rows, show the
+name. Migration 47 adds `trip_travellers(p_trip)`, the owner and the editors by first name
+for anyone who can view the journey (viewers included; a stranger gets null); the web reads it
+once per journey (`lib/trips/travellers.ts`, `tk.travellers`) and names the row. "A
+co-traveller" stays as the fallback. 47-TESTPLAN.sql is written; no Postgres runs in this
+container, so it is unrun until staging. To go live: Petra applies 47 on staging in the SQL
+editor, runs 47-TESTPLAN.sql there, then production; the web change can merge before that
+(the name falls back until the function exists).
+
+**Petra's correction, 12 Oct, on the phone's plan:** your own check-ins will NOT live under
+their stops on the phone's Trip; Patrik and Petra are considering turning the Map page into a
+feed page for them. So "until round 3" on the web's Latest means "until the web has a place
+for them", and round 3b's "Map page left empty" may become that feed page instead. Recorded in
+`docs/WEB-IOS-REDESIGN.md`.
+
+iOS: the plan for own check-ins is the phone's to decide (a feed page on the Map tab is being
+considered); `trip_travellers` is available to the phone too once 47 is live.
+
+### LIVE — round 2b of the web redesign, the people part of Home, merged with Petra (#188, 12 Oct)
+
+Merged with Petra's "yes" after the what-changes step; Vercel built `db55da1`. Petra's first
+look: she follows nobody and saw Patrik's check-ins under "Latest" as "A co-traveller", which
+is the journey's own rows (kept beyond the phone, item 1), not following. Her two asks the
+same day: keep them and show the name (the entry above), and the "Following someone?" line
+under "Where to?" (in #188 already).
+
+iOS: nothing new.
+
 ### BUILT — round 2b of the web redesign: the people part of Home as on the phone (Petra, 12 Oct)
 
 `components/social/FollowingSection.tsx` replaces `HomeActivity.tsx`, after
