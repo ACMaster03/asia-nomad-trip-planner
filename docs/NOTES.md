@@ -7,6 +7,25 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-12
 
+### DECIDED — Petra, 12 Oct: the open questions of round 2 (#187, #188)
+
+Petra's answers; Patrik can overrule.
+1. **Your own check-ins stay in Home's "Latest"**, with Edit and Delete, until the phone's
+   feed page for them is live; then the web is readjusted to match.
+2. **The React and Comment chips stay** as they are. The phone has not built reactions yet,
+   so there is nothing to follow; decided again once it has.
+3. **The meet-up lines stay**, for the same reason.
+4. Photo thumbnails in "Latest": asked again in plainer words, not yet answered.
+5. The people section on a traveller's Home: asked again in plainer words; Patrik's 3 Oct
+   rule (#130) stands until someone says otherwise.
+6. **The phone gets the "Following someone?" line** under "Where to?", on one condition: its
+   follow link must work the same way as the web's (open the link, tap Follow); otherwise the
+   line loses its meaning.
+7. **The off-route card is gone for good** (#134 stays about the check-in logic, not the card).
+
+iOS: point 6, for `NewJourney.swift` NoJourneyCard: "Following someone? Open the link they
+sent you and tap Follow.", if the phone's link page has a Follow button as the web's does.
+
 ### APPLIED — migration 47, `trip_travellers`, on staging and production (Petra, 12 Oct)
 
 #189 merged with Petra's "yes" (Vercel built `c6e0722`); then Petra applied 47 in the SQL editor

@@ -185,6 +185,12 @@ The six questions this file first ended with, and the answers.
   rows in Latest with Edit and Delete, the React and Comment chips, the meet-up lines, photo
   thumbnails. Petra the same day: keep the own rows and name the co-traveller (migration 47,
   `trip_travellers`), and a "Following someone?" line under "Where to?".
+- 12 Oct, Petra's answers to the open questions of round 2 (Patrik can overrule): own
+  check-ins stay in Latest until the phone's feed page is live; the React and Comment chips
+  and the meet-up lines stay until the phone has built theirs; the off-route card is gone for
+  good; the phone gets the "Following someone?" line if its follow link works as the web's.
+  Still open: photo thumbnails in Latest, and whether the people section stays on a
+  traveller's Home (Patrik's 3 Oct rule stands meanwhile).
 - 12 Oct, Petra's correction on the phone's plan: your own check-ins will not sit under their
   stops on the phone's Trip; the Map page may become a feed page for them. Round 3b's "Map page
   left empty" is therefore open again, and the web's own rows on Home stay until the web has
