@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { Link2, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { fetchMyFollowing } from '@/lib/follow/follows'
 import { tk } from '@/lib/trips/keys'
@@ -19,7 +19,10 @@ import FollowingSection from './FollowingSection'
 // plan one's own at the bottom. Following nobody, it is "Where to?".
 //
 // A follow link finishes on its own: PendingFollow (the app layout) completes
-// the follow and opens the journey, so nothing here asks for a link.
+// the follow and opens the journey, so nothing here asks for a link. Someone
+// who signed up first and has the link in a message still needs to know that
+// the link is the door, so "Where to?" carries one line about it (Petra,
+// 12 Oct; the phone's card does not, which is worth the same line there).
 
 export default function FollowerHome({ userEmail, userName, userId }: { userEmail?: string; userName?: string; userId?: string }) {
   const sb = createClient()
@@ -61,6 +64,12 @@ export default function FollowerHome({ userEmail, userName, userId }: { userEmai
         <>
           {header()}
           <NoJourneyCard onPlan={() => setPlanning(true)} />
+          <p className="flex items-start gap-2.5 px-1 pt-1 text-[14px] leading-[1.45] text-tx2">
+            <Link2 aria-hidden className="mt-0.5 size-4 flex-none text-ac2" strokeWidth={2} />
+            <span>
+              <span className="font-semibold text-tx">Following someone?</span> Open the link they sent you. Signing in there follows them.
+            </span>
+          </p>
         </>
       ) : (
         <>
