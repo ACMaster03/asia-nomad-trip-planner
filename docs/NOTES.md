@@ -15,9 +15,10 @@ Petra's answers; Patrik can overrule.
 2. **The React and Comment chips stay** as they are. The phone has not built reactions yet,
    so there is nothing to follow; decided again once it has.
 3. **The meet-up lines stay**, for the same reason.
-4. Photo thumbnails in "Latest": asked again in plainer words, not yet answered.
-5. The people section on a traveller's Home: asked again in plainer words; Patrik's 3 Oct
-   rule (#130) stands until someone says otherwise.
+4. **Photo thumbnails in "Latest" stay** for now: Patrik has not finished the phone's Home,
+   so there is no example to follow yet; decided again once it is.
+5. **The people section on a traveller's Home stays** (Patrik's 3 Oct rule, #130), for the
+   same reason.
 6. **The phone gets the "Following someone?" line** under "Where to?", on one condition: its
    follow link must work the same way as the web's (open the link, tap Follow); otherwise the
    line loses its meaning.
