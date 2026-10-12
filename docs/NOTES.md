@@ -7,6 +7,28 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-12
 
+### DECIDED — Patrik, 12 Oct: the web follows the phone on all six questions of the redesign (#186)
+
+Answered with Petra on her Mac, from `docs/WEB-IOS-REDESIGN.md` (the answers are written
+there too):
+1. **Check in is on the bar whenever there is a journey**, as on the phone, not only during the
+   live trip. Editors only, as before. Built the same day into #186: `(app)/layout.tsx`
+   `showCheckIn = !!activeTrip && editor`; the date gate from `design/mocks/FIXTURES.md` is gone.
+2. **The globe moves onto Trip** (round 3b, as `ios/Livhold/Trip/TripGlobe.swift`); **the Map
+   page stays, empty**, like the phone's placeholder (10 Oct).
+3. **Home drops** the big Check in button, the Money row, the two tiles and "Explore city
+   costs", as the phone did (round 2).
+4. **Trip editing follows the phone**: look first, then edit; a stop page with Edit in the
+   corner; Cancel and Save on every form (round 3c). Closes the 27 Sep "the web keeps
+   tap-to-edit for now".
+5. **Trip settings save each field as you leave it**, no Save button (round 5).
+6. **Rounds 1 and 2 go before the 31 Oct freeze, the rest after.** Patrik: "no new features,
+   but making the app clear and easy to use is the goal."
+
+iOS: nothing new; the phone already does all six. The web's Check in rule now matches
+`AppShell.swift` (the bar, circle included, once `trips.phase != .empty`), with the web's
+editor gate on top.
+
 ### STARTED — the web app in the iPhone app's image: the plan, and round 1, the frame (Petra, 12 Oct)
 
 Patrik asked Petra to redesign the web app to the iPhone app's look. The comparison, screen by
@@ -32,7 +54,8 @@ Round 1, the frame, is one pull request. Nothing changes in what you can do.
   Map. Before, those pages lit no tab.
 - **No bar without a journey** (`useTripScope().tripId === null`), as on the phone since 3 Oct.
   It appears once the wizard's `router.refresh()` lands.
-- **The Check in rule is unchanged**: live phase and editor (question 1 for Patrik).
+- **Check in is on the bar whenever there is a journey** (Patrik's answer to question 1, the
+  same day); editors only, as before.
 - **Headers** come from `components/ui/PageHeader.tsx`, `IconButton.tsx` and `Avatar.tsx`, the
   start of a web kit mirroring `ios/Livhold/Components/`. Home's date line 16 → 12.5 px; Trip's
   name 25 → 28 and its kicker 13 in plain mauve; Money's name 25 → 30, its line 14 → 13, its +

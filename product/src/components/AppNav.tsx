@@ -22,12 +22,10 @@ import { useTripScope } from '@/lib/trips/TripScope'
 // Home only). The follower's Home and the create-a-trip screen have no tab to
 // go to; Account carries a "‹ Home" link for the way back.
 //
-// The raised center check-in button appears ONLY during the live trip.
-// showCheckIn comes from the server layout: phase gate (startDate <= today <=
-// endDate, open-ended stays live) AND editor role — the same rule that gated
-// the old Live tab; viewers never check in. Whether the circle belongs on the
-// bar whenever a journey exists, as on the phone, is question 1 in
-// docs/WEB-IOS-REDESIGN.md.
+// The raised center Check in circle is there whenever there is a journey, as on
+// the phone (Patrik, 2026-10-12). showCheckIn comes from the server layout:
+// a journey AND editor role; viewers never check in. Until 12 Oct it showed
+// during the live trip only (startDate <= today <= endDate).
 //
 // z-40 + solid bg: the map page paints a FIXED globe overlay below the bar —
 // without a stacking context the bar rendered UNDER it (dogfood 2026-07-24:

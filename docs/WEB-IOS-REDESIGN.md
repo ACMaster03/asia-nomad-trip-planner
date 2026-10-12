@@ -129,7 +129,8 @@ Each round is one pull request, merged with Petra or Patrik the usual way (say w
 changes and what could go wrong, "go", merge, watch the build, test on the phone, record).
 
 1. **The frame** (this pull request). The tab bar keeps its look and takes the phone's rules:
-   a tab stays lit on the pages it opens, and there is no bar until you have a journey. The
+   a tab stays lit on the pages it opens, there is no bar until you have a journey, and Check
+   in is on the bar whenever there is one (decision 1). The
    three root headers at the phone's sizes (Home's date line 12.5 px,
    Trip's name 28 px, Money's name 30 px with the 42 px "+"). The start of the kit:
    `product/src/components/ui/`. 16 px side padding on every screen. Nothing changes in what
@@ -138,35 +139,41 @@ changes and what could go wrong, "go", merge, watch the build, test on the phone
    card with the countdown as on the phone; the estimate card; "Coming up" at 2 rows; the
    recap card with the wash inside it and the two link cards; the people you follow as
    "JOURNEYS YOU FOLLOW" + "LATEST". The TravelLoader instead of the spinner. Drops the big
-   Check in button, the Money row, the tiles and "Explore city costs" (question 3).
+   Check in button, the Money row, the tiles and "Explore city costs" (decision 3).
 3. **Trip.** 3a: the stop card's look (city 21 px, NIGHTS, no tick box, the dimming), the
    dashed "+ Add stop", "Onward" / "Journey ends", the finished-journey card, the no-stops
    card with "Or start with the flight there". 3b: the globe on top of Trip with the
-   timeline over it (the web's `Globe.tsx` already draws arcs and the replay). 3c: the
-   stop page with its hero and sections, "Edit" in the corner, the long press menu
-   (question 4).
+   timeline over it (the web's `Globe.tsx` already draws arcs and the replay); the Map page
+   stays, empty, as on the phone (decision 2). 3c: the stop page with its hero and
+   sections, "Edit" in the corner, Cancel and Save on every form, the long press menu
+   (decision 4).
 4. **Money.** 4a: the page as on the phone (the top card with the two tabs and the ring,
    Upcoming charges, Bookings open, Subscriptions as Latest, the rows gone), and the #127
    numbers. 4b: All entries with the chip row, the day sections and the actions; the
    Subscriptions page. 4c: the entry form with the big amount and the tiles.
 5. **Trip settings and Account** in the phone's groups ("This journey", "Money", "You"),
    Exchange rates on its own page; invites, follow links and alerts stay where they are.
-   Saving per field or one Save button is question 5.
+   Each field saves as you leave it, no Save button (decision 5).
 6. **Motion.** The zoom from a card to its page (View Transitions), cards settling as they
    scroll in, figures that roll to their new value, pull to refresh.
 
-## Questions for Patrik
+## Decided by Patrik, 12 Oct (with Petra, on her Mac)
 
-1. **Check in on the bar:** always there once you have a journey (the phone), or only
-   during the live trip for editors (the web today)? Round 1 keeps the web's rule.
-2. **The Map tab on the web** once the globe moves onto Trip (3b): keep it as the search
-   door to Explore, or hide it as the phone does?
-3. **Home:** drop the big Check in button, the Money row, the two tiles and "Explore city
-   costs", as the phone did?
-4. **Trip editing on the web:** the phone's "look first, then edit" (a stop page, Edit in
-   the corner, Cancel and Save), or keep tap-to-edit? Open since 27 Sep.
-5. **Trip settings:** save each field as you leave it (the phone), or keep "Save changes"?
-6. **Timing:** rounds 1 and 2 before 31 Oct, the rest after the freeze?
+The six questions this file first ended with, and the answers.
+
+1. **Check in on the bar:** as on the phone, there whenever you have a journey, not only
+   during the live trip. Editors only, as before. Built into round 1.
+2. **The Map tab on the web** once the globe moves onto Trip (3b): the globe moves, and the
+   Map page stays, empty, as the phone's placeholder does. Round 3b.
+3. **Home** drops the big Check in button, the Money row, the two tiles and "Explore city
+   costs", as the phone did. Round 2.
+4. **Trip editing on the web** follows the phone: look first, then edit; a stop page with
+   Edit in the corner; every form with Cancel and Save. Round 3c. Closes the question open
+   since 27 Sep.
+5. **Trip settings** follow the phone: each field saves as you leave it, no Save button.
+   Round 5.
+6. **Timing:** rounds 1 and 2 before 31 Oct, the rest after the freeze. Patrik: no new
+   features, but making the app clear and easy to use is the goal.
 
 ## Record
 
@@ -174,5 +181,7 @@ changes and what could go wrong, "go", merge, watch the build, test on the phone
   surface, and so is everything the later rounds draw where the phone uses a material.
 - 12 Oct, Petra: the web keeps its own tab bar. The phone's floating capsule was tried solid
   and merged with the cards under it; the full-width band keeps the page and the bar apart.
+- 12 Oct, Patrik: the six answers above. Check in on the bar whenever there is a journey
+  went into round 1 the same day.
 - 12 Oct: this file and round 1, by Petra with Claude. Before-and-after pictures of round 1
   at phone width are in `docs/web-ios-redesign/` (`main` on the left, light and dark).
