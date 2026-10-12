@@ -90,7 +90,7 @@ export default function MapClient() {
   // z-40 with a solid background, so it always paints ABOVE the globe — no
   // more being trapped on this page.
   return (
-    <div className="fixed inset-x-0 top-0 bottom-[calc(80px+env(safe-area-inset-bottom))] bg-[#0b0f14]">
+    <div className="fixed inset-x-0 top-0 bottom-[calc(76px+env(safe-area-inset-bottom))] bg-[#0b0f14]">
       {/* Explore retired as a destination — its search lives here (top-right).
           Links to the old /knowledge screen until Phase 7 embeds it. */}
       <Link

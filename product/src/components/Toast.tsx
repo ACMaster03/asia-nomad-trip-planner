@@ -39,7 +39,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {/* The aria-live container stays mounted so message changes announce. */}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] z-[60] flex justify-center px-4"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(88px+env(safe-area-inset-bottom))] z-[60] flex justify-center px-4"
       >
         {toast && (
           <div

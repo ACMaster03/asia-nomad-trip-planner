@@ -17,28 +17,28 @@ Trip settings; the timing against the 31 Oct freeze. The source of the look is
 `feat/ios-foundation` (TestFlight build 24), not the `ios/` on `main`.
 
 Round 1, the frame, is one pull request. Nothing changes in what you can do.
-- **The tab bar** takes the phone's GlassTabBar layout: a floating capsule 16 px from the
-  sides, at most 520 wide and 64 tall, a hairline and a soft shadow; labels at 11; one green
-  highlight that slides to the tab you pick; the 56 px Check in circle raised in the middle.
-  `components/AppNav.tsx`.
-- **No glass on the web (Petra, 12 Oct).** The phone's bar is Liquid Glass, Apple's own
-  material, and Apple asks apps not to imitate it; on the web a blurred, see-through bar would
-  be an imitation of the phone's. So the capsule and Money's + are solid surfaces, and the
-  later rounds use solid surfaces where the phone uses its materials (the "Open the globe" pill,
-  the compact bar over the globe).
+- **The web keeps its own tab bar** (`components/AppNav.tsx`, the handoff's "1g" band with a
+  line on top). Two decisions by Petra, 12 Oct, in this order: (1) **no glass on the web.** The
+  phone's bar is Liquid Glass, Apple's own material, and Apple asks apps not to imitate it; a
+  blurred, see-through bar on the web would be an imitation of the phone's. (2) **Without the
+  glass, the phone's floating capsule does not work on the web:** drawn solid, white on the
+  off-white canvas, it merged with the white cards scrolling under it (tried in this branch,
+  pictures compared). The full-width band keeps the page and the bar apart. So the later
+  rounds use solid surfaces where the phone uses a material (the "Open the globe" pill, the
+  compact bar over the globe, Money's +), and the capsule is not tried again.
+- **What the bar takes from the phone is behaviour**, not looks (next two points).
 - **A tab owns the pages it opens**, as a tab's stack does on the phone: Account, Reminders,
   People, a followed journey and a post keep Home lit; Trip settings keeps Trip; Explore keeps
   Map. Before, those pages lit no tab.
 - **No bar without a journey** (`useTripScope().tripId === null`), as on the phone since 3 Oct.
   It appears once the wizard's `router.refresh()` lands.
-- **The Check in rule is unchanged**: live phase and editor (question 1 for Patrik). Without it
-  the four tabs spread evenly.
+- **The Check in rule is unchanged**: live phase and editor (question 1 for Patrik).
 - **Headers** come from `components/ui/PageHeader.tsx`, `IconButton.tsx` and `Avatar.tsx`, the
   start of a web kit mirroring `ios/Livhold/Components/`. Home's date line 16 → 12.5 px; Trip's
   name 25 → 28 and its kicker 13 in plain mauve; Money's name 25 → 30, its line 14 → 13, its +
   a 42 px circle with a hairline and the plus in mauve (was 46, soft mauve).
-- **Spacing**: page side padding 18 → 16 px on every screen (the phone's); 80 px kept free at
-  the bottom (was 76; the layout and the map's globe follow); the toast 96 px up (was 88).
+- **Spacing**: page side padding 18 → 16 px on every screen (the phone's). The bottom room
+  stays 76 px, the old bar's.
 - **Account gets a "‹ Home" link** at the top, like People and a journey: without the bar a
   follower who opened Account from the avatar had no way back but the browser's.
 - **The dev previews show the bar** (`AppNav` takes a `pathname` for the route it stands in
@@ -46,9 +46,9 @@ Round 1, the frame, is one pull request. Nothing changes in what you can do.
   light and dark, are in `docs/web-ios-redesign/round1-*.png` (`main` on the left).
 - Checked: tsc, eslint, the 165 tests, `next build`.
 
-iOS: nothing new. The web copies the layout of `GlassTabBar.swift` (not its glass),
-`HomeScreen.swift`'s header, `TripScreens.swift`'s TripHeader and `MoneyScreen.swift`'s
-header. The rule the phone keeps and the web does not yet: Check in on the bar whenever a
+iOS: nothing new. The web copies the tab rules of `TabRouter.swift` (a tab owns the pages it
+pushes; no bar without a journey), `HomeScreen.swift`'s header, `TripScreens.swift`'s
+TripHeader and `MoneyScreen.swift`'s header. Not `GlassTabBar.swift`: see above. The rule the phone keeps and the web does not yet: Check in on the bar whenever a
 journey exists (`AppShell.swift`, `trips.phase != .empty`).
 
 ## 2026-10-10
