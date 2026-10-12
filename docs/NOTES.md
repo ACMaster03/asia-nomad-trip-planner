@@ -7,6 +7,53 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-12
 
+### BUILT — round 2a of the web redesign: Home's journey part as on the phone (Petra, 12 Oct)
+
+`DashboardClient.tsx` follows `ios/Livhold/Home/HomeScreen.swift` (mock rounds 1–3, Patrik,
+2 Oct) in every phase; nothing new to do, everything laid out the phone's way, and Patrik's
+decision 3 of 12 Oct applied.
+- **On the road:** one stop card: "ON PLAN" / "ARRIVAL DAY" with "Night 3 of 5" on the right,
+  the city at 30, tonight's bed with "leave 14 Oct" (amber when not booked, no bed or no stay),
+  the bar and "N nights left" except on arrival day, and, for someone tracking spending, a
+  money line at the card's foot ("Spent here 24 600 Ft · 8 200 Ft a day", the pace from the
+  third day: `stopBurnRate`). The card opens Trip, the line opens Money. Then Arrived (arrival
+  day, editors, once), the offline pill (no ✕ any more), "Coming up". The header's line reads
+  "Day 43 of 243 · stop 2 of 3".
+- **Between stops:** "On the way", "No stop planned for tonight · Hoi An from 14 Oct".
+- **Before:** the first-stop card ("FIRST STOP", "4 nights", the city at 32, "Thailand · from
+  3 Nov", the countdown at 44 beside "days to departure"; the whole card opens Trip, no
+  buttons), or "No stops yet. Add the first place you're going on Trip ›"; "Before you fly";
+  the estimate card ("ESTIMATED TOTAL", the % in mauve or amber, "≈ total" at 28, the bar,
+  "of X budget · Y left" or "Y over", the stops-without-a-stay line in amber). The numbers
+  stay `computeBudget`'s, as before (#127 is round 4a).
+- **After:** "Home again" with the dates; the figures on the journey-wash card
+  (`lv-journey-wash`: the wash inside the card, not over the page); "+ Plan the next journey"
+  (editors; the wizard in a modal, as Account's "New trip"); Final numbers; Look back.
+- **Dropped, as the phone did:** the big Check in button, the Money row, the two tiles,
+  "Explore city costs" (decision 3), "Next: …" (the card opens Trip), the off-route card
+  (#134; the phone left it out, and its drift code went with it), the offline banner's ✕,
+  the "CHECK-INS · All check-ins" row after the journey (the recap counts them).
+- **Reminders** (`HomeReminders.tsx`, `reminders.ts`): one `RemindersCard` for both names,
+  rows as the phone's `ReminderRow` (a 24 px tick circle; a calendar or card icon for money
+  ones; the amount on the right with "card charge" / "subscription" under it); the slim row
+  "Reminders · next 14 Oct · iCloud 2 TB" when nothing is due, before the journey too (the
+  "＋ Reminder" pill and "N more later" went; the + is on the Reminders page). A charge
+  reminder is titled by its stay, with the amount on the right; **each active subscription's
+  next charge is a reminder now**, on Home and on the Reminders page (`deriveReminders`,
+  kind `subscription`). A tap on a money reminder opens its form on the phone; on the web
+  the row is plain until round 3c.
+- **Waiting:** `components/ui/TravelLoader.tsx`, the phone's travelling dot, with "Getting
+  your journey"; Home shows it instead of "Loading…".
+- Not in this round: the people part (round 2b: "Journeys you follow", "Latest", the
+  follower's Home, "Where to?").
+- Checked: tsc, eslint, the 165 tests, `next build`; pictures of every phase in
+  `docs/web-ios-redesign/round2a-home-*.png` (`main` on the left; the browser's clock
+  picked the phase).
+
+iOS: nothing new. The web's `deriveReminders` now matches `HomeReminder.derive`
+(`Reminders.swift`), subscriptions included; `stopBurnRate` is the phone's
+`MoneyModel.burnRate(from: arrive, to: min(today, depart))`.
+
 ### LIVE — round 1 of the web redesign, the frame, merged with Petra (#186, 12 Oct)
 
 Merged with Petra's "yes" after the what-changes-and-what-could-go-wrong step; Vercel built

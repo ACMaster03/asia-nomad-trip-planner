@@ -2,49 +2,52 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { MapPin, PlaneLanding, TriangleAlert, SatelliteDish, X, ChevronRight } from 'lucide-react'
+import { ChevronRight, PlaneLanding, Plus, WifiOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
-import { tripDay, tripLength, stopProgress, offRoutePlace } from '@/lib/trips/progress'
+import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
 import { shortDate, stayCounts, stayForNight } from '@/lib/trips/timeline'
 import { isBookedStatus } from '@/lib/trips/commitment'
-import { useCheckIn } from '@/components/checkin/CheckInProvider'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { AccountAvatar } from '@/components/ui/Avatar'
+import { Waiting } from '@/components/ui/TravelLoader'
 import { useTripEvents } from '@/lib/trips/useTripEvents'
-import { moneyModel } from '@/lib/trips/moneyModel'
-import { moneyUnlocks } from '@/lib/trips/unlocks'
+import { stopBurnRate } from '@/lib/trips/spending'
+import { useTrackSpending } from '@/lib/trips/useTrackSpending'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { usePlanSync } from '@/lib/trips/usePlanSync'
 import { ChargeNotice } from '@/components/money/ChargeNotice'
-import { tripPhase } from '@/lib/trips/recap'
-import { tripRecap } from '@/lib/trips/recap'
+import { tripPhase, tripRecap } from '@/lib/trips/recap'
 import { fetchTripEvents } from '@/lib/trips/events'
 import { tk } from '@/lib/trips/keys'
 import { useTripScope } from '@/lib/trips/TripScope'
+import { Modal } from '@/components/trips/Modal'
+import { OnboardingWizard } from '@/components/trips/OnboardingWizard'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
-import { BeforeYouFly, ComingUp } from '../reminders/HomeReminders'
+import { RemindersCard } from '../reminders/HomeReminders'
 import HomeActivity from '@/components/social/HomeActivity'
 import FollowerHome from '@/components/social/FollowerHome'
 
-// Home — the one phase-aware tab (handoff frames 07–10). The trip phase
-// (pre / arrive / live / off-plan / post) decides the whole layout:
-//   pre    → next-stop hero + countdown tiles + estimated total
-//   live   → live hero + check-in + trip strip + money + feed
-//   arrive → live layout, no hero progress, extra "Arrived" affordance (/live)
-//   off    → live layout with the drift card (detected from the latest
-//            check-in naming a place that isn't the planned stop)
-//   post   → recap wash + stats + forward cards
-// Reminders (frames 25–26) mount in two reserved slots via HomeReminders:
-// "Before you fly" pre-trip (above Estimated total) and "Coming up" while
-// live/arrive/off (between the check-in button and the trip strip).
+// Home, as the phone draws it (ios/Livhold/Home/HomeScreen.swift, mock rounds
+// 1–3, Patrik, 2 Oct; the web follows since 12 Oct, docs/WEB-IOS-REDESIGN.md
+// round 2a). The phase decides the page:
+//   before the journey → the first stop and its countdown, Before you fly, the estimate
+//   on the road        → the stop card (with its money line), Coming up
+//   arrival day        → the stop card, "Arrived in …"
+//   between stops      → a card saying no stop covers tonight, and where next
+//   after the journey  → the recap in figures, Plan the next journey
+// Left out on purpose, as on the phone: the big Check in button (the tab bar
+// has it), the money card on the road (the stop card's line instead), the
+// off-route card (#134), "Next" (the stop card opens Trip), the departure and
+// length tiles and "Explore city costs" before the journey (Patrik, 12 Oct).
+// The people you follow (HomeActivity) are round 2b.
 
-const card = 'rounded-[var(--r)] bg-sf p-4 text-tx'
-const kicker = 'text-base font-semibold uppercase tracking-[.12em] text-ac2-deep'
+const card = 'rounded-[var(--r)] bg-sf p-[18px] text-tx'
+const kicker = 'text-[12.5px] font-semibold uppercase tracking-[.104em]'
 
 function fmtDay(d: Date, withYear = false) {
   return d.toLocaleDateString('en-GB', {
@@ -53,6 +56,13 @@ function fmtDay(d: Date, withYear = false) {
     month: 'long',
     ...(withYear ? { year: 'numeric' } : {}),
   })
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+/** "1 Sep 2026", for the line under "Home again". */
+function withYear(iso: string) {
+  const d = new Date(iso + 'T00:00:00Z')
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`
 }
 
 export default function DashboardClient({
@@ -68,7 +78,6 @@ export default function DashboardClient({
   const { fmt } = useMoney()
   const { tripId } = useTripScope()
   const { trip, cityIdx } = useTripScreen()
-  const checkIn = useCheckIn()
   const { recordArrived } = useTripEvents()
   // Home is where the app opens, so the plan → ledger sync runs here too:
   // a subscription charge whose date has come lands, and ChargeNotice below
@@ -77,12 +86,14 @@ export default function DashboardClient({
   const ledgerMut = useLedgerMutation()
   const stateMut = useTripMutation()
   usePlanSync(trip.data, canEdit, ledgerMut)
+  // The stop card's money line shows only to someone tracking their spending
+  // (the once-per-account answer, migration 41), as on the phone.
+  const tracking = useTrackSpending().data
   // Clock-dependent → client-only (SSR snapshot renders the pre layout, same
   // hydration rule the old dashboard followed, minus the setState-in-effect).
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
-  const [dismissedNow, setDismissedNow] = useState<string | null>(null)
   const offline = !useSyncExternalStore(subscribeOnline, snapOnline, snapTrue)
-  const [offlineDismissed, setOfflineDismissed] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
 
   const events = useQuery({
     queryKey: tk.events(tripId ?? 'none'),
@@ -113,26 +124,7 @@ export default function DashboardClient({
   const nextStop = sorted.find((seg) => seg.arrive > todayIso)
   const stopNo = current ? sorted.indexOf(current) + 1 : 0
   const isArrive = basePhase === 'live' && current?.arrive === todayIso
-
-  // Off-plan: the latest check-in (≤48h old, made after today's stop's arrival
-  // day) names a place outside the planned stop's city (lib/trips/progress.ts).
-  // Coarse on purpose — the rig's GPS drift is Phase 7.
-  const latestCheckin = events.data?.find((e) => e.kind === 'checkin')
-  const placeName = (basePhase === 'live' && !isArrive && offRoutePlace(current, latestCheckin, today)) || ''
-  const isOff = !!placeName
-  // "Leave it as is" holds for that check-in, reloads included (it used to be
-  // forgotten on reload, found 1 Oct). The next check-in asks again.
-  const driftDismissed =
-    !!latestCheckin && (dismissedNow === latestCheckin.id || readDismissed() === latestCheckin.id)
-  const dismissDrift = () => {
-    if (!latestCheckin) return
-    setDismissedNow(latestCheckin.id)
-    try {
-      localStorage.setItem(DRIFT_KEY, latestCheckin.id)
-    } catch {}
-  }
-
-  const phase = basePhase === 'live' ? (isArrive ? 'arrive' : isOff && !driftDismissed ? 'off' : 'live') : basePhase
+  const phase = basePhase === 'live' ? (isArrive ? 'arrive' : 'live') : basePhase
   // Already told us you got here? Then there is nothing left to press.
   const arrivedHere =
     !!current &&
@@ -147,7 +139,13 @@ export default function DashboardClient({
 
   // No trip of your own: a follower's Home, or the wizard if you follow nobody.
   if (tripId === null) return <FollowerHome userEmail={userEmail} userName={userName} userId={userId} />
-  if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
+  if (trip.isPending) {
+    return (
+      <main className="mx-auto max-w-xl px-4">
+        <Waiting />
+      </main>
+    )
+  }
   if (!trip.data || !s || !b) return <CreateTripEmptyState />
 
   // The phone's Home header: the date in small capitals, the journey's name, one line
@@ -155,148 +153,149 @@ export default function DashboardClient({
   const header = (eyebrow: string, title: string, sub: string) => (
     <PageHeader eyebrow={eyebrow} title={title} sub={sub} right={<AccountAvatar userName={userName} userEmail={userEmail} />} />
   )
+  const chevron = <ChevronRight aria-hidden className="mb-1.5 size-[15px] flex-none text-ac2" strokeWidth={2.6} />
 
-  /* ── post-trip (frame 10) ── */
+  /* ── after the journey ── */
   if (phase === 'post') {
     const recap = tripRecap(s, trip.data.ledger ?? [], events.data?.filter((e) => e.kind === 'checkin').length ?? 0)
-    const countries = recap.countries.length
+    const span = [s.meta.startDate, s.meta.endDate].filter(Boolean).map((d) => withYear(d!)).join(' – ')
+    const figure = (label: string, value: string, tone = 'text-tx') => (
+      <div className="min-w-0">
+        <div className="truncate text-[11.5px] font-medium uppercase tracking-[.096em] text-tx2">{label}</div>
+        <div className={'truncate text-[22px] font-semibold tabular-nums ' + tone}>{value}</div>
+      </div>
+    )
+    const row = (href: string, title: string, sub: string) => (
+      <Link href={href} className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf p-4 text-tx">
+        <span className="min-w-0">
+          <span className="block text-base font-semibold">{title}</span>
+          <span className="block text-[14px] text-tx2">{sub}</span>
+        </span>
+        <ChevronRight aria-hidden className="size-[14px] flex-none text-ac2" strokeWidth={2.6} />
+      </Link>
+    )
     return (
-      <main
-        className="flex min-h-dvh flex-col gap-3 px-4 pb-6 pt-[18px]"
-        style={{ background: 'var(--washLight)', color: 'var(--washInk)' }}
-      >
-        {header(fmtDay(today, true), 'Home again', `${s.meta.tripName} · complete`)}
-        <div className={card + ' lv-enter p-5'}>
-          <h2 className="font-serif text-[22px] font-semibold leading-[1.3]">
-            {recap.days} nights, {recap.stops} cities, {countries} {countries === 1 ? 'country' : 'countries'}
-          </h2>
-          <div className="mt-3 grid grid-cols-2 gap-3.5">
-            {(
-              [
-                ['Check-ins', String(recap.checkIns), true],
-                ['Spent', fmt(recap.spent), false],
-                ['Vs plan', recap.leftOfCap === null ? '—' : fmt(-recap.leftOfCap), true],
-                ['Stops', String(recap.stops), false],
-              ] as const
-            ).map(([k, v, mauve]) => (
-              <div key={k}>
-                <div className="text-base font-medium uppercase tracking-[.11em] text-tx2">{k}</div>
-                <div className={'text-[26px] font-semibold ' + (mauve ? 'text-ac2' : '')}>{v}</div>
-              </div>
-            ))}
+      <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
+        {header(fmtDay(today, true), 'Home again', [s.meta.tripName, span].filter(Boolean).join(' · '))}
+        {/* The journey's wash: the card itself carries the soft green and mauve
+            (the phone's JourneyWash), not the page. */}
+        <div className="lv-enter rounded-[var(--r)] p-[18px] text-tx lv-journey-wash">
+          <div className={kicker + ' text-ac2-deep'}>The journey in figures</div>
+          <div className="mt-3 grid grid-cols-3 gap-x-2.5 gap-y-3.5">
+            {figure('Nights', String(recap.days))}
+            {figure('Stops', String(recap.stops))}
+            {figure('Countries', String(recap.countries.length))}
+            <div className="col-span-3 border-t border-ln" />
+            {figure('Check-ins', String(recap.checkIns), 'text-ac2')}
+            {figure('Spent', fmt(recap.spent))}
+            {recap.leftOfCap !== null
+              ? figure(
+                  recap.leftOfCap >= 0 ? 'Under budget' : 'Over budget',
+                  fmt(Math.abs(recap.leftOfCap)),
+                  recap.leftOfCap >= 0 ? 'text-ac2' : 'text-warn',
+                )
+              : <div />}
           </div>
         </div>
-        <Link href="/money/entries" className={card + ' flex items-center justify-between'}>
-          <span>
-            <span className="block text-base font-semibold">Final numbers</span>
-            <span className="block text-base text-tx2">all entries, month by month</span>
-          </span>
-          <ChevronRight aria-hidden className="size-5 text-ac2" />
-        </Link>
-        <div className={kicker}>Check-ins</div>
-        <Link href="/dashboard" className={card + ' flex items-center justify-between'}>
-          <span>
-            <span className="block text-base font-semibold">All check-ins · {recap.checkIns} so far</span>
-            <span className="block text-base text-tx2">every place, photo and note, day by day</span>
-          </span>
-          <ChevronRight aria-hidden className="size-5 text-ac2" />
-        </Link>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => setWizardOpen(true)}
+            className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[var(--rCtl)] bg-ac py-3.5 text-base font-semibold text-on"
+          >
+            <Plus aria-hidden className="size-[18px]" strokeWidth={2.4} /> Plan the next journey
+          </button>
+        )}
+        {row('/money/entries', 'Final numbers', 'all entries, month by month')}
+        {row('/itinerary', 'Look back', 'the timeline and its stays')}
+        {wizardOpen && (
+          <Modal title="New journey" onClose={() => setWizardOpen(false)}>
+            <OnboardingWizard onDone={() => setWizardOpen(false)} />
+          </Modal>
+        )}
       </main>
     )
   }
 
-  /* ── pre-trip (frame 07) ── */
+  /* ── before the journey ── */
   if (phase === 'pre') {
     const first = sorted[0]
     const daysTo = s.meta.startDate ? Math.max(0, Math.ceil((+new Date(s.meta.startDate) - +today) / 86400000)) : null
     const cap = s.meta.budgetCap || 0
-    const pct = cap ? Math.min(100, Math.round((b.grand / cap) * 100)) : null
+    const total = b.grand
+    const pct = cap ? Math.round((total / cap) * 100) : null
+    const over = cap > 0 && total > cap
+    const onAverages = b.missingAccomStops.length
     return (
-      <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
+      <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
         {header(fmtDay(today), s.meta.tripName, `${inPlan.length} stops · ${b.totalNights} nights · ${s.meta.travelers} travellers`)}
-        {first && (
-          <div className={card + ' lv-enter p-5'}>
-            <div className="flex items-center gap-2">
-              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ac2" />
-              <span className="text-base font-semibold uppercase tracking-[.12em] text-ac2">First stop</span>
+        {first ? (
+          <Link href="/itinerary" className={card + ' lv-enter block'}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-[7px]">
+                <span aria-hidden className="size-[7px] rounded-full bg-ac2" />
+                <span className={kicker + ' text-ac2'}>First stop</span>
+              </span>
+              <span className="text-[14px] font-medium text-tx2">
+                {Math.max(1, Math.round((+new Date(first.depart) - +new Date(first.arrive)) / 86400000))} nights
+              </span>
             </div>
-            <div className="mt-2 font-serif text-[33px] font-semibold leading-none tracking-[-.02em]">{first.city}</div>
-            <div className="mt-1.5 text-base font-medium text-tx2">
-              {first.country} · {Math.max(1, Math.round((+new Date(first.depart) - +new Date(first.arrive)) / 86400000))} nights · from{' '}
-              {shortDate(first.arrive)}
+            <div className="mt-2 flex items-end justify-between gap-3">
+              <span className="font-serif text-[32px] font-semibold leading-[1.15] tracking-[-.01em]">{first.city}</span>
+              {chevron}
             </div>
+            <p className="mt-[3px] text-[15px] text-tx2">
+              {[first.country, `from ${shortDate(first.arrive)}`].filter(Boolean).join(' · ')}
+            </p>
             {daysTo !== null && (
-              <div className="mt-3">
-                <span className="text-[46px] font-semibold leading-none tracking-[-.03em] text-ac2">{daysTo}</span>{' '}
-                <span className="text-lg font-medium text-tx2">days to departure</span>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-[44px] font-semibold leading-none tabular-nums tracking-[-.02em] text-ac2">{daysTo}</span>
+                <span className="text-[17px] font-medium text-tx2">{daysTo === 1 ? 'day to departure' : 'days to departure'}</span>
               </div>
             )}
-            <div className="mt-[18px] flex gap-[9px]">
-              <Link href="/itinerary" className="flex-1 rounded-[var(--rCtl)] bg-ac py-3.5 text-center text-base font-semibold text-on">
-                Open itinerary
-              </Link>
-              <Link href="/itinerary" className="rounded-[var(--rCtl)] border-[1.5px] border-ac2 px-[18px] py-[13px] text-base font-semibold text-ac2">
-                Edit
-              </Link>
-            </div>
-          </div>
+          </Link>
+        ) : (
+          <Link href="/itinerary" className={card + ' block text-[15px] text-tx2'}>
+            No stops yet. Add the first place you’re going on Trip <span className="text-ac">›</span>
+          </Link>
         )}
-        <div className="grid grid-cols-2 gap-3">
-          <div className={card + ' p-[15px]'}>
-            <div className="text-base font-medium uppercase tracking-[.11em] text-tx2">Departure</div>
-            <div className="text-[26px] font-semibold text-ac2">{daysTo !== null ? `${daysTo} days` : '—'}</div>
-          </div>
-          <div className={card + ' p-[15px]'}>
-            <div className="text-base font-medium uppercase tracking-[.11em] text-tx2">Trip length</div>
-            <div className="text-[26px] font-semibold">{b.totalNights} days</div>
-          </div>
-        </div>
-        <BeforeYouFly state={s} todayIso={todayIso} />
-        <div className={card + ' p-5'}>
-          <div className="flex items-baseline justify-between">
-            <span className="text-base font-medium uppercase tracking-[.11em] text-tx2">Estimated total</span>
-            {pct !== null && <span className="text-base font-semibold text-ac2">{pct}%</span>}
-          </div>
-          <div className="mt-1">
-            <span className="text-[30px] font-semibold tracking-[-.02em]">{fmt(b.grand)}</span>
-          </div>
-          {pct !== null && (
-            <>
-              <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-track">
-                <span className="block h-full rounded-full bg-ac transition-[width] duration-700" style={{ width: pct + '%' }} />
-              </div>
-              <p className="mt-2 text-base text-tx2">
-                of {fmt(cap)} cap · <span className="font-semibold text-ac2-deep">{fmt(Math.max(0, cap - b.grand))} left</span>
-              </p>
-            </>
-          )}
-          <div className="mt-3 border-t border-ln pt-3">
-            <div className="flex justify-between text-base"><span className="text-tx2">Actually committed</span><span className="font-semibold">{fmt(b.committed)}</span></div>
-            <div className="mt-1.5 flex justify-between text-base"><span className="text-tx2">Estimated per day</span><span className="font-semibold">{fmt(b.perDay)}</span></div>
-          </div>
-          {b.missingAccomStops.length > 0 && (
-            <div className="mt-3 flex gap-2 rounded-[var(--rCtl)] bg-warn-soft p-3">
-              <TriangleAlert aria-hidden className="mt-0.5 size-4 flex-none text-warn" strokeWidth={2} />
-              <p className="text-base leading-snug text-warn">
-                {b.missingAccomStops.length} {b.missingAccomStops.length === 1 ? 'stop has' : 'stops have'} no stay yet · city averages meanwhile
-              </p>
+        <RemindersCard state={s} todayIso={todayIso} mode="beforeYouFly" />
+        {inPlan.length > 0 && (
+          <Link href="/money" className={card + ' lv-enter block'}>
+            <div className="flex items-center justify-between gap-3">
+              <span className={kicker + ' text-tx2'}>Estimated total</span>
+              {pct !== null && <span className={'text-[15px] font-semibold ' + (over ? 'text-warn' : 'text-ac2')}>{pct}%</span>}
             </div>
-          )}
-        </div>
-        <Link href="/knowledge" className={card + ' flex items-center justify-between'}>
-          <span>
-            <span className="block text-base font-semibold">Explore city costs</span>
-            <span className="block text-base text-tx2">averages for every city on the route</span>
-          </span>
-          <ChevronRight aria-hidden className="size-5 text-ac2" />
-        </Link>
+            <div className="mt-1 text-[28px] font-semibold tabular-nums tracking-[-.01em]">≈ {fmt(total)}</div>
+            {cap > 0 && (
+              <>
+                <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-track">
+                  <span className={'lv-grow block h-full rounded-full ' + (over ? 'bg-warn' : 'bg-ac')} style={{ width: Math.min(100, Math.round((total / cap) * 100)) + '%' }} />
+                </div>
+                <p className="mt-1.5 text-[14px] text-tx2">
+                  of {fmt(cap)} budget ·{' '}
+                  {over
+                    ? <span className="font-semibold text-warn">{fmt(total - cap)} over</span>
+                    : <span className="font-semibold text-ac2-deep">{fmt(cap - total)} left</span>}
+                </p>
+              </>
+            )}
+            {onAverages > 0 && (
+              <p className="mt-2.5 text-[14px] leading-snug text-warn">
+                {onAverages === 1
+                  ? '1 stop has no stay yet, so its nights are counted at the city’s average price'
+                  : `${onAverages} stops have no stay yet, so their nights are counted at each city’s average price`}
+              </p>
+            )}
+          </Link>
+        )}
       </main>
     )
   }
 
-  /* ── live / arrive / off-plan (frames 08–09, 24) ── */
-  // Shared with /live (lib/trips/progress.ts) so the two screens never
-  // disagree on the same morning again: Day 1 = departure, night 1 = arrival,
+  /* ── on the road: live, arrival day, between stops ── */
+  // Shared with Trip (lib/trips/progress.ts) so the two screens never
+  // disagree on the same morning: Day 1 = departure, night 1 = arrival,
   // "of N" = the trip's own length (planned nights only when open-ended).
   const day = tripDay(s.meta, todayIso)
   const tripDays = tripLength(s.meta, b.totalNights)
@@ -305,206 +304,108 @@ export default function DashboardClient({
   const nightsHere = prog?.nights ?? null
   const nightsLeft = prog?.left ?? 0
   // Tonight's bed, by the Trip timeline's rule (#58): a stop can hold several
-  // stays, and one only reads "booked" when it is. It used to be the stop's
-  // first counted stay, always "booked", an Idea included.
+  // stays, and one only reads "booked" when it is.
   const stay = current ? stayForNight(current, s.stays, todayIso) : null
   const stopHasStay = !!current && s.stays.some((st) => st.segId === current.id && stayCounts(st))
-  const recapMid = tripRecap(s, trip.data.ledger ?? [])
-  const money = moneyModel(s, trip.data.ledger ?? [], cityIdx, todayIso)
-  // The projection waits for the same week of pace as on Money (Petra, 23 Sep;
-  // lib/trips/unlocks.ts), so the two screens never disagree. A journey from
-  // before round 2 keeps it from day one, as it always had.
-  const projected = moneyUnlocks({
-    ledger: trip.data.ledger ?? [], todayIso, tripStart: s.meta.startDate || undefined,
-    pace: money.pace, recorded: s.moneyUnlocked, createdAt: trip.data.created_at,
-  }).projection
+  const burn = current ? stopBurnRate(current, trip.data.ledger ?? [], s.rates, todayIso) : null
+  const dayText = day ? `Day ${day}${tripDays ? ` of ${tripDays}` : ''}` : null
+  const whereText = current ? `stop ${stopNo} of ${inPlan.length}` : 'between stops'
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
-      {header(
-        fmtDay(today),
-        s.meta.tripName,
-        phase === 'off' ? 'off-route detour' : current ? `${current.city}, stop ${stopNo} of ${inPlan.length}` : 'between stops',
-      )}
+      {header(fmtDay(today), s.meta.tripName, [dayText, whereText].filter(Boolean).join(' · '))}
 
-      {offline && !offlineDismissed && (
-        <div className="lv-enter flex items-start gap-2.5 rounded-[var(--r)] border-[1.5px] border-warn-line bg-sf p-3.5">
-          <SatelliteDish aria-hidden className="mt-0.5 size-4 flex-none text-warn" strokeWidth={2} />
-          <p className="flex-1 text-base font-medium leading-normal text-warn">
-            Offline · check-ins sync when you&apos;re back
-          </p>
-          {/* 16px glyph, 44px tap target — negative margins keep the layout
-              where the bare icon sat (README: 44px min hit targets). */}
-          <button
-            aria-label="Dismiss"
-            onClick={() => setOfflineDismissed(true)}
-            className="-m-3.5 flex size-11 flex-none items-center justify-center"
-          >
-            <X className="size-4 text-warn" />
-          </button>
-        </div>
-      )}
-      {offline && offlineDismissed && (
-        <div className="flex items-center gap-1.5 self-center rounded-full bg-warn-soft px-3 py-1 text-base font-medium text-warn">
-          <SatelliteDish aria-hidden className="size-3.5" strokeWidth={2} /> Offline · syncs later
-        </div>
-      )}
-
-      <div className={card + ' lv-enter p-5'}>
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            {phase !== 'off' && <span aria-hidden className="h-2 w-2 rounded-full bg-ac" />}
-            <span className={'whitespace-nowrap text-base font-semibold uppercase tracking-[.11em] ' + (phase === 'off' ? 'text-tx2' : 'text-ac')}>
-              {phase === 'off' ? 'Right now' : 'On plan'}
-            </span>
-          </span>
-          {/* Just the day. It briefly carried the percentage and the date home
-              as well, which pushed "ON PLAN" onto two lines on a 390px phone;
-              the date moved down to the empty half of the nights row, and the
-              percentage went altogether because Plan vs actual below now shows
-              trip progress far better than a number could. */}
-          {day && (
-            <span className="flex-none text-base font-medium text-tx2">
-              Day {day}{tripDays ? ` of ${tripDays}` : ''}
-            </span>
+      {current ? (
+        <div className={card + ' lv-enter'}>
+          {/* The stop you're in: the card opens it on Trip, its foot opens Money. */}
+          <Link href="/itinerary" className="block">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-[7px]">
+                <span aria-hidden className="size-[7px] rounded-full bg-ac" />
+                <span className={kicker + ' text-ac'}>{isArrive ? 'Arrival day' : 'On plan'}</span>
+              </span>
+              {night && nightsHere && (
+                <span className="text-[14px] font-medium text-tx2">Night {night} of {nightsHere}</span>
+              )}
+            </div>
+            <div className="mt-2 flex items-end justify-between gap-3">
+              <span className="font-serif text-[30px] font-semibold leading-[1.15] tracking-[-.01em]">{current.city}</span>
+              {chevron}
+            </div>
+            {/* Tonight's bed by the timeline's rule: amber when it isn't booked or there is none. */}
+            <p className="mt-[3px] text-[15px] text-tx2">
+              {stay
+                ? isBookedStatus(stay.status)
+                  ? `${stay.name || 'Stay'} · `
+                  : <>{stay.name || 'Stay'} · <span className="text-warn">not booked</span> · </>
+                : <><span className="text-warn">{stopHasStay ? 'No bed tonight' : 'No stay yet'}</span> · </>}
+              leave {shortDate(current.depart)}
+            </p>
+            {!isArrive && night && nightsHere && (
+              <>
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-track">
+                  <span className="lv-grow block h-full rounded-full bg-ac" style={{ width: Math.min(100, Math.round((night / nightsHere) * 100)) + '%' }} />
+                </div>
+                <div className="mt-1.5 text-right text-[14px] font-semibold text-ac2">
+                  {nightsLeft} {nightsLeft === 1 ? 'night' : 'nights'} left
+                </div>
+              </>
+            )}
+          </Link>
+          {/* "Spent here 24 600 Ft · 8 200 Ft a day": the stop's everyday costs so
+              far and, from its third day, its pace (Money's This stop view). */}
+          {tracking === 'yes' && burn && (
+            <Link href="/money" className="mt-2.5 flex min-h-11 items-center justify-between gap-1 border-t border-ln pt-3 text-[14.5px] text-tx2">
+              <span className="tabular-nums">
+                Spent here <span className="font-semibold text-tx">{fmt(burn.total)}</span>
+                {burn.days >= 3 && ` · ${fmt(burn.perDay)} a day`}
+              </span>
+              <ChevronRight aria-hidden className="size-3 flex-none text-tx3" strokeWidth={2.6} />
+            </Link>
           )}
         </div>
-        <div className="mt-2 font-serif text-[30px] font-semibold leading-[1.2] tracking-[-.01em]">
-          {phase === 'off' ? `${placeName}` : phase === 'arrive' ? `${current?.city}, arrival day` : current ? `${current.city}, night ${night}` : 'Between stops'}
-        </div>
-        <div className="mt-1 text-base text-tx2">
-          {phase === 'off'
-            ? 'Not a stop in the plan · no stay logged'
-            : current
-              ? <>
-                  {/* Amber for what still needs doing, as on Money's Plan card and
-                      the timeline's "No bed" rows. */}
-                  {stay
-                    ? isBookedStatus(stay.status)
-                      ? `${stay.name || 'Stay'} · booked`
-                      : <>{stay.name || 'Stay'} · <span className="text-warn">not booked</span></>
-                    : <span className="text-warn">{stopHasStay ? 'No bed tonight' : 'No stay yet'}</span>}
-                  {phase === 'arrive' ? ` · ${nightsHere} nights planned` : ` · leave ${shortDate(current.depart)}`}
-                </>
-              : ''}
-        </div>
-        {phase === 'live' && current && night && nightsHere && (
-          <>
-            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-track">
-              <span className="block h-full rounded-full bg-ac" style={{ width: Math.min(100, Math.round((night / nightsHere) * 100)) + '%' }} />
-            </div>
-            {/* The date home was briefly here. On a 243-day trip it reads as a
-                stray fact next to "9 nights left", which is about THIS stop:
-                two different horizons a line apart. It is still on the Stops
-                summary, where the whole route is the subject. */}
-            <div className="mt-1.5 text-right text-base font-semibold text-ac2">
-              {nightsLeft} {nightsLeft === 1 ? 'night' : 'nights'} left
-            </div>
-          </>
-        )}
-        {nextStop && (
-          <Link href="/itinerary" className="mt-3 flex items-center justify-between border-t border-ln pt-3">
-            <span>
-              <span className="block text-base font-semibold">
-                Next: {nextStop.city} · {shortDate(nextStop.arrive)}
-              </span>
-              {b.missingAccomStops.length > 0 && (
-                <span className="block text-base text-warn">no stay yet{b.missingAccomStops.length > 1 ? ` - nor for the ${b.missingAccomStops.length - 1} after it` : ''}</span>
-              )}
-            </span>
-            <ChevronRight aria-hidden className="size-5 text-ac2" />
-          </Link>
-        )}
-      </div>
-
-      {phase === 'off' && (
-        <div className="lv-enter rounded-[var(--r)] bg-tag p-[18px] text-tag-ink">
-          <h2 className="font-serif text-lg font-semibold leading-[1.35]">The plan still says {current?.city}.</h2>
-          <Link href="/itinerary" className="mt-1 flex items-center justify-between border-b border-ln py-[13px]">
-            <span>
-              <span className="block text-base font-semibold text-ac">Add {placeName} as a stop</span>
-              <span className="block text-base text-tx2">until your next check-in</span>
-            </span>
-            <ChevronRight aria-hidden className="size-5 text-ac2" />
-          </Link>
-          <button onClick={dismissDrift} className="flex w-full items-center justify-between py-[13px] text-left">
-            <span>
-              <span className="block text-base font-semibold">Leave it as is</span>
-              <span className="block text-base text-tx2">nothing moves</span>
-            </span>
-            <ChevronRight aria-hidden className="size-5 text-ac2" />
-          </button>
-        </div>
+      ) : (
+        /* A night no stop covers: a gap in the plan, or a night bus. */
+        <Link href="/itinerary" className={card + ' lv-enter block'}>
+          <div className={kicker + ' text-tx2'}>Between stops</div>
+          <div className="mt-2 flex items-end justify-between gap-3">
+            <span className="font-serif text-[30px] font-semibold leading-[1.15] tracking-[-.01em]">On the way</span>
+            {chevron}
+          </div>
+          <p className="mt-[3px] text-[15px] text-tx2">
+            <span className="text-warn">No stop planned for tonight</span>
+            {nextStop && ` · ${nextStop.city} from ${shortDate(nextStop.arrive)}`}
+          </p>
+        </Link>
       )}
 
-      {/* The sheet opens over Home. No navigation, nothing to come back from. */}
-      <button
-        type="button"
-        onClick={checkIn.open}
-        className="flex items-center justify-center gap-2 rounded-[var(--r)] bg-ac py-[17px] text-lg font-semibold text-on"
-      >
-        <MapPin aria-hidden className="size-5" strokeWidth={2.2} /> Check in
-      </button>
-      {/* Arrival day only, and gone once it is recorded.
-          It used to be a LINK to /live, so pressing "Arrived" recorded nothing
-          and dropped you on a screen with another Arrived button. And /live's
-          own button showed on every day of the trip and could be pressed
-          twice, which made its "the button is done for this stop" toast a
-          plain lie. One button, one day, once. */}
-      {phase === 'arrive' && current && !arrivedHere && (
+      {/* Arrival day only, editors, and gone once it is recorded. One button, one day, once. */}
+      {isArrive && current && canEdit && !arrivedHere && (
         <button
           type="button"
           onClick={() => recordArrived(current.city)}
-          className="flex items-center justify-center gap-2 rounded-[var(--rCtl)] bg-ac2-soft py-3.5 text-base font-semibold text-ac2-deep"
+          className="flex min-h-[50px] items-center justify-center gap-2 rounded-[var(--rCtl)] bg-ac2-soft py-3 text-base font-semibold text-ac2-deep"
         >
           <PlaneLanding aria-hidden className="size-5" strokeWidth={2} /> Arrived in {current.city}
         </button>
       )}
-      <ComingUp state={s} todayIso={todayIso} />
 
-      {/* Once live, the money card speaks the Money page's language: spent so
-          far against the PROJECTED total (your measured pace), not the pre-trip
-          city-average estimate (round-two design, 2026-09-13). Until the
-          projection has its week, only what is spent, and the daily figure
-          once Money's Per day has one. */}
-      <Link href="/money" className={card + ' flex items-center justify-between'}>
-        <span>
-          <span className="block text-base font-semibold">
-            {projected
-              ? <>Spent {fmt(money.projection.spent)} of ≈ {fmt(money.projection.projected)} projected</>
-              : <>Spent {fmt(money.projection.spent)} so far</>}
-          </span>
-          <span className="block text-base text-tx2">
-            {money.pace.perDay !== null ? (
-              <>
-                {/* No "under/over the estimate" (#65, Patrik, 28 Sep): it set the
-                    projection against the pre-trip city-average estimate, which
-                    counts different things. Money's Budget cap row says whether
-                    the journey is heading over. The city is the one the pace
-                    is from: Money keeps the day you move with the stop you
-                    leave, so on a travel day it is not the stop above. */}
-                {fmt(money.pace.perDay)} a day{money.pace.scope === 'stop' && money.current ? ` in ${money.current.city}` : ''}
-                {!projected && <> · a&nbsp;projection after a week</>}
-              </>
-            ) : projected ? (
-              <>measuring your daily pace · {recapMid.spent > 0 ? `${fmt(recapMid.spent)} logged` : 'nothing logged yet'}</>
-            ) : (
-              <>measuring your daily pace</>
-            )}
-          </span>
-        </span>
-        <ChevronRight aria-hidden className="size-5 text-ac2" />
-      </Link>
+      {offline && (
+        <div className="flex items-center gap-1.5 self-center rounded-full bg-warn-soft px-3 py-1.5 text-[13.5px] font-medium text-warn">
+          <WifiOff aria-hidden className="size-[14px]" strokeWidth={2.2} /> Offline · edits sync when you’re back online
+        </div>
+      )}
+
+      <RemindersCard state={s} todayIso={todayIso} mode="comingUp" />
 
       {/* Activity: this trip's own rows merged with the posts of the people
-          you follow (docs/SOCIAL-SCOPE.md §2). Keeps working — own rows only —
-          when the social RPCs are not there yet. */}
+          you follow (docs/SOCIAL-SCOPE.md §2). The phone's "Journeys you
+          follow" and "Latest" replace it in round 2b. */}
       <HomeActivity own={events.data ?? []} ownPending={events.isPending} userId={userId} segments={s.segments} />
       <ChargeNotice trip={trip.data} canEdit={canEdit} mut={ledgerMut} stateMut={stateMut} />
     </main>
   )
 }
-
 
 // Scroll to top whenever the Home phase flips (handoff rule: phase/screen
 // change resets scroll).
@@ -512,15 +413,6 @@ function useScrollReset(phase: string) {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [phase])
-}
-
-const DRIFT_KEY = 'home.driftDismissed'
-function readDismissed(): string | null {
-  try {
-    return localStorage.getItem(DRIFT_KEY)
-  } catch {
-    return null
-  }
 }
 
 // useSyncExternalStore helpers — module-level so their identities are stable.
