@@ -143,6 +143,18 @@ Petra is new to software work; Patrik is not. The product conventions are in
   keeps a "do not email" note; a copy of your data comes by email to privacy@, by hand, so
   #152 is closed; invitations are not emailed, they are rows matched at sign-in). It is live
   since 2 Oct (#155, Patrik's "go"); the once-more pass before the public release is #156.
+- 12 Oct: the web app is being redrawn in the iPhone app's image, Petra with Claude on
+  Patrik's ask. The comparison, the six rounds and Patrik's six answers (all "follow the
+  phone": Check in on the bar whenever there is a journey; the globe onto Trip with the Map
+  page left empty; Home drops its big Check in button, Money row, tiles and "Explore city
+  costs"; look-first-then-edit on Trip; per-field saves in Trip settings; rounds 1 and 2
+  before the 31 Oct freeze) are in `docs/WEB-IOS-REDESIGN.md`. Petra decided the same day:
+  no glass on the web (Liquid Glass is Apple's), and the web keeps its own full-width tab
+  bar (the phone's capsule, drawn solid, merged with the cards). Round 1, the frame, is live
+  since 12 Oct (#186): the bar's rules from the phone, the three root headers at the
+  phone's sizes, 16 px side padding, the start of a web kit in
+  `product/src/components/ui/`. Round 2 is Home: 2a the journey part, 2b the people part.
+  The source of the look is `feat/ios-foundation`, not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.

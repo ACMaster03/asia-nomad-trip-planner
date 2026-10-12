@@ -7,6 +7,16 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-12
 
+### LIVE — round 1 of the web redesign, the frame, merged with Petra (#186, 12 Oct)
+
+Merged with Petra's "yes" after the what-changes-and-what-could-go-wrong step; Vercel built
+`50399c2`; Petra checked the four tells on her phone (Account's "‹ Home" link with Home lit,
+Money's new +, Trip's kicker with Trip lit from settings, the last rows clear of the bar), all
+as described. Home itself looks almost the same, as intended: round 1 is the frame. Next:
+round 2, Home, in two pull requests: 2a the journey part, 2b the people part.
+
+iOS: nothing new.
+
 ### DECIDED — Patrik, 12 Oct: the web follows the phone on all six questions of the redesign (#186)
 
 Answered with Petra on her Mac, from `docs/WEB-IOS-REDESIGN.md` (the answers are written
