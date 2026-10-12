@@ -7,6 +7,15 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-12
 
+### APPLIED — migration 47, `trip_travellers`, on staging and production (Petra, 12 Oct)
+
+#189 merged with Petra's "yes" (Vercel built `c6e0722`); then Petra applied 47 in the SQL editor
+on staging, ran 47-TESTPLAN.sql there (pass), and did both on production (pass). Home names a
+co-traveller's check-in from here on.
+
+iOS: `trip_travellers(p_trip)` is live for the phone too: the owner and the editors of a
+journey by first name, for anyone who can view it.
+
 ### BUILT — a co-traveller's check-in on Home carries their name: migration 47 (Petra, 12 Oct)
 
 Petra, following nobody, saw Patrik's check-ins in Home's "Latest" as "A co-traveller": the
