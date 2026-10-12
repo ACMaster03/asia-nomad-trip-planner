@@ -1,53 +1,72 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { House, Route, Wallet, Map as MapIcon, MapPin } from 'lucide-react'
+import { House, Route, Wallet, Map as MapIcon, MapPin, type LucideIcon } from 'lucide-react'
 import { useCheckIn } from '@/components/checkin/CheckInProvider'
+import { useTripScope } from '@/lib/trips/TripScope'
 
 // Bottom tab bar — the handoff's final nav structure "1g" (design/handoff-v1,
 // Menu Options.dc.html): four icon+label tabs, no More tab. Trip settings sit
 // behind the gear on the Trip page, Account behind the Home avatar, and
 // Explore was folded into Map as its search.
 //
-// The raised center check-in button appears ONLY during the live trip.
-// showCheckIn comes from the server layout: phase gate (startDate <= today <=
-// endDate, open-ended stays live) AND editor role — the same rule that gated
-// the old Live tab; viewers never check in. It links to /live until Phase 7
-// replaces that screen with the check-in sheet.
+// The web keeps this bar, a full-width band with a line on top (Petra,
+// 2026-10-12). The phone's floating capsule (ios/Livhold/Components/
+// GlassTabBar.swift) works because it is Liquid Glass, Apple's own material,
+// which stays on the phone; drawn solid on the web it merged with the white
+// cards scrolling under it. What the web takes from the phone's bar is its
+// behaviour: a tab owns the pages it opens, as a tab's stack does there
+// (Account, Reminders, People, a followed journey and a post keep Home lit;
+// Trip settings keeps Trip; All entries keeps Money; Explore keeps Map), and
+// without a journey of your own there is no bar at all (the phone since 3 Oct:
+// Home only). The follower's Home and the create-a-trip screen have no tab to
+// go to; Account carries a "‹ Home" link for the way back.
+//
+// The raised center Check in circle is there whenever there is a journey, as on
+// the phone (Patrik, 2026-10-12). showCheckIn comes from the server layout:
+// a journey AND editor role; viewers never check in. Until 12 Oct it showed
+// during the live trip only (startDate <= today <= endDate).
 //
 // z-40 + solid bg: the map page paints a FIXED globe overlay below the bar —
 // without a stacking context the bar rendered UNDER it (dogfood 2026-07-24:
 // "trapped on the map page").
 
-const TABS = [
-  { href: '/dashboard', label: 'Home', Icon: House },
-  { href: '/itinerary', label: 'Trip', Icon: Route },
-  { href: '/money', label: 'Money', Icon: Wallet },
-  { href: '/map', label: 'Map', Icon: MapIcon },
-] as const
+type Tab = { href: string; label: string; Icon: LucideIcon; owns: string[] }
 
-export function AppNav({ showCheckIn }: { showCheckIn: boolean }) {
-  const pathname = usePathname()
+const TABS: Tab[] = [
+  { href: '/dashboard', label: 'Home', Icon: House, owns: ['/account', '/reminders', '/people', '/journeys', '/post'] },
+  { href: '/itinerary', label: 'Trip', Icon: Route, owns: ['/settings'] },
+  { href: '/money', label: 'Money', Icon: Wallet, owns: [] },
+  { href: '/map', label: 'Map', Icon: MapIcon, owns: ['/knowledge'] },
+]
+
+export function AppNav({ showCheckIn, pathname: forced }: { showCheckIn: boolean; /** The dev previews pass the route they stand in for. */ pathname?: string }) {
+  const here = usePathname()
+  const pathname = forced ?? here
   const checkIn = useCheckIn()
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  const { tripId } = useTripScope()
 
   // The personalisation flow is a door, not a destination — no tab bar there.
   if (pathname.startsWith('/welcome')) return null
+  if (tripId === null) return null
 
-  const tab = ({ href, label, Icon }: (typeof TABS)[number]) => {
-    const active = isActive(href)
+  const under = (p: string) => pathname === p || pathname.startsWith(p + '/')
+  const active = TABS.find((t) => under(t.href) || t.owns.some(under))
+
+  const tab = (t: Tab) => {
+    const on = t === active
     return (
       <Link
-        key={href}
-        href={href}
-        aria-current={active ? 'page' : undefined}
+        key={t.href}
+        href={t.href}
+        aria-current={on ? 'page' : undefined}
         className={
           'flex min-h-[52px] flex-col items-center justify-center gap-0.5 pb-1 pt-2 ' +
-          (active ? 'font-semibold text-ac' : 'text-tx3')
+          (on ? 'font-semibold text-ac' : 'text-tx3')
         }
       >
-        <Icon aria-hidden className="size-6" strokeWidth={active ? 2.2 : 2} />
-        <span className="text-[12px] leading-4">{label}</span>
+        <t.Icon aria-hidden className="size-6" strokeWidth={on ? 2.2 : 2} />
+        <span className="text-[12px] leading-4">{t.label}</span>
       </Link>
     )
   }

@@ -11,7 +11,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
   }, [error])
   const auth = error.name === 'AuthUnavailableError' || /verify your sign-in/i.test(error.message)
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center gap-3 px-[18px] text-center text-tx">
+    <main className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center gap-3 px-4 text-center text-tx">
       <h1 className="font-serif text-[25px] font-semibold">{auth ? 'Couldn’t reach the sign-in service' : 'Something went wrong'}</h1>
       <p className="text-base text-tx2">
         {auth

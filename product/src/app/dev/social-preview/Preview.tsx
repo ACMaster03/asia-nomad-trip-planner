@@ -2,6 +2,7 @@
 import { TripScopeProvider } from '@/lib/trips/TripScope'
 import { MoneyProvider } from '@/lib/trips/Money'
 import { ToastProvider } from '@/components/Toast'
+import { AppNav } from '@/components/AppNav'
 import DashboardClient from '@/app/(app)/dashboard/DashboardClient'
 import JourneyClient from '@/app/(app)/journeys/[trip]/JourneyClient'
 import PeopleClient from '@/app/(app)/people/PeopleClient'
@@ -26,18 +27,19 @@ export default function Preview({ screen, tab }: { screen: Screen; tab: 'followi
             {screen === 'journey' && <JourneyClient tripId={JOURNEY_TRIP} />}
             {screen === 'people' && <PeopleClient initialTab={tab} />}
             {screen === 'post' && (
-              <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-3">
+              <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
                 <PostView mode={{ kind: 'auth', userId: ME }} eventId={POST_ID} />
               </main>
             )}
             {screen === 'follow' && <FollowClient token={TOKEN} initialSummary={sharedSummary} />}
             {screen === 'alerts' && (
-              <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]"><NotificationSettings /></main>
+              <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]"><NotificationSettings /></main>
             )}
             {screen === 'sharing' && (
-              <main className="mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]"><SharingCard endDate="2026-12-01" /></main>
+              <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]"><SharingCard endDate="2026-12-01" /></main>
             )}
           </div>
+          {screen !== 'follow' && <AppNav showCheckIn pathname={screen === 'notrip' ? '/money' : '/dashboard'} />}
         </ToastProvider>
       </MoneyProvider>
     </TripScopeProvider>

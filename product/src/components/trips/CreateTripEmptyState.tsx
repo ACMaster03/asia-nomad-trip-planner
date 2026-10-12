@@ -71,7 +71,7 @@ function NoTripScreen() {
     )
   }
   return (
-    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-[18px]">
+    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
       <div>
         <h1 className="font-serif text-[25px] font-semibold">No trip of your own yet</h1>
         <p className="mt-[5px] text-base leading-normal text-tx2">

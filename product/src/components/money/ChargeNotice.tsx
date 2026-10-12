@@ -85,7 +85,7 @@ export function ChargeNotice({ trip, canEdit, mut, stateMut }: {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(88px+env(safe-area-inset-bottom))] z-[55] flex justify-center px-[18px]">
+    <div className="fixed inset-x-0 bottom-[calc(88px+env(safe-area-inset-bottom))] z-[55] flex justify-center px-4">
       <div role="status" aria-live="polite" className="lv-enter w-full max-w-md rounded-[20px] bg-tx px-4 pb-3 pt-3.5 text-canvas shadow-lg">
         {asking === e.id ? (
           <>

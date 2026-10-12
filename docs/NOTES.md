@@ -5,6 +5,75 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-12
+
+### DECIDED — Patrik, 12 Oct: the web follows the phone on all six questions of the redesign (#186)
+
+Answered with Petra on her Mac, from `docs/WEB-IOS-REDESIGN.md` (the answers are written
+there too):
+1. **Check in is on the bar whenever there is a journey**, as on the phone, not only during the
+   live trip. Editors only, as before. Built the same day into #186: `(app)/layout.tsx`
+   `showCheckIn = !!activeTrip && editor`; the date gate from `design/mocks/FIXTURES.md` is gone.
+2. **The globe moves onto Trip** (round 3b, as `ios/Livhold/Trip/TripGlobe.swift`); **the Map
+   page stays, empty**, like the phone's placeholder (10 Oct).
+3. **Home drops** the big Check in button, the Money row, the two tiles and "Explore city
+   costs", as the phone did (round 2).
+4. **Trip editing follows the phone**: look first, then edit; a stop page with Edit in the
+   corner; Cancel and Save on every form (round 3c). Closes the 27 Sep "the web keeps
+   tap-to-edit for now".
+5. **Trip settings save each field as you leave it**, no Save button (round 5).
+6. **Rounds 1 and 2 go before the 31 Oct freeze, the rest after.** Patrik: "no new features,
+   but making the app clear and easy to use is the goal."
+
+iOS: nothing new; the phone already does all six. The web's Check in rule now matches
+`AppShell.swift` (the bar, circle included, once `trips.phase != .empty`), with the web's
+editor gate on top.
+
+### STARTED — the web app in the iPhone app's image: the plan, and round 1, the frame (Petra, 12 Oct)
+
+Patrik asked Petra to redesign the web app to the iPhone app's look. The comparison, screen by
+screen, and the six rounds are in `docs/WEB-IOS-REDESIGN.md`, with six questions for Patrik at
+its end: Check in always on the bar or only on the live trip; the web's Map tab once the globe
+moves onto Trip; what Home drops; tap-to-edit or look-then-edit on Trip; per-field saves in
+Trip settings; the timing against the 31 Oct freeze. The source of the look is
+`feat/ios-foundation` (TestFlight build 24), not the `ios/` on `main`.
+
+Round 1, the frame, is one pull request. Nothing changes in what you can do.
+- **The web keeps its own tab bar** (`components/AppNav.tsx`, the handoff's "1g" band with a
+  line on top). Two decisions by Petra, 12 Oct, in this order: (1) **no glass on the web.** The
+  phone's bar is Liquid Glass, Apple's own material, and Apple asks apps not to imitate it; a
+  blurred, see-through bar on the web would be an imitation of the phone's. (2) **Without the
+  glass, the phone's floating capsule does not work on the web:** drawn solid, white on the
+  off-white canvas, it merged with the white cards scrolling under it (tried in this branch,
+  pictures compared). The full-width band keeps the page and the bar apart. So the later
+  rounds use solid surfaces where the phone uses a material (the "Open the globe" pill, the
+  compact bar over the globe, Money's +), and the capsule is not tried again.
+- **What the bar takes from the phone is behaviour**, not looks (next two points).
+- **A tab owns the pages it opens**, as a tab's stack does on the phone: Account, Reminders,
+  People, a followed journey and a post keep Home lit; Trip settings keeps Trip; Explore keeps
+  Map. Before, those pages lit no tab.
+- **No bar without a journey** (`useTripScope().tripId === null`), as on the phone since 3 Oct.
+  It appears once the wizard's `router.refresh()` lands.
+- **Check in is on the bar whenever there is a journey** (Patrik's answer to question 1, the
+  same day); editors only, as before.
+- **Headers** come from `components/ui/PageHeader.tsx`, `IconButton.tsx` and `Avatar.tsx`, the
+  start of a web kit mirroring `ios/Livhold/Components/`. Home's date line 16 → 12.5 px; Trip's
+  name 25 → 28 and its kicker 13 in plain mauve; Money's name 25 → 30, its line 14 → 13, its +
+  a 42 px circle with a hairline and the plus in mauve (was 46, soft mauve).
+- **Spacing**: page side padding 18 → 16 px on every screen (the phone's). The bottom room
+  stays 76 px, the old bar's.
+- **Account gets a "‹ Home" link** at the top, like People and a journey: without the bar a
+  follower who opened Account from the avatar had no way back but the browser's.
+- **The dev previews show the bar** (`AppNav` takes a `pathname` for the route it stands in
+  for), so the frame can be screenshotted without a sign-in. Before-and-after pairs at 390 px,
+  light and dark, are in `docs/web-ios-redesign/round1-*.png` (`main` on the left).
+- Checked: tsc, eslint, the 165 tests, `next build`.
+
+iOS: nothing new. The web copies the tab rules of `TabRouter.swift` (a tab owns the pages it
+pushes; no bar without a journey), `HomeScreen.swift`'s header, `TripScreens.swift`'s
+TripHeader and `MoneyScreen.swift`'s header. Not `GlassTabBar.swift`: see above. The rule the phone keeps and the web does not yet: Check in on the bar whenever a
+journey exists (`AppShell.swift`, `trips.phase != .empty`).
+
 ## 2026-10-10
 
 ### DECIDED — Patrik, 10 Oct: a journey you follow opens as your own Trip does (#166, #130)

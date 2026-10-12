@@ -17,7 +17,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   // client round trip; the thread and reactions load in parallel from there.
   const initial = await fetchFollowedEvent(sb, id).catch(() => undefined)
   return (
-    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-[18px] pb-6 pt-3">
+    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
       <Link href="/dashboard" className="-ml-1 inline-flex min-h-11 items-center gap-1 text-base font-semibold text-ac2">
         <ChevronLeft className="size-5" aria-hidden /> Back
       </Link>

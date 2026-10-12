@@ -6,6 +6,7 @@ import { ToastProvider } from '@/components/Toast'
 import MoneyPage from '@/components/money/MoneyPage'
 import LedgerPage from '@/components/money/LedgerPage'
 import DashboardClient from '@/app/(app)/dashboard/DashboardClient'
+import { AppNav } from '@/components/AppNav'
 
 // The (app) layout's providers, minus auth. The query client is the root
 // Providers' one (see page.tsx), so the fixture trip is read from the same
@@ -26,6 +27,7 @@ export default function Preview({ screen, show }: { screen: 'money' | 'home' | '
                 : screen === 'entries' ? <LedgerPage day={show} />
                   : <MoneyPage />}
             </div>
+            <AppNav showCheckIn pathname={screen === 'home' ? '/dashboard' : '/money'} />
           </ToastProvider>
         </ConfirmProvider>
       </MoneyProvider>

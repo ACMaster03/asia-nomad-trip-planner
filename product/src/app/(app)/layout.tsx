@@ -34,25 +34,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     ? await fetchTripRole(supabase, activeTrip.id, claims.sub as string).catch(() => null)
     : null
 
-  // Nav canon (design/mocks/FIXTURES.md): "Live" is a nav item during the live
-  // phase ONLY — startDate <= today <= endDate (open-ended trips stay live).
-  // Uses the server's UTC calendar date; the layout is already dynamic
-  // (cookie-based auth), so this re-evaluates on every request.
+  // Check in sits on the bar whenever there is a journey, as on the phone
+  // (Patrik, 2026-10-12, docs/WEB-IOS-REDESIGN.md question 1; AppShell.swift
+  // shows the bar, circle included, once `trips.phase != .empty`). Until then
+  // it was a nav item during the live phase ONLY (design/mocks/FIXTURES.md:
+  // startDate <= today <= endDate), which left the bar lopsided before and
+  // after the dates. Without a journey there is no bar at all (AppNav).
   //
-  // Viewers never get it: /live exists to WRITE check-ins, and a read-only
-  // check-in screen is just a worse version of the follow page.
+  // Viewers never get it: the sheet exists to WRITE check-ins, and a check-in
+  // the database refuses is worse than no button.
   //
   // If the role didn't resolve (null) we SHOW it — the pre-viewer-role
-  // behaviour. Losing the check-in screen to a flaky connection mid-trip is a
-  // far worse failure than a viewer briefly seeing a tab whose every write the
-  // database refuses anyway.
+  // behaviour. Losing the check-in sheet to a flaky connection mid-trip is a
+  // far worse failure than a viewer briefly seeing a button whose every write
+  // the database refuses anyway.
   const meta = activeTrip?.state?.meta
-  const today = new Date().toISOString().slice(0, 10)
-  const showLive =
-    !!meta?.startDate &&
-    meta.startDate <= today &&
-    (!meta.endDate || today <= meta.endDate) &&
-    (initialRole === null || canEditRole(initialRole))
+  const showCheckIn = !!activeTrip && (initialRole === null || canEditRole(initialRole))
 
   return (
     <TripScopeProvider initialTripId={activeTrip?.id ?? null} initialRole={initialRole}>
@@ -78,7 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <PendingInvites />
             <PendingFollow />
             {children}
-            <AppNav showCheckIn={showLive} />
+            <AppNav showCheckIn={showCheckIn} />
           </div>
           </CheckInProvider>
           </ConfirmProvider>
