@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ChevronRight, PlaneLanding, Plus, WifiOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useMoney } from '@/lib/trips/Money'
+import { fmtMoneyShort } from '@/lib/trips/format'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { computeBudget } from '@/lib/trips/budget'
 import { tripDay, tripLength, stopProgress } from '@/lib/trips/progress'
@@ -75,7 +76,7 @@ export default function DashboardClient({
   userId?: string
 }) {
   const sb = createClient()
-  const { fmt } = useMoney()
+  const { fmt, base } = useMoney()
   const { tripId } = useTripScope()
   const { trip, cityIdx } = useTripScreen()
   const { recordArrived } = useTripEvents()
@@ -159,10 +160,11 @@ export default function DashboardClient({
   if (phase === 'post') {
     const recap = tripRecap(s, trip.data.ledger ?? [], events.data?.filter((e) => e.kind === 'checkin').length ?? 0)
     const span = [s.meta.startDate, s.meta.endDate].filter(Boolean).map((d) => withYear(d!)).join(' – ')
+    // Three to a row on a 390px phone: money in millions (the phone's MoneyText.short).
     const figure = (label: string, value: string, tone = 'text-tx') => (
       <div className="min-w-0">
-        <div className="truncate text-[11.5px] font-medium uppercase tracking-[.096em] text-tx2">{label}</div>
-        <div className={'truncate text-[22px] font-semibold tabular-nums ' + tone}>{value}</div>
+        <div className="text-[11.5px] font-medium uppercase leading-tight tracking-[.096em] text-tx2">{label}</div>
+        <div className={'mt-0.5 text-[22px] font-semibold leading-tight tabular-nums ' + tone}>{value}</div>
       </div>
     )
     const row = (href: string, title: string, sub: string) => (
@@ -187,11 +189,11 @@ export default function DashboardClient({
             {figure('Countries', String(recap.countries.length))}
             <div className="col-span-3 border-t border-ln" />
             {figure('Check-ins', String(recap.checkIns), 'text-ac2')}
-            {figure('Spent', fmt(recap.spent))}
+            {figure('Spent', fmtMoneyShort(recap.spent, base))}
             {recap.leftOfCap !== null
               ? figure(
                   recap.leftOfCap >= 0 ? 'Under budget' : 'Over budget',
-                  fmt(Math.abs(recap.leftOfCap)),
+                  fmtMoneyShort(Math.abs(recap.leftOfCap), base),
                   recap.leftOfCap >= 0 ? 'text-ac2' : 'text-warn',
                 )
               : <div />}

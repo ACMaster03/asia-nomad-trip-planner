@@ -39,6 +39,20 @@ export function fmtMoney(n: number, currency: string): string {
   }
 }
 
+/**
+ * A large amount rounded, the phone's MoneyText.short: "1.88 M Ft" from a
+ * million up, the full amount below. For figures that sit three to a row on
+ * a 390px phone (Home's recap after the journey).
+ */
+export function fmtMoneyShort(n: number, currency: string): string {
+  const v = Math.round(Number(n) || 0)
+  if (Math.abs(v) < 1_000_000) return fmtMoney(v, currency)
+  const one = fmtMoney(1, currency)
+  const symbol = one.replace(/[\d.,\s]/g, '')
+  const millions = (v / 1_000_000).toFixed(2).replace(/\.?0+$/, '')
+  return /^\d/.test(one) ? `${millions} M ${symbol}` : `${symbol}${millions} M`
+}
+
 export const fmtUSD = (n: number) => '$' + Math.round(Number(n) || 0)
 
 // Convert an amount in `cur` into the trip's BASE currency. rates are
