@@ -36,11 +36,22 @@ export interface FollowedPerson {
   trips: FollowedTripCard[]
 }
 
+/** A leg between two stops of the plan, as a follower sees it (migrations 45/46): no more. */
+export interface FollowedLeg {
+  from: string
+  to: string
+  date: string
+  /** flight, train, bus, ferry or other */
+  mode: string
+}
+
 export interface FollowedSummary {
   tripName: string
   startDate: string
   endDate: string | null
   route: SharedRouteStop[]
+  /** the legs between two stops of the plan, oldest first; absent before migration 45 */
+  legs?: FollowedLeg[]
   travellers: Traveller[]
   /** ids of the travellers whose posts the caller will see */
   following: string[]

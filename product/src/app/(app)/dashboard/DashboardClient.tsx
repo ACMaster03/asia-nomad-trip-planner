@@ -30,7 +30,7 @@ import { Modal } from '@/components/trips/Modal'
 import { OnboardingWizard } from '@/components/trips/OnboardingWizard'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
 import { RemindersCard } from '../reminders/HomeReminders'
-import HomeActivity from '@/components/social/HomeActivity'
+import FollowingSection, { useFollowedCards } from '@/components/social/FollowingSection'
 import FollowerHome from '@/components/social/FollowerHome'
 
 // Home, as the phone draws it (ios/Livhold/Home/HomeScreen.swift, mock rounds
@@ -45,7 +45,9 @@ import FollowerHome from '@/components/social/FollowerHome'
 // has it), the money card on the road (the stop card's line instead), the
 // off-route card (#134), "Next" (the stop card opens Trip), the departure and
 // length tiles and "Explore city costs" before the journey (Patrik, 12 Oct).
-// The people you follow (HomeActivity) are round 2b.
+// The people you follow (FollowingSection) come after your stop card during
+// your journey, and before your own journey otherwise, when theirs is under
+// way (Patrik, 3 Oct: whichever is live goes first).
 
 const card = 'rounded-[var(--r)] bg-sf p-[18px] text-tx'
 const kicker = 'text-[12.5px] font-semibold uppercase tracking-[.104em]'
@@ -95,6 +97,10 @@ export default function DashboardClient({
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
   const offline = !useSyncExternalStore(subscribeOnline, snapOnline, snapTrue)
   const [wizardOpen, setWizardOpen] = useState(false)
+  // Whichever is live goes first: a followed journey under way today sits above
+  // your own before and after your dates.
+  const todayIsoNow = new Date().toISOString().slice(0, 10)
+  const peopleLive = useFollowedCards(todayIsoNow).anyLive
 
   const events = useQuery({
     queryKey: tk.events(tripId ?? 'none'),
@@ -179,6 +185,7 @@ export default function DashboardClient({
     return (
       <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
         {header(fmtDay(today, true), 'Home again', [s.meta.tripName, span].filter(Boolean).join(' · '))}
+        {peopleLive && <FollowingSection today={todayIso} userId={userId} own={events.data ?? []} ownPending={events.isPending} segments={s.segments} className="pb-2" />}
         {/* The journey's wash: the card itself carries the soft green and mauve
             (the phone's JourneyWash), not the page. */}
         <div className="lv-enter rounded-[var(--r)] p-[18px] text-tx lv-journey-wash">
@@ -210,6 +217,7 @@ export default function DashboardClient({
         )}
         {row('/money/entries', 'Final numbers', 'all entries, month by month')}
         {row('/itinerary', 'Look back', 'the timeline and its stays')}
+        {!peopleLive && <FollowingSection today={todayIso} userId={userId} own={events.data ?? []} ownPending={events.isPending} segments={s.segments} className="pt-2" />}
         {wizardOpen && (
           <Modal title="New journey" onClose={() => setWizardOpen(false)}>
             <OnboardingWizard onDone={() => setWizardOpen(false)} />
@@ -231,6 +239,7 @@ export default function DashboardClient({
     return (
       <main className="mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
         {header(fmtDay(today), s.meta.tripName, `${inPlan.length} stops · ${b.totalNights} nights · ${s.meta.travelers} travellers`)}
+        {peopleLive && <FollowingSection today={todayIso} userId={userId} own={events.data ?? []} ownPending={events.isPending} segments={s.segments} className="pb-2" />}
         {first ? (
           <Link href="/itinerary" className={card + ' lv-enter block'}>
             <div className="flex items-center justify-between gap-3">
@@ -291,6 +300,7 @@ export default function DashboardClient({
             )}
           </Link>
         )}
+        {!peopleLive && <FollowingSection today={todayIso} userId={userId} own={events.data ?? []} ownPending={events.isPending} segments={s.segments} className="pt-2" />}
       </main>
     )
   }
@@ -400,10 +410,9 @@ export default function DashboardClient({
 
       <RemindersCard state={s} todayIso={todayIso} mode="comingUp" />
 
-      {/* Activity: this trip's own rows merged with the posts of the people
-          you follow (docs/SOCIAL-SCOPE.md §2). The phone's "Journeys you
-          follow" and "Latest" replace it in round 2b. */}
-      <HomeActivity own={events.data ?? []} ownPending={events.isPending} userId={userId} segments={s.segments} />
+      {/* Your people: the journeys you follow and the latest posts, your own
+          rows among them (docs/SOCIAL-SCOPE.md §2). */}
+      <FollowingSection today={todayIso} userId={userId} own={events.data ?? []} ownPending={events.isPending} segments={s.segments} className="pt-2" />
       <ChargeNotice trip={trip.data} canEdit={canEdit} mut={ledgerMut} stateMut={stateMut} />
     </main>
   )
