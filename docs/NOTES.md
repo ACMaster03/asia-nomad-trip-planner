@@ -7,8 +7,9 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Petra's two findings on #201: the cut "g", and the switch under "Save changes" (14 Oct)
+### LIVE — Petra's two findings on #201: the cut "g", and the switch under "Save changes" (14 Oct; #202)
 
+Live since 14 Oct (`72d93de`, Petra's "yes"); her test on the phone follows.
 Petra's test of `a6cb9f3` on the phone: everything works, with two findings. (1) The "g" is cut
 at the bottom on Trip's stop cards: Lora's descenders reach below a tight line box, and
 `truncate` (overflow hidden) clips at the box. Confirmed in Chromium at 3× ("Bangkok" flat
