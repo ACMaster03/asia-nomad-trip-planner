@@ -7,6 +7,18 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Trip's globe: the route smooth again (Petra, 14 Oct; #198)
+
+#197 live (`070f156`, Petra's test): the replay is good, but the route looked crooked and
+beaded: a chain of 2° arcs is a chain of short tubes, each sagging a little, with a joint
+between every two. The legs are smooth paths again (one tube each, interpolated along the
+great circle), and in a replay the leg in flight is the path up to the plane, rebuilt each
+frame, which is cheap for one leg. The coasts' white rim left the paths layer for that: the
+polygons' one stroke is now the coasts' white (the phone draws its coasts white and its
+borders a faint green; one white stroke for both reads closer than the green did).
+
+iOS: nothing new.
+
 ### BUILT — Trip's globe: the plane keeps step with the camera, the leg draws up to it (Petra, 14 Oct; #197)
 
 #196 live (`3b607a2`, Petra's test): the plane faces the right way, but set off fast and
