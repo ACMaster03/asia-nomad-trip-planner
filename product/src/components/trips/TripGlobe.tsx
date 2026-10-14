@@ -2,24 +2,40 @@
 import { useEffect, useRef } from 'react'
 import Globe from 'globe.gl'
 import type { RouteNode } from '@/lib/map/globeData'
+import { flightFor } from '@/lib/map/globeData'
 import { angDeg, journeyCamera, legDuration, worldCamera, MAX_ALTITUDE, type Camera } from '@/lib/map/journeyCamera'
+import { globeTheme, type GlobeTheme } from '@/lib/map/globeTheme'
+import { CONTINENTS, continentOpacity, countryLabels, normCountry, pickCountryLabels, stopNamesShown, outerRings, type CountryLabel, type GeoFeature } from '@/lib/map/globeNames'
+import type { TransportLeg } from '@/lib/trips/types'
 
-// The route globe on top of Trip (round 3b of the redesign; the phone's
-// GlobeView and GlobeModel): home and the stops, a leg between each pair, the
-// stop you are in ringed. It only draws. The frame around it
-// (TripGlobeScaffold) decides where its centre sits on the screen, whether a
-// finger may turn it, and when it may stop drawing. The visual language is
-// FollowGlobe's (frame 30): travelled hunter, upcoming dashed mauve, now amber,
-// home white. Not the planner's Globe.tsx, which carries the catalogue pins,
-// the people layer and the hazards.
+// The route globe on top of Trip (round 3b of the redesign), drawn as the
+// phone's GlobeView draws it (Tokens.swift "the globe", mock round 5): a pale
+// sea, sage land from the country shapes with a white rim along the coasts and
+// faint borders, your journey's countries a shade darker, continent names far
+// out and country names closer in, the route in --ac2Deep over a canvas halo
+// (dashed where it is still ahead, dotted on the ground), the stops as dots
+// with their names in the serif italic, home a small square, a warm rim around
+// the globe. The engine is the web's (globe.gl, as the follower page and the
+// old Map page); the look is the phone's. Not drawn: the night side, the seas'
+// names, the plane that flies the replay.
+//
+// It only draws. The frame around it (TripGlobeScaffold) decides where its
+// centre sits on the screen, whether a finger may turn it, and when it may
+// stop drawing.
 
 type Inst = InstanceType<typeof Globe>
 type When = 'home' | 'past' | 'now' | 'next'
-type Pt = RouteNode & { when: When }
-type Arc = { startLat: number; startLng: number; endLat: number; endLng: number; past: boolean; shown: boolean }
+type Pt = RouteNode & { when: When; i: number }
+type Leg = { startLat: number; startLng: number; endLat: number; endLng: number; upcoming: boolean; ground: boolean; shown: boolean; i: number }
+type Arc = Leg & { halo: boolean }
+type Html =
+  | { kind: 'stop'; lat: number; lng: number; pt: Pt }
+  | { kind: 'country'; lat: number; lng: number; label: CountryLabel; mine: boolean }
+  | { kind: 'continent'; lat: number; lng: number; name: string }
 
 export interface TripGlobeProps {
   route: RouteNode[]
+  transport: TransportLeg[]
   todayIso: string
   /** a finger may turn and zoom it (the open globe) */
   interactive: boolean
@@ -34,36 +50,129 @@ export interface TripGlobeProps {
   onPickStop?: (node: RouteNode) => void
 }
 
-const HUNTER = '#7fa37d'
-const AMBER = '#d9a85c'
-const MAUVE = 'rgba(208,135,149,0.95)'
-const MAUVE_ARC = 'rgba(208,135,149,0.6)'
-const HOME = '#ffffff'
-// Globe radius is 100 units: from city level to as far out as the world view goes.
+// The layers globe.gl leaves untyped in its .d.ts; the slice used here.
+interface Loose {
+  globeMaterial(): { color: { set(c: string): void }; shininess: number }
+  pathsData(d: object[]): Loose
+  pathPoints(a: string): Loose
+  pathPointLat(f: (p: object) => number): Loose
+  pathPointLng(f: (p: object) => number): Loose
+  pathPointAlt(a: number): Loose
+  pathColor(f: () => string): Loose
+  pathStroke(a: number): Loose
+  pathResolution(a: number): Loose
+  pathTransitionDuration(ms: number): Loose
+  polygonsTransitionDuration(ms: number): Loose
+  htmlElementsData(d: object[]): Loose
+  htmlLat(a: string): Loose
+  htmlLng(a: string): Loose
+  htmlAltitude(a: number): Loose
+  htmlElement(f: (d: object) => HTMLElement): Loose
+  htmlElementVisibilityModifier(f: (el: HTMLElement, visible: boolean) => void): Loose
+  htmlTransitionDuration(ms: number): Loose
+}
+
 const MIN_DISTANCE = 130
 const MAX_DISTANCE = (1 + MAX_ALTITUDE) * 100
+const SERIF = "var(--font-lora), Georgia, serif"
+const SANS = "var(--font-work-sans), 'Work Sans', sans-serif"
+/** A leg with no transport typed reads as a flight over 600 km, as ground under (the phone's rule). */
+const FLIGHT_KM = 600
+let featsCache: GeoFeature[] | null = null
+let featsPromise: Promise<GeoFeature[]> | null = null
+function loadCountries(): Promise<GeoFeature[]> {
+  if (featsCache) return Promise.resolve(featsCache)
+  featsPromise ??= fetch('/vendor/countries.geojson').then((r) => r.json()).then((j) => (featsCache = (j?.features ?? []) as GeoFeature[])).catch(() => [])
+  return featsPromise
+}
 
 /** Each place's moment: home, behind you, where you are, or ahead. The last stop reached is "now". */
 function classify(route: RouteNode[], todayIso: string): Pt[] {
   const stops = route.filter((n) => !n.home)
   let nowIdx = -1
   stops.forEach((s, i) => { if (s.arrive && s.arrive <= todayIso) nowIdx = i })
-  return route.map((n) => {
-    if (n.home) return { ...n, when: 'home' as When }
-    const i = stops.indexOf(n)
-    return { ...n, when: i < nowIdx ? 'past' : i === nowIdx ? 'now' : 'next' }
+  return route.map((n, i) => {
+    if (n.home) return { ...n, when: 'home' as When, i }
+    const k = stops.indexOf(n)
+    return { ...n, when: k < nowIdx ? 'past' : k === nowIdx ? 'now' : 'next', i }
   })
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 const stillMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+const isDark = () => typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark'
+const haloShadow = (c: string) => [[-1.5, 0], [1.5, 0], [0, -1.5], [0, 1.5], [-1.1, -1.1], [1.1, 1.1], [-1.1, 1.1], [1.1, -1.1]].map(([x, y]) => `${x}px ${y}px 0 ${c}`).join(',')
 
-export default function TripGlobe({ route, todayIso, interactive, paused, camera, cameraNonce, replayNonce, onReplayEnd, onPickStop }: TripGlobeProps) {
+/** A stop's mark and name, as the phone draws them: a dot right of which the name sits in the serif italic. */
+function stopElement(pt: Pt, t: GlobeTheme, onTap: (n: RouteNode) => void): HTMLElement {
+  const el = document.createElement('div')
+  el.style.cssText = 'position:relative;width:0;height:0;pointer-events:none'
+  el.dataset.kind = 'stop'
+  el.dataset.when = pt.when
+  const r = pt.when === 'now' ? 6.5 : 4.5
+  const mark = document.createElement(pt.when === 'home' ? 'span' : 'button')
+  if (pt.when !== 'home') { (mark as HTMLButtonElement).type = 'button'; mark.setAttribute('aria-label', pt.city) }
+  const base = `position:absolute;box-sizing:border-box;pointer-events:auto;cursor:pointer;padding:0;`
+  if (pt.when === 'home') mark.style.cssText = `${base}left:-4px;top:-4px;width:8px;height:8px;background:${t.tx2};border:0`
+  else if (pt.when === 'next') mark.style.cssText = `${base}left:${-r}px;top:${-r}px;width:${2 * r}px;height:${2 * r}px;border-radius:50%;background:${t.sf};border:2px solid ${t.route}`
+  else if (pt.when === 'past') mark.style.cssText = `${base}left:${-r}px;top:${-r}px;width:${2 * r}px;height:${2 * r}px;border-radius:50%;background:${t.route};border:0`
+  else mark.style.cssText = `${base}left:${-r}px;top:${-r}px;width:${2 * r}px;height:${2 * r}px;border-radius:50%;background:${t.route};border:2.5px solid ${t.sf}`
+  if (pt.when !== 'home') {
+    mark.addEventListener('pointerdown', (ev) => ev.stopPropagation())
+    mark.addEventListener('pointerup', (ev) => ev.stopPropagation())
+    mark.addEventListener('click', (ev) => { ev.stopPropagation(); onTap(pt) })
+  }
+  el.appendChild(mark)
+  if (pt.when === 'now') {
+    const ring = document.createElement('span')
+    ring.className = 'lv-globe-now'
+    ring.style.cssText = `position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;border:2px solid ${t.route};opacity:.5`
+    el.appendChild(ring)
+  }
+  const name = document.createElement('span')
+  name.className = 'lv-globe-name'
+  const fs = pt.when === 'now' ? 14 : 12.5
+  name.textContent = pt.when === 'home' ? `${pt.city} · home` : pt.city
+  name.style.cssText = `position:absolute;left:11px;top:${-fs * 0.72}px;white-space:nowrap;pointer-events:auto;cursor:pointer;font:italic 500 ${fs}px/1.2 ${SERIF};color:${pt.when === 'now' ? t.tx : t.tx2};text-shadow:${haloShadow(t.halo)}`
+  if (pt.when !== 'home') name.addEventListener('click', (ev) => { ev.stopPropagation(); onTap(pt) })
+  el.appendChild(name)
+  return el
+}
+
+function countryElement(label: CountryLabel, mine: boolean, t: GlobeTheme): HTMLElement {
+  const el = document.createElement('div')
+  el.style.cssText = 'position:relative;width:0;height:0;pointer-events:none'
+  el.dataset.kind = 'country'
+  const fs = Math.max(8.5, Math.min(13, 7 + label.size * 0.55))
+  const s = document.createElement('span')
+  s.textContent = label.name
+  s.style.cssText = `position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:nowrap;font:600 ${fs}px/1 ${SANS};letter-spacing:.09em;text-transform:uppercase;color:${mine ? t.nameMine : t.nameCountry}`
+  el.appendChild(s)
+  return el
+}
+
+function continentElement(name: string, t: GlobeTheme): HTMLElement {
+  const el = document.createElement('div')
+  el.style.cssText = 'position:relative;width:0;height:0;pointer-events:none'
+  el.dataset.kind = 'continent'
+  const s = document.createElement('span')
+  s.textContent = name
+  s.style.cssText = `position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:nowrap;font:600 13px/1 ${SANS};letter-spacing:.32em;text-transform:uppercase;color:${t.nameContinent}`
+  el.appendChild(s)
+  return el
+}
+
+export default function TripGlobe({ route, transport, todayIso, interactive, paused, camera, cameraNonce, replayNonce, onReplayEnd, onPickStop }: TripGlobeProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const instRef = useRef<Inst | null>(null)
   const readyRef = useRef(false)
+  const themeRef = useRef<GlobeTheme>(globeTheme(false))
   const ptsRef = useRef<Pt[]>([])
-  const arcsRef = useRef<Arc[]>([])
+  const legsRef = useRef<Leg[]>([])
+  const featsRef = useRef<GeoFeature[]>([])
+  const labelsRef = useRef<CountryLabel[]>([])
+  const mineRef = useRef<Set<string>>(new Set())
+  const altitudeRef = useRef(2)
   const cameraRef = useRef<'journey' | 'world'>(camera)
   const playingRef = useRef(false)
   const aliveRef = useRef(true)
@@ -72,17 +181,68 @@ export default function TripGlobe({ route, todayIso, interactive, paused, camera
   useEffect(() => { pickRef.current = onPickStop }, [onPickStop])
   useEffect(() => { endRef.current = onReplayEnd }, [onReplayEnd])
 
-  const target = (which: 'journey' | 'world'): Camera => {
-    const pts = ptsRef.current
-    return which === 'world' ? worldCamera(pts) : journeyCamera(pts)
-  }
+  const loose = () => instRef.current as unknown as Loose | null
+  const target = (which: 'journey' | 'world'): Camera => (which === 'world' ? worldCamera(ptsRef.current) : journeyCamera(ptsRef.current))
   const fly = (c: Camera, ms: number) => {
     const g = instRef.current
     if (!g || !readyRef.current) return
     g.pointOfView(c, stillMotion() ? 0 : ms)
   }
+
+  // ---- paint: the arcs, the land, the names; each reads the refs ----
   const paintArcs = () => {
-    instRef.current?.arcsData(arcsRef.current.filter((a) => a.shown) as object[])
+    const g = instRef.current
+    if (!g) return
+    const legs = legsRef.current.filter((l) => l.shown)
+    const arcs: Arc[] = [...legs.map((l) => ({ ...l, halo: true })), ...legs.map((l) => ({ ...l, halo: false }))]
+    g.arcsData(arcs as object[])
+  }
+  const paintLand = () => {
+    const g = loose()
+    if (!g) return
+    const feats = featsRef.current
+    ;(instRef.current as Inst).polygonsData(feats.slice() as object[])
+    // The white rim along every coast, just under the land, so half of it peeps out.
+    g.pathsData(feats.flatMap((f) => outerRings(f).filter((r) => r.length > 8).map((r) => ({ pts: r }))) as object[])
+  }
+  // Which names show at this height: continents far out, countries closer in, the stops' names near.
+  const applyZoom = () => {
+    const el = boxRef.current
+    if (!el) return
+    const alt = altitudeRef.current
+    const shown = new Set(pickCountryLabels(labelsRef.current, alt, mineRef.current).map((l) => l.name))
+    const co = continentOpacity(alt)
+    const stopNames = stopNamesShown(alt)
+    el.querySelectorAll<HTMLElement>('[data-kind]').forEach((node) => {
+      const kind = node.dataset.kind
+      if (kind === 'continent') { node.style.opacity = String(co); node.style.display = co > 0 ? '' : 'none' }
+      else if (kind === 'country') node.style.display = shown.has(node.dataset.name ?? '') ? '' : 'none'
+      else if (kind === 'stop') {
+        const name = node.querySelector<HTMLElement>('.lv-globe-name')
+        if (name) name.style.display = stopNames || node.dataset.when === 'home' || node.dataset.when === 'now' ? '' : 'none'
+      }
+    })
+  }
+  const paintNames = () => {
+    const g = loose()
+    if (!g) return
+    const items: Html[] = [
+      ...ptsRef.current.map((pt) => ({ kind: 'stop' as const, lat: pt.lat, lng: pt.lng, pt })),
+      ...labelsRef.current.map((label) => ({ kind: 'country' as const, lat: label.lat, lng: label.lng, label, mine: mineRef.current.has(normCountry(label.name)) })),
+      ...CONTINENTS.map((c) => ({ kind: 'continent' as const, lat: c.lat, lng: c.lng, name: c.name })),
+    ]
+    g.htmlElementsData(items as object[])
+    requestAnimationFrame(applyZoom)
+  }
+  const applyTheme = () => {
+    const g = instRef.current, l = loose()
+    if (!g || !l) return
+    const t = themeRef.current
+    l.globeMaterial().color.set(t.ocean)
+    g.atmosphereColor(t.glow).atmosphereAltitude(t.glowAltitude)
+    paintLand()
+    paintArcs()
+    paintNames()
   }
 
   // Build once; everything after patches the live instance.
@@ -90,35 +250,54 @@ export default function TripGlobe({ route, todayIso, interactive, paused, camera
     const el = boxRef.current
     if (!el) return
     aliveRef.current = true
+    themeRef.current = globeTheme(isDark())
+    const t = () => themeRef.current
     const g = new Globe(el)
-      .globeImageUrl('/vendor/earth-day.jpg')
       .backgroundColor('rgba(0,0,0,0)')
       .width(el.clientWidth)
       .height(el.clientHeight)
       .showAtmosphere(true)
-      .atmosphereColor(HUNTER)
-      .atmosphereAltitude(0.18)
-      .pointsData([]).pointLat('lat').pointLng('lng')
-      .pointColor(((d: object) => ({ home: HOME, past: HUNTER, now: AMBER, next: MAUVE })[(d as Pt).when]) as never)
-      .pointAltitude(((d: object) => ((d as Pt).when === 'home' ? 0.02 : 0.015)) as never)
-      .pointRadius(((d: object) => ({ home: 0.6, past: 0.55, now: 0.7, next: 0.45 })[(d as Pt).when]) as never)
-      .pointLabel(((d: object) => `<div style="background:var(--sf);color:var(--tx);border:1px solid var(--ln);border-radius:12px;padding:6px 10px;font:14px var(--font-work-sans),sans-serif">${String((d as Pt).city).replace(/[&<>]/g, '')}</div>`) as never)
-      .onPointClick(((d: object) => { const p = d as Pt; if (!p.home) pickRef.current?.(p) }) as never)
-      .pointsTransitionDuration(0)
+      .atmosphereColor(t().glow)
+      .atmosphereAltitude(t().glowAltitude)
+      // the land: the country shapes, your journey's a shade darker, faint borders
+      .polygonsData([])
+      .polygonCapColor(((f: object) => (mineRef.current.has(normCountry((f as GeoFeature).properties?.name)) ? t().mine : t().land)) as never)
+      .polygonSideColor(() => 'rgba(0,0,0,0)')
+      .polygonStrokeColor((() => t().border) as never)
+      .polygonAltitude(0.005)
+      // the route, over a canvas halo
       .arcsData([]).arcStartLat('startLat').arcStartLng('startLng').arcEndLat('endLat').arcEndLng('endLng')
-      .arcColor(((d: object) => ((d as Arc).past ? HUNTER : MAUVE_ARC)) as never)
-      .arcStroke(((d: object) => ((d as Arc).past ? 0.45 : 0.32)) as never)
-      .arcAltitudeAutoScale(0.35)
-      .arcDashLength(((d: object) => ((d as Arc).past ? 1 : 0.6)) as never)
-      .arcDashGap(((d: object) => ((d as Arc).past ? 0 : 0.25)) as never)
-      .arcDashAnimateTime(((d: object) => ((d as Arc).past ? 0 : 4000)) as never)
+      .arcAltitude(((d: object) => ((d as Arc).halo ? 0.009 : 0.0105)) as never)
+      .arcColor(((d: object) => { const a = d as Arc; return a.halo ? t().halo : a.upcoming ? t().route + 'd9' : t().route }) as never)
+      .arcStroke(((d: object) => { const a = d as Arc; return a.halo ? 1.15 : a.ground ? 0.7 : 0.55 }) as never)
+      .arcDashLength(((d: object) => { const a = d as Arc; return a.halo ? 1 : a.ground ? 0.012 : a.upcoming ? 0.07 : 1 }) as never)
+      .arcDashGap(((d: object) => { const a = d as Arc; return a.halo ? 0 : a.ground ? 0.045 : a.upcoming ? 0.055 : 0 }) as never)
+      .arcDashAnimateTime(0)
       .arcsTransitionDuration(0)
-      .ringsData([]).ringLat('lat').ringLng('lng')
-      .ringColor((() => AMBER) as never).ringMaxRadius(4).ringPropagationSpeed(1.2).ringRepeatPeriod(1400)
       .onGlobeReady(() => {
         readyRef.current = true
         g.pointOfView(target(cameraRef.current), 0)
       })
+      .onZoom((pov) => {
+        const a = pov.altitude ?? altitudeRef.current
+        const bucketBefore = Math.round(altitudeRef.current * 5), bucketAfter = Math.round(a * 5)
+        altitudeRef.current = a
+        if (bucketBefore !== bucketAfter) applyZoom()
+      })
+    const l = g as unknown as Loose
+    l.globeMaterial().color.set(t().ocean)
+    l.globeMaterial().shininess = 0
+    l.polygonsTransitionDuration(0)
+    l.pathsData([]).pathPoints('pts').pathPointLat((p) => (p as number[])[1]).pathPointLng((p) => (p as number[])[0]).pathPointAlt(0.004)
+      .pathColor(() => t().shore).pathStroke(0.9).pathResolution(1).pathTransitionDuration(0)
+    l.htmlElementsData([]).htmlLat('lat').htmlLng('lng').htmlAltitude(0.012).htmlTransitionDuration(0)
+      .htmlElement((d) => {
+        const h = d as Html
+        if (h.kind === 'stop') return stopElement(h.pt, t(), (n) => pickRef.current?.(n))
+        if (h.kind === 'country') { const e = countryElement(h.label, h.mine, t()); e.dataset.name = h.label.name; return e }
+        return continentElement(h.name, t())
+      })
+      .htmlElementVisibilityModifier((node, visible) => { node.style.visibility = visible ? 'visible' : 'hidden' })
     const c = g.controls()
     c.autoRotate = false
     c.enableDamping = true
@@ -127,35 +306,58 @@ export default function TripGlobe({ route, todayIso, interactive, paused, camera
     instRef.current = g
     const ro = new ResizeObserver(() => { g.width(el.clientWidth); g.height(el.clientHeight) })
     ro.observe(el)
+    // The country shapes, once per page.
+    void loadCountries().then((feats) => {
+      if (!aliveRef.current) return
+      featsRef.current = feats
+      labelsRef.current = countryLabels(feats)
+      paintLand()
+      paintNames()
+    })
+    // Dark and light: the theme attribute flips on <html>.
+    const mo = new MutationObserver(() => {
+      const next = globeTheme(isDark())
+      if (next === themeRef.current) return
+      themeRef.current = next
+      applyTheme()
+    })
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
     return () => {
       aliveRef.current = false
+      mo.disconnect()
       ro.disconnect()
       readyRef.current = false
       g._destructor()
       instRef.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // The journey: the places, the legs, the ring on the stop you are in.
+  // The journey: the places, the legs, your countries.
   useEffect(() => {
     const g = instRef.current
     if (!g) return
     const first = ptsRef.current.length === 0
     const pts = classify(route, todayIso)
     ptsRef.current = pts
-    const arcs: Arc[] = []
+    mineRef.current = new Set(route.map((n) => normCountry(n.country)).filter(Boolean))
+    const legs: Leg[] = []
     for (let i = 0; i + 1 < pts.length; i++) {
       const a = pts[i], b = pts[i + 1]
       if (a.lat === b.lat && a.lng === b.lng) continue
-      arcs.push({ startLat: a.lat, startLng: a.lng, endLat: b.lat, endLng: b.lng, past: b.when === 'past' || b.when === 'now', shown: true })
+      const t = flightFor(transport, a.city, b.city)
+      const km = angDeg(a, b) * 111.2
+      const flight = t ? (t.type || '').toLowerCase() === 'flight' : km > FLIGHT_KM
+      legs.push({ startLat: a.lat, startLng: a.lng, endLat: b.lat, endLng: b.lng, upcoming: b.when === 'next', ground: !flight, shown: true, i })
     }
-    arcsRef.current = arcs
-    g.pointsData(pts as object[])
-    g.ringsData(pts.filter((p) => p.when === 'now') as object[])
+    legsRef.current = legs
     if (!playingRef.current) paintArcs()
+    paintLand()
+    paintNames()
     // The first route frames the globe; a later edit does not snap the view back.
     if (first && pts.length && !playingRef.current) fly(target(cameraRef.current), 0)
-  }, [route, todayIso])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route, transport, todayIso])
 
   // The frame's asks: where to look, whether a finger may turn it, whether to draw.
   useEffect(() => {
@@ -186,7 +388,7 @@ export default function TripGlobe({ route, todayIso, interactive, paused, camera
     playingRef.current = true
     const still = stillMotion()
     const run = async () => {
-      for (const a of arcsRef.current) a.shown = false
+      for (const l of legsRef.current) l.shown = false
       paintArcs()
       fly({ lat: pts[0].lat, lng: pts[0].lng, altitude: 1.3 }, 600)
       await sleep(still ? 0 : 650)
@@ -194,17 +396,17 @@ export default function TripGlobe({ route, todayIso, interactive, paused, camera
         const from = pts[i - 1], to = pts[i]
         const ms = still ? 0 : legDuration(from, to)
         fly({ lat: to.lat, lng: to.lng, altitude: 1 + Math.min(1.2, angDeg(from, to) / 60) }, ms)
-        const arc = arcsRef.current[i - 1]
-        if (arc) {
+        const leg = legsRef.current.find((l) => l.i === i - 1)
+        if (leg) {
           await sleep(Math.round(ms * 0.35))
-          arc.shown = true
+          leg.shown = true
           paintArcs()
           await sleep(ms - Math.round(ms * 0.35) + 150)
         } else {
           await sleep(ms + 150)
         }
       }
-      for (const a of arcsRef.current) a.shown = true
+      for (const l of legsRef.current) l.shown = true
       paintArcs()
       playingRef.current = false
       if (aliveRef.current) { fly(target(cameraRef.current), 900); endRef.current?.() }

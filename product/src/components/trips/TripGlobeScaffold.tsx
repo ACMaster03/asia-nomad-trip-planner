@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronUp, Globe as GlobeIcon, Maximize2, Plane, Route } from 'lucide-react'
 import type { RouteNode } from '@/lib/map/globeData'
+import type { TransportLeg } from '@/lib/trips/types'
 import { lockBodyScroll } from '@/lib/scrollLock'
 
 // Trip with the globe on top (round 3b of the redesign; the phone's
@@ -26,7 +27,7 @@ const glow = '[text-shadow:0_0_3px_var(--canvas),0_0_8px_var(--canvas),0_0_16px_
 const scrim = 'pointer-events-none absolute inset-x-0 top-0 h-[150px] bg-gradient-to-b from-canvas via-canvas/70 to-transparent'
 const chip = 'inline-flex items-center gap-1.5 rounded-full border border-ln bg-sf px-[11px] py-1.5 text-[13px] font-medium text-tx2'
 
-export function TripGlobeScaffold({ title, header, openHeader, peek, route, todayIso, onPickStop, children }: {
+export function TripGlobeScaffold({ title, header, openHeader, peek, route, transport, todayIso, onPickStop, children }: {
   title: string
   /** over the globe, closed: the kicker, the name and the gear */
   header: ReactNode
@@ -35,6 +36,7 @@ export function TripGlobeScaffold({ title, header, openHeader, peek, route, toda
   /** the open globe's card: the stop, and one line under it */
   peek: { title: string; line: string }
   route: RouteNode[]
+  transport: TransportLeg[]
   todayIso: string
   /** a stop tapped on the open globe; the globe has folded by the time this is called */
   onPickStop: (node: RouteNode) => void
@@ -135,6 +137,7 @@ export function TripGlobeScaffold({ title, header, openHeader, peek, route, toda
       >
         <TripGlobe
           route={route}
+          transport={transport}
           todayIso={todayIso}
           interactive={open && !playing}
           paused={paused}

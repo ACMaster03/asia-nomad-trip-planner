@@ -452,6 +452,7 @@ export function Timeline() {
     <TripGlobeScaffold
       title={s.meta.tripName || 'Trip'}
       route={route}
+      transport={s.transport}
       todayIso={todayIso}
       peek={peek}
       onPickStop={pickStop}
