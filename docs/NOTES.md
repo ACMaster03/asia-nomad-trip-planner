@@ -7,6 +7,58 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — round 3b of the redesign: the globe on top of Trip (Petra, 14 Oct; #193)
+
+Patrik's 10 Oct decision A (#166, #63), on the web as the phone's `GlobeScaffold`:
+- **The globe fills the top of Trip** (40 % of the screen, at least 240 px) and the timeline
+  scrolls up over it as a sheet with rounded corners. The kicker, the name and the gear sit
+  over the globe; an "Open the globe" pill bottom right. In the header the globe takes a tap
+  only, never a drag; the globe drifts up and fades as the timeline rises.
+- **Open**, the globe takes the screen: a finger turns and zooms it, the name stays top left,
+  two round buttons top right (World/Journey, and Replay as a plane), and a card at the bottom
+  ("Hanoi · Night 15 of 44 · Da Nang next, 13 Nov", "Timeline ⌃") brings the timeline back.
+  Escape closes it too. Replay flies the journey from home, leg by leg, each leg drawn as it is
+  flown, then settles over the whole journey; the globe stays open (the phone's "replay on
+  demand"). Tapping a stop on the open globe folds the globe and scrolls to the stop's card.
+- **Once the timeline covers the globe,** a slim bar with the journey's name and a "Globe"
+  button takes its place, and the globe stops drawing (`pauseAnimation`).
+- **The globe itself** is new and lean, `components/trips/TripGlobe.tsx` (globe.gl, the web's
+  engine), drawn as the phone's GlobeView draws it (Petra, 14 Oct, with the phone's pictures:
+  the first cut had reused the Map page's satellite picture): a pale sea, sage land from the
+  country shapes (`/vendor/countries.geojson`) with a white rim along the coasts and faint
+  borders, your journey's countries a shade darker, continent names far out and country names
+  closer in (sized by how big the country is on screen, your journey's first), the route in
+  `--ac2Deep` along the great circle (dashed where still ahead, dotted on the ground), the stops
+  as dots with their names in the serif italic (the stop you are in ringed and breathing), home
+  a small square, a warm rim around the globe; light and dark from the phone's `Tokens.swift`
+  (`lib/map/globeTheme.ts`). The camera rules and the names' rules are tested
+  (`lib/map/journeyCamera.ts`, `lib/map/globeNames.ts`). Not drawn: the night side, the seas'
+  and regions' names (the phone has them in `globe-names.json`), the plane of the replay, the
+  canvas halo under the route (as a tube it swallowed the line).
+- **The Map tab is empty** (Patrik, 12 Oct, decision 2): "Nothing here yet", and one line,
+  "The globe is on Trip now." The planner globe with its catalogue pins, the people layer (#9),
+  the hazards and the country panels stays in `MapClient.tsx`, reachable in development at
+  `/dev/map-preview?screen=map`, not from the app. With it, `/knowledge` (Explore) has no link
+  from any screen; it still answers by address.
+- Solid surfaces where the phone uses glass: the pill, the compact bar, the round buttons
+  (Petra, 12 Oct).
+
+Not on the web: the onboarding and Arrived replays that play by themselves (the phone's
+GlobePlay), haptics, and the follower's Trip with the globe (`/journeys/[trip]` keeps
+FollowGlobe). Pictures: `docs/web-ios-redesign/round3b-*.png`.
+
+iOS: nothing new; the web now reads as `TripGlobe.swift` and `GlobeView.swift` do. The seas' names
+and the night side stay the phone's alone for now.
+
+### LIVE — round 3a of the redesign, Trip's timeline as on the phone (Petra, 14 Oct; #192)
+
+#192 merged with Petra's "yes" after the validation step; Vercel built `cced2d5`. Petra on her
+phone: the Hanoi card without its tick box, the dashed "+ Add stop", "Onward" and "Journey
+ends · 30 Apr", the "In the plan" switch in the stop's form, all as described. Next: 3b, the
+globe on top of Trip.
+
+iOS: nothing new.
+
 ### BUILT — round 3a of the redesign: Trip's timeline as on the phone (Petra, 14 Oct; #192)
 
 `components/trips/Timeline.tsx` redrawn after the phone's `TripScreens.swift`

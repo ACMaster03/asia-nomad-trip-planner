@@ -17,6 +17,9 @@ import { stopProgress, tripDay } from '@/lib/trips/progress'
 import { tripPhase } from '@/lib/trips/recap'
 import { stopsAround } from '@/lib/trips/whereAmI'
 import { sameCity } from '@/lib/map/norm'
+import { buildRoute, type RouteNode } from '@/lib/map/globeData'
+import { peekText } from '@/lib/map/journeyCamera'
+import { Waiting } from '@/components/ui/TravelLoader'
 import {
   buildTimeline, homeFor, journeyRecap, legMoneyState, onward as isOnward, shiftDepartures, stayCounts, stayMoneyState, stayName, stopCoverage,
   type Leg, type NightRange, type Timeline as TimelineModel, type Tone,
@@ -31,12 +34,14 @@ import { StopSheet } from './StopSheet'
 import { StaySheet } from './StaySheet'
 import { LegSheet } from './LegSheet'
 import { FlightThereSheet } from './FlightThereSheet'
+import { TripGlobeScaffold } from './TripGlobeScaffold'
 import { fmtDay, fmtHours, kicker } from './sheetKit'
 
 // Trip as ONE timeline (mock 15 §1, #58): home, leg, stop, leg, stop … home,
 // in date order, no tabs. The rail on the left is the journey. Since round 3a
 // of the redesign (docs/WEB-IOS-REDESIGN.md) it is drawn as the phone's
-// TripScreens.swift draws it:
+// TripScreens.swift draws it, and since 3b it scrolls up over the globe
+// (TripGlobeScaffold: the header over the globe, the timeline as a sheet):
 //
 // - Home is the first and the last node, hollow, with nothing to edit here.
 //   The end reads "Journey ends · 30 Apr" while the plan stops short of the
@@ -355,8 +360,13 @@ export function Timeline() {
     [state],
   )
   const rows = useMemo(() => (tl ? railRows(tl, maybes) : []), [tl, maybes])
+  // The globe's route: home and the in-plan stops the catalogue can place (lib/map/globeData).
+  const route = useMemo(
+    () => (state ? buildRoute(state.segments, cities.data ?? [], cityIdx, state.transport, homeFor(profileHome, state.meta)).route : []),
+    [state, cities.data, cityIdx, profileHome],
+  )
 
-  if (trip.isPending) return <main className="mx-auto max-w-5xl p-6">Loading…</main>
+  if (trip.isPending) return <Waiting label="Getting your journey" />
   if (!trip.data || !state || !tl) return <CreateTripEmptyState />
   const s = state
   const currencies = Object.keys(s.rates)
@@ -381,9 +391,13 @@ export function Timeline() {
     return leg ? (leg.to.kind === 'home' ? 'home' : leg.to.city) : undefined
   }
   const close = () => setSheet(null)
-  const lookBack = () => {
-    const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
-    document.getElementById('timeline')?.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' })
+  const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  const lookBack = () => document.getElementById('timeline')?.scrollIntoView({ behavior: still() ? 'auto' : 'smooth', block: 'start' })
+  const peek = peekText(s.meta, s.segments, todayIso, fmtDay, segNights)
+  // A stop tapped on the open globe: the globe folds, then the timeline scrolls to its card.
+  const pickStop = (node: RouteNode) => {
+    const seg = tl.stops.find((x) => sameCity(x.city, node.city))
+    if (seg) document.getElementById('stop-' + seg.id)?.scrollIntoView({ behavior: still() ? 'auto' : 'smooth', block: 'center' })
   }
 
   const saveStop = (seg: Segment, previous: Segment | null) => {
@@ -434,13 +448,17 @@ export function Timeline() {
     setSheet(landed ? { kind: 'stop', seg: null, prefill: { city: landed.to, arrive: (landed.date ?? '').slice(0, 10) || undefined } } : { kind: 'stop', seg: null })
 
   return (
-    <main className="mx-auto max-w-xl px-4 pb-28 pt-[18px]">
-      {after && (
-        <FinishedJourneyCard name={name} state={s} canEdit={canEdit} onPlanNext={() => setWizardOpen(true)} onLookBack={lookBack} />
-      )}
-      {/* The phone's TripHeader: the kicker, the name, and Trip settings' only door — the
-          gear (nav "1g"): dates, currency, cap, partners, sharing, delete or leave. */}
-      <div id="timeline" className="scroll-mt-4">
+    <>
+    <TripGlobeScaffold
+      title={s.meta.tripName || 'Trip'}
+      route={route}
+      transport={s.transport}
+      todayIso={todayIso}
+      peek={peek}
+      onPickStop={pickStop}
+      /* The phone's TripHeader: the kicker, the name, and Trip settings' only door — the
+         gear (nav "1g"): dates, currency, cap, partners, sharing, delete or leave. */
+      header={
         <PageHeader
           eyebrow={kickerText}
           tone="mauve"
@@ -452,12 +470,18 @@ export function Timeline() {
             </IconButton>
           }
         />
-      </div>
+      }
+      openHeader={<PageHeader eyebrow={kickerText} tone="mauve" title={s.meta.tripName || 'Trip'} truncate />}
+    >
+      <div id="timeline" className="scroll-mt-4" />
+      {after && (
+        <FinishedJourneyCard name={name} state={s} canEdit={canEdit} onPlanNext={() => setWizardOpen(true)} onLookBack={lookBack} />
+      )}
       <NewCountryBanner state={s} />
       <ViewerNotice />
       <SaveError show={mut.isError} error={mut.error} />
 
-      <ol className="mt-3 flex flex-col">
+      <ol className="flex flex-col">
         {rows.map((r) => {
           if (r.t === 'home') {
             const start = r.pos === 'start'
@@ -505,7 +529,7 @@ export function Timeline() {
           const seg = r.seg
           const isCurrent = !r.maybe && !!seg.arrive && !!seg.depart && seg.arrive <= todayIso && todayIso < seg.depart
           return (
-            <li key={seg.id} className="flex gap-3">
+            <li key={seg.id} id={'stop-' + seg.id} className="flex scroll-mt-20 gap-3">
               <Rail line="solid" node={r.maybe ? 'maybe' : isCurrent ? 'current' : 'stop'} nodeTop={36} />
               <div className="min-w-0 flex-1 py-1.5">
                 <StopCard
@@ -562,6 +586,7 @@ export function Timeline() {
           </div>
         </section>
       )}
+    </TripGlobeScaffold>
 
       {sheet?.kind === 'stop' && (
         <StopSheet
@@ -620,6 +645,6 @@ export function Timeline() {
           <OnboardingWizard onDone={() => setWizardOpen(false)} />
         </Modal>
       )}
-    </main>
+    </>
   )
 }

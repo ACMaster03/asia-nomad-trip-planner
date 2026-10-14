@@ -291,6 +291,16 @@ h3,
     var(--sf);
 }
 
+/* The ring that breathes around the stop you are in, on Trip's globe (the phone's
+   GlobeView: 2.2 s, from the dot outwards, fading). */
+@keyframes lv-globe-now {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(3.2); opacity: 0; }
+}
+.lv-globe-now {
+  animation: lv-globe-now 2.2s ease-out infinite;
+}
+
 /* The phone's TravelLoader (components/ui/TravelLoader.tsx): the dot crosses
    the 50px between the two circles, rests, and comes back, 2.4 s a lap. */
 @keyframes lv-travel {
@@ -304,6 +314,7 @@ h3,
 
 @media (prefers-reduced-motion: reduce) {
   .lv-travel { animation: none; transform: translateX(25px); }
+  .lv-globe-now { animation: none; display: none; }
   .lv-enter,
   .lv-brand,
   .lv-reveal,

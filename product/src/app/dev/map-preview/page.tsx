@@ -14,9 +14,11 @@ import Preview, { type Screen } from './Preview'
 // development.
 //   ?screen=knowledge&city=<id>  the Explore screen the map hands off to (fix 1)
 //   ?screen=home                 Home, for the meet-up line under the people strip (#9)
+//   ?screen=mapempty             the Map tab as it is since round 3b (empty); ?screen=map is the
+//                                planner globe, kept for development
 //   ?hk=1                        adds Asia's third stop as it is spelt there, "Hong Kong
 //                                Island", which the catalogue knows as "Hong Kong" (27 Sep)
-const SCREENS: Screen[] = ['map', 'knowledge', 'home']
+const SCREENS: Screen[] = ['map', 'mapempty', 'knowledge', 'home']
 export default async function MapPreviewPage({ searchParams }: { searchParams: Promise<{ screen?: string; city?: string; hk?: string }> }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   const params = await searchParams
