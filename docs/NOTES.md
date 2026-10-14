@@ -7,6 +7,23 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### LIVE — Round 3c (#199, Petra's test) · BUILT — the stop page opens in place (Petra, 14 Oct)
+
+#199 is live (`9755bac`, Petra's test on the phone): the page works, but opening a card and
+going back were each "too slow to load". The page was a route of its own (`/itinerary/<id>`),
+so each open and each back asked the server for a page: the (app) layout's sign-in check and
+the trip prefetch, a second or two from Vietnam, with the TravelLoader in between. It is a
+layer over the timeline now (`StopPage.tsx`, `fixed inset-0`, the sheets' body lock), opened
+by a tap through `history.pushState('?stop=<id>')`, which Next's router follows
+(`useSearchParams` in `Timeline.tsx`): nothing is asked of the server, the journey is already
+in the cache, the timeline waits underneath where it was scrolled, and the browser's back
+button closes the layer as the ‹ button does. A cold load of `/itinerary?stop=<id>` opens it
+too; the old `/itinerary/<id>` redirects there. The dev preview's `?stop=` is the same
+mechanism. Round 6 (the zoom from the card to its page) gets easier: one document. Checked
+in the built app: no request leaves the browser on open or on back.
+
+iOS: nothing new.
+
 ### BUILT — Round 3c: the stop page, Cancel and Save on every form, the long-press menu (Petra, 14 Oct)
 
 Decision 4 of `docs/WEB-IOS-REDESIGN.md` (look first, then edit), as the phone's `StopPage`,
