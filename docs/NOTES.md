@@ -7,6 +7,29 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Round 5b: Account in the phone's groups (14 Oct)
+
+Round 5 of `docs/WEB-IOS-REDESIGN.md`, part b. `/account` (`AccountClient.tsx`) in the phone's
+groups (`AccountView.swift`, the split Patrik agreed on 29 Sep), with the 5a kit: "Signed in as"
+and "Sign-in methods ›"; "This journey" with "Trip settings ›" and the journey's name (footer:
+"Name, dates, home, the budget and exchange rates."); Your trips (the switcher, web-only, as it
+was); "You" with Track spending (moved here from Trip settings, where 4a had put it; the phone
+has it under You), Name and Home saving as they are left (`RowInput`), Appearance as a
+Light / Dark / System control in the row and Larger text as a switch (the three theme tiles
+went); People › with the counts; Alerts (the matrix, unchanged); Follow links (unchanged);
+Sign out as a row with "Signs out this browser only. Your other devices stay signed in.";
+Delete account last. The password form moved to `/account/sign-in` ("Sign-in methods",
+`SignInMethodsClient.tsx`: a Magic link row, New password / Confirm rows, "Save password" as a
+row), and the login page's "forgot password" reset link lands there now (`login/page.tsx`).
+
+Checked locally: tsc, eslint, 204 tests, the redirects test (`/account/:path+` covered),
+`next build --webpack`, the preview shot by Playwright (`?screen=account`). Pictures in
+`docs/web-ios-redesign/round5b-*`.
+
+iOS: nothing new; the phone is the source. The web keeps Your trips, Name, Home, People,
+Alerts, Follow links and the deletion here until the phone has a home for them (the plan's
+line). The phone's "Design gallery" row has no web counterpart.
+
 ### BUILT — Petra's finding on 4c: the amount small on the phone (14 Oct)
 
 Petra's test of `8d422cc`: everything works; on the entry form the typed number was small,
