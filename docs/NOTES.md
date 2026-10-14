@@ -7,7 +7,10 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Petra's finding on #203: a category picked on top of a hidden filter showed nothing (14 Oct)
+### LIVE — #204: Petra's four findings on round 4b (14 Oct)
+
+Merged with Petra's "yes" at 10:39 UTC; Vercel built `b36c9d2` and it is live on app.livhold.com
+(`vb36c9d2`). Her re-test follows; then 4c, the entry form.
 
 Petra's test of `96fb4f1` on the phone, step 1: she tapped "Beyond the everyday", then opened
 Category and picked Food. The list said "0 entries · 0 Ft spent" and "Nothing here yet.",
