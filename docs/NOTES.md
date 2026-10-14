@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Trip's globe: the plane faces the way it flies (Petra, 14 Oct)
+### BUILT — Trip's globe: the plane faces the way it flies (Petra, 14 Oct; #196)
 
 #195 live (`7543d3e`, Petra's test): no spin, but the plane faced askew. The icon's nose
 points up and to the right, which on the screen is −45°, so the icon must turn by the heading
