@@ -7,7 +7,24 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Round 5a: Trip settings and Exchange rates as on the phone (14 Oct)
+### BUILT — Petra's finding on 4c: the amount small on the phone (14 Oct)
+
+Petra's test of `8d422cc`: everything works; on the entry form the typed number was small,
+about 16 px, while the currency menu and the conversion sat right. Cause: `globals.css` forces
+every `input`, `select` and `textarea` to 16 px under 768 px wide, so iOS never zooms on
+focus (the 24 Jul dogfood rule), and an unlayered rule beats a utility class, so the amount's
+`text-[46px]` lost on every phone, Chromium included (the 4c pictures showed it and I read it
+as the design). Fix: the amount's size is inline (`style={{ fontSize: 46 }}`), which outranks
+the rule. Measured on the production build at 390 px: 46 px. The rule stays; it is right for
+every other field.
+
+iOS: web-only.
+
+### LIVE — #207, round 5a: Trip settings and Exchange rates as on the phone (14 Oct)
+
+Merged with Petra's "yes" at 11:42 UTC. Vercel's window had freed by itself: it built `8d422cc` at once,
+and that build carries #206 (round 4c) too. Live on app.livhold.com (`v8d422cc`); Petra's test of both
+follows. Next: 5b, Account.
 
 Round 5 of `docs/WEB-IOS-REDESIGN.md`, part a (Trip settings; Account is 5b). `/settings`
 (`SettingsClient.tsx`) is the phone's `TripSettings.swift`: a grouped list (the kit is
@@ -39,7 +56,10 @@ already covered), `next build --webpack`, the previews shot by Playwright (`?scr
 iOS: nothing new; the phone is the source. Two web extras to know about: Travellers on Trip
 settings, and the Refresh row on Exchange rates.
 
-### WAITING — #206 (round 4c) merged at 11:09 UTC, not built: Vercel's daily limit again (14 Oct)
+### LIVE — #206 (round 4c) merged at 11:09 UTC, built with #207 at 11:42 (14 Oct)
+
+The merge was refused a build by Vercel's daily limit (below); the window freed by itself 33 minutes
+later, and #207's merge built `8d422cc`, which carries 4c. Live on app.livhold.com (`v8d422cc`).
 
 Merged with Petra's "yes"; Vercel created no deployment for `ad7601e`. A deployment asked for
 by hand was refused with 402 `api-deployments-free-per-day` ("more than 100, try again in 24

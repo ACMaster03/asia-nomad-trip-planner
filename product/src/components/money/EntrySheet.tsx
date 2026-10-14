@@ -253,7 +253,11 @@ export function EntrySheet({
               disabled={imported}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="col-start-1 row-start-1 w-full min-w-[2ch] bg-transparent px-1 text-center text-[46px] font-semibold leading-none text-tx outline-none placeholder:text-tx3 disabled:opacity-60"
+              // The size inline, not as a class: globals.css forces every input to 16px on
+              // phone-sized screens so iOS never zooms on focus, and that rule beats a
+              // class (Petra, 14 Oct: the number small beside its currency).
+              style={{ fontSize: 46, lineHeight: 1 }}
+              className="col-start-1 row-start-1 w-full min-w-[2ch] bg-transparent px-1 text-center font-semibold text-tx outline-none placeholder:text-tx3 disabled:opacity-60"
             />
           </span>
           <span className="relative flex-none">
