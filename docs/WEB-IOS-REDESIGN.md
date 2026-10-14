@@ -178,7 +178,7 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
-- 14 Oct: round 5b built, Account in the phone's groups (Sign-in methods on its own page, "This
+- 14 Oct: round 5b live (#209, `c99f0a8`), Account in the phone's groups (Sign-in methods on its own page, "This
   journey" → Trip settings, "You" with Track spending, name, home and Appearance, Sign out as a
   row). Pictures in `docs/web-ios-redesign/round5b-*`. Round 6, motion, is next.
 - 14 Oct: round 5a live (#207, `8d422cc`), Trip settings as the phone's grouped list ("This journey", "Money"),

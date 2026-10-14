@@ -7,7 +7,10 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Round 5b: Account in the phone's groups (14 Oct)
+### LIVE — #209, round 5b: Account in the phone's groups (14 Oct)
+
+Merged with Petra's "yes" at 12:37 UTC; Vercel built `c99f0a8` at once (`vc99f0a8`). Petra's test
+follows. Round 5 is complete; round 6, motion, is next.
 
 Round 5 of `docs/WEB-IOS-REDESIGN.md`, part b. `/account` (`AccountClient.tsx`) in the phone's
 groups (`AccountView.swift`, the split Patrik agreed on 29 Sep), with the 5a kit: "Signed in as"
