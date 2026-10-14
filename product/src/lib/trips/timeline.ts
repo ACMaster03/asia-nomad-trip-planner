@@ -273,3 +273,28 @@ export function journeyRecap(state: TripState): { nights: number; stops: number;
   const countries = new Set(inPlan.map((s) => s.country.trim().toLowerCase()).filter(Boolean))
   return { nights, stops: inPlan.length, countries: countries.size }
 }
+
+/** The legs on either side of a stop (the stop page's "Getting here" and "Leaving for …"); a maybe has none. */
+export function legsAround(tl: Pick<Timeline, 'legs'>, segId: string): { arriving: Leg | null; leaving: Leg | null } {
+  return {
+    arriving: tl.legs.find((l) => l.to.seg?.id === segId) ?? null,
+    leaving: tl.legs.find((l) => l.from.seg?.id === segId) ?? null,
+  }
+}
+
+/** The title over the leg that leaves a stop: "Leaving for Hanoi", or on the way home "Onward" / "Going home" (the phone's StopPage). */
+export function leavingTitle(leg: Pick<Leg, 'to'>, onward: boolean): string {
+  return leg.to.kind === 'home' ? (onward ? 'Onward' : 'Going home') : `Leaving for ${leg.to.city}`
+}
+
+/**
+ * The dates line under a stop's name: "30 Sep → 13 Nov · 44 nights"; the dates alone while
+ * one is still missing ("0 nights" would say nothing); "No dates yet" with neither.
+ */
+export function stopDatesLine(seg: Pick<Segment, 'arrive' | 'depart'>, short: (iso: string) => string = shortDate): string {
+  if (!seg.arrive && !seg.depart) return 'No dates yet'
+  const dates = `${seg.arrive ? short(seg.arrive) : '—'} → ${seg.depart ? short(seg.depart) : '—'}`
+  const nights = segNights(seg as Segment)
+  if (nights === 0 && (!seg.arrive || !seg.depart)) return dates
+  return `${dates} · ${nights} ${nights === 1 ? 'night' : 'nights'}`
+}

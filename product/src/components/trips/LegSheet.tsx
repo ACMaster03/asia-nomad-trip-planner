@@ -6,7 +6,7 @@ import { useMoney } from '@/lib/trips/Money'
 import { parseAmount, toBase } from '@/lib/trips/format'
 import { shortDate, stateOf, type Leg } from '@/lib/trips/timeline'
 import type { TransportLeg } from '@/lib/trips/types'
-import { Chips, StateChips, addLink, dangerBtn, hint, input, label, primaryBtn, uid } from './sheetKit'
+import { Chips, SheetBar, StateChips, addLink, dangerBtn, hint, input, label, uid, useCancel, useDirty } from './sheetKit'
 import { sameCity } from '@/lib/map/norm'
 import type { Segment } from '@/lib/trips/types'
 
@@ -23,7 +23,8 @@ import type { Segment } from '@/lib/trips/types'
 // usual case, Petra 2026-09-23: the flight goes to a city that is not a stop
 // yet) and offers the two ways out: add that city as a stop, so the leg
 // appears and the entry moves onto it by itself, or move the entry onto one
-// of the journey's legs.
+// of the journey's legs. Cancel and Save sit in the bar since round 3c
+// (decision 4); a new entry can be saved as it opens, as on the phone.
 
 const TYPES: { value: string; label: React.ReactNode }[] = [
   { value: 'Flight', label: <><Plane aria-hidden className="size-4" /> Flight</> },
@@ -82,9 +83,12 @@ export function LegSheet({
   const [chargeDate, setChargeDate] = useState(initial?.chargeDate ?? '')
   const amount = parseAmount(price) || 0
   const isFlight = type === 'Flight'
+  const dirty = useDirty({ moveTo, type, otherType, date, time, via, hours, price, cur, url, state, chargeDate })
+  const valid = !!from && !!to
+  const cancel = useCancel(dirty, onClose)
 
   function submit() {
-    if (!from || !to) { alert('This entry has no from and to'); return }
+    if (!valid) return
     onSave({
       ...(initial ?? {}),
       id: initial?.id ?? uid('tr'),
@@ -108,13 +112,11 @@ export function LegSheet({
   }
 
   return (
-    <Sheet label={initial ? 'Edit transport' : 'Add transport'} onClose={onClose}>
-      <div>
-        <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">
-          {/* The entry's own day when it has one (an overnight flight leaves the day before the stop begins), else the leg's. */}
-          {leg ? `Leg ${leg.index} · leaves ${leg.from.city}${(initial?.date || leg.date) ? ' ' + longDay(initial?.date || leg.date) : ''}` : prefill ? 'The flight there' : 'Not on a leg of this journey'}
-        </div>
-        <h3 className="mt-0.5 text-[22px] font-semibold">{from} → {to}</h3>
+    <Sheet label={initial ? 'Edit transport' : 'Add transport'} onClose={cancel}>
+      <SheetBar title={`${from} → ${to}`} onCancel={cancel} onSave={submit} saveLabel={initial ? 'Save' : 'Add'} canSave={valid && (dirty || !initial)} />
+      <div className="-mt-1 text-center text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">
+        {/* The entry's own day when it has one (an overnight flight leaves the day before the stop begins), else the leg's. */}
+        {leg ? `Leg ${leg.index} · leaves ${leg.from.city}${(initial?.date || leg.date) ? ' ' + longDay(initial?.date || leg.date) : ''}` : prefill ? 'The flight there' : 'Not on a leg of this journey'}
       </div>
       {orphan && (
         <div className="rounded-[calc(var(--r)-6px)] bg-warn-soft px-3.5 py-3 text-[14px] leading-snug text-tx">
@@ -206,7 +208,6 @@ export function LegSheet({
           <span className={hint + ' mt-1.5 block font-normal'}>Blank means the travel date. Fares are usually paid at booking.</span>
         </label>
       )}
-      <button type="button" onClick={submit} className={primaryBtn}>Save</button>
       {initial && onRemove && (
         <div className="border-t border-ln pt-3">
           <button type="button" onClick={() => onRemove(initial.id)} className={dangerBtn}>Remove transport</button>

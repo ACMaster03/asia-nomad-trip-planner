@@ -178,6 +178,10 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
+- 14 Oct: round 3c built, the stop page as the phone's StopPage (the wash hero, the sections,
+  "Edit" in the corner), Cancel and Save in the bar of every form with "Discard changes?", the
+  long-press menu on a stop card (decision 4). The stop form lost its Stays list, as on the
+  phone. Pictures in `docs/web-ios-redesign/round3c-*`.
 - 14 Oct: round 3b live (#193, Petra's test on the phone), the globe on top of Trip as the phone's GlobeScaffold (the header over
   the globe, the timeline as a sheet, the open globe with World/Journey and Replay, the card at
   the bottom, the compact bar), with a new lean route globe (`TripGlobe.tsx`) in the phone's

@@ -18,10 +18,11 @@ import Preview from './Preview'
 // ?home=Vienna,%20Austria plays the viewer's own home from their profile (#58,
 // migration 43): the timeline starts and ends there instead of the journey's.
 // ?empty=1 is a journey with no stops yet (the no-stops card); ?end=2026-12-13
-// an end date the last stop reaches ("Going home" instead of "Onward").
-export default async function TripPreviewPage({ searchParams }: { searchParams: Promise<{ maybe?: string; home?: string; empty?: string; end?: string }> }) {
+// an end date the last stop reaches ("Going home" instead of "Onward");
+// ?stop=<stop id> the stop's own page (round 3c) instead of the timeline.
+export default async function TripPreviewPage({ searchParams }: { searchParams: Promise<{ maybe?: string; home?: string; empty?: string; end?: string; stop?: string }> }) {
   if (process.env.NODE_ENV !== 'development') notFound()
-  const { maybe, home, empty, end } = await searchParams
+  const { maybe, home, empty, end, stop } = await searchParams
   const today = new Date().toISOString().slice(0, 10)
   const base = fixtureTrip(today)
   const trip: Trip = {
@@ -53,7 +54,7 @@ export default async function TripPreviewPage({ searchParams }: { searchParams: 
   qc.setQueryData(qk.tripCities(names), cities.filter((c) => names.includes(c.city)))
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <Preview />
+      <Preview stop={stop} />
     </HydrationBoundary>
   )
 }
