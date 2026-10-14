@@ -27,7 +27,7 @@ type Inst = InstanceType<typeof Globe>
 type When = 'home' | 'past' | 'now' | 'next'
 type Pt = RouteNode & { when: When; i: number }
 type Leg = { startLat: number; startLng: number; endLat: number; endLng: number; upcoming: boolean; ground: boolean; shown: boolean; i: number }
-type Arc = Leg & { halo: boolean }
+type Arc = Leg
 type Html =
   | { kind: 'stop'; lat: number; lng: number; pt: Pt }
   | { kind: 'country'; lat: number; lng: number; label: CountryLabel; mine: boolean }
@@ -191,9 +191,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   const paintArcs = () => {
     const g = instRef.current
     if (!g) return
-    const legs = legsRef.current.filter((l) => l.shown)
-    const arcs: Arc[] = [...legs.map((l) => ({ ...l, halo: true })), ...legs.map((l) => ({ ...l, halo: false }))]
-    g.arcsData(arcs as object[])
+    g.arcsData(legsRef.current.filter((l) => l.shown).map((l) => ({ ...l })) as object[])
   }
   const paintLand = () => {
     const g = loose()
@@ -218,13 +216,13 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     const cf = Math.max(0, Math.min(1, (3.3 - alt) / 0.6))
     const sizes = new Map<string, number>()
     if (cf > 0) {
-      let budget = 40
+      let room = 48
       for (const l of pickCountryLabels(labelsRef.current, alt, mineRef.current)) {
         const px = rPx * l.size * (Math.PI / 180)
         const fs = Math.max(8.5, Math.min(13, px * 0.085))
-        if (px < fs * 3 || budget <= 0) continue
+        if (px < fs * (mineRef.current.has(normCountry(l.name)) ? 2 : 3) || room <= 0) continue
         sizes.set(l.name, fs)
-        budget--
+        room--
       }
     }
     const rules = { alt, sizes, cf, co: continentOpacity(alt), stopNames: stopNamesShown(alt) }
@@ -290,13 +288,14 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor((() => t().border) as never)
       .polygonAltitude(0.005)
-      // the route, over a canvas halo
+      // the route: a line just over the land, dashed where it is still ahead, dotted on the ground.
+      // (The phone's canvas halo under it is left out: as a tube it swallowed the line.)
       .arcsData([]).arcStartLat('startLat').arcStartLng('startLng').arcEndLat('endLat').arcEndLng('endLng')
-      .arcAltitude(((d: object) => ((d as Arc).halo ? 0.009 : 0.0105)) as never)
-      .arcColor(((d: object) => { const a = d as Arc; return a.halo ? t().halo : a.upcoming ? t().route + 'd9' : t().route }) as never)
-      .arcStroke(((d: object) => { const a = d as Arc; return a.halo ? 1.9 : a.ground ? 1.3 : 1.0 }) as never)
-      .arcDashLength(((d: object) => { const a = d as Arc; return a.halo ? 1 : a.ground ? 0.012 : a.upcoming ? 0.07 : 1 }) as never)
-      .arcDashGap(((d: object) => { const a = d as Arc; return a.halo ? 0 : a.ground ? 0.045 : a.upcoming ? 0.055 : 0 }) as never)
+      .arcAltitude(0.012)
+      .arcColor(((d: object) => ((d as Arc).upcoming ? t().route + 'd9' : t().route)) as never)
+      .arcStroke(((d: object) => ((d as Arc).ground ? 1.3 : 1.0)) as never)
+      .arcDashLength(((d: object) => { const a = d as Arc; return a.ground ? 0.012 : a.upcoming ? 0.07 : 1 }) as never)
+      .arcDashGap(((d: object) => { const a = d as Arc; return a.ground ? 0.045 : a.upcoming ? 0.055 : 0 }) as never)
       .arcDashAnimateTime(0)
       .arcsTransitionDuration(0)
       .onGlobeReady(() => {

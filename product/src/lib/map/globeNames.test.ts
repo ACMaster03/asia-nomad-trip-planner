@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { countryLabels, labelBudget, normCountry, pickCountryLabels, ringSize, stopNamesShown, type GeoFeature } from './globeNames.ts'
+import { countryLabels, normCountry, pickCountryLabels, ringSize, stopNamesShown, type GeoFeature } from './globeNames.ts'
 
 const square = (name: string, lng: number, lat: number, side: number): GeoFeature => ({
   properties: { name },
@@ -25,11 +25,10 @@ test('countryLabels: biggest first, placed on the biggest piece, Antarctica and 
   assert.deepEqual([twin.lat, twin.lng], [4, 124])
 })
 
-test('pickCountryLabels: your countries first, the rest by size within the budget, none far out', () => {
+test('pickCountryLabels: your countries first, the rest by size, none far out', () => {
   const labels = countryLabels([square('A', 0, 0, 30), square('B', 40, 0, 20), square('Vietnam', 100, 10, 5), square('D', 120, 0, 15)])
   const mine = new Set(['vietnam'])
   assert.deepEqual(pickCountryLabels(labels, 1.0, mine).map((l) => l.name), ['Vietnam', 'A', 'B', 'D'])
-  assert.equal(labelBudget(3.0), 8)
   assert.deepEqual(pickCountryLabels(labels, 3.5, mine), [])
   assert.equal(normCountry('Viet Nam'), 'vietnam')
   assert.equal(stopNamesShown(3), false)

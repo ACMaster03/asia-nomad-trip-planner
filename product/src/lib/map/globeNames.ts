@@ -76,19 +76,15 @@ export const normCountry = (s?: string | null) => {
   return COUNTRY_ALIAS[k] ?? k
 }
 
-/** How many country names fit at this height: a handful far out, most of them close in. */
-export function labelBudget(altitude: number): number {
-  if (altitude > 2.4) return 8
-  if (altitude > 1.6) return 22
-  return 60
-}
-
-/** The names to show now: your journey's countries first, then the biggest, within the budget. */
+/**
+ * The order the names are tried in: your journey's countries first, then the biggest. Which
+ * of them show is the screen's call (TripGlobe: big enough on screen for its name); none from
+ * very far out, where the continents speak.
+ */
 export function pickCountryLabels(labels: CountryLabel[], altitude: number, mine: Set<string>): CountryLabel[] {
-  if (altitude > 3.2) return []
-  const budget = labelBudget(altitude)
+  if (altitude > 3.3) return []
   const first = labels.filter((l) => mine.has(normCountry(l.name)))
-  const rest = labels.filter((l) => !mine.has(normCountry(l.name))).slice(0, Math.max(0, budget - first.length))
+  const rest = labels.filter((l) => !mine.has(normCountry(l.name)))
   return [...first, ...rest]
 }
 
