@@ -7,6 +7,38 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Round 5a: Trip settings and Exchange rates as on the phone (14 Oct)
+
+Round 5 of `docs/WEB-IOS-REDESIGN.md`, part a (Trip settings; Account is 5b). `/settings`
+(`SettingsClient.tsx`) is the phone's `TripSettings.swift`: a grouped list (the kit is
+`components/ui/SettingsList.tsx`: `Group`, `Row`, `RowLink`, `RowInput`), "This journey" with
+Name, Starts, Ends ("open-ended" when none, a ✕ to clear it, the picker opening 30 days after
+the start), Travellers (web-only, kept) and Home (the journey's; the footer says the person's
+own home from Account comes first when there is one), then "Money" with Budget (the symbol
+after it), the Currency locked (#129, 45 % grey, the footer says why) and "Exchange rates ›"
+with "Refreshed today, 04:00" in grey, amber when stale. Each field saves when it is left
+(blur or Enter; dates on change) with a "Saved · Name" toast, no Save button (decision 5). A
+field being typed in keeps its draft until then (`RowInput`), so a refetch cannot overwrite
+the keystrokes; afterwards the row shows what the journey holds. An end before the start is
+refused with the phone's words in the footer. Below the groups, in the same look: the Track
+spending switch under "You" (it goes to Account with 5b), the Alerts row, then People on this
+trip, the danger zone and the build number as before.
+
+Exchange rates have their own page, `/settings/rates` (`RatesClient.tsx`, the phone's
+`RatesScreen`): "1 THB · Thailand" | "10 Ft" per watched currency (`rateText`: three
+significant digits when it would round to nothing), a ✕ to stop watching one (refused with a
+toast while a booking still uses it), "+ Add a currency" opening a sheet with a search over
+every currency the feed knows (names from the browser's `Intl.DisplayNames`), and the web's
+"Refresh now" row with "updated N hours ago" (kept: the owner's 25 Jul decision gave the web
+that control; the phone refreshes on open). `FxPanel.tsx` went. Rates stay read-only.
+
+Checked locally: tsc, eslint, 204 tests (`fxText.test.ts` new), the redirects test (`/settings/:path+`
+already covered), `next build --webpack`, the previews shot by Playwright (`?screen=settings`,
+`?screen=rates`). Pictures in `docs/web-ios-redesign/round5a-*`.
+
+iOS: nothing new; the phone is the source. Two web extras to know about: Travellers on Trip
+settings, and the Refresh row on Exchange rates.
+
 ### WAITING — #206 (round 4c) merged at 11:09 UTC, not built: Vercel's daily limit again (14 Oct)
 
 Merged with Petra's "yes"; Vercel created no deployment for `ad7601e`. A deployment asked for
