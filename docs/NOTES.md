@@ -7,6 +7,15 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### LIVE — round 3a of the redesign, Trip's timeline as on the phone (Petra, 14 Oct; #192)
+
+#192 merged with Petra's "yes" after the validation step; Vercel built `cced2d5`. Petra on her
+phone: the Hanoi card without its tick box, the dashed "+ Add stop", "Onward" and "Journey
+ends · 30 Apr", the "In the plan" switch in the stop's form, all as described. Next: 3b, the
+globe on top of Trip.
+
+iOS: nothing new.
+
 ### BUILT — round 3a of the redesign: Trip's timeline as on the phone (Petra, 14 Oct; #192)
 
 `components/trips/Timeline.tsx` redrawn after the phone's `TripScreens.swift`
