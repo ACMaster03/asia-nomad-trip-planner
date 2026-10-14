@@ -178,7 +178,7 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
-- 14 Oct: round 4a built (not merged: Vercel's daily limit), Money as the phone's MoneyScreen:
+- 14 Oct: round 4a live (#201, with #200's stop page in place), Money as the phone's MoneyScreen:
   the top card with the stop / Journey switch and the budget ring, Upcoming charges, Latest
   with the category tiles, Bookings open, Subscriptions as Latest's pattern, the All entries
   and Budget cap rows gone, the #127 numbers. The Track spending switch moved to Trip settings

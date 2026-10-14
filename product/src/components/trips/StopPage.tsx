@@ -103,7 +103,7 @@ export function StopPage({ id, onBack }: { id: string; onBack: () => void }) {
         </div>
         <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 px-5 pb-3">
           {prog && <div className="text-[13px] font-semibold uppercase tracking-[.092em] text-ac">You’re here · night {prog.night} of {nn}</div>}
-          <h1 className="truncate font-serif font-medium leading-[1.05] text-tx" style={{ fontSize: citySize }}>{city}</h1>
+          <h1 className="-mb-2 truncate pb-2 font-serif font-medium leading-[1.05] text-tx" style={{ fontSize: citySize }}>{city}</h1>
           {seg.country && <div className="text-base font-medium text-tx2">{seg.country}</div>}
           <div className="text-base font-medium text-tx2">{stopDatesLine(seg)}</div>
           {!inPlan && <div className="text-[15px] text-tx2">Maybe · not in the plan</div>}

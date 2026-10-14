@@ -182,7 +182,7 @@ export function TripGlobeScaffold({ title, header, openHeader, peek, route, tran
         className={'fixed inset-x-0 top-0 z-20 flex items-center justify-between gap-3 border-b border-ln bg-sf/95 px-4 pb-2.5 pt-[calc(10px+env(safe-area-inset-top))] backdrop-blur transition-opacity duration-200 ' + (compact && !open ? 'opacity-100' : 'pointer-events-none opacity-0')}
         aria-hidden={!compact || open}
       >
-        <span className="min-w-0 truncate font-serif text-[17px] font-semibold text-tx">{title}</span>
+        <span className="-mb-1 min-w-0 truncate pb-1 font-serif text-[17px] font-semibold text-tx">{title}</span>
         <button type="button" onClick={openGlobe} className={chip}>
           <GlobeIcon aria-hidden className="size-3.5" strokeWidth={2.2} /> Globe
         </button>
@@ -216,7 +216,7 @@ export function TripGlobeScaffold({ title, header, openHeader, peek, route, tran
             className="pointer-events-auto flex w-full items-center gap-2.5 rounded-[var(--r)] bg-sf px-4 py-3 text-left text-tx shadow-[0_6px_16px_rgba(0,0,0,.1)] disabled:opacity-70"
           >
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-serif text-[19px] font-semibold leading-tight">{peek.title}</span>
+              <span className="-mb-1 block truncate pb-1 font-serif text-[19px] font-semibold leading-tight">{peek.title}</span>
               {peek.line && <span className="mt-0.5 block truncate text-[13px] text-tx2">{peek.line}</span>}
             </span>
             <span className="flex flex-none items-center gap-1 text-[13px] font-medium text-ac">
