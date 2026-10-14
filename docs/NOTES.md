@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — round 3b of the redesign: the globe on top of Trip (Petra, 14 Oct)
+### BUILT — round 3b of the redesign: the globe on top of Trip (Petra, 14 Oct; #193)
 
 Patrik's 10 Oct decision A (#166, #63), on the web as the phone's `GlobeScaffold`:
 - **The globe fills the top of Trip** (40 % of the screen, at least 240 px) and the timeline

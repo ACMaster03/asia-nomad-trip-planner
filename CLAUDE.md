@@ -170,7 +170,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
   flight there first), is live since 14 Oct (#192, Petra's test). 3b, the globe on top of Trip
   (`TripGlobeScaffold.tsx`, a lean `TripGlobe.tsx` drawn in the phone's pale look from the country
   shapes; the Map tab empty, the planner globe kept in `MapClient.tsx` for development), was built
-  on 14 Oct. The source of the look is `feat/ios-foundation`,
+  on 14 Oct (#193). The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the

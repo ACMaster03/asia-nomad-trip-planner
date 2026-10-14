@@ -178,7 +178,7 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
-- 14 Oct: round 3b built, the globe on top of Trip as the phone's GlobeScaffold (the header over
+- 14 Oct: round 3b built, pull request #193, the globe on top of Trip as the phone's GlobeScaffold (the header over
   the globe, the timeline as a sheet, the open globe with World/Journey and Replay, the card at
   the bottom, the compact bar), with a new lean route globe (`TripGlobe.tsx`) in the phone's
   look (Petra, 14 Oct: the first cut had the Map page's satellite picture); the Map tab empty,
