@@ -1,34 +1,55 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ChevronRight } from 'lucide-react'
-import { useOnline } from '@/lib/useOnline'
+import { CalendarDays, ChevronLeft, X } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { tripQueryOptions } from '@/lib/trips/tripQuery'
-import { isRevConflict, isPermissionDenied, createInvite } from '@/lib/trips/queries'
+import { createInvite } from '@/lib/trips/queries'
 import { fetchSentInvites, revokeInvite } from '@/lib/trips/invites'
 import { tk } from '@/lib/trips/keys'
-import FxPanel from '@/components/trips/FxPanel'
-import { fetchFx } from '@/lib/catalogue/fx'
+import { fetchFx, isStale } from '@/lib/catalogue/fx'
 import { qk } from '@/lib/catalogue/keys'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripRole } from '@/lib/trips/useTripRole'
+import { useHomeBase } from '@/lib/trips/useHomeBase'
+import { useMoney } from '@/lib/trips/Money'
 import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
+import { refreshedText } from '@/lib/trips/fxText'
+import { symbolOf } from '@/lib/trips/moneyText'
+import { shortDate } from '@/lib/trips/subscriptions'
+import { addDays } from '@/lib/trips/spending'
+import { useToast } from '@/components/Toast'
 import { Toggle } from '@/components/trips/sheetKit'
 import { SaveError } from '@/components/trips/SaveError'
 import { roleLabel } from '@/lib/trips/role'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import { DangerZone } from '@/components/trips/DangerZone'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
+import { Group, Row, RowInput, RowLink } from '@/components/ui/SettingsList'
+import type { TripMeta } from '@/lib/trips/types'
 import { ActiveTripCard } from './ActiveTripCard'
+
+// Trip settings, since round 5 in the phone's look (TripSettings.swift): a
+// grouped list, "This journey" (name, starts, ends, travellers, home) and
+// "Money" (budget, the currency locked, "Exchange rates ›" to its own page).
+// Each field saves when it is left; there is no Save button (decision 5,
+// Patrik, 12 Oct). Reached from Trip's gear, Money's ring and Account.
+//
+// Below the two groups the web keeps what the phone has not built: the Track
+// spending switch (here since 4a, Petra; it goes to Account's "You" group with
+// 5b), the Alerts row to Account, People on this trip (invites), the danger
+// zone and the build number.
 
 // LIVHOLD v1 token idioms (frames 27/27b/28)
 const input =
   'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base focus:border-ac focus:outline-none disabled:opacity-60'
 const pill = 'rounded-full border-[1.4px] border-ln3 px-3 py-1.5 text-base font-medium text-tx2 disabled:opacity-50'
 const pillAc = 'rounded-full border-[1.4px] border-ac-line px-3 py-1.5 text-base font-medium text-ac disabled:opacity-50'
+
+/** "4 500 000" — the budget as the row shows it; nothing for none. */
+const capText = (n: number | undefined) => (n && n > 0 ? Math.round(n).toLocaleString('en-US').replace(/,/g, ' ') : '')
 
 // "People on this trip" — the INVITER's half of the invite flow (migration 25).
 //
@@ -149,48 +170,58 @@ function PeopleCard() {
   )
 }
 
+/** A date on the right of its row: the day as a pill, the phone's own picker under a tap. */
+function DateRow({ label, value, onSave, disabled, optional, suggested }: {
+  label: string
+  value: string
+  onSave: (iso: string) => void
+  disabled?: boolean
+  /** "open-ended" when empty, and a ✕ to clear it */
+  optional?: boolean
+  /** where the picker opens when there is no date yet */
+  suggested?: string
+}) {
+  return (
+    <Row label={label}>
+      <label className={'relative inline-flex min-h-9 items-center gap-1.5 rounded-[9px] bg-fill px-3 text-[15px] font-medium text-tx ' + (disabled ? 'opacity-60' : '')}>
+        <CalendarDays aria-hidden className="size-4 text-tx2" />
+        <span className={value ? '' : 'text-tx2'}>{value ? shortDate(value) + (value.slice(0, 4) !== String(new Date().getFullYear()) ? ` ${value.slice(0, 4)}` : '') : 'open-ended'}</span>
+        <input
+          aria-label={label}
+          type="date"
+          disabled={disabled}
+          value={value || suggested || ''}
+          onChange={(e) => { if (e.target.value) onSave(e.target.value) }}
+          onClick={(e) => { try { e.currentTarget.showPicker() } catch { /* the tap still focuses it */ } }}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-default"
+        />
+      </label>
+      {optional && value && !disabled && (
+        <button type="button" onClick={() => onSave('')} aria-label={`Clear ${label.toLowerCase()}`} className="flex size-8 flex-none items-center justify-center rounded-full bg-fill text-tx2">
+          <X aria-hidden className="size-[14px]" strokeWidth={2.6} />
+        </button>
+      )}
+    </Row>
+  )
+}
+
 export default function SettingsClient() {
   const sb = createClient()
   const { tripId } = useTripScope()
   const trip = useQuery({ ...tripQueryOptions(sb, tripId), enabled: tripId !== null })
-  // This screen reads the RAW trip document on purpose: FxPanel edits the
-  // watchlist itself and derives live values from the snapshot below, so the
-  // merged view from useTripScreen would just be a detour.
+  // The RAW trip document on purpose: the rates page edits the watchlist in it,
+  // and the merged view from useTripScreen would just be a detour.
   const fx = useQuery({ queryKey: qk.fx, queryFn: () => fetchFx(sb), staleTime: 60 * 60_000 })
-  const online = useOnline()
   const mut = useTripMutation()
   const { role, canEdit } = useTripRole()
-
-  // local draft, synced from the loaded trip; saved on demand (one write, not per keystroke)
-  const [name, setName] = useState('')
-  const [travelers, setTravelers] = useState(2)
-  const [budgetCap, setBudgetCap] = useState(0)
-  const [startDate, setStartDate] = useState('')
-  const [baseCurrency, setBaseCurrency] = useState('HUF')
+  const { fmt } = useMoney()
+  const toast = useToast()
+  const profileHome = useHomeBase().data
   // Whether Money tracks what you spend: the person's answer (migration 41),
   // kept here as on the phone (Settings → Money) since round 4a of the redesign.
   const track = useTrackSpending()
   const setTrack = useSetTrackSpending()
-  const [saved, setSaved] = useState(false)
-  const [loadedVer, setLoadedVer] = useState<string | null>(null)
-
-  // Hydrate the draft only when the server version actually changes — a background
-  // refetch (or post-save invalidate) must not overwrite in-progress keystrokes.
-  // Done while rendering, not in an effect, so the form never paints a frame of
-  // its defaults first (React's "adjusting state when a prop changes").
-  if (trip.data && trip.data.updated_at !== loadedVer) {
-    setLoadedVer(trip.data.updated_at)
-    // Legacy/hand-seeded trips can lack meta entirely — keep the form on its
-    // defaults instead of crashing the whole screen.
-    const m = trip.data.state?.meta
-    if (m) {
-      setName(m.tripName)
-      setTravelers(m.travelers)
-      setBudgetCap(m.budgetCap)
-      setStartDate(m.startDate)
-      setBaseCurrency(m.baseCurrency)
-    }
-  }
+  const [dateProblem, setDateProblem] = useState<string | null>(null)
 
   if (tripId === null) return <CreateTripEmptyState />
   if (trip.isPending)
@@ -211,135 +242,105 @@ export default function SettingsClient() {
       </main>
     )
 
-  function save() {
-    mut.mutate(
-      (s) => ({
-        ...s,
-        meta: { ...s.meta, tripName: name, travelers, budgetCap, startDate, baseCurrency },
-        // rates deliberately untouched: they are refreshed from fx_rates and
-        // the watchlist is edited in FxPanel (migration 19).
-      }),
-      {
-        onSuccess: () => {
-          setSaved(true)
-          setTimeout(() => setSaved(false), 1500)
-        },
-      },
-    )
+  // Legacy/hand-seeded trips can lack meta entirely; the rows then show nothing and save a fresh one.
+  const meta: Partial<TripMeta> = trip.data.state?.meta ?? {}
+  const base = meta.baseCurrency || 'HUF'
+  const symbol = symbolOf(fmt)
+
+  /** One change to the journey's meta; everything else is kept. */
+  function patch(p: Partial<TripMeta>, what: string) {
+    mut.mutate((s) => ({ ...s, meta: { ...s.meta, ...p } }), { onSuccess: () => toast(`Saved · ${what}`) })
+  }
+  function saveStart(iso: string) {
+    if (meta.endDate && meta.endDate < iso) { setDateProblem('The end is before the start.'); return }
+    setDateProblem(null)
+    patch({ startDate: iso }, 'Starts')
+  }
+  function saveEnd(iso: string) {
+    if (iso && meta.startDate && iso < meta.startDate) { setDateProblem('The end is before the start.'); return }
+    setDateProblem(null)
+    patch({ endDate: iso || undefined }, 'Ends')
   }
 
-  const curList = Object.keys(trip.data.state.rates ?? {}).sort((a, b) => (a === 'HUF' ? -1 : b === 'HUF' ? 1 : a.localeCompare(b)))
-
   return (
-    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-[18px]">
-      <div className="flex flex-wrap items-center gap-2.5">
-        {/* Back to the Trip screen (frame 27's back-arrow circle). */}
-        <Link
-          href="/itinerary"
-          aria-label="Back to Trip"
-          className="flex size-11 flex-none items-center justify-center rounded-full border-[1.5px] border-ln2 bg-sf"
-        >
-          <ArrowLeft aria-hidden className="size-5" strokeWidth={2} />
+    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-4 px-4 pb-6 pt-[10px]">
+      <div>
+        <Link href="/itinerary" className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep">
+          <ChevronLeft aria-hidden className="size-5" />Trip
         </Link>
-        <h1 className="font-serif text-[25px] font-semibold">Trip settings</h1>
-        {/* Your standing on this trip. Shown to everyone, not just viewers: on a
-            shared trip "who am I here" is worth stating even when the answer is
-            Owner — it's the anchor the read-only states refer back to. */}
-        {role !== 'unknown' && role !== 'none' && (
-          <span className="rounded-full border-[1.4px] border-ln3 px-2.5 py-[3px] text-base font-medium text-tx2">
-            {roleLabel(role)}
-          </span>
-        )}
-      </div>
-      <p className="text-base leading-normal text-tx2">
-        Trip basics and the FX rates used to total everything in {baseCurrency}.
-      </p>
-
-      <ViewerNotice />
-
-      <div className="flex flex-col gap-3 rounded-[var(--r)] bg-sf p-4">
-        <label className="block text-base font-medium text-tx2">
-          Trip name
-          <input className={input} disabled={!canEdit} value={name} onChange={(e) => setName(e.target.value)} />
-        </label>
-        <div className="flex gap-2.5">
-          <label className="block min-w-0 flex-1 text-base font-medium text-tx2">
-            Travellers
-            <input type="number" min={1} className={input} disabled={!canEdit} value={travelers} onChange={(e) => setTravelers(Number(e.target.value) || 1)} />
-          </label>
-          <label className="block min-w-0 flex-1 text-base font-medium text-tx2">
-            Start date
-            <input type="date" className={input} disabled={!canEdit} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          </label>
-        </div>
-        <div className="flex gap-2.5">
-          <label className="block min-w-0 flex-1 text-base font-medium text-tx2">
-            Budget cap
-            <input type="number" min={0} className={input} disabled={!canEdit} value={budgetCap} onChange={(e) => setBudgetCap(Number(e.target.value) || 0)} />
-          </label>
-          <label className="block w-[110px] flex-none text-base font-medium text-tx2">
-            Base
-            <select className={input} disabled={!canEdit} value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)}>
-              {curList.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </label>
-        </div>
-      </div>
-
-      <FxPanel state={trip.data.state} fx={fx.data} online={online} canEdit={canEdit} />
-
-
-      {canEdit && (
-        <div className="flex flex-col gap-2">
-          <button
-            onClick={save}
-            disabled={mut.isPending}
-            className="w-full rounded-[calc(var(--r)-2px)] bg-ac py-3.5 text-[17px] font-semibold text-on disabled:opacity-50"
-          >
-            {mut.isPending ? 'Saving…' : 'Save changes'}
-          </button>
-          {saved && <span className="text-center text-base font-medium text-tx2">✓ Saved</span>}
-          {mut.isError && (
-            <span className="text-base text-ac2">
-              {isPermissionDenied(mut.error)
-                ? 'Your edit access to this trip was removed. The change was rolled back.'
-                : isRevConflict(mut.error)
-                  ? 'Someone else saved this trip first. The latest version was loaded. Please redo your edit.'
-                  : 'Save failed. Try again.'}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">Trip settings</h1>
+          {/* Your standing on this trip. Shown to everyone, not just viewers: on a
+              shared trip "who am I here" is worth stating even when the answer is
+              Owner — it's the anchor the read-only states refer back to. */}
+          {role !== 'unknown' && role !== 'none' && (
+            <span className="rounded-full border-[1.4px] border-ln3 px-2.5 py-[3px] text-[14px] font-medium text-tx2">
+              {roleLabel(role)}
             </span>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Money's own switch went with round 4a (Petra, 14 Oct: the phone has none there).
-          Below "Save changes", not above it: the switch saves the moment it is tapped, like
-          Alerts leads away on its own, and above the button it read as one more field to
-          save (Petra, 14 Oct). Round 5 drops the button altogether. Hidden while the answer
-          can't be read: a switch that cannot save would lie. */}
+      <ViewerNotice />
+      <SaveError show={mut.isError} error={mut.error} />
+
+      <Group
+        title="This journey"
+        footer={
+          dateProblem ? <span className="text-warn">{dateProblem}</span>
+            : !canEdit ? 'Only the journey’s editors can change these.'
+              : profileHome ? `Your own home, ${profileHome}, comes first; it is set under Account.`
+                : 'Each field saves as you leave it.'
+        }
+      >
+        <RowInput label="Name" ariaLabel="Name" value={meta.tripName ?? ''} placeholder="Name" disabled={!canEdit}
+          onSave={(v) => { const t = v.trim(); if (t) patch({ tripName: t }, 'Name') }} />
+        <DateRow label="Starts" value={meta.startDate ?? ''} onSave={saveStart} disabled={!canEdit} />
+        <DateRow label="Ends" value={meta.endDate ?? ''} onSave={saveEnd} disabled={!canEdit} optional suggested={meta.startDate ? addDays(meta.startDate, 30) : undefined} />
+        <RowInput label="Travellers" ariaLabel="Travellers" value={String(meta.travelers ?? 1)} inputMode="numeric" disabled={!canEdit}
+          onSave={(v) => patch({ travelers: Math.max(1, Math.round(Number(v)) || 1) }, 'Travellers')} />
+        <RowInput label="Home" ariaLabel="Home" value={meta.homeBase ?? ''} placeholder="City, country" disabled={!canEdit}
+          onSave={(v) => patch({ homeBase: v.trim() || undefined }, 'Home')} />
+      </Group>
+
+      <Group title="Money" footer="Rates refresh every morning. The currency can change once each expense keeps the rate of its own day.">
+        <RowInput label="Budget" ariaLabel="Budget" value={capText(meta.budgetCap)} placeholder="None" suffix={symbol} inputMode="numeric" disabled={!canEdit}
+          onSave={(v) => patch({ budgetCap: Number(v.replace(/\D/g, '')) || 0 }, 'Budget')} />
+        {/* Locked until each expense keeps its own day's rate (#129): changing
+            it today would reprice the past at today's rate. */}
+        <Row label={<span className="opacity-45">Currency</span>}>
+          <span className="opacity-45" title="Can’t be changed yet">{base}</span>
+        </Row>
+        <RowLink
+          label="Exchange rates"
+          href="/settings/rates"
+          value={refreshedText(fx.data?.lastSuccessAt)}
+          valueClass={fx.data && isStale(fx.data.lastSuccessAt) ? 'text-warn' : 'text-tx3'}
+        />
+      </Group>
+
+      {/* The person's answer, as the phone's Account › You has it; 5b moves it there.
+          Hidden while the answer can't be read: a switch that cannot save would lie. */}
       {track.data && track.data !== 'unknown' && (
-        <div className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf p-4">
-          <span className="min-w-0">
-            <span className="block font-serif text-[19px] font-semibold">Track spending</span>
-            <span className="block text-base text-tx2">
-              {track.data === 'yes' ? 'Money shows your pace, where it goes and where the journey lands. Only for you.' : 'Spending isn’t tracked on this journey. Money shows the bookings.'}
-              {' '}Saves as you switch it.
-            </span>
-          </span>
-          <Toggle on={track.data === 'yes'} onChange={(on) => setTrack.mutate(on)} label="Track spending" />
-        </div>
+        <Group
+          title="You"
+          footer={track.data === 'yes'
+            ? 'Money shows your pace, where it goes and where the journey lands. Only for you, on every journey. Saves as you switch it.'
+            : 'Spending isn’t tracked on your journeys. Money shows the bookings. Saves as you switch it.'}
+        >
+          <Row label="Track spending">
+            <Toggle on={track.data === 'yes'} onChange={(on) => setTrack.mutate(on)} label="Track spending" />
+          </Row>
+        </Group>
       )}
       <SaveError show={setTrack.isError} error={setTrack.error} />
 
       {/* Alerts moved to /account with the notification matrix (issue #13):
           they belong to the person, and a follower with no trip needs them
           too. One row keeps the old path working for whoever looks here. */}
-      <Link href="/account#alerts" className="flex items-center justify-between rounded-[var(--r)] bg-sf p-4">
-        <span>
-          <span className="block font-serif text-[19px] font-semibold">Alerts</span>
-          <span className="block text-base text-tx2">Push and per-trip mutes, now under Account</span>
-        </span>
-        <ChevronRight aria-hidden className="size-5 text-ac2" />
-      </Link>
+      <Group>
+        <RowLink label="Alerts" href="/account#alerts" value="under Account" />
+      </Group>
 
       {/* Editors, not just the owner: invites_insert gates on can_edit_trip
           (migration 25), so hiding this from a co-editor would be the UI
@@ -349,7 +350,7 @@ export default function SettingsClient() {
       {/* Last on the page, per frame 28 — irreversible actions never sit above
           the things people came here to do. Viewers see it too: leaving a trip
           is the one destructive action a viewer legitimately has. */}
-      <DangerZone tripName={trip.data.state?.meta?.tripName ?? name} />
+      <DangerZone tripName={meta.tripName ?? ''} />
 
       <p className="mt-4 text-center text-base text-tx3">
         {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark */}

@@ -178,7 +178,10 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
-- 14 Oct: round 4c built, the entry form as the phone's (the big amount with the currency beside
+- 14 Oct: round 5a built, Trip settings as the phone's grouped list ("This journey", "Money"),
+  each field saving as it is left, no Save button (decision 5); Exchange rates on a page of their
+  own with "+ Add a currency". Account (5b) next. Pictures in `docs/web-ios-redesign/round5a-*`.
+- 14 Oct: round 4c merged (#206; the build waits on Vercel's daily limit), the entry form as the phone's (the big amount with the currency beside
   it, the name card, four category tiles with "All N categories", date and the daily-average switch
   on one card, Cancel / Add in the bar). The Subscriptions question stays on the web, on its own
   card. Pictures in `docs/web-ios-redesign/round4c-*`.
