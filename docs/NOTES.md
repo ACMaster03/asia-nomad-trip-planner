@@ -39,9 +39,11 @@ from the phone's `MoneyScreen.swift` and `MoneyModel.swift`:
   next, the bell, "in 3 days" in amber, "N active · ≈ X a month"; "All subscriptions"
   opens the rest and the cancelled ones in place until 4b gives them their page.
 - Gone: the All entries row (Latest and Upcoming lead there; the quiet page keeps a row, as
-  the phone's quiet page does) and the Budget cap row (the ring and the Budget row open the
-  settings). Kept, not on the phone: the Track spending switch under the top card, until
-  round 5 puts it in the settings; the web has nowhere else for it yet.
+  the phone's quiet page does), the Budget cap row (the ring and the Budget row open the
+  settings), and the Track spending switch (Petra, 14 Oct: "in the app version it's not
+  there"): it is a row on Trip settings now, as the phone's Settings → Money, and the quiet
+  page invites instead, as the phone's InviteCard ("See what a day costs", a Track spending
+  button, "or add a first expense"). `TrackSpendingRow.tsx` is gone.
 - The #127 numbers (`spending.ts`, `moneyModel.ts`): (1) the days between the last planned
   stop and the journey's end count, at the daily pace plus the average night's stay, in
   `projection.unplanned` / `unplannedDays` / `daysAhead`; before departure counted, not
@@ -55,8 +57,7 @@ from the phone's `MoneyScreen.swift` and `MoneyModel.swift`:
 - The dev preview takes `?today=YYYY-MM-DD` (with the browser clock set to it) for any day,
   before departure included.
 
-iOS: nothing new; the web took the phone's Money page. One difference to know: the web
-keeps the Track spending switch on Money until round 5.
+iOS: nothing new; the web took the phone's Money page.
 
 ### DECIDED — local builds; Claude's branches no longer build on Vercel (Patrik through Petra, 14 Oct)
 

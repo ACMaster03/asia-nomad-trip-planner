@@ -41,7 +41,6 @@ import { ChargeNotice } from './ChargeNotice'
 import { SubsOffer } from './SubsOffer'
 import { subsOfferRows } from '@/lib/trips/subsOffer'
 import { TrackQuestion } from './TrackQuestion'
-import { TrackSpendingRow } from './TrackSpendingRow'
 import { CardLabel } from './CardLabel'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
@@ -56,15 +55,16 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // charges, Latest, Daily spend and Where it goes (not before departure), Plan,
 // then Bookings and Subscriptions, always open (Patrik, 29 Sep: no card
 // folds). The All entries row went (Latest and Upcoming lead there) and the
-// Budget cap row too (the ring and the Budget row open the settings). The
-// Track spending switch stays under the top card until round 5 puts it in the
-// settings, as the phone has it. The three numbers of #127 came with it: the
-// days after the plan, "still to pay", a flight dated by its charge date.
+// Budget cap row too (the ring and the Budget row open the settings), and the
+// Track spending switch moved to Trip settings, as the phone's (Petra, 14 Oct);
+// the quiet page invites instead, as the phone's InviteCard. The three
+// numbers of #127 came with it: the days after the plan, "still to pay", a
+// flight dated by its charge date.
 //
 // Stage 2 of mock 16, round 1 (23 Sep): the once-per-account question, "Track
 // what you spend on this journey?", as a sheet on the first visit, and the
 // quiet page for "Not now": the bookings, the subscriptions, the add button
-// and one line back. The answer lives on the profile (migration 41;
+// and the invitation. The answer lives on the profile (migration 41;
 // lib/trips/tracking.ts has the four states). Round 2 (mock 16 §6): the full
 // page starts short and earns its cards as entries arrive, per journey
 // (lib/trips/unlocks.ts). Once a card has appeared it stays.
@@ -288,22 +288,28 @@ export default function MoneyPage() {
       {quiet ? (
         // The quiet page (mock 16 §2, the phone's): what you have committed to
         // is the one money question someone who does not track still has, so
-        // Bookings and Subscriptions, the way to All entries, and the switch.
-        // The page never says ledger, opt-in or analytics.
+        // Bookings and Subscriptions, the way to All entries, and the
+        // invitation. The page never says ledger, opt-in or analytics.
         <>
           {bookingsCard}
           {subsCard}
           {allEntriesRow}
-          <TrackSpendingRow on={false} onChange={(on) => setTrack.mutate(on)} className={wide} />
+          <div className={'rounded-[var(--r)] border-[1.5px] border-dashed border-ac-line bg-ac-soft p-4 ' + wide}>
+            <div className="font-serif text-[19px] font-semibold">See what a day costs</div>
+            <p className="mt-2 text-[14px] text-tx2">Log what you spend as you go, and Money adds your daily pace, where it goes, and where the journey lands.</p>
+            <button type="button" onClick={() => setTrack.mutate(true)} disabled={setTrack.isPending} className="mt-3 w-full rounded-[var(--rCtl)] bg-ac py-3 text-base font-semibold text-on disabled:opacity-50">
+              Track spending
+            </button>
+            {canEdit && (
+              <button type="button" onClick={() => setSheet({ entry: null })} className="mt-1 flex min-h-11 w-full items-center justify-center text-[13.5px] font-medium text-ac">
+                or add a first expense
+              </button>
+            )}
+          </div>
         </>
       ) : (
       <>
       <div className={wide}><TopCard model={model} fmt={fmt} todayIso={today} projecting={unlocks.projection} /></div>
-
-      {/* Right under the first card, as on the quiet page, until round 5 moves it to the
-          settings as on the phone. Hidden when the answer can't be read: a switch that
-          cannot save would lie. */}
-      {tracking !== 'unknown' && <TrackSpendingRow on onChange={(on) => setTrack.mutate(on)} className={wide} />}
 
       {/* Under the first card, as in mock 16 §8. Once: gone for good when answered. */}
       {offer.length > 0 && <SubsOffer rows={offer} todayIso={today} mut={mut} stateMut={stateMut} className={wide} />}

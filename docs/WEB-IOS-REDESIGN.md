@@ -181,7 +181,8 @@ The six questions this file first ended with, and the answers.
 - 14 Oct: round 4a built (not merged: Vercel's daily limit), Money as the phone's MoneyScreen:
   the top card with the stop / Journey switch and the budget ring, Upcoming charges, Latest
   with the category tiles, Bookings open, Subscriptions as Latest's pattern, the All entries
-  and Budget cap rows gone, the #127 numbers. The Track spending switch stays until round 5.
+  and Budget cap rows gone, the #127 numbers. The Track spending switch moved to Trip settings
+  (Petra), the quiet page invites as the phone's.
   Pictures in `docs/web-ios-redesign/round4a-*`.
 - 14 Oct: round 3c live (#199, Petra's test on the phone). Her finding: the stop page slow to
   open and to leave; it was a route, each way a trip to the server. It is a layer over the
