@@ -37,7 +37,8 @@ export const fmtHours = (h: number) => {
  * left, the title in the middle, Save on the right, grey until there is something to save.
  */
 export function SheetBar({ title, onCancel, onSave, saveLabel = 'Save', canSave = true }: {
-  title: string
+  /** a string, or a control: the entry form's "Add expense ⌄" switches the type there */
+  title: React.ReactNode
   onCancel: () => void
   onSave: () => void
   saveLabel?: string

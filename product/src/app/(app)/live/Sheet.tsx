@@ -18,10 +18,13 @@ import { lockBodyScroll } from '@/lib/scrollLock'
 export function Sheet({
   label,
   onClose,
+  surface = 'sf',
   children,
 }: {
   label: string
   onClose: () => void
+  /** the panel's colour: the surface, or the canvas for a form of white group cards (the entry form, round 4c) */
+  surface?: 'sf' | 'canvas'
   children: React.ReactNode
 }) {
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -61,7 +64,7 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className="lv-sheet fixed inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col gap-[13px] overflow-y-auto overscroll-contain rounded-t-[var(--r)] bg-sf px-[18px] pb-[max(26px,env(safe-area-inset-bottom))] pt-2.5 text-tx outline-none"
+        className={'lv-sheet fixed inset-x-0 bottom-0 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col gap-[13px] overflow-y-auto overscroll-contain rounded-t-[var(--r)] px-[18px] pb-[max(26px,env(safe-area-inset-bottom))] pt-2.5 text-tx outline-none ' + (surface === 'canvas' ? 'bg-canvas' : 'bg-sf')}
         style={dy ? { transform: `translateY(${dy}px)`, transition: 'none' } : undefined}
       >
         <div

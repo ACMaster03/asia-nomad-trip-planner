@@ -7,7 +7,36 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Latest's "All entries ›" took five seconds (Petra, 14 Oct)
+### BUILT — Round 4c: the entry form as on the phone (14 Oct)
+
+Round 4c of `docs/WEB-IOS-REDESIGN.md`. Add / edit an entry (`EntrySheet.tsx`) is the phone's
+`EntrySheet.swift`: the amount large at the top (46 px, as wide as what is typed) with the
+currency as a small menu beside it and the conversion under it ("≈ 1 700 Ft · you're in
+Thailand"); the name on its own card; the four categories used most as tiles (`CategoryTile`,
+46 px, the picked one ringed in its colour; the pick, the suggestion from the name, or Other
+first) with "All N categories" under them, which opens the picker with tiles on its rows; the
+date and the daily-average switch on one card; Cancel and Add / Save in the bar (`SheetBar`,
+its title now a control: "Add expense ⌄" switches the type) with "Discard changes?" on the way
+out (`useDirty`, `useCancel`); "Delete entry" at the bottom. The sheet takes the canvas colour
+for this form (`Sheet surface="canvas"`), so its cards are white on grey as the phone's.
+
+Two things decided here, for Patrik to keep or change: (1) the daily-average switch reads as
+the phone's, "In the daily average", on when the entry counts (it used to name the exception,
+"Exclude from…" / "Include in…", off by default; Patrik, 26 Sep). Stored the same way, only
+where it differs from the category. (2) The Subscriptions question stays (#37, 24 Sep: the
+charge is the subscription), on a card of its own; the phone has no such block and says "For
+one that repeats, add it under Subscriptions on Money." instead. The ⓘ "why this category" went
+(the phone has none; the tile shows the suggestion).
+
+Checked locally (Patrik's rule): tsc, eslint, 202 tests, `next build --webpack`, the previews
+shot by Playwright. Pictures in `docs/web-ios-redesign/round4c-*`.
+
+iOS: nothing new; the phone is the source. The switch's wording and the Subscriptions question
+are the two places the apps differ.
+
+### LIVE — #205: Latest's "All entries ›" took five seconds (Petra, 14 Oct)
+
+Merged with Petra's "yes" at 10:52 UTC; Vercel built `9ad49a8`, live on app.livhold.com (`v9ad49a8`).
 
 Petra's re-test of `b36c9d2`: all four fixes work; Latest's "All entries ›" on Money took about
 five seconds to open. The same cause as "‹ Money" in #204, the other way round: a dynamic page

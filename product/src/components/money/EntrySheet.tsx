@@ -1,8 +1,10 @@
 'use client'
 import { useMemo, useState } from 'react'
-import { CalendarDays, ChevronDown, Info } from 'lucide-react'
+import { CalendarDays, ChevronDown } from 'lucide-react'
 import { Sheet } from '@/app/(app)/live/Sheet'
+import { SheetBar, Toggle, chipCls, useCancel, useDirty } from '@/components/trips/sheetKit'
 import { CategoryPicker } from './CategoryPicker'
+import { CategoryTile, categoryColor } from './CategoryTile'
 import { useMoney } from '@/lib/trips/Money'
 import { parseAmount, toBase } from '@/lib/trips/format'
 import { addDays, everydaySwitchable } from '@/lib/trips/spending'
@@ -13,19 +15,23 @@ import {
 import { nearestCharge, nextCharge, shortDate, subFromEntry, subNamed } from '@/lib/trips/subscriptions'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 
-// Add / edit an entry. Patrik, 26 Sep: amount first, since what it cost is
-// what you came to type, then "What was it? · optional" on a second row (it
-// is still the entry's name in All entries; empty, the category stands in).
-// The title is the type: "Add expense ⌄", and a tap makes it "Add income ⌄".
-// About 98% of entries are expenses, so the Expense | Income row went; the
-// chevron is there because nobody taps a bare heading. The category is
-// suggested from the name (alias table), shown as a pre-selected chip; six
-// most-used chips + "All N…" opens the picker. No pick = Other. The date is a
-// small pill beside the daily-average switch, still readable at a glance.
+// Add / edit an entry, since round 4c in the phone's look (EntrySheet.swift,
+// Money mock round 2 §4): the amount large at the top with the currency as a
+// small menu beside it and the conversion under it, the name on its own card,
+// the four categories you use most as tiles with "All N categories" under
+// them, then the date and the daily-average switch on one card. Cancel and
+// Add / Save in the bar, as on every form since round 3c; "Discard changes?"
+// on the way out. Patrik, 26 Sep: amount first, since what it cost is what
+// you came to type; the title is the type, "Add expense ⌄", and a tap makes it
+// "Add income ⌄" (about 98% of entries are expenses). The category is
+// suggested from the name (alias table) until a tile is tapped. No pick =
+// Other, the tile that starts selected.
 //
-// In the Subscriptions category it asks one question (mock 16 §7, round 3):
-// does it repeat? The charge IS the subscription (#59), so saving declares it,
-// anchored on this entry's date, and no second form is ever needed.
+// In the Subscriptions category it asks one question (mock 16 §7, round 3;
+// Patrik, 24 Sep, #37): does it repeat? The charge IS the subscription (#59),
+// so saving declares it, anchored on this entry's date, and no second form is
+// ever needed. The phone has no such block (it points to the Subscriptions
+// page instead); the web keeps the decided behaviour, on a card of its own.
 // - A new name: Every month (preselected on a new entry), Every year, Other…
 //   (every N months) or Doesn't repeat, the next charge, and a reminder three
 //   days before, on by default.
@@ -39,26 +45,21 @@ import type { LedgerEntry, Subscription } from '@/lib/trips/types'
 // fix its amount must not declare anything.
 //
 // The daily-average switch (#36, Patrik, 26 Sep): the category decides unless
-// the entry says otherwise. It is on every expense typed by hand. #96 showed
-// it only for an amount at least 3× the daily pace; Patrik, the same day: "a
-// flat option, we might have stuff that we buy that's cheap but we don't want
-// it counted". Never for stays, transport or subscriptions: the projection
-// adds those on its own, so counting them in the pace too would count twice.
-// The switch names what differs from the category, so it always starts off:
-// "Exclude from the daily average" for an everyday category, "Include in the
-// daily average" for the other three. No description: Patrik, the label says
-// it (the overview's "beyond the everyday" shows it still counts as spent).
+// the entry says otherwise. It is on every expense typed by hand, never for
+// stays, transport or subscriptions: the projection adds those on its own, so
+// counting them in the pace too would count twice. Since round 4c it reads as
+// the phone's: "In the daily average", on when the entry counts, so the
+// switch shows the state rather than naming the exception. Stored only where
+// it differs from the category.
 
 const newId = (p: string) => p + crypto.randomUUID()
 const todayISO = () => new Date().toISOString().slice(0, 10)
-const label = 'block min-w-0 text-[14px] font-medium text-tx2'
-const box =
-  'mt-1.5 flex min-h-[52px] w-full items-center rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 text-base text-tx outline-none transition-colors duration-[180ms] focus:border-ac disabled:opacity-60'
-const chip = (on: boolean) =>
-  'rounded-full border-[1.5px] px-3 py-[7px] text-[14px] font-medium transition-colors duration-[180ms] ' +
-  (on ? 'border-ac bg-ac text-on' : 'border-ln2 bg-sf text-tx')
 const dayLabel = (iso: string) =>
   iso === todayISO() ? 'Today' : new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+/** A white card on the sheet's canvas, the phone's `group`. */
+const group = 'rounded-[16px] bg-sf px-[14px]'
+const row = 'flex min-h-[50px] items-center justify-between gap-3 py-1 text-base text-tx'
+const small = 'block text-[14px] font-medium text-tx2'
 
 /** What saving an entry does to the subscriptions beside it. */
 export type SubChange =
@@ -80,7 +81,7 @@ export function EntrySheet({
   rates: Record<string, number>
   /** the journey's subscriptions, for the Subscriptions question */
   subs?: Subscription[]
-  /** what the currency box starts on for a NEW entry (see pickEntryCurrency) */
+  /** what the currency starts on for a NEW entry (see pickEntryCurrency) */
   defaultCur: string
   /** the country that chose it, when the choice came from today's stop */
   defaultCurWhere?: string | null
@@ -88,7 +89,7 @@ export function EntrySheet({
   onSave: (e: LedgerEntry, sub?: SubChange, replaceId?: string) => void
   onDelete?: (e: LedgerEntry) => void
   onClose: () => void
-  /** one line right above the save button, for what saving does beyond saving */
+  /** one line under the form, for what saving does beyond saving */
   note?: string
 }) {
   const { base, fmt } = useMoney()
@@ -105,7 +106,6 @@ export function EntrySheet({
   const [catTouched, setCatTouched] = useState(!!initial)
   const [date, setDate] = useState(initial?.date ?? todayISO())
   const [picker, setPicker] = useState(false)
-  const [why, setWhy] = useState(false)
   // Unset: the category decides (#36). Set only by the switch.
   const [everyday, setEveryday] = useState<boolean | undefined>(initial?.everyday)
 
@@ -119,32 +119,38 @@ export function EntrySheet({
   const [remind, setRemind] = useState(linked ? !!linked.remind : true)
   const [isCharge, setIsCharge] = useState<boolean | null>(initial?.subId === null ? false : null)
 
-  // The suggestion follows the name until the user picks a chip themselves.
+  const dirty = useDirty({ type, name, amount, cur, cat, date, everyday, repeat, otherMonths, remind, isCharge })
+  const cancel = useCancel(dirty, onClose)
+
+  // The suggestion follows the name until a tile is tapped.
   const suggested = useMemo(() => suggestCategory(name, type), [name, type])
   const effective = catTouched ? cat : suggested
-  const chips = useMemo(() => {
-    const row = mostUsedCategories(ledger, type, 6)
-    if (effective && !row.includes(effective)) row.unshift(effective)
-    return row.slice(0, 6)
-  }, [ledger, type, effective])
-  const currencies = Object.keys(rates)
+  // The selected tile: the pick, the suggestion, or Other (the phone starts on it).
+  const catId = effective ?? DEFAULT_CATEGORY[type]
+  const tiles = useMemo(() => {
+    const row = mostUsedCategories(ledger, type, 4)
+    if (!row.includes(catId)) row.unshift(catId)
+    return row.slice(0, 4)
+  }, [ledger, type, catId])
+  // The base first, as on the phone; one that is no longer watched stays listed while it is picked.
+  const currencies = useMemo(() => {
+    const list = Object.keys(rates).filter((c) => c !== base).sort()
+    list.unshift(base)
+    if (cur && !list.includes(cur)) list.push(cur)
+    return list
+  }, [rates, base, cur])
   const amt = parseAmount(amount)
   const valid = isFinite(amt) && amt > 0
-  const preview = valid && cur !== base ? fmt(toBase(amt, cur, rates)) : null
 
   // The daily-average switch (see the header).
-  const catId = effective ?? DEFAULT_CATEGORY[type]
   const byCategory = isEverydayCategory(catId)
   const counts = everyday ?? byCategory
   const askEveryday = type === 'expense' && !imported && everydaySwitchable(catId)
-  const everydayLabel = byCategory ? 'Exclude from the daily average' : 'Include in the daily average'
-  const title = `${initial ? 'Edit' : 'Add'} ${type}`
-  // Say WHY the box opened on this currency, but only while it is still the
-  // app's guess: once it has been changed by hand the note would be a lie.
-  const curNote =
-    !initial && !curTouched && defaultCurWhere && cur === defaultCur
-      ? `${cur} is the currency in ${defaultCurWhere}, where you are today.`
-      : null
+  // The conversion, and why the currency is this one while it is still the
+  // app's guess: once changed by hand the note would be a lie.
+  const conversion: string[] = []
+  if (valid && cur !== base) conversion.push(`≈ ${fmt(toBase(amt, cur, rates))}`)
+  if (!initial && !curTouched && defaultCurWhere && cur === defaultCur && cur !== base) conversion.push(`you’re in ${defaultCurWhere}`)
 
   const isSubCat = type === 'expense' && effective === RECURRING_CATEGORY && !imported
   const match = isSubCat && !linked ? subNamed(subs, name) : null
@@ -167,11 +173,16 @@ export function EntrySheet({
     : undefined
   const badOther = repeat === 'other' && !otherOk && (mode === 'new' || mode === 'linked')
   const dated = (iso: string) => (iso.slice(0, 4) === todayISO().slice(0, 4) ? shortDate(iso) : `${shortDate(iso)} ${iso.slice(0, 4)}`)
+  const footnote = imported
+    ? 'Amount and date follow the booking on the Trip page; edit them there.'
+    : note
+  const shortLabel = (id: string) => (id === 'convenience' ? 'Convenience' : categoryLabel(id))
 
   function switchType(t: CategoryKind) {
     setType(t)
     setCat(null)
     setCatTouched(false)
+    setEveryday(undefined)
   }
   function submit() {
     if (!valid || badOther) return
@@ -179,7 +190,7 @@ export function EntrySheet({
       id: initial?.id ?? newId('le'),
       date: date || todayISO(),
       type,
-      category: effective ?? DEFAULT_CATEGORY[type],
+      category: catId,
       amount: amt,
       currency: cur || base,
       note: name.trim(),
@@ -205,105 +216,109 @@ export function EntrySheet({
     onSave(entry, change, mode === 'match' && isCharge === true && written ? written.id : undefined)
   }
 
+  const typeWord = type === 'expense' ? 'expense' : 'income'
+  const title = initial || imported
+    ? (type === 'expense' ? 'Expense' : 'Income')
+    : (
+      <button
+        type="button"
+        onClick={() => switchType(type === 'expense' ? 'income' : 'expense')}
+        aria-label={`Add ${typeWord}. Switch to ${type === 'expense' ? 'income' : 'expense'}`}
+        className="inline-flex min-h-11 items-center gap-1 text-base font-semibold text-tx"
+      >
+        Add {typeWord}
+        <ChevronDown aria-hidden className="size-[11px] text-tx" strokeWidth={3} />
+      </button>
+    )
+
   return (
-    <Sheet label={title} onClose={onClose}>
-      {imported ? (
-        <h3 className="text-[20px] font-semibold">{title}</h3>
-      ) : (
-        <button
-          type="button"
-          onClick={() => switchType(type === 'expense' ? 'income' : 'expense')}
-          aria-label={`${title}. Switch to ${type === 'expense' ? 'income' : 'expense'}`}
-          className="-my-1.5 flex min-h-11 items-center gap-1.5 self-start text-left"
-        >
-          <span className="text-[20px] font-semibold">{title}</span>
-          <ChevronDown aria-hidden className="size-5 text-tx3" />
-        </button>
-      )}
+    <Sheet label={initial ? `Edit ${typeWord}` : `Add ${typeWord}`} onClose={cancel} surface="canvas">
+      <SheetBar title={title} onCancel={cancel} onSave={submit} saveLabel={initial ? 'Save' : 'Add'} canSave={valid && !badOther} />
 
-      {/* No autoFocus: on the iPhone a keyboard that opens the instant the sheet
-          appears shifts the sheet before it has settled and leaves a blank band
-          under it (Petra, 23 Sep). A tap on a field opens it cleanly. */}
-      <div className="grid grid-cols-[1fr_96px] gap-2.5">
-        <label className={label}>
-          Amount
-          <input
-            aria-label="Amount"
-            className={box + ' text-[24px] font-semibold'}
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            disabled={imported}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </label>
-        <label className={label}>
-          Currency
-          <select
-            aria-label="Currency"
-            className={box}
-            disabled={imported}
-            value={cur}
-            onChange={(e) => { setCur(e.target.value); setCurTouched(true) }}
-          >
-            {!currencies.includes(cur) && <option value={cur}>{cur}</option>}
-            {currencies.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </label>
+      {/* The amount, large, with the currency beside it. The input is as wide as
+          what is typed (the hidden twin under it sizes the cell), so the
+          currency sits right after the number, as on the phone. No autoFocus:
+          on the iPhone a keyboard that opens the instant the sheet appears
+          shifts the sheet before it has settled (Petra, 23 Sep). */}
+      <div className="flex flex-col items-center gap-1 pt-1">
+        <div className="flex max-w-full items-baseline justify-center gap-2.5">
+          <span className="inline-grid min-w-0 max-w-[70%]">
+            <span aria-hidden className="invisible col-start-1 row-start-1 whitespace-pre px-1 text-[46px] font-semibold leading-none">{amount || '0'}</span>
+            <input
+              aria-label="Amount"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="0"
+              disabled={imported}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="col-start-1 row-start-1 w-full min-w-[2ch] bg-transparent px-1 text-center text-[46px] font-semibold leading-none text-tx outline-none placeholder:text-tx3 disabled:opacity-60"
+            />
+          </span>
+          <span className="relative flex-none">
+            <select
+              aria-label="Currency"
+              disabled={imported}
+              value={cur}
+              onChange={(e) => { setCur(e.target.value); setCurTouched(true) }}
+              className="appearance-none rounded-[9px] bg-fill py-1.5 pl-2.5 pr-[26px] text-[15px] font-semibold text-tx outline-none disabled:opacity-60"
+            >
+              {currencies.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <ChevronDown aria-hidden className="pointer-events-none absolute right-2 top-1/2 size-[10px] -translate-y-1/2 text-tx" strokeWidth={3} />
+          </span>
+        </div>
+        <p className="min-h-[18px] text-center text-[13px] tabular-nums text-tx2">{conversion.join(' · ')}</p>
       </div>
-      {imported && (
-        <p className="-mt-1 text-[13px] text-tx2">Amount and date follow the booking on the Trip page; edit them there.</p>
-      )}
-      {(curNote || preview) && (
-        <p className="-mt-1 flex items-baseline justify-between gap-3 text-[13px] text-tx3">
-          <span>{curNote}</span>
-          {preview && <span className="shrink-0 tabular-nums">≈ {preview} in {base}</span>}
-        </p>
-      )}
 
-      <input
-        aria-label="What was it?"
-        className={box + ' mt-0'}
-        placeholder="What was it? · optional"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+      <div className={group}>
+        <input
+          aria-label="What was it?"
+          className="w-full bg-transparent py-[13px] text-base text-tx outline-none placeholder:text-tx3"
+          placeholder="What was it? · optional"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
 
-      <div>
-        <div className="flex items-baseline justify-between">
-          <span className={label}>Category</span>
-          {/* Behind an ⓘ, not always on (Petra, mock 16 round 2: too much text). */}
-          {!catTouched && suggested && (
-            <button type="button" onClick={() => setWhy((v) => !v)} aria-expanded={why} aria-label="Why this category" className="-my-3 -mr-3 flex size-11 items-center justify-center text-tx3">
-              <Info aria-hidden className="size-[18px]" />
-            </button>
-          )}
-          {!effective && name.trim().length >= 3 && <span className="text-[13px] text-tx3">none picked → Other</span>}
+      {/* The four categories you use most, as tiles; the picked one first when it is not among them. */}
+      <div className="flex flex-col items-center gap-2.5 rounded-[16px] bg-sf p-3">
+        <div className="flex w-full items-start gap-1" role="group" aria-label="Category">
+          {tiles.map((id) => {
+            const on = id === catId
+            return (
+              <button
+                key={id}
+                type="button"
+                disabled={imported}
+                onClick={() => { setCat(id); setCatTouched(true) }}
+                aria-pressed={on}
+                aria-label={categoryLabel(id)}
+                className="flex min-w-0 flex-1 flex-col items-center gap-1.5 disabled:opacity-60"
+              >
+                <span className="rounded-[16px] p-[3px]" style={on ? { boxShadow: `inset 0 0 0 2px ${categoryColor(id)}` } : undefined}>
+                  <CategoryTile id={id} size={46} />
+                </span>
+                <span className={'line-clamp-2 text-center text-[11.5px] leading-tight ' + (on ? 'font-semibold text-tx' : 'text-tx2')}>{shortLabel(id)}</span>
+              </button>
+            )
+          })}
         </div>
-        {why && !catTouched && suggested && <p className="mt-1 text-[13px] text-tx3">Suggested from the name. Tap another to change it.</p>}
-        <div className="mt-2 flex flex-wrap gap-[7px]">
-          {chips.map((id) => (
-            <button key={id} onClick={() => { setCat(id); setCatTouched(true) }} className={chip(effective === id)} aria-pressed={effective === id}>
-              {categoryLabel(id)}{effective === id && !catTouched ? ' ✓' : ''}
-            </button>
-          ))}
-          <button onClick={() => setPicker(true)} className={chip(false) + ' border-dashed bg-inp text-tx2'}>
-            All {categoriesFor(type).length}…
-          </button>
-        </div>
+        <button type="button" disabled={imported} onClick={() => setPicker(true)} className="min-h-9 text-[14px] font-medium text-ac disabled:opacity-60">
+          All {categoriesFor(type).length} categories
+        </button>
       </div>
 
       {mode === 'match' && match && (
-        <div>
-          <span className={label}>Repeats</span>
-          <p className="mt-1 text-base">
+        <div className={group + ' py-3'}>
+          <span className={small}>Repeats</span>
+          <p className="mt-1 text-base text-tx">
             {match.label} is one of your subscriptions. Is this {matchCharge ? `its ${dated(matchCharge)} charge` : 'a charge of it'}?
           </p>
-          <div className="mt-2 flex flex-wrap gap-[7px]" role="radiogroup" aria-label="Is this its charge">
+          <div className="mt-2.5 flex flex-wrap gap-[7px]" role="radiogroup" aria-label="Is this its charge">
             {/* Yes also fills what is still empty from the subscription: in
-                Bangkok the currency box starts on THB, a bill from home is HUF. */}
+                Bangkok the currency starts on THB, a bill from home is HUF. */}
             <button
               type="button"
               role="radio"
@@ -313,23 +328,23 @@ export function EntrySheet({
                 if (!amount) setAmount(String(match.amount))
                 if (!curTouched) { setCur(match.cur); setCurTouched(true) }
               }}
-              className={chip(isCharge === true)}
+              className={chipCls(isCharge === true)}
             >
               Yes, it is
             </button>
-            <button type="button" role="radio" aria-checked={isCharge === false} onClick={() => setIsCharge(false)} className={chip(isCharge === false)}>No</button>
+            <button type="button" role="radio" aria-checked={isCharge === false} onClick={() => setIsCharge(false)} className={chipCls(isCharge === false)}>No</button>
           </div>
           {isCharge === true && written && (
-            <p className="mt-2 text-[14px] text-tx2">It was added by itself on {dated(written.date)}. Saving this replaces it.</p>
+            <p className="mt-2.5 text-[14px] text-tx2">It was added by itself on {dated(written.date)}. Saving this replaces it.</p>
           )}
         </div>
       )}
       {(mode === 'new' || mode === 'linked') && (
-        <div>
-          <span className={label}>Repeats</span>
-          <div className="mt-2 flex flex-wrap gap-[7px]" role="radiogroup" aria-label="Repeats">
+        <div className={group + ' py-3'}>
+          <span className={small}>Repeats</span>
+          <div className="mt-2.5 flex flex-wrap gap-[7px]" role="radiogroup" aria-label="Repeats">
             {REPEATS.map((r) => (
-              <button key={r.id} type="button" role="radio" aria-checked={repeat === r.id} onClick={() => setRepeat(r.id)} className={chip(repeat === r.id)}>
+              <button key={r.id} type="button" role="radio" aria-checked={repeat === r.id} onClick={() => setRepeat(r.id)} className={chipCls(repeat === r.id)}>
                 {r.label}
               </button>
             ))}
@@ -343,7 +358,7 @@ export function EntrySheet({
                 inputMode="numeric"
                 min={2}
                 max={24}
-                className={box + ' mt-0 w-[76px] text-center'}
+                className="w-[76px] rounded-[9px] bg-fill px-2 py-1.5 text-center text-base font-medium text-tx outline-none"
                 value={otherMonths}
                 onChange={(e) => setOtherMonths(e.target.value)}
               />
@@ -351,73 +366,51 @@ export function EntrySheet({
             </label>
           )}
           {repeat === 'other' && !otherOk && <p className="mt-1 text-[13px] text-warn">From 2 to 24 months.</p>}
-          {next && <p className="mt-2 text-[14px] text-tx2">Next charge {dated(next)}.</p>}
+          {next && <p className="mt-2.5 text-[14px] text-tx2">Next charge {dated(next)}.</p>}
           {months && (
-            <div className="mt-2.5 flex min-h-11 items-center justify-between gap-3">
-              <span className="text-base">Remind me before each charge<span className="block text-[13px] text-tx3">3 days before</span></span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={remind}
-                aria-label="Remind me before each charge"
-                onClick={() => setRemind(!remind)}
-                className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (remind ? 'bg-ac' : 'bg-ln3')}
-              >
-                <span className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (remind ? 'left-[24px]' : 'left-[3px]')} />
-              </button>
+            <div className="mt-1 flex min-h-11 items-center justify-between gap-3">
+              <span className="text-base text-tx">Remind me before each charge<span className="block text-[13px] text-tx2">3 days before</span></span>
+              <Toggle on={remind} onChange={setRemind} label="Remind me before each charge" />
             </div>
           )}
         </div>
       )}
 
-      {/* The date and the daily-average switch share a row (Patrik, 26 Sep).
-          The date is a pill, not a grey "change" link: logging yesterday's
-          dinner this morning is the normal case on the road, and the date it
-          defaults to has to be readable before anyone can notice it is wrong.
-          The native date input lies invisibly over the pill, so a tap opens
-          the phone's own picker. */}
-      <div className="flex items-center justify-between gap-3">
-        <label className={'relative inline-flex min-h-11 flex-none items-center gap-2 rounded-full border-[1.5px] border-ln2 bg-inp px-3.5 text-base font-medium text-tx ' + (imported ? 'opacity-60' : '')}>
-          <CalendarDays aria-hidden className="size-[18px] text-tx2" />
-          <span>{dayLabel(date)}</span>
-          <input
-            aria-label="Date"
-            type="date"
-            disabled={imported}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            onClick={(e) => { try { e.currentTarget.showPicker() } catch { /* the tap still focuses it */ } }}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-default"
-          />
-        </label>
+      {/* The date and the daily-average switch on one card (Patrik, 27 Sep). The
+          native date input lies invisibly over the pill, so a tap opens the
+          phone's own picker. */}
+      <div className={group}>
+        <div className={row}>
+          <span>Date</span>
+          <label className={'relative inline-flex min-h-9 flex-none items-center gap-1.5 rounded-[9px] bg-fill px-3 text-[15px] font-medium text-tx ' + (imported ? 'opacity-60' : '')}>
+            <CalendarDays aria-hidden className="size-4 text-tx2" />
+            <span>{dayLabel(date)}</span>
+            <input
+              aria-label="Date"
+              type="date"
+              disabled={imported}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              onClick={(e) => { try { e.currentTarget.showPicker() } catch { /* the tap still focuses it */ } }}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-default"
+            />
+          </label>
+        </div>
         {askEveryday && (
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="text-right text-[14px] leading-tight">{everydayLabel}</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={counts !== byCategory}
-              aria-label={everydayLabel}
-              onClick={() => setEveryday(!counts)}
-              className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (counts !== byCategory ? 'bg-ac' : 'bg-ln3')}
-            >
-              <span className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (counts !== byCategory ? 'left-[24px]' : 'left-[3px]')} />
-            </button>
-          </div>
+          <>
+            <div className="border-t border-ln" />
+            <div className={row}>
+              <span>In the daily average</span>
+              <Toggle on={counts} onChange={setEveryday} label="In the daily average" />
+            </div>
+          </>
         )}
       </div>
 
-      {note && <p className="-mb-1 text-center text-[13px] text-tx2">{note}</p>}
-      <button
-        onClick={submit}
-        disabled={!valid || badOther}
-        className="w-full rounded-[var(--rCtl)] bg-ac py-3.5 text-base font-semibold text-on disabled:opacity-50"
-      >
-        {initial ? 'Save changes' : type === 'expense' ? 'Add expense' : 'Add income'}
-      </button>
+      {footnote && <p className="px-1 text-[13px] text-tx2">{footnote}</p>}
       {initial && onDelete && (
-        <button onClick={() => onDelete(initial)} className="min-h-11 w-full text-center text-base font-semibold text-ac2-deep">
-          Delete this entry
+        <button type="button" onClick={() => onDelete(initial)} className="min-h-11 w-full text-center text-base font-medium text-ac2-deep">
+          Delete entry
         </button>
       )}
 
@@ -425,7 +418,7 @@ export function EntrySheet({
         <CategoryPicker
           kind={type}
           ledger={ledger}
-          selected={effective}
+          selected={catId}
           onPick={(id) => { setCat(id); setCatTouched(true); setPicker(false) }}
           onClose={() => setPicker(false)}
         />

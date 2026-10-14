@@ -189,8 +189,11 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Edit / Delete, the + here too) and the Subscriptions page at `/money/subscriptions` (Money's
   card shows three and "All subscriptions ›"), is live since 14 Oct (#203, Petra's test); her four
   findings (a category picked over a hidden filter, Between stops, the chart's two lines, "‹ Money"
-  going back in the history) are live since 14 Oct (#204).
-  Next: 4c (the entry form), 5, 6. The source of the look is `feat/ios-foundation`,
+  going back in the history) are live since 14 Oct (#204), and Money's links fetch All entries and
+  Subscriptions in the background since 14 Oct (#205, her fifth finding: five seconds to open). 4c, the entry form as the phone's (the
+  big amount, the category tiles, date and the daily-average switch on one card, Cancel / Add in the
+  bar; the Subscriptions question kept on its own card), is built on 14 Oct and waits for Petra's go.
+  Next: 5 (settings), 6 (motion). The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the

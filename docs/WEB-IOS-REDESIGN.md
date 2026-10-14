@@ -178,6 +178,10 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
+- 14 Oct: round 4c built, the entry form as the phone's (the big amount with the currency beside
+  it, the name card, four category tiles with "All N categories", date and the daily-average switch
+  on one card, Cancel / Add in the bar). The Subscriptions question stays on the web, on its own
+  card. Pictures in `docs/web-ios-redesign/round4c-*`.
 - 14 Oct: round 4b live (#203, `96fb4f1`), All entries and the Subscriptions page as the phone's (the chip row,
   the day sections with their totals, Coming up, a row held down for Log again / Edit / Delete;
   the page with every subscription and what they add up to). Money's rows open All entries on
