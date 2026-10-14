@@ -34,6 +34,9 @@ const HOME_PLACES: Record<string, { lat: number; lng: number; country: string }>
   Vienna: { lat: 48.2082, lng: 16.3738, country: 'Austria' },
 }
 
+/** What placing a stop needs of a catalogue row: the light list (CityLite) has it too. */
+export type PlaceCity = Pick<City, 'city' | 'country' | 'region' | 'lat' | 'lng'>
+
 export interface RouteNode {
   city: string; country: string; r: string | null
   lat: number; lng: number; arrive: string
@@ -113,7 +116,7 @@ export function cityInfoRows(c: City | undefined, k: CityCost | undefined): Info
 }
 
 /** A home node for `name`, when the globe knows where it is: a known home, or a catalogue city. */
-function homePlace(name: string, cities: City[]): RouteNode | null {
+function homePlace(name: string, cities: PlaceCity[]): RouteNode | null {
   const hp = HOME_PLACES[name]
   const c = catalogueCity(name, cities)
   const p = hp ?? (c ? { lat: c.lat!, lng: c.lng!, country: c.country } : null)
@@ -121,7 +124,7 @@ function homePlace(name: string, cities: City[]): RouteNode | null {
   return { city: name, country: p.country ?? '', lat: p.lat, lng: p.lng, r: null, home: true, arrive: '' }
 }
 
-export function detectOrigin(stops: RouteNode[], transport: TransportLeg[], cities: City[]): RouteNode | null {
+export function detectOrigin(stops: RouteNode[], transport: TransportLeg[], cities: PlaceCity[]): RouteNode | null {
   if (!stops.length) return null
   const seen = new Set(stops.map((s) => normCity(s.city)))
   const inbound = transport
@@ -136,7 +139,7 @@ export function detectOrigin(stops: RouteNode[], transport: TransportLeg[], citi
  * the globe can place it, the route starts there; otherwise, or without one,
  * it starts where the first flight in comes from, as before.
  */
-export function buildRoute(segments: Segment[], cities: City[], cityIdx: Record<string, CityCost>, transport: TransportLeg[], home?: string) {
+export function buildRoute(segments: Segment[], cities: PlaceCity[], cityIdx: Record<string, CityCost>, transport: TransportLeg[], home?: string) {
   const stops: RouteNode[] = segments
     .filter((s) => s.include !== false)
     .map((s) => {
