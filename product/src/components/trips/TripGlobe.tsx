@@ -171,8 +171,6 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   const featsRef = useRef<GeoFeature[]>([])
   const labelsRef = useRef<CountryLabel[]>([])
   const mineRef = useRef<Set<string>>(new Set())
-  const altitudeRef = useRef(2)
-  const zoomTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cameraRef = useRef<'journey' | 'world'>(camera)
   const playingRef = useRef(false)
   const aliveRef = useRef(true)
@@ -207,13 +205,16 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   }
   // Which names show at this height (the phone's drawNames): continents far out, fading as you
   // come closer; a country's name sized by how big the country is on screen and shown once it
-  // is big enough for it (your journey's countries first, then the biggest); the stops' names near.
-  const applyZoom = () => {
+  // is big enough for it (your journey's countries first, then the biggest); the stops' names
+  // near. Worked out once per height and applied to each element in globe.gl's own per-frame
+  // visibility pass, so no timing can miss it.
+  const rulesRef = useRef<{ alt: number; sizes: Map<string, number>; cf: number; co: number; stopNames: boolean } | null>(null)
+  const rulesFor = (alt: number) => {
+    const cached = rulesRef.current
+    if (cached && Math.abs(cached.alt - alt) < 0.03) return cached
     const el = boxRef.current
-    if (!el) return
-    const alt = altitudeRef.current
     // The globe's radius on screen: the camera looks through a 50° field of view, top to bottom.
-    const rPx = el.clientHeight / (2 * (1 + alt) * Math.tan((25 * Math.PI) / 180))
+    const rPx = (el?.clientHeight ?? 700) / (2 * (1 + alt) * Math.tan((25 * Math.PI) / 180))
     const cf = Math.max(0, Math.min(1, (3.3 - alt) / 0.6))
     const sizes = new Map<string, number>()
     if (cf > 0) {
@@ -226,23 +227,27 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         budget--
       }
     }
-    const co = continentOpacity(alt)
-    const stopNames = stopNamesShown(alt)
-    el.querySelectorAll<HTMLElement>('[data-kind]').forEach((node) => {
-      const kind = node.dataset.kind
-      if (kind === 'continent') { node.style.opacity = String(co); node.style.display = co > 0 ? '' : 'none' }
-      else if (kind === 'country') {
-        const fs = sizes.get(node.dataset.name ?? '')
-        node.style.display = fs ? '' : 'none'
-        if (fs) { const s = node.firstElementChild as HTMLElement | null; if (s) { s.style.fontSize = fs + 'px'; s.style.opacity = String(cf) } }
-      } else if (kind === 'stop') {
-        const name = node.querySelector<HTMLElement>('.lv-globe-name')
-        if (name) name.style.display = stopNames || node.dataset.when === 'home' || node.dataset.when === 'now' ? '' : 'none'
-      }
-    })
+    const rules = { alt, sizes, cf, co: continentOpacity(alt), stopNames: stopNamesShown(alt) }
+    rulesRef.current = rules
+    return rules
   }
-  // globe.gl makes the elements on its next frame: ask again a little later.
-  const applyZoomSoon = () => { setTimeout(applyZoom, 60); setTimeout(applyZoom, 400) }
+  const applyRules = (node: HTMLElement, visible: boolean) => {
+    const g = instRef.current
+    if (!g) return
+    const r = rulesFor(g.pointOfView().altitude ?? 2)
+    const kind = node.dataset.kind
+    let show = visible
+    if (kind === 'continent') { node.style.opacity = String(r.co); show = visible && r.co > 0 }
+    else if (kind === 'country') {
+      const fs = r.sizes.get(node.dataset.name ?? '')
+      show = visible && !!fs
+      if (fs) { const s = node.firstElementChild as HTMLElement | null; if (s) { s.style.fontSize = fs + 'px'; s.style.opacity = String(r.cf) } }
+    } else if (kind === 'stop') {
+      const name = node.querySelector<HTMLElement>('.lv-globe-name')
+      if (name) name.style.display = r.stopNames || node.dataset.when === 'home' || node.dataset.when === 'now' ? '' : 'none'
+    }
+    node.style.visibility = show ? 'visible' : 'hidden'
+  }
   const paintNames = () => {
     const g = loose()
     if (!g) return
@@ -252,7 +257,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       ...CONTINENTS.map((c) => ({ kind: 'continent' as const, lat: c.lat, lng: c.lng, name: c.name })),
     ]
     g.htmlElementsData(items as object[])
-    applyZoomSoon()
+    rulesRef.current = null
   }
   const applyTheme = () => {
     const g = instRef.current, l = loose()
@@ -298,11 +303,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         readyRef.current = true
         g.pointOfView(target(cameraRef.current), 0)
       })
-      .onZoom((pov) => {
-        altitudeRef.current = pov.altitude ?? altitudeRef.current
-        if (zoomTimer.current) return
-        zoomTimer.current = setTimeout(() => { zoomTimer.current = null; applyZoom() }, 120)
-      })
+
     const l = g as unknown as Loose
     l.globeMaterial().color.set(t().ocean)
     l.globeMaterial().shininess = 0
@@ -316,11 +317,11 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         if (h.kind === 'country') { const e = countryElement(h.label, h.mine, t()); e.dataset.name = h.label.name; return e }
         return continentElement(h.name, t())
       })
-      .htmlElementVisibilityModifier((node, visible) => { node.style.visibility = visible ? 'visible' : 'hidden' })
-    for (const light of g.lights() as { type: string; intensity: number }[]) {
-      if (light.type === 'DirectionalLight') light.intensity = 0.35
-      if (light.type === 'AmbientLight') light.intensity = 1.9
-    }
+      .htmlElementVisibilityModifier(applyRules)
+    // Lit flat, as the phone's globe is: the even light alone, at full strength, every colour drawn as it is.
+    const lights = g.lights() as unknown as { type: string; intensity: number; color: { set(c: number): void } }[]
+    const ambient = lights.find((l) => l.type === 'AmbientLight')
+    if (ambient) { ambient.intensity = Math.PI; ambient.color.set(0xffffff); g.lights([ambient as unknown as (typeof lights)[number]] as never) }
     const c = g.controls()
     c.autoRotate = false
     c.enableDamping = true
@@ -364,6 +365,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     const pts = classify(route, todayIso)
     ptsRef.current = pts
     mineRef.current = new Set(route.map((n) => normCountry(n.country)).filter(Boolean))
+    rulesRef.current = null
     const legs: Leg[] = []
     for (let i = 0; i + 1 < pts.length; i++) {
       const a = pts[i], b = pts[i + 1]
