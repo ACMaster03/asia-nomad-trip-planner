@@ -211,7 +211,7 @@ export default function MoneyPage() {
   }
 
   const allEntriesRow = ledger.length > 0 && (
-    <Link href="/money/entries" className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-4 py-4">
+    <Link href="/money/entries" prefetch className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-4 py-4">
       <CardLabel>All entries</CardLabel>
       <span className="flex items-center gap-1.5 text-[13.5px] text-tx2">
         {ledger.length}
