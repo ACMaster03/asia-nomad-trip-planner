@@ -7,6 +7,19 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Petra's finding on 4c: the amount small on the phone (14 Oct)
+
+Petra's test of `8d422cc`: everything works; on the entry form the typed number was small,
+about 16 px, while the currency menu and the conversion sat right. Cause: `globals.css` forces
+every `input`, `select` and `textarea` to 16 px under 768 px wide, so iOS never zooms on
+focus (the 24 Jul dogfood rule), and an unlayered rule beats a utility class, so the amount's
+`text-[46px]` lost on every phone, Chromium included (the 4c pictures showed it and I read it
+as the design). Fix: the amount's size is inline (`style={{ fontSize: 46 }}`), which outranks
+the rule. Measured on the production build at 390 px: 46 px. The rule stays; it is right for
+every other field.
+
+iOS: web-only.
+
 ### LIVE — #207, round 5a: Trip settings and Exchange rates as on the phone (14 Oct)
 
 Merged with Petra's "yes" at 11:42 UTC. Vercel's window had freed by itself: it built `8d422cc` at once,
