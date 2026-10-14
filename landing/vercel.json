@@ -293,6 +293,16 @@
       "permanent": true
     },
     {
+      "source": "/wash",
+      "destination": "https://app.livhold.com/wash",
+      "permanent": true
+    },
+    {
+      "source": "/wash/:path+",
+      "destination": "https://app.livhold.com/wash/:path+",
+      "permanent": true
+    },
+    {
       "source": "/welcome",
       "destination": "https://app.livhold.com/welcome",
       "permanent": true
