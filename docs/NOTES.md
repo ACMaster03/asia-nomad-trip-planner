@@ -7,6 +7,21 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### WAITING — main is merged but not live: Vercel's 100-a-day limit (14 Oct, 07:56 UTC)
+
+#200 (the stop page in place, `7741cdd`) merged with Petra's "yes", but Vercel started no
+build, and starting one by hand was refused: `402 api-deployments-free-per-day`, the Hobby
+plan's 100 deployments a day, used up by the day's nine merges and their branch pushes
+(every push to the branch makes a preview build too, cancelled or not). app.livhold.com runs
+`9755bac` (#199): round 3c with the slow stop page, nothing broken. The missed build does not
+catch up on its own: once the window frees (about 24 h after the day's first builds), main
+has to be deployed again, by a Redeploy of main in the Vercel dashboard, by the API (a
+check-in is set for 15 Oct 08:10 UTC to do that), or by the next merge, which deploys
+everything on main. Patrik: whether the plan should change (Pro has no such limit) is yours;
+until then, fewer pushes per pull request keep the day's budget.
+
+iOS: nothing new.
+
 ### LIVE — Round 3c (#199, Petra's test) · BUILT — the stop page opens in place (Petra, 14 Oct)
 
 #199 is live (`9755bac`, Petra's test on the phone): the page works, but opening a card and

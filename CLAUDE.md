@@ -175,7 +175,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Cancel/Save bars on every form, the long-press menu on a card), is live since 14 Oct (#199,
   Petra's test); her finding, the page slow to open and to leave (a route, each way a trip to
   the server), is fixed: the page is a layer over the timeline at `/itinerary?stop=<id>`,
-  built 14 Oct. The source of the look is `feat/ios-foundation`,
+  merged 14 Oct (#200) but NOT LIVE: Vercel refused the build (the Hobby plan's 100
+  deployments a day, used up); app.livhold.com runs `9755bac` until main is deployed again
+  (a check-in on 15 Oct 08:10 UTC retries; the next merge would also do it). The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
