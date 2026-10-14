@@ -20,7 +20,6 @@ import type { Upcoming } from '@/lib/trips/moneyRows'
 import { addDays } from '@/lib/trips/spending'
 import { moneyUnlocks, moreLine } from '@/lib/trips/unlocks'
 import { buildTimeline, homeFor, legFor } from '@/lib/trips/timeline'
-import { useConfirm } from '@/components/Confirm'
 import { nightsBetween } from '@/lib/trips/format'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
@@ -32,6 +31,7 @@ import { WhereItGoes } from './WhereItGoes'
 import { BookingsCard } from './BookingsCard'
 import { SubscriptionsCard } from './SubscriptionsCard'
 import { SubscriptionSheet } from './SubscriptionSheet'
+import { useSubscriptionEdits } from './useSubscriptionEdits'
 import { LatestCard } from './LatestCard'
 import { UpcomingCard } from './UpcomingCard'
 import { TopCard } from './TopCard'
@@ -42,7 +42,7 @@ import { SubsOffer } from './SubsOffer'
 import { subsOfferRows } from '@/lib/trips/subsOffer'
 import { TrackQuestion } from './TrackQuestion'
 import { CardLabel } from './CardLabel'
-import type { LedgerEntry, Subscription } from '@/lib/trips/types'
+import type { LedgerEntry } from '@/lib/trips/types'
 
 // Money — ONE page (round-two design signed off 2026-09-13; round three
 // 2026-09-19). No tabs and no split: a Spending / Plan segmented control was
@@ -88,7 +88,6 @@ let questionClosedThisVisit = false
 
 export default function MoneyPage() {
   const { fmt, base } = useMoney()
-  const confirm = useConfirm()
   const router = useRouter()
   const { trip, cities, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
@@ -102,7 +101,7 @@ export default function MoneyPage() {
   const [questionClosed, setQuestionClosed] = useState(() => questionClosedThisVisit)
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
-  const [subSheet, setSubSheet] = useState<{ sub: Subscription | null } | null>(null)
+  const subEdits = useSubscriptionEdits(stateMut)
   /** a stay's or a leg's form, opened from Upcoming charges (the Trip sheets, round 3c) */
   const [tripSheet, setTripSheet] = useState<SheetState>(null)
   const [range, setRange] = useState<Range>(14)
@@ -195,33 +194,6 @@ export default function MoneyPage() {
     imp.candidates.forEach((entry) => mut.mutate({ kind: 'upsert', entry }))
     stateMut.mutate((cur) => ({ ...cur, autoImport: true }))
   }
-  function saveSub(sub: Subscription) {
-    stateMut.mutate((cur) => {
-      const list = cur.subscriptions ?? []
-      return {
-        ...cur,
-        subscriptions: list.some((x) => x.id === sub.id) ? list.map((x) => (x.id === sub.id ? sub : x)) : [...list, sub],
-      }
-    })
-    setSubSheet(null)
-  }
-  async function delSub(sub: Subscription) {
-    const ok = await confirm({
-      title: 'Delete this subscription?',
-      body: '“Mark cancelled” keeps what it already charged; deleting forgets it.',
-    })
-    if (!ok) return
-    stateMut.mutate((cur) => ({ ...cur, subscriptions: (cur.subscriptions ?? []).filter((x) => x.id !== sub.id) }))
-    setSubSheet(null)
-  }
-  function toggleRemind(sub: Subscription) {
-    stateMut.mutate((cur) => ({
-      ...cur,
-      subscriptions: (cur.subscriptions ?? []).map((x) =>
-        x.id === sub.id ? { ...x, remind: !x.remind, leadDays: x.leadDays ?? 3 } : x,
-      ),
-    }))
-  }
   // An upcoming charge opens what it is: the entry's form, or the booking's on Trip (round 3c's sheets).
   function openUpcoming(u: Upcoming) {
     const opens = u.opens
@@ -249,7 +221,7 @@ export default function MoneyPage() {
   const subsCard = (
     <SubscriptionsCard
       subs={subs} rates={s.rates} fmt={fmt} todayIso={today} canEdit={canEdit}
-      onAdd={() => setSubSheet({ sub: null })} onEdit={(sub) => setSubSheet({ sub })} onToggleRemind={toggleRemind}
+      onAdd={() => subEdits.setSubSheet({ sub: null })} onEdit={(sub) => subEdits.setSubSheet({ sub })} onToggleRemind={subEdits.toggleRemind}
     />
   )
 
@@ -364,14 +336,14 @@ export default function MoneyPage() {
           note={quiet && !sheet.entry ? 'Saving this turns on spending tracking.' : undefined}
         />
       )}
-      {subSheet && (
+      {subEdits.subSheet && (
         <SubscriptionSheet
-          initial={subSheet.sub}
+          initial={subEdits.subSheet.sub}
           rates={s.rates}
           todayIso={today}
-          onSave={saveSub}
-          onDelete={subSheet.sub ? delSub : undefined}
-          onClose={() => setSubSheet(null)}
+          onSave={subEdits.saveSub}
+          onDelete={subEdits.subSheet.sub ? subEdits.delSub : undefined}
+          onClose={() => subEdits.setSubSheet(null)}
         />
       )}
       <TripSheets sheet={tripSheet} setSheet={setTripSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} edits={edits} />

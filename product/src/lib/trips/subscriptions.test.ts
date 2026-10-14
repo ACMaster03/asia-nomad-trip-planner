@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  chargeSoon, chargesBetween, isCancelled, nearestCharge, nextChargeFrom, subFromEntry, subNamed, monthlyRunRate, nextCharge, ordinalDay, scheduleLabel, shiftMonths, subsBetween, subsCharges,
+  activeSubs, cancelledSubs, subsAhead, chargeSoon, chargesBetween, isCancelled, nearestCharge, nextChargeFrom, subFromEntry, subNamed, monthlyRunRate, nextCharge, ordinalDay, scheduleLabel, shiftMonths, subsBetween, subsCharges,
 } from './subscriptions.ts'
 import type { Subscription } from './types.ts'
 
@@ -159,4 +159,14 @@ test('a charge logged today is not still to come: the next one counts from the d
   assert.equal(chargeSoon([netflix], '2026-09-24', 7, logged), null, 'not "Netflix today"')
   assert.equal(chargeSoon([netflix], '2026-09-24')?.inDays, 0, 'without the ledger it still would be')
   assert.equal(nextChargeFrom(netflix, '2026-12-31', [{ subId: 'nf', date: '2026-12-31' }]), '2027-01-01', 'across the year')
+})
+
+test('the lists the card and the page show: active by next charge, cancelled latest first, what is ahead', () => {
+  assert.deepEqual(activeSubs(CANON, TODAY).map((s) => s.id), ['icloud', 'spotify', 'internet', 'domain'])
+  assert.deepEqual(cancelledSubs([...CANON, sub({ id: 'old', amount: 1, anchor: '2026-01-01', cancelledOn: '2026-03-01' })]).map((s) => s.id), ['netflix', 'old'])
+  const ahead = subsAhead(activeSubs(CANON, TODAY), rates, TODAY, TRIP_END)!
+  assert.equal(ahead.days, 166)
+  assert.equal(ahead.total, subsBetween(activeSubs(CANON, TODAY), rates, TOMORROW, TRIP_END))
+  assert.equal(subsAhead(CANON, rates, TODAY, undefined), null)
+  assert.equal(subsAhead(CANON, rates, TODAY, TODAY), null)
 })

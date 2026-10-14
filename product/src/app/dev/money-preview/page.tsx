@@ -21,7 +21,9 @@ import Preview from './Preview'
 // server-renders the trip document, so Home is where a mismatch shows.
 // ?screen=entries renders All entries, the ledger's screen, and
 // &show=YYYY-MM-DD opens it at that day, the way a chart bar's "Open in All
-// entries" does.
+// entries" does; &before=1, &from&to, &filter=, &cat=, &fam=, &coming=1 open it the
+// way Money's rows do (round 4b, lib/trips/ledgerFilters.ts). ?screen=subscriptions
+// renders the Subscriptions page.
 // ?track=ask | no | yes seeds Money's once-per-account answer (migration 41):
 // ask shows the question (over the full page, since the fixture has logged
 // costs), no the quiet page, yes (the default) the full page; both carry the
@@ -46,7 +48,7 @@ import Preview from './Preview'
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; today?: string; show?: string; subs?: string; oneoffs?: string; stay?: string; maybe?: string }>
+  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; today?: string; show?: string; before?: string; from?: string; to?: string; filter?: string; cat?: string; fam?: string; coming?: string; subs?: string; oneoffs?: string; stay?: string; maybe?: string }>
 }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   // ?slow=<ms> streams the page that long after the shell, the way the real
@@ -110,8 +112,8 @@ export default async function MoneyPreviewPage({
   return (
     <HydrationBoundary state={dehydrate(qc)}>
       <Preview
-        screen={params.screen === 'home' ? 'home' : params.screen === 'entries' ? 'entries' : 'money'}
-        show={params.show}
+        screen={params.screen === 'home' ? 'home' : params.screen === 'entries' ? 'entries' : params.screen === 'subscriptions' ? 'subscriptions' : 'money'}
+        entries={{ day: params.show, before: params.before, from: params.from, to: params.to, filter: params.filter, cat: params.cat, fam: params.fam, coming: params.coming }}
       />
     </HydrationBoundary>
   )

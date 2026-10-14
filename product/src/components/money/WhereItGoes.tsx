@@ -1,5 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
 import { spendByCategory, everydayOnly } from '@/lib/trips/spending'
 import { GROUPS, GROUP_ORDER, groupOf, categoryLabel } from '@/lib/trips/categories'
 import type { LedgerEntry } from '@/lib/trips/types'
@@ -58,26 +60,25 @@ export function WhereItGoes({ ledger, rates, from, to, fmt, rangeLabel }: {
               {groups[1] && <> <b className="text-tx">{groups[1].label}</b> {pct(groups[1].total)}%{groups[2] ? `, ${groups[2].label.toLowerCase()} ${pct(groups[2].total)}%` : ''}.</>}
             </p>
           </div>
-          <table className="mt-2 w-full border-collapse text-[14px]">
-            <tbody>
-              {shown.map((c) => (
-                <tr key={c.category}>
-                  <td className="border-t border-ln py-2"><i className="mr-2 inline-block size-2.5 rounded-[3px] align-[-1px]" style={{ background: GROUPS[groupOf(c.category)].color }} />{categoryLabel(c.category)}</td>
-                  <td className="border-t border-ln py-2 text-right font-semibold">{fmt(c.total)}</td>
-                </tr>
-              ))}
-              {!all && rest.length > 0 && (
-                <tr onClick={() => setAll(true)} className="cursor-pointer text-tx3">
-                  <td className="border-t border-ln py-2">{rest.length} more…</td>
-                  <td className="border-t border-ln py-2 text-right">{fmt(rest.reduce((a, c) => a + c.total, 0))}</td>
-                </tr>
-              )}
-              <tr className="font-semibold text-ac2-deep">
-                <td className="border-t-[1.5px] border-ln3 py-2">Everyday total</td>
-                <td className="border-t-[1.5px] border-ln3 py-2 text-right">{fmt(total)}</td>
-              </tr>
-            </tbody>
-          </table>
+          {/* Each row opens its entries over the same days on All entries (round 4b, the phone's rows). */}
+          <div className="mt-2 text-[14px]">
+            {shown.map((c) => (
+              <Link key={c.category} href={`/money/entries?cat=${c.category}&filter=everyday&from=${from}&to=${to}`} className="flex items-center justify-between gap-3 border-t border-ln py-2">
+                <span className="min-w-0 truncate"><i className="mr-2 inline-block size-2.5 rounded-[3px] align-[-1px]" style={{ background: GROUPS[groupOf(c.category)].color }} />{categoryLabel(c.category)}</span>
+                <span className="flex flex-none items-center gap-1 font-semibold">{fmt(c.total)}<ChevronRight aria-hidden className="size-[11px] text-tx3" strokeWidth={2.6} /></span>
+              </Link>
+            ))}
+            {!all && rest.length > 0 && (
+              <button type="button" onClick={() => setAll(true)} className="flex w-full items-center justify-between border-t border-ln py-2 text-tx3">
+                <span>{rest.length} more…</span>
+                <span>{fmt(rest.reduce((a, c) => a + c.total, 0))}</span>
+              </button>
+            )}
+            <Link href={`/money/entries?filter=everyday&from=${from}&to=${to}`} className="flex items-center justify-between gap-3 border-t-[1.5px] border-ln3 py-2 font-semibold text-ac2-deep">
+              <span>Everyday total</span>
+              <span className="flex items-center gap-1">{fmt(total)}<ChevronRight aria-hidden className="size-[11px] text-tx3" strokeWidth={2.6} /></span>
+            </Link>
+          </div>
         </>
       )}
     </div>
