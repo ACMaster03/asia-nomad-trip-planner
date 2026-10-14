@@ -477,19 +477,30 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     if (leg.ground) v.style.cssText += `;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:${themeRef.current.tx};border:2px solid ${themeRef.current.sf}`
     const start = performance.now()
     let raf = 0
-    let last: { x: number; y: number } | null = null
+    let heading: number | null = null
     const n = leg.pts.length - 1
     const place = (t: number) => {
       const f = t * n, i = Math.min(n - 1, Math.floor(f)), k = f - i
       const [lng0, lat0] = leg.pts[i], [lng1, lat1] = leg.pts[i + 1]
       const p = g.getScreenCoords(lat0 + (lat1 - lat0) * k, lng0 + (lng1 - lng0) * k, 0.02)
       if (!p) return
-      // The heading from the last place; the first frame points the way the leg goes.
-      const ahead = last ?? g.getScreenCoords(leg.pts[Math.min(n, i + 1)][1], leg.pts[Math.min(n, i + 1)][0], 0.02)
-      const heading = last && ahead ? (Math.atan2(p.y - last.y, p.x - last.x) * 180) / Math.PI : ahead ? (Math.atan2(ahead.y - p.y, ahead.x - p.x) * 180) / Math.PI : 0
+      // The heading is the way the route goes from here, both ends read in the same frame:
+      // read from one frame to the next it carried the camera's own flight, and the plane
+      // spun round and round (Petra, 14 Oct). Smoothed a little between frames.
+      const [lngA, latA] = leg.pts[i + 1]
+      const ahead = g.getScreenCoords(latA, lngA, 0.02)
+      if (ahead && Math.hypot(ahead.x - p.x, ahead.y - p.y) > 0.5) {
+        const want = (Math.atan2(ahead.y - p.y, ahead.x - p.x) * 180) / Math.PI
+        if (heading === null) heading = want
+        else {
+          let d = want - heading
+          while (d > 180) d -= 360
+          while (d < -180) d += 360
+          heading += d * 0.3
+        }
+      }
       // The plane's nose points up and to the right in the icon: turn it by 45° less.
-      v.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${heading - 45}deg)`
-      last = p
+      v.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${(heading ?? 0) - 45}deg)`
     }
     place(0)
     const step = () => {
