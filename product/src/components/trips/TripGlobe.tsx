@@ -139,14 +139,13 @@ function stopElement(pt: Pt, t: GlobeTheme, onTap: (n: RouteNode) => void): HTML
   return el
 }
 
-function countryElement(label: CountryLabel, mine: boolean, t: GlobeTheme): HTMLElement {
+function countryElement(label: Pick<CountryLabel, 'name'>, mine: boolean, t: GlobeTheme): HTMLElement {
   const el = document.createElement('div')
   el.style.cssText = 'position:relative;width:0;height:0;pointer-events:none'
   el.dataset.kind = 'country'
-  const fs = Math.max(8.5, Math.min(13, 7 + label.size * 0.55))
   const s = document.createElement('span')
   s.textContent = label.name
-  s.style.cssText = `position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:nowrap;font:600 ${fs}px/1 ${SANS};letter-spacing:.09em;text-transform:uppercase;color:${mine ? t.nameMine : t.nameCountry}`
+  s.style.cssText = `position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:nowrap;font:600 10px/1 ${SANS};letter-spacing:.09em;text-transform:uppercase;color:${mine ? t.nameMine : t.nameCountry}`
   el.appendChild(s)
   return el
 }
@@ -173,6 +172,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   const labelsRef = useRef<CountryLabel[]>([])
   const mineRef = useRef<Set<string>>(new Set())
   const altitudeRef = useRef(2)
+  const zoomTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cameraRef = useRef<'journey' | 'world'>(camera)
   const playingRef = useRef(false)
   const aliveRef = useRef(true)
@@ -202,27 +202,47 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     if (!g) return
     const feats = featsRef.current
     ;(instRef.current as Inst).polygonsData(feats.slice() as object[])
-    // The white rim along every coast, just under the land, so half of it peeps out.
+    // The white rim along every coast (the phone's globeShore), just over the land's edge.
     g.pathsData(feats.flatMap((f) => outerRings(f).filter((r) => r.length > 8).map((r) => ({ pts: r }))) as object[])
   }
-  // Which names show at this height: continents far out, countries closer in, the stops' names near.
+  // Which names show at this height (the phone's drawNames): continents far out, fading as you
+  // come closer; a country's name sized by how big the country is on screen and shown once it
+  // is big enough for it (your journey's countries first, then the biggest); the stops' names near.
   const applyZoom = () => {
     const el = boxRef.current
     if (!el) return
     const alt = altitudeRef.current
-    const shown = new Set(pickCountryLabels(labelsRef.current, alt, mineRef.current).map((l) => l.name))
+    // The globe's radius on screen: the camera looks through a 50° field of view, top to bottom.
+    const rPx = el.clientHeight / (2 * (1 + alt) * Math.tan((25 * Math.PI) / 180))
+    const cf = Math.max(0, Math.min(1, (3.3 - alt) / 0.6))
+    const sizes = new Map<string, number>()
+    if (cf > 0) {
+      let budget = 40
+      for (const l of pickCountryLabels(labelsRef.current, alt, mineRef.current)) {
+        const px = rPx * l.size * (Math.PI / 180)
+        const fs = Math.max(8.5, Math.min(13, px * 0.085))
+        if (px < fs * 3 || budget <= 0) continue
+        sizes.set(l.name, fs)
+        budget--
+      }
+    }
     const co = continentOpacity(alt)
     const stopNames = stopNamesShown(alt)
     el.querySelectorAll<HTMLElement>('[data-kind]').forEach((node) => {
       const kind = node.dataset.kind
       if (kind === 'continent') { node.style.opacity = String(co); node.style.display = co > 0 ? '' : 'none' }
-      else if (kind === 'country') node.style.display = shown.has(node.dataset.name ?? '') ? '' : 'none'
-      else if (kind === 'stop') {
+      else if (kind === 'country') {
+        const fs = sizes.get(node.dataset.name ?? '')
+        node.style.display = fs ? '' : 'none'
+        if (fs) { const s = node.firstElementChild as HTMLElement | null; if (s) { s.style.fontSize = fs + 'px'; s.style.opacity = String(cf) } }
+      } else if (kind === 'stop') {
         const name = node.querySelector<HTMLElement>('.lv-globe-name')
         if (name) name.style.display = stopNames || node.dataset.when === 'home' || node.dataset.when === 'now' ? '' : 'none'
       }
     })
   }
+  // globe.gl makes the elements on its next frame: ask again a little later.
+  const applyZoomSoon = () => { setTimeout(applyZoom, 60); setTimeout(applyZoom, 400) }
   const paintNames = () => {
     const g = loose()
     if (!g) return
@@ -232,7 +252,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       ...CONTINENTS.map((c) => ({ kind: 'continent' as const, lat: c.lat, lng: c.lng, name: c.name })),
     ]
     g.htmlElementsData(items as object[])
-    requestAnimationFrame(applyZoom)
+    applyZoomSoon()
   }
   const applyTheme = () => {
     const g = instRef.current, l = loose()
@@ -269,7 +289,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       .arcsData([]).arcStartLat('startLat').arcStartLng('startLng').arcEndLat('endLat').arcEndLng('endLng')
       .arcAltitude(((d: object) => ((d as Arc).halo ? 0.009 : 0.0105)) as never)
       .arcColor(((d: object) => { const a = d as Arc; return a.halo ? t().halo : a.upcoming ? t().route + 'd9' : t().route }) as never)
-      .arcStroke(((d: object) => { const a = d as Arc; return a.halo ? 1.15 : a.ground ? 0.7 : 0.55 }) as never)
+      .arcStroke(((d: object) => { const a = d as Arc; return a.halo ? 1.9 : a.ground ? 1.3 : 1.0 }) as never)
       .arcDashLength(((d: object) => { const a = d as Arc; return a.halo ? 1 : a.ground ? 0.012 : a.upcoming ? 0.07 : 1 }) as never)
       .arcDashGap(((d: object) => { const a = d as Arc; return a.halo ? 0 : a.ground ? 0.045 : a.upcoming ? 0.055 : 0 }) as never)
       .arcDashAnimateTime(0)
@@ -279,17 +299,16 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         g.pointOfView(target(cameraRef.current), 0)
       })
       .onZoom((pov) => {
-        const a = pov.altitude ?? altitudeRef.current
-        const bucketBefore = Math.round(altitudeRef.current * 5), bucketAfter = Math.round(a * 5)
-        altitudeRef.current = a
-        if (bucketBefore !== bucketAfter) applyZoom()
+        altitudeRef.current = pov.altitude ?? altitudeRef.current
+        if (zoomTimer.current) return
+        zoomTimer.current = setTimeout(() => { zoomTimer.current = null; applyZoom() }, 120)
       })
     const l = g as unknown as Loose
     l.globeMaterial().color.set(t().ocean)
     l.globeMaterial().shininess = 0
     l.polygonsTransitionDuration(0)
-    l.pathsData([]).pathPoints('pts').pathPointLat((p) => (p as number[])[1]).pathPointLng((p) => (p as number[])[0]).pathPointAlt(0.004)
-      .pathColor(() => t().shore).pathStroke(0.9).pathResolution(1).pathTransitionDuration(0)
+    l.pathsData([]).pathPoints('pts').pathPointLat((p) => (p as number[])[1]).pathPointLng((p) => (p as number[])[0]).pathPointAlt(0.0055)
+      .pathColor(() => t().shore).pathStroke(0.8).pathResolution(1).pathTransitionDuration(0)
     l.htmlElementsData([]).htmlLat('lat').htmlLng('lng').htmlAltitude(0.012).htmlTransitionDuration(0)
       .htmlElement((d) => {
         const h = d as Html
@@ -298,6 +317,10 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         return continentElement(h.name, t())
       })
       .htmlElementVisibilityModifier((node, visible) => { node.style.visibility = visible ? 'visible' : 'hidden' })
+    for (const light of g.lights() as { type: string; intensity: number }[]) {
+      if (light.type === 'DirectionalLight') light.intensity = 0.35
+      if (light.type === 'AmbientLight') light.intensity = 1.9
+    }
     const c = g.controls()
     c.autoRotate = false
     c.enableDamping = true
