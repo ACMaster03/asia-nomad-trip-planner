@@ -167,7 +167,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   globe, 3c the stop page), Money (4a–c), settings (5), motion (6) go now, in that order. 3a,
   Trip's timeline in the phone's look (the stop card without its tick box, "In the plan" in the
   stop's form, "Onward" / "Journey ends", the "Where next?" card, the no-stops card with the
-  flight there first), is live since 14 Oct (#192, Petra's test). Next: 3b. The source of the look is `feat/ios-foundation`,
+  flight there first), is live since 14 Oct (#192, Petra's test). 3b, the globe on top of Trip
+  (`TripGlobeScaffold.tsx`, a lean `TripGlobe.tsx`; the Map tab empty, the planner globe kept in
+  `MapClient.tsx` for development), was built on 14 Oct. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
