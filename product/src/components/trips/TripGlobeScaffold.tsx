@@ -19,7 +19,11 @@ const TripGlobe = dynamic(() => import('./TripGlobe'), { ssr: false, loading: ()
 
 /** The bar's height plus the safe area: the globe and the open overlay stop above it. */
 const ABOVE_BAR = 'calc(76px + env(safe-area-inset-bottom))'
-const glow = '[text-shadow:0_0_4px_var(--canvas),0_0_12px_var(--canvas)]'
+// The words over the globe: a canvas-coloured glow around the letters (the phone's shadow) and,
+// because the web's globe is a satellite picture rather than the phone's pale drawing, a soft
+// wash of the canvas behind them that fades out downwards.
+const glow = '[text-shadow:0_0_3px_var(--canvas),0_0_8px_var(--canvas),0_0_16px_var(--canvas),0_0_28px_var(--canvas)]'
+const scrim = 'pointer-events-none absolute inset-x-0 top-0 h-[150px] bg-gradient-to-b from-canvas via-canvas/70 to-transparent'
 const chip = 'inline-flex items-center gap-1.5 rounded-full border border-ln bg-sf px-[11px] py-1.5 text-[13px] font-medium text-tx2'
 
 export function TripGlobeScaffold({ title, header, openHeader, peek, route, todayIso, onPickStop, children }: {
@@ -105,9 +109,10 @@ export function TripGlobeScaffold({ title, header, openHeader, peek, route, toda
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
+  // The sheet takes 550 ms to come back; scrolling to the card before that lands wide.
   const pick = (node: RouteNode) => {
     close()
-    setTimeout(() => onPickStop(node), 450)
+    setTimeout(() => onPickStop(node), 620)
   }
   const replay = () => {
     if (playing) return
@@ -158,7 +163,8 @@ export function TripGlobeScaffold({ title, header, openHeader, peek, route, toda
           className="relative cursor-pointer"
           style={{ height: 'max(240px, 40dvh)' }}
         >
-          <div className={'px-4 pt-2 ' + glow}>{header}</div>
+          <div className={scrim} aria-hidden />
+          <div className={'relative px-4 pt-2 ' + glow}>{header}</div>
           <span className={chip + ' absolute bottom-[30px] right-3.5 bg-sf/90'}>
             <Maximize2 aria-hidden className="size-3.5" strokeWidth={2.2} /> Open the globe
           </span>
@@ -182,7 +188,8 @@ export function TripGlobeScaffold({ title, header, openHeader, peek, route, toda
       {/* The open globe: the name top left, World and Replay top right, the card at the bottom. */}
       {open && (
         <div className="lv-enter pointer-events-none fixed inset-x-0 top-0 z-30 flex flex-col justify-between px-4 pb-2.5 pt-[calc(8px+env(safe-area-inset-top))]" style={{ bottom: ABOVE_BAR }}>
-          <div className="flex items-start justify-between gap-3">
+          <div className={scrim} aria-hidden />
+          <div className="relative flex items-start justify-between gap-3">
             <div className={'min-w-0 flex-1 ' + glow}>{openHeader}</div>
             <div className="pointer-events-auto flex flex-col gap-2.5">
               <button

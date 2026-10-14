@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { angDeg, centroid, journeyCamera, legDuration, peekText, spreadDeg, worldCamera, DEFAULT_CAMERA } from './journeyCamera.ts'
+import { angDeg, centroid, journeyCamera, legDuration, peekText, spreadDeg, worldCamera, DEFAULT_CAMERA, MAX_ALTITUDE } from './journeyCamera.ts'
 
 const BUD = { lat: 47.4979, lng: 19.0402 }
 const BKK = { lat: 13.7563, lng: 100.5018 }
@@ -26,10 +26,10 @@ test('journeyCamera: a wide journey sits high, a tight one low, nothing sits ove
   const wide = journeyCamera([BUD, BKK, HAN, DAD])
   const tight = journeyCamera([HAN, DAD])
   assert.ok(wide.altitude > tight.altitude)
-  assert.ok(tight.altitude >= 0.75 && wide.altitude <= 2.6)
+  assert.ok(tight.altitude >= 0.75 && wide.altitude <= MAX_ALTITUDE)
   assert.ok(wide.lng > 19 && wide.lng < 108)
   assert.deepEqual(journeyCamera([]), DEFAULT_CAMERA)
-  assert.equal(worldCamera([HAN]).altitude, 2.6)
+  assert.equal(worldCamera([HAN]).altitude, MAX_ALTITUDE)
   assert.equal(spreadDeg([HAN]), 0)
 })
 

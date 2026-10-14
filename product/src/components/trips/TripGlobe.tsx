@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import Globe from 'globe.gl'
 import type { RouteNode } from '@/lib/map/globeData'
-import { angDeg, journeyCamera, legDuration, worldCamera, type Camera } from '@/lib/map/journeyCamera'
+import { angDeg, journeyCamera, legDuration, worldCamera, MAX_ALTITUDE, type Camera } from '@/lib/map/journeyCamera'
 
 // The route globe on top of Trip (round 3b of the redesign; the phone's
 // GlobeView and GlobeModel): home and the stops, a leg between each pair, the
@@ -39,8 +39,9 @@ const AMBER = '#d9a85c'
 const MAUVE = 'rgba(208,135,149,0.95)'
 const MAUVE_ARC = 'rgba(208,135,149,0.6)'
 const HOME = '#ffffff'
+// Globe radius is 100 units: from city level to as far out as the world view goes.
 const MIN_DISTANCE = 130
-const MAX_DISTANCE = 480
+const MAX_DISTANCE = (1 + MAX_ALTITUDE) * 100
 
 /** Each place's moment: home, behind you, where you are, or ahead. The last stop reached is "now". */
 function classify(route: RouteNode[], todayIso: string): Pt[] {

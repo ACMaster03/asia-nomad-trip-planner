@@ -43,18 +43,25 @@ export function spreadDeg(points: LatLng[]): number {
 /** Somewhere over Asia, for a journey with no places yet. */
 export const DEFAULT_CAMERA: Camera = { lat: 20, lng: 100, altitude: 2.4 }
 
-/** Over the whole journey: its middle, high enough for every stop to show. */
+/** As far out as the globe's controls allow (globe.gl: the camera at 5 radii). */
+export const MAX_ALTITUDE = 4
+
+/**
+ * Over the whole journey: its middle, high enough for every stop to show with
+ * room around it on a phone held upright, where the globe's width is the
+ * tight side (the camera's field of view is vertical).
+ */
 export function journeyCamera(points: LatLng[]): Camera {
   const c = centroid(points)
   if (!c) return DEFAULT_CAMERA
   const spread = spreadDeg(points)
-  return { ...c, altitude: Math.min(2.6, Math.max(0.75, 0.55 + spread / 42)) }
+  return { ...c, altitude: Math.min(MAX_ALTITUDE, Math.max(0.75, 0.5 + spread / 36)) }
 }
 
-/** The world: the journey's side of it, from far out. */
+/** The world: the journey's side of it, from as far out as it goes. */
 export function worldCamera(points: LatLng[]): Camera {
   const c = centroid(points) ?? DEFAULT_CAMERA
-  return { lat: c.lat, lng: c.lng, altitude: 2.6 }
+  return { lat: c.lat, lng: c.lng, altitude: MAX_ALTITUDE }
 }
 
 /** Over one stop, close. */
