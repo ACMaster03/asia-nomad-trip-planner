@@ -7,6 +7,17 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### LIVE — #203, round 4b: All entries and the Subscriptions page as on the phone (14 Oct)
+
+Merged with Petra's "yes" at 10:13 UTC; Vercel built `96fb4f1` and it is live on
+app.livhold.com (`v96fb4f1` in Trip settings). Petra's test on the phone follows. Her finding on
+the pictures before the merge, a Coming up row running past its dashed box, went in with it
+(the row takes what is left beside its date). Her question on the box's two amounts (the
+total on top, each payment below; they coincide with one payment) was answered, nothing
+changed. The role fix (the BUILT entry below) rides with it. Next: 4c, the entry form.
+
+iOS: nothing new.
+
 ### BUILT — Round 4b: All entries and the Subscriptions page as on the phone (14 Oct)
 
 Round 4b of `docs/WEB-IOS-REDESIGN.md`, on Patrik's "rounds 3–6 now" (14 Oct). All entries
