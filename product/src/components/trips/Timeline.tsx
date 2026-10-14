@@ -11,9 +11,9 @@ import { useTripRole } from '@/lib/trips/useTripRole'
 import { useHomeBase } from '@/lib/trips/useHomeBase'
 import { useMoney } from '@/lib/trips/Money'
 import { localISODate, nightsBetween, segNights } from '@/lib/trips/format'
-import { stopProgress, tripDay } from '@/lib/trips/progress'
+import { stopProgress } from '@/lib/trips/progress'
 import { tripPhase } from '@/lib/trips/recap'
-import { stopsAround } from '@/lib/trips/whereAmI'
+import { tripKicker } from '@/lib/trips/kicker'
 import { sameCity } from '@/lib/map/norm'
 import { buildRoute, type RouteNode } from '@/lib/map/globeData'
 import { peekText } from '@/lib/map/journeyCamera'
@@ -271,13 +271,8 @@ export function Timeline() {
   const s = state
   const name = s.meta.tripName || 'Your journey'
 
-  const day = tripDay(s.meta, todayIso)
-  const { current } = stopsAround(s, todayIso)
-  const prog = current ? stopProgress(current, todayIso) : null
   const after = tripPhase(s, todayIso) === 'post'
-  const kickerText = !day
-    ? s.meta.startDate ? `Leaves ${fmtDay(s.meta.startDate)}` : ''
-    : after ? 'Home again' : `Day ${day}${current && prog ? ` · ${current.city}, night ${prog.night}` : ' · between stops'}`
+  const kickerText = tripKicker(s.meta, s.segments, todayIso)
   const onward = isOnward(s.meta, tl)
   const placedNights = tl.stops.reduce((a, x) => a + segNights(x), 0)
   const tripNights = nightsBetween(s.meta.startDate, s.meta.endDate)

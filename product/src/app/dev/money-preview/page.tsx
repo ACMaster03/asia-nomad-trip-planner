@@ -41,10 +41,12 @@ import Preview from './Preview'
 // round 2's unlocks: the fixture is built for that date and keeps only the
 // costs typed by then (the plan's rows stay, like the plan). The page reads
 // today from the device, so pair it with a browser clock set to the same day.
+// ?today=YYYY-MM-DD does the same for any date, a day before departure
+// included (round 4a, the estimate card; #149).
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; show?: string; subs?: string; oneoffs?: string; stay?: string; maybe?: string }>
+  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; today?: string; show?: string; subs?: string; oneoffs?: string; stay?: string; maybe?: string }>
 }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   // ?slow=<ms> streams the page that long after the shell, the way the real
@@ -56,7 +58,8 @@ export default async function MoneyPreviewPage({
   if (slow > 0) await new Promise((r) => setTimeout(r, Math.min(slow, 10_000)))
   const qc = new QueryClient()
   const realToday = new Date().toISOString().slice(0, 10)
-  const replayDay = Number(params.day) > 0 ? addDays(fixtureTrip(realToday).state.meta.startDate!, Number(params.day) - 1) : null
+  const replayDay = /^\d{4}-\d{2}-\d{2}$/.test(params.today ?? '') ? params.today!
+    : Number(params.day) > 0 ? addDays(fixtureTrip(realToday).state.meta.startDate!, Number(params.day) - 1) : null
   const fixture = fixtureTrip(replayDay ?? realToday)
   if (replayDay) {
     fixture.ledger = fixture.ledger.filter((e) => e.source || e.date <= replayDay)
