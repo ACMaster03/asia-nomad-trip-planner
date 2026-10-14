@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Trip's globe: the route smooth again (Petra, 14 Oct)
+### BUILT — Trip's globe: the route smooth again (Petra, 14 Oct; #198)
 
 #197 live (`070f156`, Petra's test): the replay is good, but the route looked crooked and
 beaded: a chain of 2° arcs is a chain of short tubes, each sagging a little, with a joint
