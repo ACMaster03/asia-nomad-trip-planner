@@ -499,8 +499,9 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
           heading += d * 0.3
         }
       }
-      // The plane's nose points up and to the right in the icon: turn it by 45° less.
-      v.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${(heading ?? 0) - 45}deg)`
+      // The icon's nose points up and to the right, which on the screen is −45°: turning it
+      // by the heading plus 45° points it the way it flies (it was minus, and it flew askew).
+      v.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${(heading ?? 0) + 45}deg)`
     }
     place(0)
     const step = () => {

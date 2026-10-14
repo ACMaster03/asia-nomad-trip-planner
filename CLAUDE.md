@@ -171,7 +171,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
   (`TripGlobeScaffold.tsx`, a lean `TripGlobe.tsx` drawn in the phone's pale look from the country
   shapes; the Map tab empty, the planner globe kept in `MapClient.tsx` for development), is live since
   14 Oct (#193, Petra's test); her two findings, the names on the globe kept apart and the plane
-  in the replay, are live since 14 Oct (#194, Petra's test); the plane's spin is fixed after it (#195).
+  in the replay, are live since 14 Oct (#194, Petra's test); the plane's spin is fixed after it (#195, live), then its heading (#196).
   Next: 3c, the stop page. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under

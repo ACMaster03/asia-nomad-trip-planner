@@ -7,6 +7,14 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Trip's globe: the plane faces the way it flies (Petra, 14 Oct; #196)
+
+#195 live (`7543d3e`, Petra's test): no spin, but the plane faced askew. The icon's nose
+points up and to the right, which on the screen is −45°, so the icon must turn by the heading
+plus 45°; it turned by the heading minus 45°, a quarter turn off.
+
+iOS: nothing new.
+
 ### BUILT — Trip's globe: the plane no longer spins (Petra, 14 Oct; #195)
 
 #194 merged with Petra's "yes"; Vercel built `7c0ba4a`; her test: all works, the build number
