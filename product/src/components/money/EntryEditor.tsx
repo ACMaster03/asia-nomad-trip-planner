@@ -2,7 +2,6 @@
 import { useMoney } from '@/lib/trips/Money'
 import { useConfirm } from '@/components/Confirm'
 import { useToast } from '@/components/Toast'
-import { sourceKey } from '@/lib/trips/importCosts'
 import { pickEntryCurrency } from '@/lib/trips/entryCurrency'
 import { countryCurrencies } from '@/lib/catalogue/countryCurrencies'
 import { currentStop } from '@/lib/trips/moneyModel'
@@ -12,6 +11,7 @@ import type { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import type { useTripMutation } from '@/lib/trips/useTripMutation'
 import type { LedgerEntry, Trip } from '@/lib/trips/types'
 import { EntrySheet, type SubChange } from './EntrySheet'
+import { deleteEntry } from './deleteEntry'
 
 // The entry sheet with what saving and deleting mean, shared by Money and All
 // entries so a row edits the same way on both. The page owns whether the
@@ -74,42 +74,7 @@ export function EntryEditor({ initial, trip, todayIso, mut, stateMut, onClose, o
     toast(`${isNew ? 'Added' : 'Saved'} · ${fmt(toBase(entry.amount, entry.currency, s.rates))} · ${entry.note?.trim() || categoryLabel(entry.category)}${change?.kind === 'create' ? ' · now a subscription' : ''}`)
   }
   async function del(entry: LedgerEntry) {
-    if (entry.source?.kind === 'sub') {
-      // A charge the app wrote (importCosts.ts). The skip record keeps the
-      // sync from writing it again; the subscription itself stays.
-      const ok = await confirm({
-        title: 'Remove this charge?',
-        body: `${entry.note || 'The subscription'} stays on your subscriptions. This charge won’t be added again.`,
-        confirmLabel: 'Remove',
-      })
-      if (!ok) return
-      const key = sourceKey(entry.source)
-      stateMut.mutate(
-        (cur) => ({ ...cur, importSkip: [...new Set([...(cur.importSkip ?? []), key])] }),
-        { onSuccess: () => mut.mutate({ kind: 'delete', id: entry.id }) },
-      )
-    } else if (entry.source && entry.source.kind !== 'extra') {
-      // Without the skip record, reconcile would resurrect the row next visit.
-      // (A paid one-off's row from before #39 is a plain entry: nothing
-      // imports it again.)
-      const ok = await confirm({
-        title: 'Remove this imported cost?',
-        body: 'The booking stays on the Trip page, but it won’t be re-imported here.',
-        confirmLabel: 'Remove',
-      })
-      if (!ok) return
-      const key = sourceKey(entry.source)
-      // Persist the skip BEFORE deleting: a ledger refetch landing between the
-      // two writes would otherwise re-import the row.
-      stateMut.mutate(
-        (cur) => ({ ...cur, importSkip: [...new Set([...(cur.importSkip ?? []), key])] }),
-        { onSuccess: () => mut.mutate({ kind: 'delete', id: entry.id }) },
-      )
-    } else {
-      if (!(await confirm({ title: 'Delete this entry?' }))) return
-      mut.mutate({ kind: 'delete', id: entry.id })
-    }
-    onClose()
+    if (await deleteEntry(entry, { confirm, mut, stateMut, toast })) onClose()
   }
 
   return (

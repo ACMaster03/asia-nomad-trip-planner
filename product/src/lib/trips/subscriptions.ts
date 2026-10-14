@@ -242,3 +242,22 @@ export function shortDate(iso: string): string {
 
 export const LEAD_CHOICES = [1, 3, 7] as const
 export const leadLabel = (days: number) => `${days} day${days === 1 ? '' : 's'} before`
+
+// ---- the lists the Subscriptions card and page show (the phone's SubscriptionList, round 4b)
+
+/** Active ones, the next charge first. */
+export function activeSubs(subs: Subscription[], todayIso: string): Subscription[] {
+  const next = (s: Subscription) => nextCharge(s, todayIso) ?? '9999'
+  return subs.filter((s) => !isCancelled(s)).sort((a, b) => next(a).localeCompare(next(b)))
+}
+
+/** Cancelled ones, the latest first. */
+export const cancelledSubs = (subs: Subscription[]) =>
+  subs.filter(isCancelled).sort((a, b) => (b.cancelledOn ?? '').localeCompare(a.cancelledOn ?? ''))
+
+/** What the active ones take from tomorrow to the journey's end, and the days left; null once the journey is over. */
+export function subsAhead(active: Subscription[], rates: Record<string, number>, todayIso: string, tripEnd?: string): { days: number; total: number } | null {
+  if (!tripEnd || !validIso(tripEnd) || tripEnd <= todayIso) return null
+  const from = dayAfter(todayIso)
+  return { days: Math.round((Date.parse(tripEnd) - Date.parse(todayIso)) / 86_400_000), total: subsBetween(active, rates, from, tripEnd) }
+}

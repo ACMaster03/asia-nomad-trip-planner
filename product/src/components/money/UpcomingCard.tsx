@@ -42,7 +42,7 @@ export function UpcomingCard({ rows, fmt, todayIso, canEdit, onOpen }: {
           </button>
         ))}
         {rows.length > 3 && (
-          <Link href="/money/entries" className="block py-2.5 text-[13.5px] font-medium text-ac">{rows.length - 3} more in All entries ›</Link>
+          <Link href="/money/entries?coming=1" className="block py-2.5 text-[13.5px] font-medium text-ac">{rows.length - 3} more in All entries ›</Link>
         )}
       </div>
     </div>
