@@ -27,7 +27,7 @@ export function useLongPress(onLongPress: () => void, { ms = 500, enabled = true
       onPointerUp: clear,
       onPointerCancel: clear,
       onPointerLeave: clear,
-      onContextMenu: (e: React.MouseEvent) => { e.preventDefault(); fired.current = true; onLongPress() },
+      onContextMenu: (e: React.MouseEvent) => { e.preventDefault(); onLongPress() },
     },
   }
 }

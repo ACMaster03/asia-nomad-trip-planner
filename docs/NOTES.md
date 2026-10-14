@@ -7,6 +7,31 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Round 3c: the stop page, Cancel and Save on every form, the long-press menu (Petra, 14 Oct)
+
+Decision 4 of `docs/WEB-IOS-REDESIGN.md` (look first, then edit), as the phone's `StopPage`,
+`EditForm` and the `StopRow` menu. Tapping a stop card on Trip opens the stop's page at
+`/itinerary/<stop id>` (`components/trips/StopPage.tsx`): the wash picture (the phone's
+`washLight`, copied to `public/wash/`) with the city in the serif over it, "You're here ·
+night 15 of 44" when you are, the country and the dates; then STAYS in detail (the payment
+line, a chevron, "+ Add stay"), GETTING HERE, LEAVING FOR DA NANG (or ONWARD / GOING HOME),
+NOTES; "Edit" in the corner, and a back button to the card you came from. A stop deleted
+under the page says "This stop is no longer on the journey." and goes back. Every form (stop,
+stay, transport, the flight there) has the phone's bar: Cancel on the left, the title, Save on
+the right, grey until the form is valid and something changed ("Add" for a new stop or stay);
+closing a changed form by Cancel, the scrim, the handle or Escape asks "Discard changes?" /
+"Keep editing". The `alert()`s went with it. The stop form lost its Stays list: the page has
+it, as on the phone. A long press (half a second, still) or a right click on a card opens the
+menu, a bottom sheet: Edit stop, Add stay, Add transport to X (or home), Leave out of / Put in
+the plan (a one-tap save), Delete X (asks first). Viewers get the page, not the menu or Edit.
+The card's stay and "No bed" rows are no longer buttons: the card is one link. Shared pieces,
+so the timeline and the page do the same thing: `useTripEdits` (the saves and the three
+confirmed deletes), `TripSheets` (which form is open), `LegStrip`, `StayRows`, `useLongPress`,
+and `SheetBar` / `useDirty` / `useCancel` in `sheetKit`. Pictures in
+`docs/web-ios-redesign/round3c-*`; the dev preview takes `?stop=<id>`.
+
+iOS: nothing new; the web took the phone's `StopPage`, `EditForm` and `StopRow` menu.
+
 ### LIVE — Trip's globe, the four follow-ups (Petra, 14 Oct; #194, #195, #196, #198)
 
 All four merged with Petra's "yes" and tested on her phone, the last build `8218073`: the names

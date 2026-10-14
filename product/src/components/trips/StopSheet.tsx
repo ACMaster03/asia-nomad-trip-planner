@@ -11,17 +11,16 @@ import type { CityLite } from '@/lib/catalogue/types'
 import { useMoney } from '@/lib/trips/Money'
 import { nightsBetween, usdToBase, TIER_LABELS } from '@/lib/trips/format'
 import type { CityCost } from '@/lib/trips/budget'
-import { stayMoneyState, stayRange } from '@/lib/trips/timeline'
-import type { Segment, Stay, Tier } from '@/lib/trips/types'
-import { Chips, SheetBar, Toggle, addLink, dangerBtn, fmtDay, hint, input, kicker, label, uid, useCancel, useDirty } from './sheetKit'
+import type { Segment, Tier } from '@/lib/trips/types'
+import { Chips, SheetBar, Toggle, addLink, dangerBtn, hint, input, label, uid, useCancel, useDirty } from './sheetKit'
 import { normCity } from '@/lib/map/norm'
 
 // The stop editor (mock 15 §4): a bottom sheet instead of the centred Modal.
 // Arrive and Leave are the stop; the city and country were picked when the
 // stop was added and are not re-asked. The comfort level lives here behind an
 // ⓘ, not on the card, where it meant nothing next to a paid stay (round 1).
-// The stop's stays are listed inside it, each opening its own sheet, which
-// is what makes "a stop holds one or more stays" true in the editor as well.
+// The stop's stays were listed in here until round 3c; the stop page lists
+// them now, as on the phone, and the form is the stop alone.
 // Delete stays below a rule, in the warning colour, as it was moved on
 // 2026-09-19. The "In the plan" switch moved in here from the card with round
 // 3a of the redesign (14 Oct): the phone's card has no tick box. Since round
@@ -33,28 +32,21 @@ import { normCity } from '@/lib/map/norm'
 // catalogue search, an offline fallback to the light list, and free text as a
 // last resort, because places attach by city NAME and Erd is not catalogued.
 
-const TONE = { ok: 'text-ac', warn: 'text-warn', muted: 'text-tx3' } as const
-
 export function StopSheet({
-  initial, cities, stays, cityCost, rates, nextCity, defaultArrive, todayIso, prefill, onClose, onSave, onDelete, onOpenStay, onAddStay,
+  initial, cities, cityCost, rates, nextCity, defaultArrive, prefill, onClose, onSave, onDelete,
 }: {
   initial: Segment | null
   cities: CityLite[]
   /** a new stop opened from a transport entry that names it: the city and the day it arrives are already known */
   prefill?: { city: string; arrive?: string }
-  /** the stop's stays, for the list inside the editor */
-  stays: Stay[]
   cityCost: CityCost | undefined
   rates: Record<string, number>
   /** where the leg after this stop goes, for the consequence line */
   nextCity?: string
   defaultArrive: string
-  todayIso: string
   onClose: () => void
   onSave: (seg: Segment, previous: Segment | null) => void
   onDelete?: () => void
-  onOpenStay: (stay: Stay) => void
-  onAddStay: () => void
 }) {
   const { fmt } = useMoney()
   const known = prefill ? cities.find((c) => normCity(c.city) === normCity(prefill.city)) : undefined
@@ -219,32 +211,6 @@ export function StopSheet({
           {inPlan ? 'Its nights and costs count in the plan.' : 'A maybe: shown faded on the timeline, with no legs of its own.'}
         </div>
       </div>
-
-      {initial && (
-        <div>
-          <div className={kicker}>Stays</div>
-          <div className="mt-1 divide-y divide-ln">
-            {stays.map((st) => {
-              const r = stayRange(st, initial)
-              const money = stayMoneyState(st, todayIso)
-              return (
-                <button key={st.id} type="button" onClick={() => onOpenStay(st)} className="flex w-full items-center justify-between gap-3 py-2.5 text-left">
-                  <span className="min-w-0">
-                    <span className="block truncate text-base font-medium">{st.name || 'Stay'}</span>
-                    <span className="block text-[13px] text-tx2">
-                      {r ? `${fmtDay(r.from)} – ${fmtDay(r.to)} · ` : ''}
-                      <span className={TONE[money.tone]}>{st.include === false && !st.status?.match(/booked|chosen/i) ? 'old option · not counted' : money.label}</span>
-                    </span>
-                  </span>
-                  <span className="text-tx3">›</span>
-                </button>
-              )
-            })}
-            {!stays.length && <div className="py-2.5 text-base text-warn">No stay yet</div>}
-          </div>
-          <button type="button" onClick={onAddStay} className={addLink}>+ Add stay</button>
-        </div>
-      )}
 
       {!showNote ? (
         <button type="button" className={addLink + ' -my-2 text-tx2'} onClick={() => setShowNote(true)}>+ Note</button>

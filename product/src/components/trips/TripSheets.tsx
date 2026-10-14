@@ -26,14 +26,13 @@ export const addStaySheet = (seg: Segment, state: TripState): SheetState => {
   return { kind: 'stay', seg, stay: null, range: cov.covered.length ? (cov.gaps[0] ?? null) : null }
 }
 
-export function TripSheets({ sheet, setSheet, state, tl, cities, cityIdx, todayIso, edits, onStopDeleted }: {
+export function TripSheets({ sheet, setSheet, state, tl, cities, cityIdx, edits, onStopDeleted }: {
   sheet: SheetState
   setSheet: (s: SheetState) => void
   state: TripState
   tl: TimelineModel
   cities: CityLite[]
   cityIdx: Record<string, CityCost | undefined>
-  todayIso: string
   edits: TripEdits
   /** the stop page: its stop is gone, go back */
   onStopDeleted?: (seg: Segment) => void
@@ -54,17 +53,13 @@ export function TripSheets({ sheet, setSheet, state, tl, cities, cityIdx, todayI
           initial={sheet.seg}
           prefill={sheet.prefill}
           cities={cities}
-          stays={sheet.seg ? s.stays.filter((x) => x.segId === sheet.seg!.id) : []}
           cityCost={sheet.seg ? cityIdx[sheet.seg.city] : undefined}
           rates={s.rates}
           nextCity={nextCityOf(sheet.seg)}
           defaultArrive={defaultArrive}
-          todayIso={todayIso}
           onClose={close}
           onSave={(seg, previous) => { edits.saveStop(seg, previous); close() }}
           onDelete={sheet.seg ? async () => { const seg = sheet.seg!; if (await edits.deleteStop(seg)) { close(); onStopDeleted?.(seg) } } : undefined}
-          onOpenStay={(stay) => setSheet({ kind: 'stay', seg: sheet.seg!, stay, range: null })}
-          onAddStay={() => setSheet(addStaySheet(sheet.seg!, s))}
         />
       )}
       {sheet.kind === 'stay' && (

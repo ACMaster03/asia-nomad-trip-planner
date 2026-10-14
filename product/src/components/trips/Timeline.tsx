@@ -418,7 +418,7 @@ export function Timeline() {
       )}
     </TripGlobeScaffold>
 
-      <TripSheets sheet={sheet} setSheet={setSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} todayIso={todayIso} edits={edits} />
+      <TripSheets sheet={sheet} setSheet={setSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} edits={edits} />
       {menuSeg && (
         <StopMenu seg={menuSeg} tl={tl} state={s} edits={edits} openSheet={(sh) => { setMenuSeg(null); setSheet(sh) }} onClose={() => setMenuSeg(null)} />
       )}

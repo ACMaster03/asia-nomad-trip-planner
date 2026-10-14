@@ -171,8 +171,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   (`TripGlobeScaffold.tsx`, a lean `TripGlobe.tsx` drawn in the phone's pale look from the country
   shapes; the Map tab empty, the planner globe kept in `MapClient.tsx` for development), is live since
   14 Oct (#193, Petra's test); her two findings, the names on the globe kept apart and the plane
-  in the replay, are live since 14 Oct (#194, Petra's test); the plane's spin is fixed after it (#195, live), then its heading (#196, live), then its pace and the leg drawing up to it (#197, live), then the route smooth again (#198); all live and tested by Petra on 14 Oct. Next: 3c, the
-  stop page, started 14 Oct. The source of the look is `feat/ios-foundation`,
+  in the replay, are live since 14 Oct (#194, Petra's test); the plane's spin is fixed after it (#195, live), then its heading (#196, live), then its pace and the leg drawing up to it (#197, live), then the route smooth again (#198); all live and tested by Petra on 14 Oct. 3c, the stop page (`StopPage.tsx` at
+  `/itinerary/<id>`, Cancel/Save bars on every form, the long-press menu on a card), was built
+  on 14 Oct. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the

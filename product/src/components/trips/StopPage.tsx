@@ -118,7 +118,7 @@ export function StopPage({ id }: { id: string }) {
         )}
       </div>
 
-      <TripSheets sheet={sheet} setSheet={setSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} todayIso={todayIso} edits={edits} onStopDeleted={() => router.replace('/itinerary')} />
+      <TripSheets sheet={sheet} setSheet={setSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} edits={edits} onStopDeleted={() => router.replace('/itinerary')} />
     </>
   )
 }
