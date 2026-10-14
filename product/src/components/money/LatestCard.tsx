@@ -31,7 +31,8 @@ export function LatestCard({ entries, rates, base, fmt, todayIso, canEdit, onEdi
     <div className="lv-enter rounded-[var(--r)] bg-sf px-4 py-3 text-tx">
       <div className={'flex items-center justify-between gap-3' + (rows.length ? ' pb-1' : '')}>
         <CardLabel mauve>Latest</CardLabel>
-        <Link href="/money/entries" className="text-[13.5px] font-medium text-ac">All entries ›</Link>
+        {/* prefetch: the whole page fetched while Money is open, so the tap opens it at once (Petra, 14 Oct). */}
+        <Link href="/money/entries" prefetch className="text-[13.5px] font-medium text-ac">All entries ›</Link>
       </div>
       {rows.length === 0 && <p className="py-2.5 text-[14px] text-tx2">Nothing typed yet. Tap + to log the first thing you buy.</p>}
       <div className="divide-y divide-ln">

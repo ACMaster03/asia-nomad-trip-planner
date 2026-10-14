@@ -26,7 +26,7 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, canEdit, onAdd, 
     <div className="lv-enter rounded-[var(--r)] bg-sf px-4 py-3 text-tx">
       <div className="flex items-center justify-between gap-3 pb-1">
         <CardLabel mauve>Subscriptions</CardLabel>
-        {subs.length > 0 && <Link href="/money/subscriptions" className="text-[13.5px] font-medium text-ac">All subscriptions ›</Link>}
+        {subs.length > 0 && <Link href="/money/subscriptions" prefetch className="text-[13.5px] font-medium text-ac">All subscriptions ›</Link>}
       </div>
       {subs.length === 0 ? (
         <SubscriptionsEmpty canEdit={canEdit} onAdd={onAdd} />
