@@ -23,6 +23,20 @@ Category › Food, shows Food's days with All checked.
 iOS: the phone has the same trap (`LedgerScreen.swift`, the Category menu keeps `filter`);
 worth the same two lines there.
 
+Her three other findings, same test, same pull request: (1) "Between stops" under Spent so far
+opened every entry (the phone's row opens nothing; `MoneyScreen.swift`). It opens the days no
+stop owns now, `?between=1`, a chip "Between stops ✕" (`ownerOf`, a travel day is the next
+stop's). (2) The chart's "tap the bar again to close" and "Open in All entries ›" sat cramped
+in one row: each has its own line now, the action first (`DailySpendChart.tsx`). (3) Money took
+long to come back from All entries. A link to `/money` renders Money's page on the server again
+(the app router refetches a dynamic page on every link, a trip to the server on a Vietnam
+VPN); the browser's back restores the screen it already has. "‹ Money" on All entries and
+Subscriptions goes back in the history when Money was the screen before (`lib/useCameFrom.ts`,
+a note in `sessionStorage` of the last app screen), else forward as before. All three probed
+on the production build with Playwright.
+
+iOS: (1) the phone's "Between stops" row could open the same days; (2) and (3) are web-only.
+
 ### LIVE — #203, round 4b: All entries and the Subscriptions page as on the phone (14 Oct)
 
 Merged with Petra's "yes" at 10:13 UTC; Vercel built `96fb4f1` and it is live on
