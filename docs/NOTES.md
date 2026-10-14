@@ -7,6 +7,15 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### LIVE — Trip's globe, the four follow-ups (Petra, 14 Oct; #194, #195, #196, #198)
+
+All four merged with Petra's "yes" and tested on her phone, the last build `8218073`: the names
+kept apart, the plane flying the replay, facing the way it flies, keeping step with the camera
+with the leg drawing under it, and the route one smooth line. Round 3b is done. Next: 3c, the
+stop page (Petra, 14 Oct: "start round 3c").
+
+iOS: nothing new.
+
 ### BUILT — Trip's globe: the route smooth again (Petra, 14 Oct; #198)
 
 #197 live (`070f156`, Petra's test): the replay is good, but the route looked crooked and
