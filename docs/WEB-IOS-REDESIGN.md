@@ -178,6 +178,9 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
+- 14 Oct: round 5b built, Account in the phone's groups (Sign-in methods on its own page, "This
+  journey" → Trip settings, "You" with Track spending, name, home and Appearance, Sign out as a
+  row). Pictures in `docs/web-ios-redesign/round5b-*`. Round 6, motion, is next.
 - 14 Oct: round 5a live (#207, `8d422cc`), Trip settings as the phone's grouped list ("This journey", "Money"),
   each field saving as it is left, no Save button (decision 5); Exchange rates on a page of their
   own with "+ Add a currency". Account (5b) next. Pictures in `docs/web-ios-redesign/round5a-*`.

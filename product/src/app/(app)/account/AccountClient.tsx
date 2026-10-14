@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { tripQueryOptions } from '@/lib/trips/tripQuery'
-import { humanAuthError } from '@/lib/auth/authError'
 import {
   createShareLink,
   fetchShares,
@@ -17,18 +16,34 @@ import {
 import { tk } from '@/lib/trips/keys'
 import { fetchFollowerAccess, fetchMyFollowerCount, fetchMyFollowing, setFollowerAccess } from '@/lib/follow/follows'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripRole } from '@/lib/trips/useTripRole'
+import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
 import { AccountDeletion } from '@/components/trips/DangerZone'
 import { Modal } from '@/components/trips/Modal'
 import { NotificationSettings } from '@/components/trips/NotificationSettings'
+import { SaveError } from '@/components/trips/SaveError'
+import { Toggle } from '@/components/trips/sheetKit'
 import { useToast } from '@/components/Toast'
 import { useHomeBase, useSetHomeBase } from '@/lib/trips/useHomeBase'
 import { applyLarger, applyTheme, storedLarger, storedTheme, type Theme } from '@/lib/theme'
 import { ActiveTripCard } from '@/app/(app)/settings/ActiveTripCard'
+import { Group, Row, RowInput, RowLink, rowCls } from '@/components/ui/SettingsList'
 
-// LIVHOLD v1 token idioms (frames 27/27b/28/29)
+// Account, since round 5b in the phone's groups (AccountView.swift, the split
+// Patrik agreed on 29 Sep): how you sign in, the journey's settings behind one
+// row, then what belongs to you on every journey ("You": Track spending, your
+// name and home, Appearance), People, Alerts, Follow links, Sign out, and
+// last the deletion. Each field saves as it is left (decision 5). The web
+// keeps what the phone has not built (your name and home, Your trips, People,
+// Alerts, Follow links, the password page); the plan says they stay here.
+//
+// App-level, deliberately NOT trip-scoped (design/mocks/13-account.html): it
+// renders with a live trip, with zero trips, mid-onboarding, and right after
+// access to the active trip was revoked.
+
+// LIVHOLD v1 token idioms (frames 27/27b/28/29), for the Follow links panel
 const input =
   'mt-[5px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base focus:border-ac focus:outline-none disabled:opacity-60'
 const pill = 'rounded-full border-[1.4px] border-ln3 px-3 py-1.5 text-base font-medium text-tx2 disabled:opacity-50'
@@ -44,23 +59,23 @@ const snapFalse = () => false
 const snapNowIso = () => new Date().toISOString()
 const snapNoTime = () => ''
 
-// "Your name" — the first name lives in auth user metadata, not on any trip:
-// it follows the person (Home avatar, and eventually anywhere the app talks
-// about you) across every trip they own or joined.
-function NameCard({ initialFirstName }: { initialFirstName: string }) {
+/** The "You" group: what is true of you on every journey. */
+function YouGroup({ initialFirstName }: { initialFirstName: string }) {
   const sb = createClient()
   const toast = useToast()
   const router = useRouter()
-  const [name, setName] = useState(initialFirstName)
-  // what the server currently has — the prop goes stale after a save until the
-  // next server render, so the Save button tracks this instead
+  // Whether Money tracks what you spend: the person's answer (migration 41), here
+  // as on the phone since round 5b (it sat on Trip settings from 4a).
+  const track = useTrackSpending()
+  const setTrack = useSetTrackSpending()
+  // Your first name lives in auth user metadata, not on any trip: it follows
+  // the person (the Home avatar, and anywhere the app talks to you).
   const [savedName, setSavedName] = useState(initialFirstName)
-
-  const save = useMutation({
-    mutationFn: async () => {
-      const { error } = await sb.auth.updateUser({ data: { first_name: name.trim() } })
+  const saveName = useMutation({
+    mutationFn: async (name: string) => {
+      const { error } = await sb.auth.updateUser({ data: { first_name: name } })
       if (error) throw error
-      return name.trim()
+      return name
     },
     onSuccess: async (saved) => {
       setSavedName(saved)
@@ -69,251 +84,71 @@ function NameCard({ initialFirstName }: { initialFirstName: string }) {
       // with the updated user_metadata now, then re-render the server components.
       await sb.auth.refreshSession()
       router.refresh()
-      toast('Name saved')
+      toast('Saved · Name')
     },
   })
-
-  return (
-    <section className="rounded-[var(--r)] bg-sf p-4">
-      <h2 className="font-serif text-[19px] font-semibold">Your name</h2>
-      <p className="mt-1 text-base leading-normal text-tx2">
-        Shown on your Home avatar and to people you plan with.
-      </p>
-      <div className="mt-2 flex items-end gap-[9px]">
-        <label className="block min-w-0 grow text-base font-medium text-tx2">
-          First name
-          <input
-            className={input}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Anna"
-          />
-        </label>
-        <button
-          onClick={() => save.mutate()}
-          disabled={save.isPending || !name.trim() || name.trim() === savedName.trim()}
-          className="flex-none rounded-[calc(var(--r)-3px)] bg-ac px-[15px] py-3 text-base font-semibold text-on disabled:opacity-50"
-        >
-          {save.isPending ? 'Saving…' : 'Save'}
-        </button>
-      </div>
-      {save.isError && (
-        <p className="mt-2 text-base text-ac2">Could not save your name. Try again.</p>
-      )}
-    </section>
-  )
-}
-
-// "Home" (#58; Patrik, 27 Sep; migration 43): where you live is a fact about
-// you, not any one journey, so it lives on the profile. Every journey starts
-// and ends there on Trip; a journey created before this, or by someone who
-// never set one, falls back to the home it was created with. Emptying it and
-// saving goes back to that.
-function HomeCard() {
-  const toast = useToast()
+  // Home (#58; Patrik, 27 Sep; migration 43): where you live is a fact about
+  // you, not any one journey. Every journey starts and ends there on Trip; a
+  // journey created before this, or by someone who never set one, falls back
+  // to the home it was created with. Emptying it goes back to that.
   const home = useHomeBase()
-  const save = useSetHomeBase()
-  // null until the field is touched: it shows the saved home until then
-  const [typed, setTyped] = useState<string | null>(null)
-  const saved = home.data ?? ''
-  const value = typed ?? saved
-
-  return (
-    <section className="rounded-[var(--r)] bg-sf p-4">
-      <h2 className="font-serif text-[19px] font-semibold">Home</h2>
-      <p className="mt-1 text-base leading-normal text-tx2">Every journey starts and ends here.</p>
-      <div className="mt-2 flex items-end gap-[9px]">
-        <label className="block min-w-0 grow text-base font-medium text-tx2">
-          City, country
-          <input
-            className={input}
-            value={value}
-            onChange={(e) => setTyped(e.target.value)}
-            placeholder="Budapest, Hungary"
-            autoComplete="address-level2"
-          />
-        </label>
-        <button
-          onClick={() => save.mutate(value, { onSuccess: () => { setTyped(null); toast('Home saved') } })}
-          disabled={save.isPending || home.isPending || value.trim() === saved.trim()}
-          className="flex-none rounded-[calc(var(--r)-3px)] bg-ac px-[15px] py-3 text-base font-semibold text-on disabled:opacity-50"
-        >
-          {save.isPending ? 'Saving…' : 'Save'}
-        </button>
-      </div>
-      {save.isError && (
-        <p className="mt-2 text-base text-ac2">Could not save your home. Try again.</p>
-      )}
-    </section>
-  )
-}
-
-// Password (2026-09-14). An account starts with a magic link to a working email
-// address, which is both the sign-up and the check that the address is real. A
-// password is a SECOND key to a door you already have: `signInWithPassword`
-// never creates an account, so nothing here is a way in for a stranger.
-// (Corrected 2026-09-18: this comment used to say the project keeps signups
-// closed. It does not, by design.)
-//
-// Two reasons it exists. Google Play requires reusable sign-in credentials for
-// app review, and says so in as many words for apps gated behind one-time
-// passwords — which is exactly what a magic link is. And on the road it is the
-// more dependable way in: no mail server to wait on, and no link that can be
-// opened in the wrong browser (the failure lib/supabase/otp.ts documents).
-//
-// Whether an account already HAS a password is not something Supabase tells the
-// client — there is no flag on the user object — so this card never claims to
-// know. It sets one either way, which is also what makes it double as the
-// landing spot for a "forgot password" link.
-const MIN_PASSWORD_LENGTH = 8
-
-function PasswordCard() {
-  const sb = createClient()
-  const toast = useToast()
-  const [pw, setPw] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState('')
-
-  const tooShort = pw.length > 0 && pw.length < MIN_PASSWORD_LENGTH
-  const mismatch = confirm.length > 0 && pw !== confirm
-  const ready = pw.length >= MIN_PASSWORD_LENGTH && pw === confirm
-
-  const save = useMutation({
-    mutationFn: async () => {
-      const { error } = await sb.auth.updateUser({ password: pw })
-      if (error) throw error
-    },
-    onSuccess: () => {
-      setPw('')
-      setConfirm('')
-      setError('')
-      toast('Password saved - you can sign in with it now')
-    },
-    onError: (e) =>
-      setError(
-        humanAuthError(e, "We couldn't save the password just now. Please try again in a moment."),
-      ),
-  })
-
-  return (
-    <section className="rounded-[var(--r)] bg-sf p-4">
-      <h2 className="font-serif text-[19px] font-semibold">Password</h2>
-      <p className="mt-1 text-base leading-normal text-tx2">
-        Optional. A magic link always works. A password is a second way in, and the quicker one
-        when the mail is slow to arrive. Set a new one here at any time.
-      </p>
-      <label className="mt-2 block text-base font-medium text-tx2">
-        New password
-        <input
-          className={input}
-          type="password"
-          autoComplete="new-password"
-          value={pw}
-          onChange={(e) => setPw(e.target.value)}
-          placeholder={'At least ' + MIN_PASSWORD_LENGTH + ' characters'}
-        />
-      </label>
-      <label className="mt-3 block text-base font-medium text-tx2">
-        Confirm password
-        <input
-          className={input}
-          type="password"
-          autoComplete="new-password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          placeholder="Type it again"
-        />
-      </label>
-      {/* Both notes wait for the reader to have typed something — a form that
-          scolds you before you have finished the first field is just noise. */}
-      {tooShort && (
-        <p className="mt-2 text-base text-tx2">
-          At least {MIN_PASSWORD_LENGTH} characters.
-        </p>
-      )}
-      {mismatch && <p className="mt-2 text-base text-ac2">The two passwords don&apos;t match.</p>}
-      {error && <p className="mt-2 text-base text-ac2">{error}</p>}
-      <button
-        onClick={() => save.mutate()}
-        disabled={save.isPending || !ready}
-        className="mt-[13px] w-full rounded-[calc(var(--r)-3px)] bg-ac py-3 text-base font-semibold text-on disabled:opacity-50"
-      >
-        {save.isPending ? 'Saving…' : 'Save password'}
-      </button>
-    </section>
-  )
-}
-
-// Appearance (frame 27b + P6): the same theme + larger-text choices the
-// personalisation flow offers — P7's recap links here, and the README rule is
-// that every personalisation answer lives in Settings. Applies instantly via
-// the shared lib/theme helpers (lv-theme / lv-larger localStorage +
-// data-theme / data-large on <html>); nothing is written to the trip.
-// Relocated from Trip Settings (testing round 1): it belongs to the person.
-function AppearanceCard() {
-  // localStorage doesn't exist during the server prerender and hydration must
-  // match it, so the stored choice is read only once mounted (the
-  // useSyncExternalStore mounted-gate pattern from DashboardClient); picks
-  // then live in local state on top of it.
+  const saveHome = useSetHomeBase()
+  // Appearance (frame 27b + P6): the theme and the larger-text choice the
+  // personalisation flow offers. Applies instantly via lib/theme (lv-theme /
+  // lv-larger in localStorage, data-theme / data-large on <html>); nothing is
+  // written to the trip. localStorage doesn't exist during the server
+  // prerender and hydration must match it, so the stored choice is read only
+  // once mounted; picks then live in local state on top of it.
   const mounted = useSyncExternalStore(subscribeNever, snapTrue, snapFalse)
   const [pick, setPick] = useState<{ theme: Theme; larger: boolean } | null>(null)
   const theme: Theme | null = pick ? pick.theme : mounted ? storedTheme() : null
   const larger = pick ? pick.larger : mounted ? storedLarger() : false
 
   return (
-    <section className="mt-3 flex flex-col gap-3">
-      <h2 className="font-serif text-[19px] font-semibold">Appearance</h2>
-      <div className="flex flex-col gap-3 rounded-[var(--r)] bg-sf p-4">
-        <div className="grid grid-cols-3 gap-2.5">
-          {(['Light', 'Dark', 'System'] as Theme[]).map((t) => {
-            const on = theme === t
-            return (
-              <button
-                key={on ? t + ' ·picked' : t}
-                onClick={() => {
-                  setPick({ theme: t, larger })
-                  applyTheme(t) // instant — the whole app flips with the pick
-                }}
-                className={'rounded-[calc(var(--r)-3px)] border-2 bg-sf p-2.5 transition-colors duration-[180ms] ' + (on ? 'lv-pick border-ac' : 'border-fill2')}
-              >
-                <span
-                  className="block h-[74px] rounded-[9px] p-2"
-                  style={{
-                    background:
-                      t === 'Light' ? '#E8F7EE' : t === 'Dark' ? '#161A18' : 'linear-gradient(115deg,#E8F7EE 50%,#161A18 50%)',
-                  }}
+    <>
+      <Group
+        title="You"
+        footer={
+          saveName.isError ? <span className="text-warn">Could not save your name. Try again.</span>
+            : saveHome.isError ? <span className="text-warn">Could not save your home. Try again.</span>
+              : track.data === 'no' ? 'Spending isn’t tracked on your journeys; Money shows the bookings. Your name is on your Home avatar; every journey starts and ends at your home.'
+                : 'Tracking shows your daily pace, where it goes and the projection on Money, on every journey. Your name is on your Home avatar; every journey starts and ends at your home.'
+        }
+      >
+        {track.data && track.data !== 'unknown' && (
+          <Row label="Track spending">
+            <Toggle on={track.data === 'yes'} onChange={(on) => setTrack.mutate(on)} label="Track spending" />
+          </Row>
+        )}
+        <RowInput label="Name" ariaLabel="First name" value={savedName} placeholder="Anna"
+          onSave={(v) => { const t = v.trim(); if (t) saveName.mutate(t) }} />
+        <RowInput label="Home" ariaLabel="Home" value={home.data ?? ''} placeholder="City, country" disabled={home.isPending}
+          onSave={(v) => saveHome.mutate(v.trim(), { onSuccess: () => toast('Saved · Home') })} />
+        <Row label="Appearance">
+          <span role="radiogroup" aria-label="Appearance" className="flex rounded-[9px] bg-fill p-[3px]">
+            {(['Light', 'Dark', 'System'] as Theme[]).map((t) => {
+              const on = theme === t
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => { setPick({ theme: t, larger }); applyTheme(t) }}
+                  className={'rounded-[7px] px-2.5 py-1 text-[14px] font-medium ' + (on ? 'bg-sf text-tx shadow-sm' : 'text-tx2')}
                 >
-                  <span className="block h-2 w-[70%] rounded" style={{ background: t === 'Dark' ? '#1F2622' : '#fff' }} />
-                  <span className="mt-1.5 block h-[22px] rounded" style={{ background: t === 'Dark' ? '#1F2622' : '#fff' }} />
-                  <span className="mt-1.5 block h-2 w-[45%] rounded" style={{ background: t === 'Dark' ? '#7FA37D' : '#3F5A3E' }} />
-                </span>
-                <span className="mt-[9px] block text-center text-base font-semibold text-tx">{t}</span>
-              </button>
-            )
-          })}
-        </div>
-        <div className="flex items-center justify-between gap-3 border-t border-ln pt-3">
-          <span>
-            <span className="block text-base font-semibold">Larger text</span>
-            <span className="block text-base text-tx2">Every size steps up one notch</span>
+                  {t}
+                </button>
+              )
+            })}
           </span>
-          <button
-            role="switch"
-            aria-checked={larger}
-            aria-label="Larger text"
-            onClick={() => {
-              setPick({ theme: theme ?? storedTheme(), larger: !larger })
-              applyLarger(!larger)
-            }}
-            className={'relative h-[31px] w-[52px] flex-none rounded-full transition-colors duration-[180ms] ' + (larger ? 'bg-ac' : 'bg-ln2')}
-          >
-            <span
-              className={'absolute top-[3px] block h-[25px] w-[25px] rounded-full bg-sf transition-[left] duration-[180ms] ' + (larger ? 'left-[24px]' : 'left-[3px]')}
-            />
-          </button>
-        </div>
-      </div>
-    </section>
+        </Row>
+        <Row label="Larger text">
+          <Toggle on={larger} onChange={(on) => { setPick({ theme: theme ?? storedTheme(), larger: on }); applyLarger(on) }} label="Larger text" />
+        </Row>
+      </Group>
+      <SaveError show={setTrack.isError} error={setTrack.error} />
+    </>
   )
 }
 
@@ -711,11 +546,13 @@ export default function AccountClient({
   const [busy, setBusy] = useState(false)
   const { tripId } = useTripScope()
   const { canEdit } = useTripRole()
-  // Follow links belong to the ACTIVE trip; only its end date is needed here
-  // (SharingCard's default expiry). Cached under the same key every trip
-  // screen uses, so this is usually free — and `enabled` keeps this page
-  // rendering with zero trips, mid-onboarding, or after access was revoked.
+  // Follow links belong to the ACTIVE trip; its name sits on the Trip settings
+  // row and its end date is SharingCard's default expiry. Cached under the same
+  // key every trip screen uses, so this is usually free, and `enabled` keeps
+  // this page rendering with zero trips, mid-onboarding, or after access was
+  // revoked.
   const trip = useQuery({ ...tripQueryOptions(sb, tripId), enabled: tripId !== null })
+  const tripName = trip.data?.state?.meta?.tripName || trip.data?.name || ''
 
   async function signOut() {
     setBusy(true)
@@ -727,56 +564,33 @@ export default function AccountClient({
   }
 
   return (
-    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-3 px-4 pb-6 pt-3">
-      {/* A way back that does not depend on the tab bar: without a journey there is no
-          bar (AppNav), and Account is the one page a follower reaches from Home's avatar. */}
-      <Link href="/dashboard" className="-ml-1 inline-flex min-h-11 items-center gap-1 text-base font-semibold text-ac2">
-        <ChevronLeft className="size-5" aria-hidden /> Home
-      </Link>
+    <main className="lv-enter mx-auto flex max-w-xl flex-col gap-4 px-4 pb-6 pt-[10px]">
       <div>
-        <h1 className="font-serif text-[25px] font-semibold">Account</h1>
-        <p className="mt-[5px] text-base leading-normal text-tx2">
-          These apply to you, not to any one trip.
-        </p>
+        {/* A way back that does not depend on the tab bar: without a journey there is no
+            bar (AppNav), and Account is the one page a follower reaches from Home's avatar. */}
+        <Link href="/dashboard" className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep">
+          <ChevronLeft aria-hidden className="size-5" />Home
+        </Link>
+        <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">Account</h1>
       </div>
 
-      <section className="rounded-[var(--r)] bg-sf p-4">
-        <h2 className="font-serif text-[19px] font-semibold">Signed in as</h2>
-        <div className="mt-3 flex items-center gap-3">
-          <span
-            aria-hidden
-            className="flex size-10 flex-none items-center justify-center rounded-full border-[1.5px] border-ac2-line bg-ac2-soft text-base font-semibold text-ac2-deep"
-          >
-            {((initialFirstName?.trim() || email.trim())[0] ?? '?').toUpperCase()}
-          </span>
-          <div className="min-w-0 grow">
-            <div className="truncate text-base font-semibold">{email || 'Signed in'}</div>
-            <div className="mt-0.5 text-base text-tx2">
-              Sign in with a magic link, or with a password you set below.
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={signOut}
-          disabled={busy}
-          className="mt-[13px] w-full rounded-[calc(var(--r)-3px)] border-[1.5px] border-ac2 py-3 text-base font-semibold text-ac2 disabled:opacity-50"
-        >
-          {busy ? 'Signing out…' : 'Sign out'}
-        </button>
-      </section>
+      <Group>
+        <Row label="Signed in as"><span className="truncate">{email || 'Signed in'}</span></Row>
+        <RowLink label="Sign-in methods" href="/account/sign-in" value="magic link, password" />
+      </Group>
 
-      {/* Directly under the identity card, and above everything trip-shaped: a
-          "forgot password" link lands on this page, so what it came for has to
-          be on screen without hunting. */}
-      <PasswordCard />
+      {tripId !== null && (
+        <Group title="This journey" footer="Name, dates, home, the budget and exchange rates.">
+          <RowLink label="Trip settings" href="/settings" value={tripName} />
+        </Group>
+      )}
 
-      <NameCard initialFirstName={initialFirstName ?? ''} />
-
-      <HomeCard />
-
+      {/* The switcher (frame 29): per ACCOUNT, so phone and laptop show the same journey. */}
       <ActiveTripCard />
 
-      <PeopleRow />
+      <YouGroup initialFirstName={initialFirstName ?? ''} />
+
+      <PeopleGroup />
 
       {/* The notification matrix (issue #13). Here and not on Settings: it
           is about the person, and a follower without a trip needs it too. */}
@@ -784,36 +598,36 @@ export default function AccountClient({
         <NotificationSettings />
       </div>
 
-      <AppearanceCard />
-
       {/* Editors, not just the owner — create_share_link and
           set_trip_sharing_paused both gate on can_edit_trip (migrations 11/16),
           so hiding this from a co-editor would be the UI inventing a rule the
           database doesn't have. Viewers (and trip-less accounts) get nothing. */}
       {tripId !== null && canEdit && <SharingCard endDate={trip.data?.state?.meta?.endDate} />}
 
+      <Group footer="Signs out this browser only. Your other devices stay signed in.">
+        <button type="button" onClick={signOut} disabled={busy} className={rowCls + ' w-full text-left font-medium text-ac2-deep disabled:opacity-50'}>
+          {busy ? 'Signing out…' : 'Sign out'}
+        </button>
+      </Group>
+
       <AccountDeletion />
     </main>
   )
 }
 
-// One line, the door to the full lists. Counts fail soft on a database
-// without migration 33 — the row then simply says "People".
-function PeopleRow() {
+// One row, the door to the full lists. Counts fail soft on a database
+// without migration 33 — the row then simply says who it is about.
+function PeopleGroup() {
   const sb = createClient()
   const following = useQuery({ queryKey: tk.following, queryFn: () => fetchMyFollowing(sb), staleTime: 5 * 60_000, retry: false })
   const followers = useQuery({ queryKey: ['follower-count'], queryFn: () => fetchMyFollowerCount(sb), staleTime: 5 * 60_000, retry: false })
   const parts = [
-    following.data ? `Following ${following.data.length}` : null,
+    following.data ? `following ${following.data.length}` : null,
     followers.data != null ? `${followers.data} follower${followers.data === 1 ? '' : 's'}` : null,
   ].filter(Boolean)
   return (
-    <Link href="/people" className="flex items-center justify-between rounded-[var(--r)] bg-sf p-4">
-      <span>
-        <span className="block font-serif text-[19px] font-semibold">People</span>
-        <span className="block text-base text-tx2">{parts.length ? parts.join(' · ') : 'Who you follow, who follows you'}</span>
-      </span>
-      <ChevronRight aria-hidden className="size-5 text-ac2" />
-    </Link>
+    <Group footer="Who you follow, who follows you.">
+      <RowLink label="People" href="/people" value={parts.join(' · ')} />
+    </Group>
   )
 }

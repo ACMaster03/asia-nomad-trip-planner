@@ -25,7 +25,7 @@ import Preview from './Preview'
 // way Money's rows do (round 4b, lib/trips/ledgerFilters.ts). ?screen=subscriptions
 // renders the Subscriptions page; ?screen=settings Trip settings and ?screen=rates the
 // Exchange rates page (round 5; the feed and the invites are out of reach here, so they show
-// their empty states).
+// their empty states); ?screen=account the Account page (5b), with a made-up person.
 // ?track=ask | no | yes seeds Money's once-per-account answer (migration 41):
 // ask shows the question (over the full page, since the fixture has logged
 // costs), no the quiet page, yes (the default) the full page; both carry the
@@ -114,7 +114,7 @@ export default async function MoneyPreviewPage({
   return (
     <HydrationBoundary state={dehydrate(qc)}>
       <Preview
-        screen={params.screen === 'home' ? 'home' : params.screen === 'entries' ? 'entries' : params.screen === 'subscriptions' ? 'subscriptions' : params.screen === 'settings' ? 'settings' : params.screen === 'rates' ? 'rates' : 'money'}
+        screen={params.screen === 'home' ? 'home' : params.screen === 'entries' ? 'entries' : params.screen === 'subscriptions' ? 'subscriptions' : params.screen === 'settings' ? 'settings' : params.screen === 'rates' ? 'rates' : params.screen === 'account' ? 'account' : 'money'}
         entries={{ day: params.show, before: params.before, from: params.from, to: params.to, filter: params.filter, cat: params.cat, fam: params.fam, coming: params.coming, between: params.between }}
       />
     </HydrationBoundary>

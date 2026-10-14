@@ -195,9 +195,10 @@ Petra is new to software work; Patrik is not. The product conventions are in
   bar; the Subscriptions question kept on its own card), is live since 14 Oct (#206, built with #207
   after Vercel's daily limit had refused it for half an hour). 5a, Trip settings as the phone's grouped
   list (each field saves as it is left, no Save button; the currency locked; Exchange rates on its own
-  page with "+ Add a currency"), is live since 14 Oct (#207, `8d422cc`); Petra's test of 4c and 5a
-  follows. Next: 5b (Account in the phone's groups,
-  Track spending under "You"), 6 (motion). The source of the look is `feat/ios-foundation`,
+  page with "+ Add a currency"), is live since 14 Oct (#207, `8d422cc`, Petra's test; her finding, the
+  amount small on the phone, is live with #208). 5b, Account in the phone's groups (Sign-in methods on
+  its own page at `/account/sign-in`, "This journey" → Trip settings, "You" with Track spending, name,
+  home and Appearance, Sign out as a row), is built on 14 Oct and waits for Petra's go. Next: 6 (motion). The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
