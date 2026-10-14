@@ -94,6 +94,11 @@ Petra is new to software work; Patrik is not. The product conventions are in
   changes and what could go wrong, get a "go", merge, watch the Vercel build,
   test on livhold.com, record.
 - No hourly check-ins on pull requests unless someone asks for them.
+- Patrik, 14 Oct: builds are local. Every change is built and run in Claude's workspace
+  (`next build --webpack`, `next start`, the dev previews, Playwright) before a pull request;
+  Vercel builds only merges. Claude's `kyh/*` branches create no Vercel deployment
+  (`git.deploymentEnabled` in `product/vercel.json` and `landing/vercel.json`), because the
+  Hobby plan allows 100 deployments a day and 14 Oct used them all. One merge per round.
 - Since 27 Sep another agent builds the iOS app (`ios/`) on Patrik's machine:
   Trip now, Money next. Web bugs on Home and Trip go first, and every web
   change to behaviour gets an "iOS:" line in its `docs/NOTES.md` entry (the
@@ -175,7 +180,12 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Cancel/Save bars on every form, the long-press menu on a card), is live since 14 Oct (#199,
   Petra's test); her finding, the page slow to open and to leave (a route, each way a trip to
   the server), is fixed: the page is a layer over the timeline at `/itinerary?stop=<id>`,
-  built 14 Oct. The source of the look is `feat/ios-foundation`,
+  merged 14 Oct (#200) but NOT LIVE: Vercel refused the build (the Hobby plan's 100
+  deployments a day, used up); app.livhold.com runs `9755bac` until main is deployed again
+  (a check-in on 15 Oct 08:10 UTC retries; the next merge would also do it). 4a, Money's page
+  as the phone's (the top card with the stop / Journey switch and the budget ring, Upcoming
+  charges, Latest with category tiles, Bookings open, Subscriptions as Latest, the #127
+  numbers), was built on 14 Oct, on the branch with #200's fix, waiting for the same build. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the

@@ -7,6 +7,88 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Round 4a: Money's page as on the phone, and the #127 numbers (Petra, 14 Oct)
+
+Built in the workspace, pictures in `docs/web-ios-redesign/round4a-*` (before and after,
+light and dark); not merged, since Vercel's day is spent (see WAITING below). What changed,
+from the phone's `MoneyScreen.swift` and `MoneyModel.swift`:
+
+- The top card (`components/money/TopCard.tsx`): a switch between the stop you are in (its
+  city, or "This stop") and Journey. Journey: "Lands near ≈ X" (or "Spent so far" until the
+  projection unlocks) beside the budget ring (`BudgetRing.tsx`, an SVG: one arc per part in
+  row order, the full circle the budget, an amber outer lap past it, the percentage in the
+  middle; it opens the settings), then the parts as rows (Spent so far, which opens to
+  where it was spent: before departure, each stop by date, between stops, each a link to All
+  entries; Still to pay; Day to day, N nights; Stays not booked yet; After the plan, N days,
+  hatched; Subscriptions), the Budget and what is left in it or how far over, "About X a day
+  less gets you there" in amber, and the pace line. The stop: "Hanoi · night 15 of 44", what
+  everyday costs came to here, "Per day here" and "The stop comes to", the nights bar with
+  "today" over it, and what was spent beyond the everyday here. Between stops: the phone's
+  two lines. Before departure (#149): "Estimated total" with the same ring, no switch, the
+  unplanned days' share of the budget, the unbooked legs named, the city-averages note.
+- Upcoming charges (`UpcomingCard.tsx`, #149): entries dated ahead and booked stays and legs
+  with no entry yet, the three soonest, the total in the corner; a row opens the entry's
+  form, or the stay's or the leg's form from Trip (round 3c's `TripSheets`), so Money edits a
+  booking without going to Trip. Latest (`LatestCard.tsx`) in the phone's row style
+  (`EntryRow.tsx`): the category tile (`CategoryTile.tsx`, the phone's colours in
+  `globals.css` as `--cat-<id>`, lucide icons for its SF symbols), the name, the day and a
+  detail ("from booking", "not in daily average", the original currency), the amount.
+- Bookings always open (Patrik, 29 Sep): the Stays and Transport rows with the four states
+  (paid once charged, booked while the charge is ahead, not booked), the sums, the total by
+  the title; each row opens Trip. Subscriptions as Latest's pattern: the three that charge
+  next, the bell, "in 3 days" in amber, "N active · ≈ X a month"; "All subscriptions"
+  opens the rest and the cancelled ones in place until 4b gives them their page.
+- Gone: the All entries row (Latest and Upcoming lead there; the quiet page keeps a row, as
+  the phone's quiet page does), the Budget cap row (the ring and the Budget row open the
+  settings), and the Track spending switch (Petra, 14 Oct: "in the app version it's not
+  there"): it is a row on Trip settings now, as the phone's Settings → Money, and the quiet
+  page invites instead, as the phone's InviteCard ("See what a day costs", a Track spending
+  button, "or add a first expense"). `TrackSpendingRow.tsx` is gone.
+- The #127 numbers (`spending.ts`, `moneyModel.ts`): (1) the days between the last planned
+  stop and the journey's end count, at the daily pace plus the average night's stay, in
+  `projection.unplanned` / `unplannedDays` / `daysAhead`; before departure counted, not
+  priced. (2) "Still to pay" = entries dated ahead + booked stays and legs with no entry
+  (`projection.toPay`). (3) A leg is dated by its charge date, else the travel date, and a
+  booking is paid only once its entry's date has passed: `bookingsSummary` has four states
+  now (`paid`, `scheduled`, `unpaid`, `unbooked`) and takes today. The Plan card's rows still
+  add up to the projection (its tests hold). `moneyRows.ts` has the upcoming list and the
+  spent-by-place list, `moneyText.ts` the phone's spellings ("1.33 M Ft", "≈ 465 800 Ft",
+  "400 k"), `kicker.ts` the line under a root screen's name, which Trip uses too now.
+- The dev preview takes `?today=YYYY-MM-DD` (with the browser clock set to it) for any day,
+  before departure included.
+
+iOS: nothing new; the web took the phone's Money page.
+
+### DECIDED — local builds; Claude's branches no longer build on Vercel (Patrik through Petra, 14 Oct)
+
+After the 100-a-day refusal: "keep to local builds and run the server locally". So: every
+change is built and run in Claude's workspace (`next build --webpack`, `next start`, the dev
+previews from fixtures, Playwright at phone width), and that is the check before a pull
+request, as the round pictures already were. Vercel builds only what is merged: `kyh/*`, the
+name every Claude session branch carries, is set to `deploymentEnabled: false` in
+`product/vercel.json` and `landing/vercel.json` (minimatch, per Vercel's git configuration),
+so a push to a work branch creates no deployment at all (the `ignoreCommand` only cancelled
+them, and a cancelled deployment still counted). One merge per round is the budget to keep;
+Petra tests on app.livhold.com after the merge, as before. Patrik's own branches are not
+named `kyh/*` and keep their previews.
+
+iOS: nothing new.
+
+### WAITING — main is merged but not live: Vercel's 100-a-day limit (14 Oct, 07:56 UTC)
+
+#200 (the stop page in place, `7741cdd`) merged with Petra's "yes", but Vercel started no
+build, and starting one by hand was refused: `402 api-deployments-free-per-day`, the Hobby
+plan's 100 deployments a day, used up by the day's nine merges and their branch pushes
+(every push to the branch makes a preview build too, cancelled or not). app.livhold.com runs
+`9755bac` (#199): round 3c with the slow stop page, nothing broken. The missed build does not
+catch up on its own: once the window frees (about 24 h after the day's first builds), main
+has to be deployed again, by a Redeploy of main in the Vercel dashboard, by the API (a
+check-in is set for 15 Oct 08:10 UTC to do that), or by the next merge, which deploys
+everything on main. Patrik: whether the plan should change (Pro has no such limit) is yours;
+until then, fewer pushes per pull request keep the day's budget.
+
+iOS: nothing new.
+
 ### LIVE — Round 3c (#199, Petra's test) · BUILT — the stop page opens in place (Petra, 14 Oct)
 
 #199 is live (`9755bac`, Petra's test on the phone): the page works, but opening a card and

@@ -94,6 +94,25 @@
 }
 /* @generated:tokens end */
 
+/* The category tiles' colours (the phone's Categories.swift, light and dark):
+   components/money/CategoryTile.tsx reads --cat-<id>. */
+:root {
+  --cat-food: rgb(63 90 62); --cat-drinks: rgb(110 139 61); --cat-groceries: rgb(126 154 120); --cat-convenience: rgb(94 143 134);
+  --cat-stays: rgb(122 92 153); --cat-transport: rgb(79 111 176); --cat-local-transport: rgb(108 140 207); --cat-activities: rgb(201 138 99);
+  --cat-health: rgb(138 100 32); --cat-personal-care: rgb(165 121 74); --cat-clothes: rgb(169 76 90); --cat-accessories: rgb(184 104 126);
+  --cat-souvenirs: rgb(156 90 140); --cat-gear: rgb(111 118 130); --cat-connectivity: rgb(63 143 168); --cat-subscriptions: rgb(124 115 176);
+  --cat-insurance: rgb(91 107 140); --cat-fees: rgb(140 138 112); --cat-giving: rgb(192 102 122); --cat-other: rgb(138 145 140);
+  --cat-salary: rgb(63 122 85); --cat-freelance: rgb(63 122 85); --cat-savings: rgb(63 122 85); --cat-refund: rgb(63 122 85); --cat-other-income: rgb(63 122 85);
+}
+:root[data-theme="dark"] {
+  --cat-food: rgb(127 163 125); --cat-drinks: rgb(163 191 110); --cat-groceries: rgb(159 184 154); --cat-convenience: rgb(134 184 174);
+  --cat-stays: rgb(169 139 199); --cat-transport: rgb(127 155 214); --cat-local-transport: rgb(139 166 220); --cat-activities: rgb(217 160 124);
+  --cat-health: rgb(217 168 92); --cat-personal-care: rgb(216 174 126); --cat-clothes: rgb(208 135 149); --cat-accessories: rgb(221 160 178);
+  --cat-souvenirs: rgb(197 141 182); --cat-gear: rgb(154 162 174); --cat-connectivity: rgb(111 182 204); --cat-subscriptions: rgb(166 158 218);
+  --cat-insurance: rgb(141 155 186); --cat-fees: rgb(183 181 150); --cat-giving: rgb(224 151 167); --cat-other: rgb(167 173 169);
+  --cat-salary: rgb(127 184 146); --cat-freelance: rgb(127 184 146); --cat-savings: rgb(127 184 146); --cat-refund: rgb(127 184 146); --cat-other-income: rgb(127 184 146);
+}
+
 @theme inline {
   --color-canvas: var(--canvas);
   --color-pg: var(--pg);

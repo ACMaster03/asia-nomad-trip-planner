@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "kyh/*": false
+    }
+  },
   "framework": null,
   "outputDirectory": "public",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- .",
@@ -285,6 +290,16 @@
     {
       "source": "/vendor/:path+",
       "destination": "https://app.livhold.com/vendor/:path+",
+      "permanent": true
+    },
+    {
+      "source": "/wash",
+      "destination": "https://app.livhold.com/wash",
+      "permanent": true
+    },
+    {
+      "source": "/wash/:path+",
+      "destination": "https://app.livhold.com/wash/:path+",
       "permanent": true
     },
     {

@@ -213,7 +213,13 @@ export interface BookingRow {
   title: string
   detail: string
   date?: string
-  status: 'paid' | 'unpaid' | 'unbooked'
+  /**
+   * paid       — its entry is dated today or before
+   * scheduled  — booked and its entry is dated ahead: a charge to come, not a payment (#127, #149)
+   * unpaid     — booked, no entry yet
+   * unbooked   — an idea in the plan: listed, owed to nobody
+   */
+  status: 'paid' | 'scheduled' | 'unpaid' | 'unbooked'
   /** amount in base; 0 for an unbooked leg with no price */
   amount: number
   /** the booking's own currency figure, when it differs from base */
@@ -225,17 +231,34 @@ export interface BookingRow {
 /**
  * Bookings section: every ticked stay and every planned transport leg, with
  * whether the money is already on the books — "paid" once the row is in the
- * ledger (auto-imported from its charge date). A booking whose date has passed
- * but that never got a charge date stays "unpaid" and is flagged in the UI.
+ * ledger (auto-imported from its charge date) and that date has passed,
+ * "scheduled" while the row is dated ahead (the phone's rule, #127 and #149:
+ * a December charge is not a payment in September). A booking with no row yet
+ * is "unpaid" and is flagged in the UI.
  *
  * A row that is ticked but still an idea/shortlist is "unbooked": it is listed
  * (you asked for it in the plan) but counts towards neither `paid` nor `toPay`,
  * because nobody owes money on a draft.
+ *
+ * `todayIso` splits paid from scheduled; without it every row on the books is
+ * paid, as before #127.
  */
-export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
+export function bookingsSummary(state: TripState, ledger: LedgerEntry[], todayIso = '9999-12-31') {
   const rates = state.rates
   const base = state.meta.baseCurrency || 'HUF'
-  const imported = new Set(ledger.filter((e) => e.source).map((e) => `${e.source!.kind}:${e.source!.id}`))
+  // The latest entry date of each booking: dated ahead, the charge is still to come.
+  const entryDates = new Map<string, string>()
+  for (const e of ledger) {
+    if (!e.source) continue
+    const k = `${e.source.kind}:${e.source.id}`
+    entryDates.set(k, [entryDates.get(k) ?? '', e.date ?? ''].sort().pop()!)
+  }
+  const status = (booked: boolean, key: string): BookingRow['status'] => {
+    if (!booked) return 'unbooked'
+    const d = entryDates.get(key)
+    if (d === undefined) return 'unpaid'
+    return d && d <= todayIso ? 'paid' : 'scheduled'
+  }
   const orig = (amount: number, cur: string) => (cur !== base ? { amount, cur } : undefined)
   // A stop taken out of the plan, or deleted (#105): its drafts go with it,
   // as its nights and estimate leave computeBudget. A booked stay stays and is
@@ -247,13 +270,11 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
       const seg = state.segments.find((s) => s.id === st.segId)
       const nights = stayNights(st, seg)
       const total = stayTotal(st, seg)
-      const booked = isBookedStatus(st.status)
-      const paid = booked && imported.has(`stay:${st.id}`)
       return {
         id: st.id, kind: 'stay', title: `${seg?.city ?? '—'} · ${st.name}`,
         detail: `${nights} nights · ${st.ppn} ${st.cur} / night`,
         date: st.chargeDate || undefined,
-        status: !booked ? 'unbooked' : paid ? 'paid' : 'unpaid',
+        status: status(isBookedStatus(st.status), `stay:${st.id}`),
         amount: toBase(total, st.cur, rates), original: orig(total, st.cur),
         ...(inPlan.has(st.segId) ? {} : { outOfPlan: true }),
       }
@@ -262,13 +283,14 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
   const transport: BookingRow[] = state.transport
     .filter((t) => t.include !== false)
     .map((t): BookingRow => {
-      const booked = isBookedStatus(t.status)
-      const paid = booked && imported.has(`transport:${t.id}`)
       return {
         id: t.id, kind: 'transport', title: `${t.from} → ${t.to}`,
         detail: [t.type, t.provider].filter(Boolean).join(' · '),
-        date: t.date || undefined,
-        status: !booked ? 'unbooked' : paid ? 'paid' : 'unpaid',
+        // Dated like its entry in All entries (importCosts): when the card was
+        // charged, else the travel date. The travel date alone called a flight
+        // paid in September "scheduled" until December (#127, Patrik, 29 Sep).
+        date: t.chargeDate || t.date || undefined,
+        status: status(isBookedStatus(t.status), `transport:${t.id}`),
         amount: toBase(t.price, t.cur, rates), original: orig(t.price, t.cur),
       }
     })
@@ -276,8 +298,13 @@ export function bookingsSummary(state: TripState, ledger: LedgerEntry[]) {
   const all = [...stays, ...transport]
   return {
     stays, transport,
+    /** on the books and charged already */
     paid: all.filter((r) => r.status === 'paid').reduce((a, r) => a + r.amount, 0),
+    /** on the books, the charge still ahead */
+    scheduled: all.filter((r) => r.status === 'scheduled').reduce((a, r) => a + r.amount, 0),
+    /** booked, no entry yet */
     toPay: all.filter((r) => r.status === 'unpaid').reduce((a, r) => a + r.amount, 0),
+    total: all.reduce((a, r) => a + r.amount, 0),
     // Drafted stays: listed, priced, but owed to nobody. Kept out of
     // paid/toPay and reported separately so the card can say what it is NOT
     // counting. (Drafted transport has always been reported as `unbooked`.)
@@ -322,12 +349,30 @@ export interface Projection {
    */
   scheduled: number
   remainingNights: number
+  /** the nights still ahead at the stops, at the rate: Σ remaining × rate */
+  ahead: number
   /** stays for stops whose stay is not paid yet (booked, drafted or estimated) */
   unpaidStays: number
+  /** of those, booked stays with no entry yet */
+  staysToPay: number
+  /** and the rest: stays on the plan but not booked, and stops priced at the city's average */
+  staysEstimated: number
   transportToPay: number
   /** subscription charges falling between tomorrow and the end of the trip (#37) */
   subsAhead: number
-  /** spent + scheduled + Σ remaining nights × rate + unpaid stays + transport to pay + subscriptions ahead */
+  /**
+   * The days between the last planned stop and the journey's end (#127, Patrik,
+   * 29 Sep): the cap is for the whole journey, so what it is compared with has
+   * to be too. Counted at the daily pace plus the average night's stay so far
+   * (moneyModel decides the rate); 0 before there is a pace or a plan.
+   */
+  unplannedDays: number
+  unplanned: number
+  /** planned nights still ahead plus the unplanned days: what "a day less" divides over */
+  daysAhead: number
+  /** charged later or not yet: entries dated ahead and bookings with no entry ("+ X not paid yet") */
+  toPay: number
+  /** spent + scheduled + ahead + unpaid stays + transport to pay + subscriptions ahead + the unplanned days */
   projected: number
   /** logged spend that no stop or paid booking accounts for: gear, e-SIM, days between stops */
   residual: number
@@ -353,6 +398,8 @@ export function projectFromPlan(
   rates: Record<string, number>,
   todayIso: string,
   subsAhead = 0,
+  /** the days after the plan and what they cost together (moneyModel); none by default */
+  unplanned: { days: number; amount: number } = { days: 0, amount: 0 },
 ): Projection {
   const expenses = ledger.filter(isExpense)
   const sum = (rows: LedgerEntry[]) => rows.reduce((a, e) => a + toBase(e.amount, e.currency, rates), 0)
@@ -361,16 +408,21 @@ export function projectFromPlan(
   const remainingNights = plan.reduce((a, p) => a + p.remaining, 0)
   const ahead = plan.reduce((a, p) => a + p.remaining * p.rate, 0)
   const unpaidStays = plan.filter((p) => p.stayLabel !== 'booked').reduce((a, p) => a + p.stay, 0)
+  const staysToPay = plan.filter((p) => p.stayLabel === 'unpaid').reduce((a, p) => a + p.stay, 0)
   const transportToPay = bookings.transport.filter((r) => r.status === 'unpaid').reduce((a, r) => a + r.amount, 0)
-  const paidStays = bookings.stays.filter((r) => r.status === 'paid').reduce((a, r) => a + r.amount, 0)
-  const paidTransport = bookings.transport.filter((r) => r.status === 'paid').reduce((a, r) => a + r.amount, 0)
+  // On the books, charged or not: a scheduled booking's money is in `scheduled` already.
+  const onBooks = (rows: BookingRow[]) => rows.filter((r) => r.status === 'paid' || r.status === 'scheduled').reduce((a, r) => a + r.amount, 0)
+  const paidStays = onBooks(bookings.stays)
+  const paidTransport = onBooks(bookings.transport)
   const inStops = plan.reduce((a, p) => a + p.spent, 0)
   // Residual is measured against the WHOLE ledger (spent + scheduled): the
   // paid-booking totals it subtracts are timeless too, so mixing bases here
   // would break "Σ stops + transport + residual = projected".
   return {
-    spent, scheduled, remainingNights, unpaidStays, transportToPay, subsAhead,
-    projected: spent + scheduled + ahead + unpaidStays + transportToPay + subsAhead,
+    spent, scheduled, remainingNights, ahead, unpaidStays, staysToPay, staysEstimated: unpaidStays - staysToPay, transportToPay, subsAhead,
+    unplannedDays: unplanned.days, unplanned: unplanned.amount, daysAhead: remainingNights + unplanned.days,
+    toPay: scheduled + staysToPay + transportToPay,
+    projected: spent + scheduled + ahead + unpaidStays + transportToPay + subsAhead + unplanned.amount,
     residual: spent + scheduled - inStops - paidStays - paidTransport,
   }
 }

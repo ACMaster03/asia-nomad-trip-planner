@@ -1,141 +1,71 @@
 'use client'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
-import type { BookingRow } from '@/lib/trips/spending'
-import { FoldButton, FoldedRow } from './Fold'
+import type { bookingsSummary } from '@/lib/trips/spending'
+import { shortMoney } from '@/lib/trips/moneyText'
+import { CardLabel } from './CardLabel'
+import { CategoryTile } from './CategoryTile'
 
-// Bookings — committed money, in five figures (owner review, 2026-09-19).
-//
-// It used to list every ticked stay and every planned leg and then close with
-// three footer lines: fourteen numbers on a phone to answer "how much of this
-// is already committed". The per-booking detail already exists on the Trip
-// page, which is also the only place you can edit it — so Money shows the two
-// halves, the three states and one total, and taps through. Nothing is lost;
-// it moved to where you act on it.
-//
-// The three states still partition the total exactly, which is the point of
-// splitting them: PAID is in the ledger and already counted as spend,
-// SCHEDULED & TO PAY is booked and owed, NOT BOOKED is a draft nobody owes
-// money on yet.
-//
-// On the full Money page it starts folded to one line (Fold.tsx): the total,
-// and what is not booked yet in amber, or else what is still to pay. The quiet
-// page shows it open, without ⌃: there it is the whole page.
+// Bookings (the phone's BookingsCard): two rows and what's paid, always open
+// (Patrik, 29 Sep: it's only two rows); the total beside the title, as Plan's.
+// Stays and transport are booked and changed on Trip, so each row goes there.
+// The four states (spending.ts bookingsSummary): paid once the charge date has
+// passed, scheduled while the charge is still ahead, unpaid when booked with
+// no entry yet, unbooked for an idea that counts in no figure.
 
-export function BookingsCard({ stays, transport, paid, toPay, draftedStays, draftStays, offPlanStays = 0, fmt, todayIso, folded, onToggle }: {
-  stays: BookingRow[]
-  transport: BookingRow[]
-  paid: number
-  toPay: number
-  /** total of the drafted stays — counted in neither paid nor toPay */
-  draftedStays: number
-  draftStays: number
-  /** booked stays at a stop no longer in the plan: still counted, said in amber (#105) */
-  offPlanStays?: number
-  fmt: (n: number) => string
-  todayIso: string
-  /** with onToggle: one line, or the card with ⌃ (Fold.tsx) */
-  folded?: boolean
-  onToggle?: () => void
-}) {
-  const sum = (rows: BookingRow[]) => rows.reduce((a, r) => a + r.amount, 0)
-  // `paid` counts every row that is on the books, charge date or not — split it
-  // so the card never calls a December charge "paid" (the Trip page doesn't either).
-  const scheduled = [...stays, ...transport]
-    .filter((r) => r.status === 'paid' && !!r.date && r.date > todayIso)
-    .reduce((a, r) => a + r.amount, 0)
-  const settled = paid - scheduled
-  const draftTransport = transport.filter((r) => r.status === 'unbooked')
-  const notBooked = draftedStays + sum(draftTransport)
-  const staysTotal = sum(stays)
-  const transportTotal = sum(transport)
-  const paidStays = stays.filter((r) => r.status === 'paid').length
-  const bookedLegs = transport.filter((r) => r.status !== 'unbooked').length
-
-  if (!stays.length && !transport.length) {
-    return (
-      <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] py-4 text-tx">
-        <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Bookings</div>
-        <p className="mt-1.5 text-base text-tx2">No stays chosen and no transport planned yet.</p>
-      </div>
-    )
-  }
-
-  const total = staysTotal + transportTotal
-  const due = scheduled + toPay
-  if (folded && onToggle) {
-    return (
-      <FoldedRow
-        title="Bookings"
-        onOpen={onToggle}
-        summary={notBooked > 0
-          ? <>{fmt(total)} · <span className="whitespace-nowrap text-warn">{fmt(notBooked)} not booked yet</span></>
-          : due > 0 ? <>{fmt(total)} · {fmt(due)} to pay</> : <>{fmt(total)}, all paid</>}
-      />
-    )
-  }
-
-  const line = (name: string, value: number, tone = '') => (
-    <div className="mt-1.5 flex items-baseline justify-between gap-3 text-base first:mt-0">
-      <span className="text-tx2">{name}</span>
-      <b className={tone}>{fmt(value)}</b>
-    </div>
-  )
-
-  const header = (
-    <div className="flex items-center justify-between border-b border-ln py-2.5">
-      <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Bookings</span>
-      <span className="flex items-center gap-1">
-        <span className="text-[13px] text-tx3">committed money</span>
-        {onToggle && <FoldButton label="Bookings" onFold={onToggle} />}
+export function BookingsCard({ bookings, fmt }: { bookings: ReturnType<typeof bookingsSummary>; fmt: (n: number) => string }) {
+  const b = bookings
+  const all = [...b.stays, ...b.transport]
+  const sum = (rows: typeof all) => rows.reduce((a, r) => a + r.amount, 0)
+  const notBooked = sum(all.filter((r) => r.status === 'unbooked'))
+  const due = b.scheduled + b.toPay
+  const paid = b.stays.filter((r) => r.status === 'paid').length
+  const booked = b.stays.filter((r) => r.status === 'scheduled' || r.status === 'unpaid').length
+  const unbooked = b.stays.filter((r) => r.status === 'unbooked').length
+  const staysDetail = [
+    paid > 0 || booked === 0 ? `${paid} paid` : null,
+    booked > 0 ? `${booked} booked` : null,
+    unbooked > 0 ? `${unbooked} not booked` : null,
+  ].filter(Boolean).join(' · ')
+  const row = (cat: string, title: string, detail: string, amount: number, offPlan = 0) => (
+    <Link href="/itinerary" className="flex items-center gap-3 py-2">
+      <CategoryTile id={cat} size={30} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-medium">{title}</span>
+        <span className="block text-[12.5px] text-tx2">
+          {detail}
+          {/* A booked stay at a stop no longer in the plan still counts (#105). */}
+          {offPlan > 0 && <span className="text-warn"> · {offPlan} not in the plan</span>}
+        </span>
       </span>
+      <span className="text-[15px] font-semibold tabular-nums">{shortMoney(amount, fmt)}</span>
+      <ChevronRight aria-hidden className="size-[13px] text-tx3" strokeWidth={2.6} />
+    </Link>
+  )
+  const sumLine = (title: string, v: number, warn = false) => (
+    <div className={'flex justify-between text-[13.5px] ' + (warn ? 'text-warn' : 'text-tx2')}>
+      <span>{title}</span><span className="tabular-nums">{fmt(v)}</span>
     </div>
   )
-  const body = (
-    <>
-      <div className="grid grid-cols-2 gap-3 pt-3">
-        <div>
-          <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">Stays</div>
-          <div className="mt-0.5 text-[21px] font-semibold">{fmt(staysTotal)}</div>
-          <div className="text-[13px] text-tx2">
-            {paidStays} paid{draftStays > 0 ? ` · ${draftStays} draft` : ''}
-            {offPlanStays > 0 && <span className="text-warn"> · {offPlanStays} not in the plan</span>}
+  return (
+    <div className="lv-enter rounded-[var(--r)] bg-sf px-4 py-3 text-tx">
+      <div className="flex items-baseline justify-between gap-3 pb-1">
+        <CardLabel mauve>Bookings</CardLabel>
+        {all.length > 0 && <span className="text-[13px] font-medium text-tx2">{shortMoney(b.total, fmt)}</span>}
+      </div>
+      {all.length === 0 ? (
+        <Link href="/itinerary" className="block py-2.5 text-[14px] text-tx2">No stays or transport in the plan yet. They’re added on Trip <span className="text-ac">›</span></Link>
+      ) : (
+        <div className="divide-y divide-ln">
+          {b.stays.length > 0 && row('stays', 'Stays', staysDetail, sum(b.stays), b.offPlanStays)}
+          {b.transport.length > 0 && row('transport', 'Transport', `${b.transport.filter((r) => r.status !== 'unbooked').length} of ${b.transport.length} booked`, sum(b.transport))}
+          <div className="flex flex-col gap-1 pt-2.5">
+            {b.paid > 0 && sumLine('Paid', b.paid)}
+            {due > 0 && sumLine('Scheduled & to pay', due)}
+            {notBooked > 0 && sumLine('Not booked yet', notBooked, true)}
           </div>
         </div>
-        <div>
-          <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">Transport</div>
-          <div className="mt-0.5 text-[21px] font-semibold">{fmt(transportTotal)}</div>
-          <div className="text-[13px] text-tx2">{bookedLegs} of {transport.length} booked</div>
-        </div>
-      </div>
-      <div className="mt-3 border-t border-ln pt-3">
-        {line('Paid', settled)}
-        {line('Scheduled & to pay', scheduled + toPay)}
-        {line('Not booked yet', notBooked, notBooked > 0 ? 'text-warn' : '')}
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-3 border-t border-ln pt-3">
-        <b className="text-[17px]">Total</b>
-        <span className="flex items-center gap-1">
-          <b className="text-[17px]">{fmt(total)}</b>
-          <ChevronRight aria-hidden className="size-5 text-ac2" />
-        </span>
-      </div>
-    </>
-  )
-  // Foldable, the header holds ⌃, so only the figures tap through to the Trip
-  // page: a button cannot sit inside a link.
-  if (onToggle) {
-    return (
-      <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-4 pt-1.5 text-tx">
-        {header}
-        <Link href="/itinerary" className="block">{body}</Link>
-      </div>
-    )
-  }
-  return (
-    <Link href="/itinerary" className="lv-enter block rounded-[var(--r)] bg-sf px-[18px] pb-4 pt-1.5 text-tx">
-      {header}
-      {body}
-    </Link>
+      )}
+    </div>
   )
 }

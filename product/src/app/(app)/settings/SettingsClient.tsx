@@ -15,6 +15,9 @@ import { qk } from '@/lib/catalogue/keys'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripRole } from '@/lib/trips/useTripRole'
+import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
+import { Toggle } from '@/components/trips/sheetKit'
+import { SaveError } from '@/components/trips/SaveError'
 import { roleLabel } from '@/lib/trips/role'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import { DangerZone } from '@/components/trips/DangerZone'
@@ -164,6 +167,10 @@ export default function SettingsClient() {
   const [budgetCap, setBudgetCap] = useState(0)
   const [startDate, setStartDate] = useState('')
   const [baseCurrency, setBaseCurrency] = useState('HUF')
+  // Whether Money tracks what you spend: the person's answer (migration 41),
+  // kept here as on the phone (Settings → Money) since round 4a of the redesign.
+  const track = useTrackSpending()
+  const setTrack = useSetTrackSpending()
   const [saved, setSaved] = useState(false)
   const [loadedVer, setLoadedVer] = useState<string | null>(null)
 
@@ -280,6 +287,21 @@ export default function SettingsClient() {
       </div>
 
       <FxPanel state={trip.data.state} fx={fx.data} online={online} canEdit={canEdit} />
+
+      {/* Money's own switch went with round 4a (Petra, 14 Oct: the phone has none there).
+          Hidden while the answer can't be read: a switch that cannot save would lie. */}
+      {track.data && track.data !== 'unknown' && (
+        <div className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf p-4">
+          <span className="min-w-0">
+            <span className="block font-serif text-[19px] font-semibold">Track spending</span>
+            <span className="block text-base text-tx2">
+              {track.data === 'yes' ? 'Money shows your pace, where it goes and where the journey lands. Only for you.' : 'Spending isn’t tracked on this journey. Money shows the bookings.'}
+            </span>
+          </span>
+          <Toggle on={track.data === 'yes'} onChange={(on) => setTrack.mutate(on)} label="Track spending" />
+        </div>
+      )}
+      <SaveError show={setTrack.isError} error={setTrack.error} />
 
       {canEdit && (
         <div className="flex flex-col gap-2">
