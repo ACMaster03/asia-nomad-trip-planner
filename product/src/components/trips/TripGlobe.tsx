@@ -211,7 +211,12 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   // is big enough for it (your journey's countries first, then the biggest); the stops' names
   // near. Worked out once per height and applied to each element in globe.gl's own per-frame
   // visibility pass, so no timing can miss it.
-  const rulesRef = useRef<{ alt: number; sizes: Map<string, number>; cf: number; co: number; stopNames: boolean } | null>(null)
+  const rulesRef = useRef<{ alt: number; rPx: number; sizes: Map<string, number>; cf: number; co: number; stopNames: boolean } | null>(null)
+  // The names placed so far this frame, as boxes on the screen: a name that would sit on
+  // another is left out (the phone's `hit`). The frame counter comes from the loop below.
+  const frameRef = useRef(0)
+  const boxesRef = useRef<{ frame: number; boxes: { x: number; y: number; w: number; h: number }[] }>({ frame: -1, boxes: [] })
+  const vehicleRef = useRef<HTMLDivElement | null>(null)
   const rulesFor = (alt: number) => {
     const cached = rulesRef.current
     if (cached && Math.abs(cached.alt - alt) < 0.03) return cached
@@ -230,24 +235,54 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         room--
       }
     }
-    const rules = { alt, sizes, cf, co: continentOpacity(alt), stopNames: stopNamesShown(alt) }
+    const rules = { alt, rPx, sizes, cf, co: continentOpacity(alt), stopNames: stopNamesShown(alt) }
     rulesRef.current = rules
     return rules
   }
+  /** Where globe.gl put the element this frame, read back from its transform. */
+  const screenXY = (node: HTMLElement): { x: number; y: number } | null => {
+    const m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)\s*$/.exec(node.style.transform)
+    return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : null
+  }
+  /** Claims the box for a name; false when another name already has that place. */
+  const claim = (x: number, y: number, w: number, h: number) => {
+    const b = boxesRef.current
+    if (b.frame !== frameRef.current) { b.frame = frameRef.current; b.boxes = [] }
+    const box = { x: x - w / 2, y: y - h / 2, w, h }
+    if (b.boxes.some((o) => box.x < o.x + o.w && box.x + box.w > o.x && box.y < o.y + o.h && box.y + box.h > o.y)) return false
+    b.boxes.push(box)
+    return true
+  }
+  // The band under the kicker and the name, where no name on the globe should sit.
+  const TOP_BAND = 118
   const applyRules = (node: HTMLElement, visible: boolean) => {
-    const g = instRef.current
-    if (!g) return
+    const g = instRef.current, el = boxRef.current
+    if (!g || !el) return
     const r = rulesFor(g.pointOfView().altitude ?? 2)
     const kind = node.dataset.kind
-    let show = visible
-    if (kind === 'continent') { node.style.opacity = String(r.co); show = visible && r.co > 0 }
-    else if (kind === 'country') {
+    const at = screenXY(node)
+    // Near the globe's edge the names bunch up and foreshorten: leave them out (the phone's `facing`).
+    const edge = at ? Math.hypot(at.x - el.clientWidth / 2, at.y - el.clientHeight / 2) > r.rPx * 0.92 : false
+    let show = visible && !edge
+    if (kind === 'continent') {
+      node.style.opacity = String(r.co)
+      show = show && r.co > 0 && !!at && at.y > TOP_BAND && claim(at.x, at.y, (node.textContent?.length ?? 4) * 13 * 0.98, 20)
+    } else if (kind === 'country') {
       const fs = r.sizes.get(node.dataset.name ?? '')
-      show = visible && !!fs
+      show = show && !!fs && !!at && at.y > TOP_BAND
       if (fs) { const s = node.firstElementChild as HTMLElement | null; if (s) { s.style.fontSize = fs + 'px'; s.style.opacity = String(r.cf) } }
+      if (show && fs && at) show = claim(at.x, at.y, (node.dataset.name?.length ?? 4) * fs * 0.72 + 6, fs + 6)
     } else if (kind === 'stop') {
       const name = node.querySelector<HTMLElement>('.lv-globe-name')
-      if (name) name.style.display = r.stopNames || node.dataset.when === 'home' || node.dataset.when === 'now' ? '' : 'none'
+      const when = node.dataset.when
+      if (name) {
+        let named = r.stopNames || when === 'home' || when === 'now'
+        if (named && at && when !== 'now' && at.y < TOP_BAND) named = false
+        // The stop's name claims its place first, to the right of the mark.
+        if (named && at) named = claim(at.x + 11 + (name.textContent?.length ?? 4) * 6.5 * 0.5, at.y, (name.textContent?.length ?? 4) * 6.5 + 4, 16)
+        name.style.display = named ? '' : 'none'
+      }
+      show = visible
     }
     node.style.visibility = show ? 'visible' : 'hidden'
   }
@@ -256,8 +291,8 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     if (!g) return
     const items: Html[] = [
       ...ptsRef.current.map((pt) => ({ kind: 'stop' as const, lat: pt.lat, lng: pt.lng, pt })),
-      ...labelsRef.current.map((label) => ({ kind: 'country' as const, lat: label.lat, lng: label.lng, label, mine: mineRef.current.has(normCountry(label.name)) })),
       ...CONTINENTS.map((c) => ({ kind: 'continent' as const, lat: c.lat, lng: c.lng, name: c.name })),
+      ...labelsRef.current.map((label) => ({ kind: 'country' as const, lat: label.lat, lng: label.lng, label, mine: mineRef.current.has(normCountry(label.name)) })),
     ]
     g.htmlElementsData(items as object[])
     rulesRef.current = null
@@ -332,6 +367,16 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     c.minDistance = MIN_DISTANCE
     c.maxDistance = MAX_DISTANCE
     instRef.current = g
+    // One tick per frame, so the names' boxes start afresh each frame.
+    let raf = 0
+    const tick = () => { frameRef.current++; raf = requestAnimationFrame(tick) }
+    raf = requestAnimationFrame(tick)
+    // The plane (or the dot on the ground) that flies the replay (the phone's drawVehicle).
+    const vehicle = document.createElement('div')
+    vehicle.style.cssText = 'position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;display:none;z-index:2'
+    vehicle.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" style="position:absolute;left:-11px;top:-11px;overflow:visible;filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.22))" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" fill="${t().tx}" stroke="${t().sf}" stroke-width="1.6" stroke-linejoin="round"/></svg>`
+    el.appendChild(vehicle)
+    vehicleRef.current = vehicle
     const ro = new ResizeObserver(() => { g.width(el.clientWidth); g.height(el.clientHeight) })
     ro.observe(el)
     // The country shapes, once per page.
@@ -352,6 +397,9 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
     return () => {
       aliveRef.current = false
+      cancelAnimationFrame(raf)
+      vehicle.remove()
+      vehicleRef.current = null
       mo.disconnect()
       ro.disconnect()
       readyRef.current = false
@@ -409,6 +457,35 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     else g.resumeAnimation()
   }, [paused])
 
+  /** Moves the plane along a leg's great circle over `ms`; returns a stop that hides it. */
+  const flyVehicle = (leg: Leg, ms: number) => {
+    const g = instRef.current, v = vehicleRef.current
+    if (!g || !v || leg.pts.length < 2) return () => {}
+    const svg = v.firstElementChild as SVGElement | null
+    if (svg) { svg.style.display = leg.ground ? 'none' : ''; }
+    v.style.display = ''
+    if (leg.ground) v.style.cssText += `;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:${themeRef.current.tx};border:2px solid ${themeRef.current.sf}`
+    const start = performance.now()
+    let raf = 0
+    let last: { x: number; y: number } | null = null
+    const n = leg.pts.length - 1
+    const step = () => {
+      const t = Math.min(1, (performance.now() - start) / ms)
+      const f = t * n, i = Math.min(n - 1, Math.floor(f)), k = f - i
+      const [lng0, lat0] = leg.pts[i], [lng1, lat1] = leg.pts[i + 1]
+      const p = g.getScreenCoords(lat0 + (lat1 - lat0) * k, lng0 + (lng1 - lng0) * k, 0.02)
+      if (p) {
+        const heading = last ? (Math.atan2(p.y - last.y, p.x - last.x) * 180) / Math.PI : 0
+        // The plane's nose points up and to the right in the icon: turn it by 45° less.
+        v.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${heading - 45}deg)`
+        last = p
+      }
+      if (t < 1 && aliveRef.current) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => { cancelAnimationFrame(raf); v.style.display = 'none'; v.style.cssText = 'position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;display:none;z-index:2' }
+  }
+
   // The replay: from home, leg by leg, each leg drawn as it is flown; then the whole journey.
   useEffect(() => {
     if (!replayNonce) return
@@ -426,11 +503,18 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         const ms = still ? 0 : legDuration(from, to)
         fly({ lat: to.lat, lng: to.lng, altitude: 1 + Math.min(1.2, angDeg(from, to) / 60) }, ms)
         const leg = legsRef.current.find((l) => l.i === i - 1)
-        if (leg) {
+        if (leg && !still) {
+          // The leg draws itself under the plane as it flies, a little behind it.
+          const stop = flyVehicle(leg, ms)
           await sleep(Math.round(ms * 0.35))
           leg.shown = true
           paintArcs()
           await sleep(ms - Math.round(ms * 0.35) + 150)
+          stop()
+        } else if (leg) {
+          leg.shown = true
+          paintArcs()
+          await sleep(150)
         } else {
           await sleep(ms + 150)
         }
