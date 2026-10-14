@@ -124,7 +124,8 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
   const comingRow = (e: LedgerEntry) => (
     <button key={e.id} type="button" disabled={!canEdit} onClick={() => setSheet({ entry: e })} className="flex w-full items-center gap-2.5 text-left">
       <span className="w-[46px] flex-none text-[12.5px] font-medium text-tx3">{shortDate(e.date)}</span>
-      <EntryRow entry={e} rates={rates} base={base} fmt={fmt} todayIso={today!} />
+      {/* The row takes what is left beside the date, so the amount stays inside the box (Petra, 14 Oct). */}
+      <span className="flex min-w-0 flex-1"><EntryRow entry={e} rates={rates} base={base} fmt={fmt} todayIso={today!} /></span>
     </button>
   )
 
