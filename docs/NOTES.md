@@ -7,6 +7,38 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Trip's globe: the names kept apart, the plane flies the replay (Petra, 14 Oct; #194)
+
+Petra's two findings on #193, on her phone:
+- **The countries' names crowded and overlapped** towards the globe's edge and ghosted under
+  the title. The web had no overlap check; the phone's `drawNames` has one (`hit`) and a
+  `facing` rule. Now, once per frame, every name claims its box on the screen in the order
+  given (the stops' names, the continents, then the countries, your journey's first, then by
+  size) and yields to one already there; none sits near the globe's edge (beyond 92 % of its
+  radius) or in the band under the kicker and the title. globe.gl's own visibility callback
+  only fires when occlusion changes, so the pass is a `requestAnimationFrame` loop of the
+  globe's own, idle while the globe is paused.
+- **The replay shows the plane** (a dot on a ground leg), flying each leg along the great
+  circle a little ahead of the line as it is drawn, turned the way it goes (the phone's
+  `drawVehicle`; the icon is lucide's plane with a canvas stroke and a soft shadow). It is a
+  plain element over the globe, placed with `getScreenCoords` each frame.
+
+The headless Chromium of the screenshot pipeline draws the globe at a frame or two a second
+(no GPU), so a picture of the replay is luck; none is kept. Pictures of the rest refreshed in
+`docs/web-ios-redesign/round3b-*.png`.
+
+iOS: nothing new.
+
+### LIVE — round 3b of the redesign, the globe on top of Trip (Petra, 14 Oct; #193)
+
+#193 merged with Petra's "yes" after the validation step; Vercel built `37afcce`. Petra on her
+phone: everything works, the build number is right. Her two findings, fixed in the follow-up
+below (#194): the countries' names crowded and overlapped towards the globe's edge and ghosted under
+the title (the web had no overlap check, the phone has one), and the replay should show the
+plane flying, as the phone's does.
+
+iOS: nothing new.
+
 ### BUILT — round 3b of the redesign: the globe on top of Trip (Petra, 14 Oct; #193)
 
 Patrik's 10 Oct decision A (#166, #63), on the web as the phone's `GlobeScaffold`:

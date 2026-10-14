@@ -169,8 +169,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   stop's form, "Onward" / "Journey ends", the "Where next?" card, the no-stops card with the
   flight there first), is live since 14 Oct (#192, Petra's test). 3b, the globe on top of Trip
   (`TripGlobeScaffold.tsx`, a lean `TripGlobe.tsx` drawn in the phone's pale look from the country
-  shapes; the Map tab empty, the planner globe kept in `MapClient.tsx` for development), was built
-  on 14 Oct (#193). The source of the look is `feat/ios-foundation`,
+  shapes; the Map tab empty, the planner globe kept in `MapClient.tsx` for development), is live since
+  14 Oct (#193, Petra's test); her two findings, the names on the globe kept apart and the plane
+  in the replay, are #194. Next: 3c, the stop page. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
