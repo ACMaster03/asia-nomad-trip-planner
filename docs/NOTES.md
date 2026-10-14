@@ -34,7 +34,9 @@ shot by Playwright. Pictures in `docs/web-ios-redesign/round4c-*`.
 iOS: nothing new; the phone is the source. The switch's wording and the Subscriptions question
 are the two places the apps differ.
 
-### BUILT — Latest's "All entries ›" took five seconds (Petra, 14 Oct)
+### LIVE — #205: Latest's "All entries ›" took five seconds (Petra, 14 Oct)
+
+Merged with Petra's "yes" at 10:52 UTC; Vercel built `9ad49a8`, live on app.livhold.com (`v9ad49a8`).
 
 Petra's re-test of `b36c9d2`: all four fixes work; Latest's "All entries ›" on Money took about
 five seconds to open. The same cause as "‹ Money" in #204, the other way round: a dynamic page
