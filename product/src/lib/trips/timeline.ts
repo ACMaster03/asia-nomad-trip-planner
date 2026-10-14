@@ -1,4 +1,4 @@
-import type { Segment, Stay, TransportLeg, TripState } from './types'
+import type { Segment, Stay, TransportLeg, TripMeta, TripState } from './types'
 import { nightsBetween, segNights } from './format.ts'
 import { isBookedStatus } from './commitment.ts'
 import { sameCity } from '../map/norm.ts'
@@ -228,4 +228,48 @@ export const stateOf = (status?: string): 'idea' | 'booked' => (isBookedStatus(s
 export function shiftDepartures(transport: TransportLeg[], city: string, oldDepart: string, newDepart: string): TransportLeg[] {
   if (!oldDepart || !newDepart || oldDepart === newDepart) return transport
   return transport.map((t) => (sameCity(t.from, city) && t.date === oldDepart ? { ...t, date: newDepart } : t))
+}
+
+/**
+ * Patrik, 27 Sep: while the plan stops before the journey's end date, what
+ * follows the last stop is "Onward" and the end reads "Journey ends"; once a
+ * stop reaches the end date it turns into "Going home" and "Home". Without an
+ * end date nothing reaches it, so it stays onward. (The phone's Journey.onward.)
+ */
+export function onward(meta: Pick<TripMeta, 'endDate'>, tl: Pick<Timeline, 'stops'>): boolean {
+  const last = tl.stops[tl.stops.length - 1]
+  if (!meta.endDate || !last) return true
+  return last.depart < meta.endDate
+}
+
+const NAME_SEPARATORS = /^[ \-\u2013\u2014:,\u00b7|/]+|[ \-\u2013\u2014:,\u00b7|/]+$/g
+
+/**
+ * A stay's name without the stop's city in front: "Bangkok – Home in Khet
+ * Huai Khwang" under Bangkok reads "Home in Khet Huai Khwang" (the phone's
+ * Journey.stayName). A name that only starts like the city ("Bangkokian
+ * Suites") is left alone.
+ */
+export function stayName(st: Pick<Stay, 'name'>, seg: Pick<Segment, 'city'>): string {
+  const name = (st.name ?? '').trim()
+  if (!name) return 'Stay'
+  const city = seg.city.trim()
+  if (!city || !name.toLowerCase().startsWith(city.toLowerCase())) return name
+  const rest = name.slice(city.length)
+  if (!/^[ \-\u2013\u2014:,\u00b7|/]/.test(rest)) return name
+  const trimmed = rest.replace(NAME_SEPARATORS, '')
+  return trimmed || name
+}
+
+/**
+ * The three figures on the "Where next?" card after the journey (the phone's
+ * Journey.recap): nights away from the journey's dates (the planned nights
+ * when it has no end), in-plan stops and their countries.
+ */
+export function journeyRecap(state: TripState): { nights: number; stops: number; countries: number } {
+  const inPlan = state.segments.filter((s) => s.include !== false)
+  const span = nightsBetween(state.meta.startDate, state.meta.endDate)
+  const nights = span > 0 ? span : inPlan.reduce((a, s) => a + segNights(s), 0)
+  const countries = new Set(inPlan.map((s) => s.country.trim().toLowerCase()).filter(Boolean))
+  return { nights, stops: inPlan.length, countries: countries.size }
 }

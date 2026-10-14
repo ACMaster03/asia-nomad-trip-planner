@@ -5,6 +5,52 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-14
+
+### BUILT — round 3a of the redesign: Trip's timeline as on the phone (Petra, 14 Oct)
+
+`components/trips/Timeline.tsx` redrawn after the phone's `TripScreens.swift`
+(`feat/ios-foundation`), look only; the rules stay the same:
+- The stop card: the city in the serif (21 px), the country and the dates a row each, the
+  nights on the right ("NIGHTS", or "NIGHT"), no tick box; a maybe shows faded, as before.
+  "No dates yet" instead of "— → —". A stay's name drops the city in front ("Bangkok - Home
+  in Khet Huai Khwang" reads "Home in Khet Huai Khwang"; `stayName`, tested).
+- "In the plan" is a switch in the stop's form (the phone's StopForm), with the same two
+  sentences under it. The tick on the card was the only way to take a stop out of the plan;
+  now the form is.
+- "+ Add stop" is a dashed row after the last stop, before the way home; "+ Add stay" left
+  the card (it is in the stop's form, and every "No bed" row still opens it).
+- The way home reads "Onward" while the plan stops before the end date and "Going home" once
+  a stop reaches it; the end node "Journey ends · 30 Apr" / "Home · 30 Apr" (Patrik's 27 Sep
+  rule; `onward`, tested). An empty leg says "No transport yet" with the route under it.
+- After the journey, a "Where next?" card on the wash above the timeline: the dates, three
+  boxes (nights, stops, countries; `journeyRecap`, tested), "+ Plan the next journey" (the
+  wizard) and a "Look back ›" card that scrolls to the timeline.
+- With no stops: "No stops yet. Add the first place you're going.", "+ Add the first stop"
+  and "+ Or start with the flight there": From and To, the transport form, then the stop form
+  with the place and the day filled in (`FlightThereSheet.tsx`). A flight there saved before
+  its stop fills "Add the first stop" in.
+- The footer says "nights planned" (the phone's word, Patrik 29 Sep), not "placed".
+
+Kept until 3c (the stop page): the money state on each stay row of the card, which the phone
+shows on the stop page only; tapping a card still opens the form. Dev preview: `?empty=1`
+(no stops) and `?end=2026-12-13` (the last stop reaches the end). Pictures:
+`docs/web-ios-redesign/round3a-*.png`.
+
+iOS: nothing new; the web now reads as `TripScreens.swift` and `TimelineLogic.swift`
+(`onward`, `stayName`, `recap`) do. Not on the web yet: the long-press menu and the stop page
+(3c), the globe on top (3b).
+
+### DECIDED — Patrik, 14 Oct (through Petra): rounds 3 to 6 go now, not after the freeze
+
+Patrik's 12 Oct answer 6 put rounds 3–6 after the 31 Oct freeze; on 14 Oct he agreed with
+Petra that they go now, in the plan's order: 3a, 3b (the globe on Trip), 3c (the stop page),
+4a–c (Money), 5 (settings), 6 (motion). Still no new features: the web takes the phone's look
+and its ways of editing. Trip, Money and Trip settings on the web were still in their old
+look; the wait was only the timing.
+
+iOS: nothing to change.
+
 ## 2026-10-12
 
 ### DECIDED — Petra, 12 Oct: the open questions of round 2 (#187, #188)

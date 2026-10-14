@@ -41,7 +41,7 @@ const longDay = (iso: string) =>
   iso ? `${new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short' })}, ${shortDate(iso)}` : ''
 
 export function LegSheet({
-  leg, initial, rates, currencies, legs = [], stops = [], onClose, onSave, onRemove, onAddStop,
+  leg, initial, rates, currencies, legs = [], stops = [], onClose, onSave, onRemove, onAddStop, prefill,
 }: {
   leg: Leg | null
   initial: TransportLeg | null
@@ -55,19 +55,21 @@ export function LegSheet({
   onRemove?: (id: string) => void
   /** open Add stop with this city and arrival day filled in */
   onAddStop?: (prefill: { city: string; arrive?: string }) => void
+  /** "the flight there" on a journey with no stops yet: both ends and the day, with no leg to take them from */
+  prefill?: { from: string; to: string; date?: string }
 }) {
   const { base, fmt } = useMoney()
   // An entry on no leg can be moved onto one: its from and to become that leg's.
   const [moveTo, setMoveTo] = useState('')
   const target = moveTo ? legs.find((l) => l.key === moveTo) : undefined
-  const from = leg?.from.city ?? target?.from.city ?? initial?.from ?? ''
-  const to = leg?.to.city ?? target?.to.city ?? initial?.to ?? ''
+  const from = leg?.from.city ?? target?.from.city ?? initial?.from ?? prefill?.from ?? ''
+  const to = leg?.to.city ?? target?.to.city ?? initial?.to ?? prefill?.to ?? ''
   const orphan = !leg && !!initial
   const stopNamed = (city: string) => stops.find((s) => sameCity(s.city, city))
   const missing = orphan ? [initial!.to, initial!.from].find((c) => !stopNamed(c)) : undefined
   const [type, setType] = useState(asType(initial?.type))
   const [otherType, setOtherType] = useState(initial && asType(initial.type) === 'Other' ? initial.type : '')
-  const [date, setDate] = useState(initial?.date || leg?.date || '')
+  const [date, setDate] = useState(initial?.date || leg?.date || prefill?.date || '')
   const [time, setTime] = useState(initial?.time ?? '')
   const [via, setVia] = useState(initial?.via ?? '')
   const [hours, setHours] = useState(initial?.hours != null ? String(initial.hours) : '')
@@ -110,7 +112,7 @@ export function LegSheet({
       <div>
         <div className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">
           {/* The entry's own day when it has one (an overnight flight leaves the day before the stop begins), else the leg's. */}
-          {leg ? `Leg ${leg.index} · leaves ${leg.from.city}${(initial?.date || leg.date) ? ' ' + longDay(initial?.date || leg.date) : ''}` : 'Not on a leg of this journey'}
+          {leg ? `Leg ${leg.index} · leaves ${leg.from.city}${(initial?.date || leg.date) ? ' ' + longDay(initial?.date || leg.date) : ''}` : prefill ? 'The flight there' : 'Not on a leg of this journey'}
         </div>
         <h3 className="mt-0.5 text-[22px] font-semibold">{from} → {to}</h3>
       </div>

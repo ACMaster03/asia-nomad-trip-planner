@@ -13,7 +13,7 @@ import { nightsBetween, usdToBase, TIER_LABELS } from '@/lib/trips/format'
 import type { CityCost } from '@/lib/trips/budget'
 import { stayMoneyState, stayRange } from '@/lib/trips/timeline'
 import type { Segment, Stay, Tier } from '@/lib/trips/types'
-import { Chips, addLink, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
+import { Chips, Toggle, addLink, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
 import { normCity } from '@/lib/map/norm'
 
 // The stop editor (mock 15 §4): a bottom sheet instead of the centred Modal.
@@ -23,7 +23,8 @@ import { normCity } from '@/lib/map/norm'
 // The stop's stays are listed inside it, each opening its own sheet, which
 // is what makes "a stop holds one or more stays" true in the editor as well.
 // Delete stays below a rule, in the warning colour, as it was moved on
-// 2026-09-19. The budget tick stays on the card, not in here.
+// 2026-09-19. The "In the plan" switch moved in here from the card with round
+// 3a of the redesign (14 Oct): the phone's card has no tick box.
 //
 // Adding a stop keeps the city picker from the old form (mock 03): debounced
 // catalogue search, an offline fallback to the light list, and free text as a
@@ -60,6 +61,7 @@ export function StopSheet({
   const [arrive, setArrive] = useState(initial?.arrive ?? prefill?.arrive ?? defaultArrive ?? '')
   const [depart, setDepart] = useState(initial?.depart ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
+  const [inPlan, setInPlan] = useState(initial?.include !== false)
   const [showNote, setShowNote] = useState(!!initial?.notes)
   const [showInfo, setShowInfo] = useState(false)
   const sb = createClient()
@@ -94,8 +96,8 @@ export function StopSheet({
     if (depart < arrive) { alert("Leave can't be before arrive"); return }
     const t = Math.min(2, Math.max(0, tier)) as Tier
     const seg: Segment = initial
-      ? { ...initial, tier: t, arrive, depart, notes }
-      : { id: uid('sg'), city: city.trim(), country: country.trim(), tier: t, arrive, depart, notes, include: true, color: '' }
+      ? { ...initial, tier: t, arrive, depart, notes, include: inPlan }
+      : { id: uid('sg'), city: city.trim(), country: country.trim(), tier: t, arrive, depart, notes, include: inPlan, color: '' }
     onSave(seg, initial)
   }
 
@@ -200,6 +202,16 @@ export function StopSheet({
             It never changes a stay or a fare you typed.
           </p>
         )}
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between gap-3">
+          <span className={label}>In the plan</span>
+          <Toggle on={inPlan} onChange={setInPlan} label="In the plan" />
+        </div>
+        <div className={hint + ' mt-1.5'}>
+          {inPlan ? 'Its nights and costs count in the plan.' : 'A maybe: shown faded on the timeline, with no legs of its own.'}
+        </div>
       </div>
 
       {initial && (

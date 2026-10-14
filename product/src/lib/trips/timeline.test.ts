@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTimeline, stopCoverage, stayRange, stayMoneyState, legMoneyState, deadlinesMissing, shiftDepartures, homeCity, homeFor, stayForNight } from './timeline.ts'
+import { buildTimeline, stopCoverage, stayRange, stayMoneyState, legMoneyState, deadlinesMissing, shiftDepartures, homeCity, homeFor, stayForNight, onward, stayName, journeyRecap } from './timeline.ts'
 import { stayNights } from './format.ts'
 import type { Segment, Stay, TransportLeg, TripState } from './types'
 
@@ -168,4 +168,33 @@ test('a transport entry finds its leg when one name is the other plus a word: "H
   }))
   assert.equal(tl.orphans.length, 0)
   assert.equal(tl.legs.find((l) => l.to.city === 'Hong Kong Island')?.booked?.id, 'f')
+})
+
+test('onward: the plan stops before the end date, until a stop reaches it', () => {
+  const s = state()
+  assert.equal(onward(s.meta, buildTimeline(s)), true)
+  const reached = state({ meta: { ...s.meta, endDate: '2026-12-13' } })
+  assert.equal(onward(reached.meta, buildTimeline(reached)), false)
+  const open = state({ meta: { ...s.meta, endDate: undefined } })
+  assert.equal(onward(open.meta, buildTimeline(open)), true)
+  assert.equal(onward(s.meta, { stops: [] }), true)
+})
+
+test('stayName drops the stop\'s city from the front of a stay\'s name', () => {
+  const bkk = seg('bkk', 'Bangkok', '2026-09-01', '2026-09-30')
+  assert.equal(stayName({ name: 'Bangkok - Home in Khet Huai Khwang' }, bkk), 'Home in Khet Huai Khwang')
+  assert.equal(stayName({ name: 'Bangkok \u2013 Riverside loft' }, bkk), 'Riverside loft')
+  assert.equal(stayName({ name: 'bangkok: Old town' }, bkk), 'Old town')
+  assert.equal(stayName({ name: 'Bangkokian Suites' }, bkk), 'Bangkokian Suites')
+  assert.equal(stayName({ name: 'Bangkok' }, bkk), 'Bangkok')
+  assert.equal(stayName({ name: '  ' }, bkk), 'Stay')
+  assert.equal(stayName({ name: 'An Bang beach house' }, seg('dad', 'Da Nang', '2026-11-13', '2026-11-30')), 'An Bang beach house')
+})
+
+test('journeyRecap: nights from the dates, in-plan stops and their countries', () => {
+  const s = state({ segments: [seg('bkk', 'Bangkok', '2026-09-01', '2026-09-30', { country: 'Thailand' }), seg('han', 'Hanoi', '2026-09-30', '2026-11-13', { country: 'Vietnam' }), seg('dad', 'Da Nang', '2026-11-13', '2026-12-13', { country: 'vietnam ' }), seg('kul', 'Kuala Lumpur', '2026-12-13', '2026-12-20', { country: 'Malaysia', include: false })] })
+  assert.deepEqual(journeyRecap(s), { nights: 242, stops: 3, countries: 2 })
+  // No end date: the planned nights stand in.
+  const open = state({ meta: { ...s.meta, endDate: undefined }, segments: s.segments })
+  assert.deepEqual(journeyRecap(open), { nights: 29 + 44 + 30, stops: 3, countries: 2 })
 })
