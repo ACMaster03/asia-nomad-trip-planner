@@ -7,6 +7,22 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Latest's "All entries ›" took five seconds (Petra, 14 Oct)
+
+Petra's re-test of `b36c9d2`: all four fixes work; Latest's "All entries ›" on Money took about
+five seconds to open. The same cause as "‹ Money" in #204, the other way round: a dynamic page
+is rendered on the server at the tap (`prefetchTripScreen`, two Supabase calls, over the VPN),
+because a link's default prefetch stops at the (app) `loading.tsx` boundary (`link.md`:
+"auto"). Fix: the four links from Money's cards to All entries and Subscriptions (Latest,
+Upcoming's "more", the Subscriptions card, the quiet page's row) carry `prefetch`, which
+fetches the whole page while Money is open and keeps it five minutes (`staleTimes.static`),
+so the tap shows it at once. The rows deeper in the top card and Where it goes keep the
+default: a dozen server renders per visit would cost more than they save. Probed on the
+production build: the RSC prefetch requests for `/money/entries` and `/money/subscriptions`
+go out while Money is on screen.
+
+iOS: web-only.
+
 ### LIVE — #204: Petra's four findings on round 4b (14 Oct)
 
 Merged with Petra's "yes" at 10:39 UTC; Vercel built `b36c9d2` and it is live on app.livhold.com
