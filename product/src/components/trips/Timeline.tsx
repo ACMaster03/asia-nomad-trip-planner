@@ -167,7 +167,7 @@ function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onMenu }:
     >
       <div className="flex items-start justify-between gap-2">
         <span className="min-w-0">
-          <span className="block truncate font-serif text-[21px] font-semibold leading-tight">{seg.city || 'Stop'}</span>
+          <span className="-mb-1 block truncate pb-1 font-serif text-[21px] font-semibold leading-tight">{seg.city || 'Stop'}</span>
           {seg.country && <span className="mt-0.5 block truncate text-[15px] text-tx2">{seg.country}</span>}
           <span className="block truncate text-[15px] text-tx2">{stopDatesLine(seg).split(' · ')[0]}</span>
         </span>

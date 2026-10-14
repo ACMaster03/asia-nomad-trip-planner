@@ -7,6 +7,21 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Petra's two findings on #201: the cut "g", and the switch under "Save changes" (14 Oct)
+
+Petra's test of `a6cb9f3` on the phone: everything works, with two findings. (1) The "g" is cut
+at the bottom on Trip's stop cards: Lora's descenders reach below a tight line box, and
+`truncate` (overflow hidden) clips at the box. Confirmed in Chromium at 3× ("Bangkok" flat
+under the g). Fix: padding inside the clipped box, pulled back by the same margin, on the four
+truncated serif lines (the card's city, the stop page's name, the compact bar's title, the
+globe's peek card). (2) On Trip settings the Track spending switch sat right above "Save
+changes", so she asked whether the switch needs the button, and why Alerts then does not. It
+does not: the switch saves as it is tapped, the button is for the typed fields above it. The
+row moved below the button, next to Alerts, and says "Saves as you switch it." Round 5
+drops the button altogether (each field saves as you leave it, decision 5).
+
+iOS: nothing new.
+
 ### LIVE — #200 (the stop page in place) and #201 (round 4a, Money as on the phone) (14 Oct)
 
 Merged with Petra's "yes"; Vercel built `a6cb9f3` after all at 08:47 UTC, so the WAITING
