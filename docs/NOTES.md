@@ -7,6 +7,57 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Round 4a: Money's page as on the phone, and the #127 numbers (Petra, 14 Oct)
+
+Built in the workspace, pictures in `docs/web-ios-redesign/round4a-*` (before and after,
+light and dark); not merged, since Vercel's day is spent (see WAITING below). What changed,
+from the phone's `MoneyScreen.swift` and `MoneyModel.swift`:
+
+- The top card (`components/money/TopCard.tsx`): a switch between the stop you are in (its
+  city, or "This stop") and Journey. Journey: "Lands near ≈ X" (or "Spent so far" until the
+  projection unlocks) beside the budget ring (`BudgetRing.tsx`, an SVG: one arc per part in
+  row order, the full circle the budget, an amber outer lap past it, the percentage in the
+  middle; it opens the settings), then the parts as rows (Spent so far, which opens to
+  where it was spent: before departure, each stop by date, between stops, each a link to All
+  entries; Still to pay; Day to day, N nights; Stays not booked yet; After the plan, N days,
+  hatched; Subscriptions), the Budget and what is left in it or how far over, "About X a day
+  less gets you there" in amber, and the pace line. The stop: "Hanoi · night 15 of 44", what
+  everyday costs came to here, "Per day here" and "The stop comes to", the nights bar with
+  "today" over it, and what was spent beyond the everyday here. Between stops: the phone's
+  two lines. Before departure (#149): "Estimated total" with the same ring, no switch, the
+  unplanned days' share of the budget, the unbooked legs named, the city-averages note.
+- Upcoming charges (`UpcomingCard.tsx`, #149): entries dated ahead and booked stays and legs
+  with no entry yet, the three soonest, the total in the corner; a row opens the entry's
+  form, or the stay's or the leg's form from Trip (round 3c's `TripSheets`), so Money edits a
+  booking without going to Trip. Latest (`LatestCard.tsx`) in the phone's row style
+  (`EntryRow.tsx`): the category tile (`CategoryTile.tsx`, the phone's colours in
+  `globals.css` as `--cat-<id>`, lucide icons for its SF symbols), the name, the day and a
+  detail ("from booking", "not in daily average", the original currency), the amount.
+- Bookings always open (Patrik, 29 Sep): the Stays and Transport rows with the four states
+  (paid once charged, booked while the charge is ahead, not booked), the sums, the total by
+  the title; each row opens Trip. Subscriptions as Latest's pattern: the three that charge
+  next, the bell, "in 3 days" in amber, "N active · ≈ X a month"; "All subscriptions"
+  opens the rest and the cancelled ones in place until 4b gives them their page.
+- Gone: the All entries row (Latest and Upcoming lead there; the quiet page keeps a row, as
+  the phone's quiet page does) and the Budget cap row (the ring and the Budget row open the
+  settings). Kept, not on the phone: the Track spending switch under the top card, until
+  round 5 puts it in the settings; the web has nowhere else for it yet.
+- The #127 numbers (`spending.ts`, `moneyModel.ts`): (1) the days between the last planned
+  stop and the journey's end count, at the daily pace plus the average night's stay, in
+  `projection.unplanned` / `unplannedDays` / `daysAhead`; before departure counted, not
+  priced. (2) "Still to pay" = entries dated ahead + booked stays and legs with no entry
+  (`projection.toPay`). (3) A leg is dated by its charge date, else the travel date, and a
+  booking is paid only once its entry's date has passed: `bookingsSummary` has four states
+  now (`paid`, `scheduled`, `unpaid`, `unbooked`) and takes today. The Plan card's rows still
+  add up to the projection (its tests hold). `moneyRows.ts` has the upcoming list and the
+  spent-by-place list, `moneyText.ts` the phone's spellings ("1.33 M Ft", "≈ 465 800 Ft",
+  "400 k"), `kicker.ts` the line under a root screen's name, which Trip uses too now.
+- The dev preview takes `?today=YYYY-MM-DD` (with the browser clock set to it) for any day,
+  before departure included.
+
+iOS: nothing new; the web took the phone's Money page. One difference to know: the web
+keeps the Track spending switch on Money until round 5.
+
 ### DECIDED — local builds; Claude's branches no longer build on Vercel (Patrik through Petra, 14 Oct)
 
 After the 100-a-day refusal: "keep to local builds and run the server locally". So: every

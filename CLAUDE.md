@@ -182,7 +182,10 @@ Petra is new to software work; Patrik is not. The product conventions are in
   the server), is fixed: the page is a layer over the timeline at `/itinerary?stop=<id>`,
   merged 14 Oct (#200) but NOT LIVE: Vercel refused the build (the Hobby plan's 100
   deployments a day, used up); app.livhold.com runs `9755bac` until main is deployed again
-  (a check-in on 15 Oct 08:10 UTC retries; the next merge would also do it). The source of the look is `feat/ios-foundation`,
+  (a check-in on 15 Oct 08:10 UTC retries; the next merge would also do it). 4a, Money's page
+  as the phone's (the top card with the stop / Journey switch and the budget ring, Upcoming
+  charges, Latest with category tiles, Bookings open, Subscriptions as Latest, the #127
+  numbers), was built on 14 Oct, on the branch with #200's fix, waiting for the same build. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
