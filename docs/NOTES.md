@@ -7,6 +7,20 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Trip's globe: the plane keeps step with the camera, the leg draws up to it (Petra, 14 Oct)
+
+#196 live (`3b607a2`, Petra's test): the plane faces the right way, but set off fast and
+slowed, and the leg's line came late and all at once. Two causes. The camera's flight eases in
+and out (globe.gl's pointOfView, cubic) while the plane moved evenly, so it raced ahead at
+the start and dawdled at the end: it now eases the same way, and stays with the camera. And
+a leg was one line shown whole at 35 % of the flight; the phone draws it up to the plane
+(`P.arc(upTo:)`). The legs are now chains of short arcs, 2° each, so low they hug the globe
+(the paths layer is the coasts' alone again), and a leg shows its pieces up to the plane,
+frame by frame. The dashes ahead and the dots on the ground are the pieces left out (every
+other 1.5° or 0.6° piece), so a dashed leg draws the same way.
+
+iOS: nothing new.
+
 ### BUILT — Trip's globe: the plane faces the way it flies (Petra, 14 Oct; #196)
 
 #195 live (`7543d3e`, Petra's test): no spin, but the plane faced askew. The icon's nose
