@@ -7,6 +7,16 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### WAITING — #206 (round 4c) merged at 11:09 UTC, not built: Vercel's daily limit again (14 Oct)
+
+Merged with Petra's "yes"; Vercel created no deployment for `ad7601e`. A deployment asked for
+by hand was refused with 402 `api-deployments-free-per-day` ("more than 100, try again in 24
+hours"), the Hobby plan's rolling limit, hit this morning at 07:56 UTC too (freed at 08:47).
+Vercel does not retry a refused merge on its own: once the window frees, the deployment has to
+be asked for again (`create_deployment` with `gitSource` main @ `ad7601e`, target production),
+or the next merge brings it. The live build stays #205's `9ad49a8` until then. Retry
+scheduled from the chat. The web app is unaffected: main holds 4c, production does not yet.
+
 ### BUILT — Round 4c: the entry form as on the phone (14 Oct)
 
 Round 4c of `docs/WEB-IOS-REDESIGN.md`. Add / edit an entry (`EntrySheet.tsx`) is the phone's

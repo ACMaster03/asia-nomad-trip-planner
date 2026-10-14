@@ -178,7 +178,7 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
-- 14 Oct: round 4c built, the entry form as the phone's (the big amount with the currency beside
+- 14 Oct: round 4c merged (#206; the build waits on Vercel's daily limit), the entry form as the phone's (the big amount with the currency beside
   it, the name card, four category tiles with "All N categories", date and the daily-average switch
   on one card, Cancel / Add in the bar). The Subscriptions question stays on the web, on its own
   card. Pictures in `docs/web-ios-redesign/round4c-*`.
