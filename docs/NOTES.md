@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Trip's globe: the plane no longer spins (Petra, 14 Oct)
+### BUILT — Trip's globe: the plane no longer spins (Petra, 14 Oct; #195)
 
 #194 merged with Petra's "yes"; Vercel built `7c0ba4a`; her test: all works, the build number
 right, but the plane spun round and round while it flew. The cause: its heading was read from
