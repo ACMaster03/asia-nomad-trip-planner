@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTimeline, stopCoverage, stayRange, stayMoneyState, legMoneyState, deadlinesMissing, shiftDepartures, homeCity, homeFor, stayForNight, onward, stayName, journeyRecap } from './timeline.ts'
+import { buildTimeline, stopCoverage, stayRange, stayMoneyState, legMoneyState, deadlinesMissing, shiftDepartures, homeCity, homeFor, stayForNight, onward, stayName, journeyRecap, legsAround, leavingTitle, stopDatesLine } from './timeline.ts'
 import { stayNights } from './format.ts'
 import type { Segment, Stay, TransportLeg, TripState } from './types'
 
@@ -197,4 +197,29 @@ test('journeyRecap: nights from the dates, in-plan stops and their countries', (
   // No end date: the planned nights stand in.
   const open = state({ meta: { ...s.meta, endDate: undefined }, segments: s.segments })
   assert.deepEqual(journeyRecap(open), { nights: 29 + 44 + 30, stops: 3, countries: 2 })
+})
+
+test('legsAround: the legs on either side of a stop, none for a maybe (round 3c)', () => {
+  const st = state({ segments: [seg('a', 'Bangkok', '2026-08-31', '2026-09-30'), seg('b', 'Hanoi', '2026-09-30', '2026-11-13'), seg('m', 'Hue', '2026-10-01', '2026-10-03', { include: false })] })
+  const tl = buildTimeline(st)
+  const b = legsAround(tl, 'b')
+  assert.equal(b.arriving?.from.city, 'Bangkok')
+  assert.equal(b.leaving?.to.kind, 'home')
+  const a = legsAround(tl, 'a')
+  assert.equal(a.arriving?.from.kind, 'home')
+  assert.equal(a.leaving?.to.city, 'Hanoi')
+  assert.deepEqual(legsAround(tl, 'm'), { arriving: null, leaving: null })
+})
+
+test('leavingTitle: the next city, or the way home as Onward / Going home', () => {
+  assert.equal(leavingTitle({ to: { kind: 'stop', city: 'Hanoi' } }, true), 'Leaving for Hanoi')
+  assert.equal(leavingTitle({ to: { kind: 'home', city: 'Budapest' } }, true), 'Onward')
+  assert.equal(leavingTitle({ to: { kind: 'home', city: 'Budapest' } }, false), 'Going home')
+})
+
+test('stopDatesLine: dates and nights, the dates alone with one missing, "No dates yet" with none', () => {
+  assert.equal(stopDatesLine({ arrive: '2026-09-30', depart: '2026-11-13' }), '30 Sep → 13 Nov · 44 nights')
+  assert.equal(stopDatesLine({ arrive: '2026-09-30', depart: '2026-10-01' }), '30 Sep → 1 Oct · 1 night')
+  assert.equal(stopDatesLine({ arrive: '2026-09-30', depart: '' }), '30 Sep → —')
+  assert.equal(stopDatesLine({ arrive: '', depart: '' }), 'No dates yet')
 })

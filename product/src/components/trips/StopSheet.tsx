@@ -13,7 +13,7 @@ import { nightsBetween, usdToBase, TIER_LABELS } from '@/lib/trips/format'
 import type { CityCost } from '@/lib/trips/budget'
 import { stayMoneyState, stayRange } from '@/lib/trips/timeline'
 import type { Segment, Stay, Tier } from '@/lib/trips/types'
-import { Chips, Toggle, addLink, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
+import { Chips, SheetBar, Toggle, addLink, dangerBtn, fmtDay, hint, input, kicker, label, uid, useCancel, useDirty } from './sheetKit'
 import { normCity } from '@/lib/map/norm'
 
 // The stop editor (mock 15 §4): a bottom sheet instead of the centred Modal.
@@ -24,7 +24,10 @@ import { normCity } from '@/lib/map/norm'
 // is what makes "a stop holds one or more stays" true in the editor as well.
 // Delete stays below a rule, in the warning colour, as it was moved on
 // 2026-09-19. The "In the plan" switch moved in here from the card with round
-// 3a of the redesign (14 Oct): the phone's card has no tick box.
+// 3a of the redesign (14 Oct): the phone's card has no tick box. Since round
+// 3c the bar at the top holds Cancel and Save (decision 4, the phone's
+// EditForm): Save is grey until the form is valid and something changed, and
+// closing with changes asks first.
 //
 // Adding a stop keeps the city picker from the old form (mock 03): debounced
 // catalogue search, an offline fallback to the light list, and free text as a
@@ -89,11 +92,17 @@ export function StopSheet({
 
   const nights = nightsBetween(arrive, depart)
   const bands = cityCost ? cityCost.accom.map((usd) => fmt(usdToBase(usd, rates))) : null
+  const dirty = useDirty({ city, country, tier, arrive, depart, notes, inPlan })
+  const valid = !!city.trim() && !!arrive && !!depart && depart >= arrive
+  const cancel = useCancel(dirty, onClose)
+  // The phone's hint: what is still missing, then the nights, then what moving Leave does.
+  const dateHint = !arrive || !depart
+    ? depart ? '' : 'Choose the day you leave.'
+    : depart < arrive ? 'Leave can’t be before arrive.'
+    : `${nights} ${nights === 1 ? 'night' : 'nights'}.` + (initial && depart !== initial.depart && nextCity ? ` Moving Leave moves the ${nextCity === 'home' ? 'home' : nextCity} leg with it.` : '')
 
   function submit() {
-    if (!city.trim()) { alert('Enter a city'); return }
-    if (!arrive || !depart) { alert('Enter the arrive and leave dates'); return }
-    if (depart < arrive) { alert("Leave can't be before arrive"); return }
+    if (!valid) return
     const t = Math.min(2, Math.max(0, tier)) as Tier
     const seg: Segment = initial
       ? { ...initial, tier: t, arrive, depart, notes, include: inPlan }
@@ -102,15 +111,15 @@ export function StopSheet({
   }
 
   return (
-    <Sheet label={initial ? `Edit ${initial.city}` : 'Add stop'} onClose={onClose}>
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="min-w-0 truncate text-[22px] font-semibold">{initial ? initial.city : 'Add stop'}</h3>
-        {initial?.country && (
+    <Sheet label={initial ? `Edit ${initial.city}` : 'Add stop'} onClose={cancel}>
+      <SheetBar title={initial ? initial.city || 'Stop' : 'Add stop'} onCancel={cancel} onSave={submit} saveLabel={initial ? 'Save' : 'Add'} canSave={valid && dirty} />
+      {initial?.country && (
+        <div className="-mt-1 flex justify-center">
           <span className="min-w-0 truncate rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink">
             {countryFlag(initial.country)} {initial.country}
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {!initial && (
         <>
@@ -171,10 +180,7 @@ export function StopSheet({
             <input type="date" className={input} value={depart} onChange={(e) => setDepart(e.target.value)} />
           </label>
         </div>
-        <div className={hint + ' mt-1.5'}>
-          {nights > 0 ? `${nights} ${nights === 1 ? 'night' : 'nights'}.` : arrive && depart ? 'Leave is before arrive.' : ''}
-          {initial && nextCity && nights > 0 ? ` Moving Leave moves the ${nextCity} leg with it.` : ''}
-        </div>
+        <div className={hint + ' mt-1.5'}>{dateHint}</div>
       </div>
 
       <div>
@@ -248,7 +254,6 @@ export function StopSheet({
           <textarea rows={2} className={input} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
       )}
-      <button type="button" onClick={submit} className={primaryBtn}>{initial ? 'Save' : 'Add stop'}</button>
       {initial && onDelete && (
         <div className="border-t border-ln pt-3">
           <button type="button" onClick={onDelete} className={dangerBtn}>Delete this stop</button>

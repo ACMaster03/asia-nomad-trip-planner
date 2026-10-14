@@ -1,18 +1,15 @@
 'use client'
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Bus, Plane, Plus, Settings, Ship, TrainFront } from 'lucide-react'
+import { Plus, Settings } from 'lucide-react'
 import NewCountryBanner from './NewCountryBanner'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { IconButton } from '@/components/ui/IconButton'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
-import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useHomeBase } from '@/lib/trips/useHomeBase'
 import { useMoney } from '@/lib/trips/Money'
-import { useConfirm } from '@/components/Confirm'
-import { localISODate, nightsBetween, segNights, stayTotal, toBase } from '@/lib/trips/format'
-import { isBookedStatus } from '@/lib/trips/commitment'
+import { localISODate, nightsBetween, segNights } from '@/lib/trips/format'
 import { stopProgress, tripDay } from '@/lib/trips/progress'
 import { tripPhase } from '@/lib/trips/recap'
 import { stopsAround } from '@/lib/trips/whereAmI'
@@ -21,21 +18,23 @@ import { buildRoute, type RouteNode } from '@/lib/map/globeData'
 import { peekText } from '@/lib/map/journeyCamera'
 import { Waiting } from '@/components/ui/TravelLoader'
 import {
-  buildTimeline, homeFor, journeyRecap, legMoneyState, onward as isOnward, shiftDepartures, stayCounts, stayMoneyState, stayName, stopCoverage,
-  type Leg, type NightRange, type Timeline as TimelineModel, type Tone,
+  buildTimeline, homeFor, journeyRecap, onward as isOnward, stopDatesLine,
+  type Leg, type Timeline as TimelineModel,
 } from '@/lib/trips/timeline'
-import type { Segment, Stay, TransportLeg, TripState } from '@/lib/trips/types'
+import type { Segment, TransportLeg, TripState } from '@/lib/trips/types'
 import { SaveError } from './SaveError'
 import { ViewerNotice } from './ViewerNotice'
 import CreateTripEmptyState from './CreateTripEmptyState'
 import { Modal } from './Modal'
 import { OnboardingWizard } from './OnboardingWizard'
-import { StopSheet } from './StopSheet'
-import { StaySheet } from './StaySheet'
-import { LegSheet } from './LegSheet'
-import { FlightThereSheet } from './FlightThereSheet'
 import { TripGlobeScaffold } from './TripGlobeScaffold'
-import { fmtDay, fmtHours, kicker } from './sheetKit'
+import { LegStrip } from './LegStrip'
+import { StayRows } from './StayRows'
+import { StopMenu } from './StopMenu'
+import { TripSheets, type SheetState } from './TripSheets'
+import { useLongPress } from './useLongPress'
+import { useTripEdits } from './useTripEdits'
+import { fmtDay, kicker } from './sheetKit'
 
 // Trip as ONE timeline (mock 15 §1, #58): home, leg, stop, leg, stop … home,
 // in date order, no tabs. The rail on the left is the journey. Since round 3a
@@ -55,7 +54,9 @@ import { fmtDay, fmtHours, kicker } from './sheetKit'
 //   the nights on the right, the stays underneath, one row per stay with its
 //   nights, its money state and its total. No tick box: "In the plan" is a
 //   switch in the stop's form, and a maybe shows faded. Tapping the card
-//   opens the form (until round 3c brings the stop page).
+//   opens the stop's page (round 3c, decision 4: look first, then edit); a
+//   long press, or a right click, opens the menu (Edit stop, Add stay, Add
+//   transport, in or out of the plan, Delete).
 // - "No bed 30 Nov → 13 Dec" is the amber row inside a stop, a warning, and
 //   tapping it opens Add stay with those dates already in.
 // - "+ Add stop" is a dashed row after the last stop, before the way home.
@@ -63,13 +64,6 @@ import { fmtDay, fmtHours, kicker } from './sheetKit'
 //   "Look back ›" to the timeline below. With no stops, the no-stops card
 //   offers the first stop, or the flight there first.
 // - Copy diet (#65): nothing on this screen explains itself.
-
-type SheetState =
-  | { kind: 'stop'; seg: Segment | null; prefill?: { city: string; arrive?: string } }
-  | { kind: 'stay'; seg: Segment; stay: Stay | null; range: NightRange | null }
-  | { kind: 'leg'; leg: Leg | null; entry: TransportLeg | null; prefill?: { from: string; to: string; date?: string } }
-  | { kind: 'flightThere' }
-  | null
 
 type Row =
   | { t: 'home'; pos: 'start' | 'end' }
@@ -104,7 +98,6 @@ function railRows(tl: TimelineModel, maybes: Segment[]): Row[] {
   return out
 }
 
-const TONE: Record<Tone, string> = { ok: 'text-ac', warn: 'text-warn', muted: 'text-tx3' }
 const NODE = {
   home: 'border-2 border-ac bg-canvas',
   stop: 'bg-ac',
@@ -114,7 +107,6 @@ const NODE = {
 /** The phone's TripPillButtonStyle: accent, full round, sized to its words. */
 const pill = 'inline-flex min-h-11 items-center gap-1.5 rounded-full bg-ac px-[18px] text-[15px] font-semibold text-on'
 const dashed = 'rounded-[calc(var(--r)-6px)] border-[1.5px] border-dashed'
-const cap = (t: string) => (t ? t[0].toUpperCase() + t.slice(1) : t)
 const plural = (n: number, one: string) => `${n} ${n === 1 ? one : one + 's'}`
 
 function Rail({ line, node, clipTop, clipBottom, nodeTop = 20 }: {
@@ -133,113 +125,40 @@ function Rail({ line, node, clipTop, clipBottom, nodeTop = 20 }: {
   )
 }
 
-function TypeIcon({ type }: { type: string }) {
-  const t = type.toLowerCase()
-  const cls = 'size-4 flex-none'
-  if (t === 'flight') return <Plane aria-hidden className={cls} />
-  if (t === 'train') return <TrainFront aria-hidden className={cls} />
-  if (t === 'bus') return <Bus aria-hidden className={cls} />
-  if (t === 'ferry') return <Ship aria-hidden className={cls} />
-  return null
-}
-
-function LegStrip({ leg, entry, todayIso, fmt, rates, canEdit, onward, onOpen }: {
-  leg: Leg | null
-  entry: TransportLeg | null
-  todayIso: string
-  fmt: (n: number) => string
-  rates: Record<string, number>
-  canEdit: boolean
-  onward: boolean
-  onOpen: (entry: TransportLeg | null) => void
-}) {
-  const wayHome = !!leg && leg.to.kind === 'home'
-  if (!entry) {
-    // The phone's EmptyLegStrip: the route under the words, not beside them.
-    return (
-      <button
-        type="button"
-        disabled={!canEdit}
-        onClick={() => onOpen(null)}
-        className={'flex min-h-11 w-full items-center justify-between gap-2 border-ac2-line px-3.5 py-2 text-left ' + dashed}
-      >
-        <span className="min-w-0">
-          <span className={'block truncate text-base font-semibold ' + (wayHome ? 'text-tx2' : 'text-ac2')}>
-            {wayHome ? (onward ? 'Onward' : 'Going home') : 'No transport yet'}
-          </span>
-          {!wayHome && leg && <span className="block truncate text-[13px] text-tx2">{leg.from.city} → {leg.to.city}</span>}
-        </span>
-        {wayHome && canEdit && <span className="flex-none text-[15px] font-semibold text-ac">+ Add</span>}
-      </button>
-    )
-  }
-  const booked = isBookedStatus(entry.status)
-  const money = legMoneyState(entry, todayIso)
-  const price = entry.price > 0 ? fmt(toBase(entry.price, entry.cur, rates)) : ''
-  return (
-    <button
-      type="button"
-      disabled={!canEdit}
-      onClick={() => onOpen(entry)}
-      className={
-        'grid w-full grid-cols-[1fr_auto] items-center gap-x-3 rounded-[calc(var(--r)-6px)] px-3.5 py-2.5 text-left ' +
-        (booked ? 'bg-ac2-soft' : 'border-[1.5px] border-dashed border-ac2-line')
-      }
-    >
-      <span className="flex min-w-0 items-center gap-1.5 text-base font-medium text-ac2-deep">
-        <TypeIcon type={entry.type} />
-        <span className="truncate">
-          {cap(entry.type)}
-          {entry.date ? ` · ${fmtDay(entry.date)}` : ''}
-          {entry.time ? ` ${entry.time}` : ''}
-        </span>
-      </span>
-      {price ? <span className="text-base font-semibold tabular-nums">{price}</span> : <span />}
-      {/* The connection is a place you pass through, drawn on the globe as a dogleg with the hours on it (#58). Its own line, so the price never squeezes it. */}
-      <span className="col-span-2 block truncate text-[13px] text-tx2">
-        {!leg ? `${entry.from} → ${entry.to} · ` : ''}
-        {entry.via ? `via ${entry.via}${entry.hours ? ` · ${fmtHours(entry.hours)}` : ''} · ` : ''}
-        <span className={TONE[money.tone]}>{money.label}</span>
-      </span>
-    </button>
-  )
-}
-
-/** The phone's StopCard: the city, the country and the dates a row each, the nights on the right, the stays underneath. */
-function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onStay }: {
+/**
+ * The phone's StopCard: the city, the country and the dates a row each, the nights on the
+ * right, the stays underneath. The whole card is the link to the stop's page; a long press
+ * (or a right click) opens the menu instead, for an editor.
+ */
+function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onMenu }: {
   seg: Segment
   maybe: boolean
   state: TripState
   todayIso: string
   canEdit: boolean
   fmt: (n: number) => string
-  onOpen: () => void
-  onStay: (stay: Stay | null, range: NightRange | null) => void
+  onMenu: () => void
 }) {
+  const { handlers, firedRef } = useLongPress(onMenu, { enabled: canEdit })
   const inPlan = !maybe
   const nn = segNights(seg)
-  const undated = !seg.arrive && !seg.depart
   // "0 nights" says nothing while a date is still missing.
   const showNights = !(nn === 0 && (!seg.arrive || !seg.depart))
   const isCurrent = inPlan && !!seg.arrive && !!seg.depart && seg.arrive <= todayIso && todayIso < seg.depart
   const prog = isCurrent && nn > 0 ? stopProgress(seg, todayIso) : null
-  const stays = state.stays.filter((x) => x.segId === seg.id)
-  const cov = stopCoverage(seg, stays)
-  const uncounted = stays.filter((x) => !stayCounts(x))
-  const row = 'flex w-full items-center justify-between gap-3 py-2.5 text-left'
   return (
-    <div
-      role={canEdit ? 'button' : undefined}
-      tabIndex={canEdit ? 0 : undefined}
-      onClick={canEdit ? onOpen : undefined}
-      onKeyDown={canEdit ? (e) => { if (e.key === 'Enter') onOpen() } : undefined}
-      className={'lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx ' + (canEdit ? 'cursor-pointer ' : '') + (inPlan ? '' : 'opacity-60')}
+    <Link
+      href={`/itinerary/${seg.id}`}
+      {...handlers}
+      onClick={(e) => { if (firedRef.current) { e.preventDefault(); firedRef.current = false } }}
+      draggable={false}
+      className={'lv-enter block select-none rounded-[var(--r)] bg-sf p-[18px] text-tx [-webkit-touch-callout:none] ' + (inPlan ? '' : 'opacity-60')}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="min-w-0">
           <span className="block truncate font-serif text-[21px] font-semibold leading-tight">{seg.city || 'Stop'}</span>
           {seg.country && <span className="mt-0.5 block truncate text-[15px] text-tx2">{seg.country}</span>}
-          <span className="block truncate text-[15px] text-tx2">{undated ? 'No dates yet' : `${fmtDay(seg.arrive)} → ${fmtDay(seg.depart)}`}</span>
+          <span className="block truncate text-[15px] text-tx2">{stopDatesLine(seg).split(' · ')[0]}</span>
         </span>
         {showNights && (
           <span className="flex-none text-right">
@@ -253,48 +172,10 @@ function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onStay }:
           <span className="lv-grow block h-full rounded-full bg-ac" style={{ width: prog.pct + '%' }} />
         </div>
       )}
-      <div className="mt-3 divide-y divide-ln border-t border-ln">
-        {cov.covered.map(({ stay, range }) => {
-          const money = stayMoneyState(stay, todayIso)
-          const total = toBase(stayTotal(stay, seg), stay.cur, state.rates)
-          return (
-            <button key={stay.id} type="button" disabled={!canEdit} onClick={(e) => { e.stopPropagation(); onStay(stay, null) }} className={row}>
-              <span className="min-w-0">
-                <span className="block truncate text-base font-medium">{stayName(stay, seg)}</span>
-                <span className="block text-[13px] text-tx2">
-                  {fmtDay(range.from)} – {fmtDay(range.to)} · {plural(range.nights, 'night')} · <span className={TONE[money.tone]}>{money.label}</span>
-                  {/* A stop out of the plan still owes its booked stays (#105): Money counts them until cancelled. */}
-                  {!inPlan && isBookedStatus(stay.status) && <span className="text-warn"> · still in Bookings</span>}
-                </span>
-              </span>
-              {total > 0 && <span className="flex-none text-base font-semibold tabular-nums">{fmt(total)}</span>}
-            </button>
-          )
-        })}
-        {uncounted.map((stay) => (
-          <button key={stay.id} type="button" disabled={!canEdit} onClick={(e) => { e.stopPropagation(); onStay(stay, null) }} className={row + ' opacity-55'}>
-            <span className="min-w-0">
-              <span className="block truncate text-base font-medium">{stayName(stay, seg)}</span>
-              <span className="block text-[13px] text-tx2">old option · not counted</span>
-            </span>
-          </button>
-        ))}
-        {inPlan && cov.gaps.map((g) => (
-          <button key={g.from} type="button" disabled={!canEdit} onClick={(e) => { e.stopPropagation(); onStay(null, g) }} className={row + ' text-warn'}>
-            <span className="text-base font-medium">No bed {fmtDay(g.from)} → {fmtDay(g.to)}</span>
-            <span className="text-[13px]">{plural(g.nights, 'night')}</span>
-          </button>
-        ))}
-        {cov.overlaps.map((o) => (
-          <div key={o.from} className="py-2 text-[13px] font-medium text-warn">
-            Two stays overlap {fmtDay(o.from)} – {fmtDay(o.to)} · {plural(o.nights, 'night')} counted twice
-          </div>
-        ))}
-        {!stays.length && (
-          <div className={'py-2.5 text-base font-medium ' + (inPlan ? 'text-warn' : 'text-tx3')}>{inPlan ? 'No stay yet' : 'Nights not counted'}</div>
-        )}
+      <div className="mt-3 border-t border-ln">
+        <StayRows seg={seg} state={state} todayIso={todayIso} fmt={fmt} inPlan={inPlan} />
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -344,11 +225,11 @@ function FinishedJourneyCard({ name, state, canEdit, onPlanNext, onLookBack }: {
 
 export function Timeline() {
   const { trip, cities, cityIdx } = useTripScreen()
-  const mut = useTripMutation()
+  const edits = useTripEdits()
   const { canEdit } = useTripRole()
-  const confirm = useConfirm()
   const { fmt } = useMoney()
   const [sheet, setSheet] = useState<SheetState>(null)
+  const [menuSeg, setMenuSeg] = useState<Segment | null>(null)
   const [wizardOpen, setWizardOpen] = useState(false)
   const todayIso = localISODate()
   const state = trip.data?.state
@@ -369,7 +250,6 @@ export function Timeline() {
   if (trip.isPending) return <Waiting label="Getting your journey" />
   if (!trip.data || !state || !tl) return <CreateTripEmptyState />
   const s = state
-  const currencies = Object.keys(s.rates)
   const name = s.meta.tripName || 'Your journey'
 
   const day = tripDay(s.meta, todayIso)
@@ -385,12 +265,6 @@ export function Timeline() {
   const noStops = !tl.stops.length && !maybes.length
   // A leg already going somewhere from home: the flight there, saved before its stop.
   const landed = noStops ? s.transport.find((t) => t.to.trim() && !sameCity(t.to, tl.home)) : undefined
-  const defaultArrive = tl.stops.length ? tl.stops[tl.stops.length - 1].depart : s.meta.startDate || ''
-  const nextCityOf = (seg: Segment | null) => {
-    const leg = seg ? tl.legs.find((l) => l.from.seg?.id === seg.id) : undefined
-    return leg ? (leg.to.kind === 'home' ? 'home' : leg.to.city) : undefined
-  }
-  const close = () => setSheet(null)
   const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
   const lookBack = () => document.getElementById('timeline')?.scrollIntoView({ behavior: still() ? 'auto' : 'smooth', block: 'start' })
   const peek = peekText(s.meta, s.segments, todayIso, fmtDay, segNights)
@@ -400,49 +274,6 @@ export function Timeline() {
     if (seg) document.getElementById('stop-' + seg.id)?.scrollIntoView({ behavior: still() ? 'auto' : 'smooth', block: 'center' })
   }
 
-  const saveStop = (seg: Segment, previous: Segment | null) => {
-    mut.mutate((st) => ({
-      ...st,
-      segments: st.segments.some((x) => x.id === seg.id) ? st.segments.map((x) => (x.id === seg.id ? seg : x)) : [...st.segments, seg],
-      // Moving Leave moves the leg after this stop with it (mock 15 §4).
-      transport: previous ? shiftDepartures(st.transport, previous.city, previous.depart, seg.depart) : st.transport,
-    }))
-    close()
-  }
-  const deleteStop = async (seg: Segment) => {
-    const ok = await confirm({
-      title: `Delete ${seg.city || 'this stop'}?`,
-      body: 'Its stays and transport stay on the trip; the legs on either side become one.',
-    })
-    if (!ok) return
-    mut.mutate((st) => ({ ...st, segments: st.segments.filter((x) => x.id !== seg.id) }))
-    close()
-  }
-  const saveStay = (stay: Stay) => {
-    mut.mutate((st) => ({
-      ...st,
-      stays: st.stays.some((x) => x.id === stay.id) ? st.stays.map((x) => (x.id === stay.id ? stay : x)) : [...st.stays, stay],
-    }))
-    close()
-  }
-  const deleteStay = async (id: string) => {
-    if (!(await confirm({ title: 'Delete this stay?' }))) return
-    mut.mutate((st) => ({ ...st, stays: st.stays.filter((x) => x.id !== id) }))
-    close()
-  }
-  const saveLeg = (t: TransportLeg) => {
-    mut.mutate((st) => ({
-      ...st,
-      transport: st.transport.some((x) => x.id === t.id) ? st.transport.map((x) => (x.id === t.id ? t : x)) : [...st.transport, t],
-    }))
-    close()
-  }
-  const removeLeg = async (id: string) => {
-    if (!(await confirm({ title: 'Remove this transport?', confirmLabel: 'Remove' }))) return
-    mut.mutate((st) => ({ ...st, transport: st.transport.filter((x) => x.id !== id) }))
-    close()
-  }
-  const openStay = (seg: Segment) => (stay: Stay | null, range: NightRange | null) => setSheet({ kind: 'stay', seg, stay, range })
   // The first stop, with the place the flight there lands already filled in.
   const addFirstStop = () =>
     setSheet(landed ? { kind: 'stop', seg: null, prefill: { city: landed.to, arrive: (landed.date ?? '').slice(0, 10) || undefined } } : { kind: 'stop', seg: null })
@@ -479,7 +310,7 @@ export function Timeline() {
       )}
       <NewCountryBanner state={s} />
       <ViewerNotice />
-      <SaveError show={mut.isError} error={mut.error} />
+      <SaveError show={edits.mut.isError} error={edits.mut.error} />
 
       <ol className="flex flex-col">
         {rows.map((r) => {
@@ -539,8 +370,7 @@ export function Timeline() {
                   todayIso={todayIso}
                   canEdit={canEdit}
                   fmt={fmt}
-                  onOpen={() => setSheet({ kind: 'stop', seg })}
-                  onStay={openStay(seg)}
+                  onMenu={() => setMenuSeg(seg)}
                 />
               </div>
             </li>
@@ -588,57 +418,9 @@ export function Timeline() {
       )}
     </TripGlobeScaffold>
 
-      {sheet?.kind === 'stop' && (
-        <StopSheet
-          initial={sheet.seg}
-          prefill={sheet.prefill}
-          cities={cities.data ?? []}
-          stays={sheet.seg ? s.stays.filter((x) => x.segId === sheet.seg!.id) : []}
-          cityCost={sheet.seg ? cityIdx[sheet.seg.city] : undefined}
-          rates={s.rates}
-          nextCity={nextCityOf(sheet.seg)}
-          defaultArrive={defaultArrive}
-          todayIso={todayIso}
-          onClose={close}
-          onSave={saveStop}
-          onDelete={sheet.seg ? () => deleteStop(sheet.seg!) : undefined}
-          onOpenStay={(stay) => setSheet({ kind: 'stay', seg: sheet.seg!, stay, range: null })}
-          onAddStay={() => {
-            const seg = sheet.seg!
-            const cov = stopCoverage(seg, s.stays.filter((x) => x.segId === seg.id))
-            setSheet({ kind: 'stay', seg, stay: null, range: cov.covered.length ? (cov.gaps[0] ?? null) : null })
-          }}
-        />
-      )}
-      {sheet?.kind === 'stay' && (
-        <StaySheet initial={sheet.stay} seg={sheet.seg} range={sheet.range} rates={s.rates} currencies={currencies} onClose={close} onSave={saveStay} onDelete={sheet.stay ? deleteStay : undefined} />
-      )}
-      {sheet?.kind === 'flightThere' && (
-        <FlightThereSheet
-          home={tl.home}
-          onClose={close}
-          onNext={(from, to) => setSheet({ kind: 'leg', leg: null, entry: null, prefill: { from, to, date: s.meta.startDate || '' } })}
-        />
-      )}
-      {sheet?.kind === 'leg' && (
-        <LegSheet
-          leg={sheet.leg}
-          initial={sheet.entry}
-          prefill={sheet.prefill}
-          rates={s.rates}
-          currencies={currencies}
-          legs={tl.legs}
-          stops={tl.stops}
-          onClose={close}
-          onSave={
-            sheet.prefill
-              // The flight there is saved: its stop's form opens with the place and the day filled in.
-              ? (t) => { saveLeg(t); setSheet({ kind: 'stop', seg: null, prefill: { city: t.to, arrive: t.date || s.meta.startDate || undefined } }) }
-              : saveLeg
-          }
-          onRemove={sheet.entry ? removeLeg : undefined}
-          onAddStop={(prefill) => setSheet({ kind: 'stop', seg: null, prefill })}
-        />
+      <TripSheets sheet={sheet} setSheet={setSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} todayIso={todayIso} edits={edits} />
+      {menuSeg && (
+        <StopMenu seg={menuSeg} tl={tl} state={s} edits={edits} openSheet={(sh) => { setMenuSeg(null); setSheet(sh) }} onClose={() => setMenuSeg(null)} />
       )}
       {wizardOpen && (
         <Modal title="New journey" onClose={() => setWizardOpen(false)}>

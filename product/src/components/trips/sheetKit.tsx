@@ -1,10 +1,13 @@
 'use client'
+import { useState } from 'react'
+import { useConfirm } from '@/components/Confirm'
 import { shortDate } from '@/lib/trips/timeline'
 
 // Shared vocabulary for the Trip sheets (mock 15 §4–§6): the label and input
 // classes every form in the app already uses (AddReminderSheet), the chip
-// group, the Idea / Booked pair, a switch, and the "+ Something" link that
-// keeps a rarely used field off the screen until it is wanted (#65).
+// group, the Idea / Booked pair, a switch, the "+ Something" link that
+// keeps a rarely used field off the screen until it is wanted (#65), and the
+// Cancel / Save bar every form carries since round 3c (decision 4).
 
 export const label = 'block min-w-0 text-base font-medium text-tx2'
 export const input =
@@ -27,6 +30,46 @@ export const fmtHours = (h: number) => {
   const whole = Math.floor(h)
   const mins = Math.round((h - whole) * 60)
   return mins ? `${whole} h ${String(mins).padStart(2, '0')}` : `${whole} h`
+}
+
+/**
+ * The bar at the top of every form since round 3c (the phone's EditForm): Cancel on the
+ * left, the title in the middle, Save on the right, grey until there is something to save.
+ */
+export function SheetBar({ title, onCancel, onSave, saveLabel = 'Save', canSave = true }: {
+  title: string
+  onCancel: () => void
+  onSave: () => void
+  saveLabel?: string
+  canSave?: boolean
+}) {
+  return (
+    <div className="-mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      <button type="button" onClick={onCancel} className="-ml-2 min-h-11 justify-self-start px-2 text-base text-tx2">Cancel</button>
+      <span className="min-w-0 truncate text-center text-base font-semibold text-tx">{title}</span>
+      <button type="button" onClick={onSave} disabled={!canSave} className="-mr-2 min-h-11 justify-self-end px-2 text-base font-semibold text-ac disabled:opacity-40">
+        {saveLabel}
+      </button>
+    </div>
+  )
+}
+
+/** Whether the form has changed since it opened: its fields now against its fields then. */
+export function useDirty(fields: unknown): boolean {
+  const [first] = useState(() => JSON.stringify(fields))
+  return first !== JSON.stringify(fields)
+}
+
+/**
+ * Closing a form that has changes asks "Discard changes?" first (the phone's EditForm), whether
+ * Cancel, the scrim, the handle or Escape closes it. Returns the function to close with.
+ */
+export function useCancel(dirty: boolean, onClose: () => void): () => void {
+  const confirm = useConfirm()
+  return async () => {
+    if (!dirty) { onClose(); return }
+    if (await confirm({ title: 'Discard changes?', confirmLabel: 'Discard changes', cancelLabel: 'Keep editing' })) onClose()
+  }
 }
 
 export function Chips<T extends string>({

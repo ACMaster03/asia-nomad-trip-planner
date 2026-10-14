@@ -5,7 +5,7 @@ import { useMoney } from '@/lib/trips/Money'
 import { nightsBetween, parseAmount, toBase } from '@/lib/trips/format'
 import { addDays, stateOf, stayRange, type NightRange } from '@/lib/trips/timeline'
 import type { Segment, Stay } from '@/lib/trips/types'
-import { Chips, StateChips, Toggle, addLink, chipCls, dangerBtn, fmtDay, hint, input, kicker, label, primaryBtn, uid } from './sheetKit'
+import { Chips, SheetBar, StateChips, Toggle, addLink, chipCls, dangerBtn, fmtDay, hint, input, kicker, label, uid, useCancel, useDirty } from './sheetKit'
 
 // Add / edit a stay (mock 15 §5, #60). Opened from a stop's "+ Add stay",
 // from a stay row, or from an amber "No bed" row with those nights already
@@ -16,7 +16,8 @@ import { Chips, StateChips, Toggle, addLink, chipCls, dangerBtn, fmtDay, hint, i
 //
 // Two states, Idea and Booked (round 1). Booked is what makes Money import
 // the stay on its charge date, as before (commitment.ts). Idea keeps the
-// deadline fields hidden; they appear the moment Booked is chosen.
+// deadline fields hidden; they appear the moment Booked is chosen. Cancel and
+// Save sit in the bar since round 3c (decision 4).
 
 const PLATFORMS = ['Booking.com', 'Airbnb', 'Other'] as const
 type Platform = (typeof PLATFORMS)[number]
@@ -63,10 +64,12 @@ export function StaySheet({
   const price = parseAmount(ppn) || 0
   const perNight = toBase(price, cur, rates)
   const remindRow = state === 'booked' && !!cancelUntil && !noFreeCancel
+  const dirty = useDirty({ name, platform, platformOther, checkIn, checkOut, ppn, cur, state, cancelUntil, noFreeCancel, chargeDate, chargeAtCheckIn, remind, url, notes, count })
+  const valid = !!name.trim() && nights > 0
+  const cancel = useCancel(dirty, onClose)
 
   function submit() {
-    if (!name.trim()) { alert('Give the stay a name'); return }
-    if (!checkIn || !checkOut || nights <= 0) { alert('Check-out has to be after check-in'); return }
+    if (!valid) return
     const stay: Stay = {
       ...(initial ?? {}),
       id: initial?.id ?? uid('st'),
@@ -92,9 +95,9 @@ export function StaySheet({
   }
 
   return (
-    <Sheet label={initial ? 'Edit stay' : 'Add stay'} onClose={onClose}>
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-[22px] font-semibold">{initial ? 'Edit stay' : 'Add stay'}</h3>
+    <Sheet label={initial ? 'Edit stay' : 'Add stay'} onClose={cancel}>
+      <SheetBar title={initial ? 'Edit stay' : 'Add stay'} onCancel={cancel} onSave={submit} saveLabel={initial ? 'Save' : 'Add'} canSave={valid && dirty} />
+      <div className="-mt-1 flex justify-center">
         <span className="min-w-0 truncate rounded-full bg-tag px-3 py-1 text-[13px] font-medium text-tag-ink">
           {seg.city} · {fmtDay(checkIn)} – {fmtDay(checkOut)}
         </span>
@@ -198,7 +201,6 @@ export function StaySheet({
           <textarea rows={2} className={input} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
       )}
-      <button type="button" onClick={submit} className={primaryBtn}>{initial ? 'Save' : 'Add stay'}</button>
       {initial && onDelete && (
         <div className="border-t border-ln pt-3">
           <button type="button" onClick={() => onDelete(initial.id)} className={dangerBtn}>Delete this stay</button>
