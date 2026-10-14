@@ -26,9 +26,12 @@ import type { TransportLeg } from '@/lib/trips/types'
 type Inst = InstanceType<typeof Globe>
 type When = 'home' | 'past' | 'now' | 'next'
 type Pt = RouteNode & { when: When; i: number }
-type Leg = { pts: [number, number][]; upcoming: boolean; ground: boolean; shown: boolean; i: number }
-/** One line on the globe: a leg of the route, or a stretch of coast. */
-type Path = { kind: 'leg'; pts: [number, number][]; leg: Leg } | { kind: 'coast'; pts: number[][] }
+/** A leg of the route: the great circle from one place to the next, in short pieces, and how much of it is drawn (0..1). */
+type Leg = { pts: [number, number][]; segs: Seg[]; upcoming: boolean; ground: boolean; progress: number; i: number }
+/** One short piece of a leg, drawn as an arc so low it hugs the globe; the dashes are the pieces left out. */
+type Seg = { startLat: number; startLng: number; endLat: number; endLng: number; upcoming: boolean; ground: boolean; k: number; n: number }
+/** A stretch of coast, in the paths layer. */
+type Path = { pts: number[][] }
 type Html =
   | { kind: 'stop'; lat: number; lng: number; pt: Pt }
   | { kind: 'country'; lat: number; lng: number; label: CountryLabel; mine: boolean }
@@ -58,11 +61,9 @@ interface Loose {
   pathPoints(a: string): Loose
   pathPointLat(f: (p: object) => number): Loose
   pathPointLng(f: (p: object) => number): Loose
-  pathPointAlt(f: (p: object) => number): Loose
-  pathColor(f: (d: object) => string): Loose
-  pathStroke(f: (d: object) => number): Loose
-  pathDashLength(f: (d: object) => number): Loose
-  pathDashGap(f: (d: object) => number): Loose
+  pathPointAlt(a: number): Loose
+  pathColor(f: () => string): Loose
+  pathStroke(a: number): Loose
   pathResolution(a: number): Loose
   pathTransitionDuration(ms: number): Loose
   polygonsTransitionDuration(ms: number): Loose
@@ -191,20 +192,21 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   }
 
   // ---- paint: the arcs, the land, the names; each reads the refs ----
-  // The lines on the globe, in one layer: the coasts' white rim under the route's legs.
-  const paintPaths = () => {
-    const g = loose()
-    if (!g) return
-    const coasts: Path[] = featsRef.current.flatMap((f) => outerRings(f).filter((r) => r.length > 8).map((r) => ({ kind: 'coast' as const, pts: r })))
-    const legs: Path[] = legsRef.current.filter((l) => l.shown).map((l) => ({ kind: 'leg' as const, pts: l.pts, leg: l }))
-    g.pathsData([...coasts, ...legs] as object[])
-  }
-  const paintArcs = paintPaths
-  const paintLand = () => {
+  // The route: each leg's pieces up to how far it is drawn (all of it, outside a replay).
+  const paintArcs = () => {
     const g = instRef.current
     if (!g) return
+    const segs: Seg[] = []
+    for (const l of legsRef.current) for (const s of l.segs) if (s.k < l.progress * s.n + 1e-6) segs.push(s)
+    g.arcsData(segs as object[])
+  }
+  // The coasts' white rim, in the paths layer.
+  const paintLand = () => {
+    const g = instRef.current, l = loose()
+    if (!g || !l) return
     g.polygonsData(featsRef.current.slice() as object[])
-    paintPaths()
+    const coasts: Path[] = featsRef.current.flatMap((f) => outerRings(f).filter((r) => r.length > 8).map((r) => ({ pts: r })))
+    l.pathsData(coasts as object[])
   }
   // Which names show at this height (the phone's drawNames): continents far out, fading as you
   // come closer; a country's name sized by how big the country is on screen and shown once it
@@ -338,18 +340,19 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     l.globeMaterial().color.set(t().ocean)
     l.globeMaterial().shininess = 0
     l.polygonsTransitionDuration(0)
-    // The lines: the coasts' white rim (the phone's globeShore) just over the land's edge, and the
-    // route's legs over it, along the great circle so they hug the globe: dashed where still
-    // ahead, dotted on the ground. (The phone's canvas halo under the route is left out: as a
-    // tube it swallowed the line.)
-    const path = (d: object) => d as Path
-    l.pathsData([]).pathPoints('pts').pathPointLat((p) => (p as number[])[1]).pathPointLng((p) => (p as number[])[0])
-      .pathPointAlt((d) => (path(d).kind === 'leg' ? 0.011 : 0.0055))
-      .pathColor((d) => { const p = path(d); return p.kind === 'coast' ? t().shore : p.leg.upcoming ? t().route + 'd9' : t().route })
-      .pathStroke((d) => { const p = path(d); return p.kind === 'coast' ? 0.8 : p.leg.ground ? 1.7 : 1.4 })
-      .pathDashLength((d) => { const p = path(d); return p.kind === 'coast' ? 1 : p.leg.ground ? 0.012 : p.leg.upcoming ? 0.07 : 1 })
-      .pathDashGap((d) => { const p = path(d); return p.kind === 'coast' ? 0 : p.leg.ground ? 0.045 : p.leg.upcoming ? 0.055 : 0 })
-      .pathResolution(1).pathTransitionDuration(0)
+    // The coasts' white rim (the phone's globeShore), just over the land's edge.
+    l.pathsData([]).pathPoints('pts').pathPointLat((p) => (p as number[])[1]).pathPointLng((p) => (p as number[])[0]).pathPointAlt(0.0055)
+      .pathColor(() => t().shore).pathStroke(0.8).pathResolution(1).pathTransitionDuration(0)
+    // The route's legs, in short pieces so low they hug the globe (a long arc with no height cut
+    // through it); the dashes are the pieces left out. (The phone's canvas halo under the route is
+    // left out: as a tube it swallowed the line.)
+    const seg = (d: object) => d as Seg
+    g.arcsData([]).arcStartLat('startLat').arcStartLng('startLng').arcEndLat('endLat').arcEndLng('endLng')
+      .arcAltitude(0.011)
+      .arcColor(((d: object) => (seg(d).upcoming ? t().routeAhead : t().route)) as never)
+      // Arcs are drawn at a finer scale than the paths were: 0.7 here is the 1.4 there.
+      .arcStroke(((d: object) => (seg(d).ground ? 0.85 : 0.7)) as never)
+      .arcsTransitionDuration(0)
     l.htmlElementsData([]).htmlLat('lat').htmlLng('lng').htmlAltitude(0.012).htmlTransitionDuration(0)
       .htmlElement((d) => {
         const h = d as Html
@@ -434,7 +437,14 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       const t = flightFor(transport, a.city, b.city)
       const km = angDeg(a, b) * 111.2
       const flight = t ? (t.type || '').toLowerCase() === 'flight' : km > FLIGHT_KM
-      legs.push({ pts: geodesic(a, b), upcoming: b.when === 'next', ground: !flight, shown: true, i })
+      const upcoming = b.when === 'next', ground = !flight
+      const line = geodesic(a, b, ground ? 0.6 : upcoming ? 1.5 : 2)
+      const segs: Seg[] = []
+      for (let k = 0; k + 1 < line.length; k++) {
+        if ((upcoming || ground) && k % 2 === 1) continue
+        segs.push({ startLat: line[k][1], startLng: line[k][0], endLat: line[k + 1][1], endLng: line[k + 1][0], upcoming, ground, k, n: line.length - 1 })
+      }
+      legs.push({ pts: geodesic(a, b), segs, upcoming, ground, progress: 1, i })
     }
     legsRef.current = legs
     if (!playingRef.current) paintArcs()
@@ -481,6 +491,9 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     const n = leg.pts.length - 1
     const place = (t: number) => {
       const f = t * n, i = Math.min(n - 1, Math.floor(f)), k = f - i
+      // The leg draws itself up to the plane.
+      leg.progress = t
+      paintArcs()
       const [lng0, lat0] = leg.pts[i], [lng1, lat1] = leg.pts[i + 1]
       const p = g.getScreenCoords(lat0 + (lat1 - lat0) * k, lng0 + (lng1 - lng0) * k, 0.02)
       if (!p) return
@@ -503,10 +516,13 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       // by the heading plus 45° points it the way it flies (it was minus, and it flew askew).
       v.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${(heading ?? 0) + 45}deg)`
     }
+    // The camera's flight eases in and out (globe.gl: cubic); the plane keeps step with it, or it
+    // raced ahead at the start and dawdled at the end (Petra, 14 Oct).
+    const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
     place(0)
     const step = () => {
       const t = Math.min(1, (performance.now() - start) / ms)
-      place(t)
+      place(ease(t))
       if (t < 1 && aliveRef.current) raf = requestAnimationFrame(step)
     }
     raf = requestAnimationFrame(step)
@@ -521,7 +537,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     playingRef.current = true
     const still = stillMotion()
     const run = async () => {
-      for (const l of legsRef.current) l.shown = false
+      for (const l of legsRef.current) l.progress = 0
       paintArcs()
       fly({ lat: pts[0].lat, lng: pts[0].lng, altitude: 1.3 }, 600)
       await sleep(still ? 0 : 650)
@@ -531,22 +547,20 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         fly({ lat: to.lat, lng: to.lng, altitude: 1 + Math.min(1.2, angDeg(from, to) / 60) }, ms)
         const leg = legsRef.current.find((l) => l.i === i - 1)
         if (leg && !still) {
-          // The leg draws itself under the plane as it flies, a little behind it.
           const stop = flyVehicle(leg, ms)
-          await sleep(Math.round(ms * 0.35))
-          leg.shown = true
-          paintArcs()
-          await sleep(ms - Math.round(ms * 0.35) + 150)
+          await sleep(ms + 150)
           stop()
+          leg.progress = 1
+          paintArcs()
         } else if (leg) {
-          leg.shown = true
+          leg.progress = 1
           paintArcs()
           await sleep(150)
         } else {
           await sleep(ms + 150)
         }
       }
-      for (const l of legsRef.current) l.shown = true
+      for (const l of legsRef.current) l.progress = 1
       paintArcs()
       playingRef.current = false
       if (aliveRef.current) { fly(target(cameraRef.current), 900); endRef.current?.() }
