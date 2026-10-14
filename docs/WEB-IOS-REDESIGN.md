@@ -178,6 +178,10 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
+- 14 Oct: round 4b built, All entries and the Subscriptions page as the phone's (the chip row,
+  the day sections with their totals, Coming up, a row held down for Log again / Edit / Delete;
+  the page with every subscription and what they add up to). Money's rows open All entries on
+  what they show. Pictures in `docs/web-ios-redesign/round4b-*`.
 - 14 Oct: round 4a live (#201, with #200's stop page in place), Money as the phone's MoneyScreen:
   the top card with the stop / Journey switch and the budget ring, Upcoming charges, Latest
   with the category tiles, Bookings open, Subscriptions as Latest's pattern, the All entries

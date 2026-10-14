@@ -184,8 +184,11 @@ Petra is new to software work; Patrik is not. The product conventions are in
   as the phone's (the top card with the stop / Journey switch and the budget ring, Upcoming
   charges, Latest with category tiles, Bookings open, Subscriptions as Latest, the #127
   numbers; the Track spending switch moved to Trip settings, Petra), is live since 14 Oct
-  (#201); Petra's phone test follows. Next: 4b (All entries with the chip row, the day
-  sections and the actions; the Subscriptions page), 4c (the entry form), 5, 6. The source of the look is `feat/ios-foundation`,
+  (#201; Petra's test, her two findings in #202). 4b, All entries as the phone's LedgerScreen
+  (the chip row, the day sections with their totals, Coming up, a row held down for Log again /
+  Edit / Delete, the + here too) and the Subscriptions page at `/money/subscriptions` (Money's
+  card shows three and "All subscriptions ›"), is built on 14 Oct and waits for Petra's go.
+  Next: 4c (the entry form), 5, 6. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the

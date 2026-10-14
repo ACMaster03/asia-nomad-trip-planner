@@ -7,6 +7,44 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Round 4b: All entries and the Subscriptions page as on the phone (14 Oct)
+
+Round 4b of `docs/WEB-IOS-REDESIGN.md`, on Patrik's "rounds 3–6 now" (14 Oct). All entries
+(`/money/entries`, `LedgerPage.tsx`) is the phone's `LedgerScreen`: the search ("Name or
+category"), a row of chips (Before departure once the journey has started; a Category menu of
+the categories used, most used first, with their counts; All / Everyday / Beyond the everyday /
+Bookings / Subscriptions / Income), one line of what the filtered rows come to ("12 entries ·
+48 200 Ft spent · 420 000 Ft received"), Coming up folded at the top (what is dated after
+today, "not counted as spent yet"), then the days with their totals ("Today · Tue 14 Oct",
+"Yesterday · …", "Mon 31 Aug · day 1"), each day's rows on a card with the category tiles
+(`EntryRow`). The month bands and the "Trip starts" band went. A tap opens the row's form; a
+long press (a right click on a desktop) opens its menu, the phone's two swipes: Log again
+(the same thing again, today; toast "Logged again · X · name"), Edit, Delete (asks first;
+toast "Deleted · name"). The + adds an entry here too. Paging stays (20 rows, whole days;
+the web's render-cost reason, #38). Money's rows say what to open on: Spent so far's parts
+(`?before=1`, `?from&to`), "beyond the everyday here" (`?filter=beyond&from&to`), Upcoming's
+"more" (`?coming=1`), Where it goes' rows (`?cat=&filter=everyday&from&to`), the chart's
+`?day`. The rules are pure and tested in `lib/trips/ledgerFilters.ts`; `ledgerView.ts`,
+`ledgerSearch.ts` and `LedgerList.tsx` went with the old list.
+
+Subscriptions get the phone's page, `/money/subscriptions` (`SubscriptionsPage.tsx`): every
+active one, the next charge first, with "N active · ≈ X a month" and "across the N days left ·
+≈ Y"; a Cancelled card; the empty card with the way to add one; the + in the header. Money's
+card (`SubscriptionsCard.tsx`) shows the three that charge next and "All subscriptions ›"; the
+in-place expander and its add button went (the phone's card has neither). Shared pieces:
+`SubscriptionRow.tsx` (the row and the empty card), `useSubscriptionEdits.ts` (save, delete
+that asks, the bell), `deleteEntry.ts` (one delete for the entry form and the row menu, with
+its skip record for a charge or an imported booking).
+
+Checked locally (Patrik's rule, 14 Oct): tsc, eslint, 201 tests, `next build --webpack`, the
+redirects test, `next start` with the dev previews shot by Playwright. Pictures in
+`docs/web-ios-redesign/round4b-*`. Dev preview: `?screen=subscriptions`; `?screen=entries` with
+`&before=1`, `&from&to`, `&filter=`, `&cat=`, `&fam=`, `&coming=1`.
+
+iOS: nothing new; the phone is the source (`LedgerScreen.swift`, `SubscriptionsScreen.swift`).
+Two differences to keep in mind: the web has no swipe, so a row held down opens a menu with
+Log again and Delete; and the web pages the list by whole days.
+
 ### BUILT — "You no longer have access to this trip" shown to the owner (Petra, 14 Oct)
 
 Petra, testing `72d93de` on the phone: Trip showed "You no longer have access to this trip"
