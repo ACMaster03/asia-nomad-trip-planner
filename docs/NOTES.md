@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Trip's globe: the names kept apart, the plane flies the replay (Petra, 14 Oct)
+### BUILT — Trip's globe: the names kept apart, the plane flies the replay (Petra, 14 Oct; #194)
 
 Petra's two findings on #193, on her phone:
 - **The countries' names crowded and overlapped** towards the globe's edge and ghosted under
@@ -33,7 +33,7 @@ iOS: nothing new.
 
 #193 merged with Petra's "yes" after the validation step; Vercel built `37afcce`. Petra on her
 phone: everything works, the build number is right. Her two findings, fixed in the follow-up
-below: the countries' names crowded and overlapped towards the globe's edge and ghosted under
+below (#194): the countries' names crowded and overlapped towards the globe's edge and ghosted under
 the title (the web had no overlap check, the phone has one), and the replay should show the
 plane flying, as the phone's does.
 
