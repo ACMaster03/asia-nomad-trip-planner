@@ -7,6 +7,21 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### DECIDED — local builds; Claude's branches no longer build on Vercel (Patrik through Petra, 14 Oct)
+
+After the 100-a-day refusal: "keep to local builds and run the server locally". So: every
+change is built and run in Claude's workspace (`next build --webpack`, `next start`, the dev
+previews from fixtures, Playwright at phone width), and that is the check before a pull
+request, as the round pictures already were. Vercel builds only what is merged: `kyh/*`, the
+name every Claude session branch carries, is set to `deploymentEnabled: false` in
+`product/vercel.json` and `landing/vercel.json` (minimatch, per Vercel's git configuration),
+so a push to a work branch creates no deployment at all (the `ignoreCommand` only cancelled
+them, and a cancelled deployment still counted). One merge per round is the budget to keep;
+Petra tests on app.livhold.com after the merge, as before. Patrik's own branches are not
+named `kyh/*` and keep their previews.
+
+iOS: nothing new.
+
 ### WAITING — main is merged but not live: Vercel's 100-a-day limit (14 Oct, 07:56 UTC)
 
 #200 (the stop page in place, `7741cdd`) merged with Petra's "yes", but Vercel started no
