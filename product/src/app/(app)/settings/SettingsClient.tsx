@@ -15,13 +15,11 @@ import { useTripScope } from '@/lib/trips/TripScope'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useHomeBase } from '@/lib/trips/useHomeBase'
 import { useMoney } from '@/lib/trips/Money'
-import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
 import { refreshedText } from '@/lib/trips/fxText'
 import { symbolOf } from '@/lib/trips/moneyText'
 import { shortDate } from '@/lib/trips/subscriptions'
 import { addDays } from '@/lib/trips/spending'
 import { useToast } from '@/components/Toast'
-import { Toggle } from '@/components/trips/sheetKit'
 import { SaveError } from '@/components/trips/SaveError'
 import { roleLabel } from '@/lib/trips/role'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
@@ -37,10 +35,10 @@ import { ActiveTripCard } from './ActiveTripCard'
 // Each field saves when it is left; there is no Save button (decision 5,
 // Patrik, 12 Oct). Reached from Trip's gear, Money's ring and Account.
 //
-// Below the two groups the web keeps what the phone has not built: the Track
-// spending switch (here since 4a, Petra; it goes to Account's "You" group with
-// 5b), the Alerts row to Account, People on this trip (invites), the danger
-// zone and the build number.
+// Below the two groups the web keeps what the phone has not built: the Alerts
+// row to Account, People on this trip (invites), the danger zone and the build
+// number. The Track spending switch went to Account's "You" group with 5b, as
+// on the phone.
 
 // LIVHOLD v1 token idioms (frames 27/27b/28)
 const input =
@@ -217,10 +215,6 @@ export default function SettingsClient() {
   const { fmt } = useMoney()
   const toast = useToast()
   const profileHome = useHomeBase().data
-  // Whether Money tracks what you spend: the person's answer (migration 41),
-  // kept here as on the phone (Settings → Money) since round 4a of the redesign.
-  const track = useTrackSpending()
-  const setTrack = useSetTrackSpending()
   const [dateProblem, setDateProblem] = useState<string | null>(null)
 
   if (tripId === null) return <CreateTripEmptyState />
@@ -318,22 +312,6 @@ export default function SettingsClient() {
           valueClass={fx.data && isStale(fx.data.lastSuccessAt) ? 'text-warn' : 'text-tx3'}
         />
       </Group>
-
-      {/* The person's answer, as the phone's Account › You has it; 5b moves it there.
-          Hidden while the answer can't be read: a switch that cannot save would lie. */}
-      {track.data && track.data !== 'unknown' && (
-        <Group
-          title="You"
-          footer={track.data === 'yes'
-            ? 'Money shows your pace, where it goes and where the journey lands. Only for you, on every journey. Saves as you switch it.'
-            : 'Spending isn’t tracked on your journeys. Money shows the bookings. Saves as you switch it.'}
-        >
-          <Row label="Track spending">
-            <Toggle on={track.data === 'yes'} onChange={(on) => setTrack.mutate(on)} label="Track spending" />
-          </Row>
-        </Group>
-      )}
-      <SaveError show={setTrack.isError} error={setTrack.error} />
 
       {/* Alerts moved to /account with the notification matrix (issue #13):
           they belong to the person, and a follower with no trip needs them

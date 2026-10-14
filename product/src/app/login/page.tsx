@@ -128,7 +128,7 @@ export default function Login() {
     // change to start working.
     const sb = createOtpClient()
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/account')}`,
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/account/sign-in')}`,
     })
     setSending(false)
     if (error) {
