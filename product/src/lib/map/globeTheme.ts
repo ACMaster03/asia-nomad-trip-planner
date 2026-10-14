@@ -18,6 +18,8 @@ export interface GlobeTheme {
   halo: string
   /** the route: --ac2Deep */
   route: string
+  /** the leg still ahead: the route's colour, a little see-through (an rgba string: WebGL reads no 8-digit hex) */
+  routeAhead: string
   nameContinent: string
   nameCountry: string
   nameMine: string
@@ -36,6 +38,7 @@ export const GLOBE_LIGHT: GlobeTheme = {
   glowAltitude: 0.12,
   halo: 'rgba(240, 238, 233, 0.9)',
   route: '#93404c',
+  routeAhead: 'rgba(147, 64, 76, 0.85)',
   nameContinent: 'rgba(31, 42, 36, 0.5)',
   nameCountry: 'rgba(31, 42, 36, 0.52)',
   nameMine: '#2f4a2e',
@@ -54,6 +57,7 @@ export const GLOBE_DARK: GlobeTheme = {
   glowAltitude: 0.09,
   halo: 'rgba(18, 22, 26, 0.85)',
   route: '#de9ba7',
+  routeAhead: 'rgba(222, 155, 167, 0.85)',
   nameContinent: 'rgba(216, 224, 229, 0.52)',
   nameCountry: 'rgba(216, 224, 229, 0.55)',
   nameMine: '#a9cba5',

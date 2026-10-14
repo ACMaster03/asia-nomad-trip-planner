@@ -349,8 +349,9 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     const seg = (d: object) => d as Seg
     g.arcsData([]).arcStartLat('startLat').arcStartLng('startLng').arcEndLat('endLat').arcEndLng('endLng')
       .arcAltitude(0.011)
-      .arcColor(((d: object) => (seg(d).upcoming ? t().route + 'd9' : t().route)) as never)
-      .arcStroke(((d: object) => (seg(d).ground ? 1.7 : 1.4)) as never)
+      .arcColor(((d: object) => (seg(d).upcoming ? t().routeAhead : t().route)) as never)
+      // Arcs are drawn at a finer scale than the paths were: 0.7 here is the 1.4 there.
+      .arcStroke(((d: object) => (seg(d).ground ? 0.85 : 0.7)) as never)
       .arcsTransitionDuration(0)
     l.htmlElementsData([]).htmlLat('lat').htmlLng('lng').htmlAltitude(0.012).htmlTransitionDuration(0)
       .htmlElement((d) => {
