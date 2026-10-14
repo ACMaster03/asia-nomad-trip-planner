@@ -7,6 +7,16 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Trip's globe: the plane no longer spins (Petra, 14 Oct; #195)
+
+#194 merged with Petra's "yes"; Vercel built `7c0ba4a`; her test: all works, the build number
+right, but the plane spun round and round while it flew. The cause: its heading was read from
+its own screen position one frame to the next, and between frames the camera flies too, so the
+difference carried the camera's motion and flipped. Now the heading is the way the route goes
+from the plane's place, both ends read in the same frame, smoothed a little between frames.
+
+iOS: nothing new.
+
 ### BUILT — Trip's globe: the names kept apart, the plane flies the replay (Petra, 14 Oct; #194)
 
 Petra's two findings on #193, on her phone:
