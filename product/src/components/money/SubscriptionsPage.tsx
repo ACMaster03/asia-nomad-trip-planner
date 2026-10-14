@@ -1,12 +1,14 @@
 'use client'
 import { useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ChevronLeft, Plus } from 'lucide-react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useToday } from '@/lib/useToday'
+import { useCameFrom } from '@/lib/useCameFrom'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { approxMoney } from '@/lib/trips/moneyText'
 import { activeSubs, cancelledSubs, monthlyRunRate, subsAhead } from '@/lib/trips/subscriptions'
@@ -29,6 +31,8 @@ export default function SubscriptionsPage() {
   const stateMut = useTripMutation()
   const { canEdit } = useTripRole()
   const today = useToday()
+  const router = useRouter()
+  const cameFrom = useCameFrom('/money/subscriptions')
   const edits = useSubscriptionEdits(stateMut)
   const model = useMemo(
     () => (trip.data && today ? moneyModel(trip.data.state, trip.data.ledger, cityIdx, today) : null),
@@ -56,7 +60,11 @@ export default function SubscriptionsPage() {
     <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[10px] text-tx">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <Link href="/money" className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep">
+          <Link
+            href="/money"
+            onClick={(e) => { if (cameFrom.current === '/money') { e.preventDefault(); router.back() } }}
+            className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep"
+          >
             <ChevronLeft aria-hidden className="size-5" />Money
           </Link>
           <h1 className="font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">Subscriptions</h1>

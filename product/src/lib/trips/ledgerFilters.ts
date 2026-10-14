@@ -37,15 +37,17 @@ export interface Focus {
   span: { from: string; to: string } | null
   /** only what is dated before this day: departure day, from "Before departure" */
   before: string | null
+  /** only the days no stop owns, from Spent so far's "Between stops" (the page says which days those are) */
+  between: boolean
   /** the search box's text */
   query: string
 }
 
-export const NO_FOCUS: Focus = { filter: 'all', category: null, family: null, span: null, before: null, query: '' }
+export const NO_FOCUS: Focus = { filter: 'all', category: null, family: null, span: null, before: null, between: false, query: '' }
 
 /** Anything narrowing the list: the summary line shows then. */
 export const isFocused = (f: Focus) =>
-  f.filter !== 'all' || !!f.category || !!f.family || !!f.span || !!f.before || !!f.query.trim()
+  f.filter !== 'all' || !!f.category || !!f.family || !!f.span || !!f.before || f.between || !!f.query.trim()
 
 /** The screen's title: the category or family it opened on, else All entries. */
 export const focusTitle = (f: Focus) => (f.category ? categoryLabel(f.category) : f.family ? GROUPS[f.family].label : 'All entries')
@@ -74,6 +76,8 @@ export interface EntriesParams {
   fam?: string
   /** "1": Coming up open */
   coming?: string
+  /** "1": the days between stops */
+  between?: string
 }
 
 /**
@@ -91,17 +95,19 @@ export function focusFromParams(p: EntriesParams, tripStart?: string): { focus: 
   }
   if (validIso(p.from) && validIso(p.to) && p.from <= p.to) focus.span = { from: p.from, to: p.to }
   if (p.before === '1' && tripStart) focus.before = tripStart
+  if (p.between === '1') focus.between = true
   return { focus, day: validIso(p.day) ? p.day : null, coming: p.coming === '1' }
 }
 
-/** The rows the focus keeps, in the ledger's stored order. */
-export function matching(ledger: LedgerEntry[], f: Focus): LedgerEntry[] {
+/** The rows the focus keeps, in the ledger's stored order. `isBetween` says whether a day belongs to no stop. */
+export function matching(ledger: LedgerEntry[], f: Focus, isBetween?: (date: string) => boolean): LedgerEntry[] {
   const words = fold(f.query).split(/\s+/).filter(Boolean)
   return ledger.filter((e) => {
     if (f.category && e.category !== f.category) return false
     if (f.family && groupOf(e.category) !== f.family) return false
     if (f.span && (e.date < f.span.from || e.date > f.span.to)) return false
     if (f.before && (!e.date || e.date >= f.before)) return false
+    if (f.between && !isBetween?.(e.date)) return false
     const expense = e.type !== 'income'
     switch (f.filter) {
       case 'all': break

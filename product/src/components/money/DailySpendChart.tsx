@@ -154,11 +154,12 @@ export function DailySpendChart({
               <span className="flex-none text-right"><span className="block text-base font-semibold">{fmt(base)}</span>{e.currency !== undefined && rates[e.currency] !== 1 && <span className="block text-[13px] text-tx2">{e.amount.toLocaleString('en-US')} {e.currency}</span>}</span>
             </div>
           ))}
-          <div className="flex items-center justify-between border-t border-ln pt-2.5">
-            <button onClick={() => setSel(null)} className="min-h-11 text-[13px] text-tx3">tap the bar again to close</button>
+          {/* Each on its own line (Petra, 14 Oct: cramped together in one row). */}
+          <div className="flex flex-col items-start border-t border-ln pt-1">
             {dayEntries.length > 0 && (
               <button onClick={() => onShowDay(sel)} className="min-h-11 text-base font-semibold text-ac2-deep">Open in All entries ›</button>
             )}
+            <button onClick={() => setSel(null)} className="min-h-10 text-[13px] text-tx3">tap the bar again to close</button>
           </div>
         </div>
       )}

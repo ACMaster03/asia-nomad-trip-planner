@@ -45,6 +45,13 @@ test('a category, a family, a span and before departure narrow on top of the fil
   assert.deepEqual(ids(matching(ledger, { ...NO_FOCUS, filter: 'beyond', span: { from: '2026-09-01', to: '2026-09-14' } })), ['concert', 'icloud'])
 })
 
+test('between stops keeps the days no stop owns, which the page decides', () => {
+  assert.deepEqual(ids(matching(ledger, { ...NO_FOCUS, between: true }, (d) => d === '2026-09-03')), ['concert'])
+  assert.deepEqual(ids(matching(ledger, { ...NO_FOCUS, between: true })), [])
+  assert.equal(focusFromParams({ between: '1' }, START).focus.between, true)
+  assert.equal(isFocused({ ...NO_FOCUS, between: true }), true)
+})
+
 test('the search matches the name and the category, accents off, every word', () => {
   assert.deepEqual(ids(matching(ledger, { ...NO_FOCUS, query: 'pho' })), ['pho'])
   assert.deepEqual(ids(matching(ledger, { ...NO_FOCUS, query: 'icloud tb' })), ['icloud'])

@@ -7,6 +7,22 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — Petra's finding on #203: a category picked on top of a hidden filter showed nothing (14 Oct)
+
+Petra's test of `96fb4f1` on the phone, step 1: she tapped "Beyond the everyday", then opened
+Category and picked Food. The list said "0 entries · 0 Ft spent" and "Nothing here yet.",
+though the menu had shown Food with a count. Not a wrong number: the category sits on top of
+the filter, as on the phone, and Food has nothing beyond the everyday. But the filter chip was
+scrolled out of view to the right, the menu's count was over every entry, and the empty line
+did not say why. Fix (`LedgerPage.tsx`): picking a category turns the filter back to All (the
+family and the days were already cleared, as on the phone) and scrolls the chip row home, so
+the state is in view; an empty filtered list says "No entries match this choice of chips."
+instead of "Nothing here yet." Probed on the production build with Playwright: Beyond, then
+Category › Food, shows Food's days with All checked.
+
+iOS: the phone has the same trap (`LedgerScreen.swift`, the Category menu keeps `filter`);
+worth the same two lines there.
+
 ### LIVE — #203, round 4b: All entries and the Subscriptions page as on the phone (14 Oct)
 
 Merged with Petra's "yes" at 10:13 UTC; Vercel built `96fb4f1` and it is live on

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { CalendarClock, ChevronDown, ChevronLeft, CircleX, Pencil, Plus, RotateCcw, Search, Trash2, X, type LucideIcon } from 'lucide-react'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { useConfirm } from '@/components/Confirm'
@@ -19,6 +20,8 @@ import {
   type EntriesParams, type Focus,
 } from '@/lib/trips/ledgerFilters'
 import { shortDate } from '@/lib/trips/subscriptions'
+import { ownerOf } from '@/lib/trips/moneyRows'
+import { useCameFrom } from '@/lib/useCameFrom'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -67,6 +70,8 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
   const today = useToday()
   const confirm = useConfirm()
   const toast = useToast()
+  const router = useRouter()
+  const cameFrom = useCameFrom('/money/entries')
   const tripStart = trip.data?.state.meta.startDate || undefined
   const initial = useMemo(() => focusFromParams(params, tripStart), [params, tripStart])
   // What the chips and the search hold; until something is tapped, what the link asked for.
@@ -81,7 +86,12 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
   const chips = useRef<HTMLDivElement>(null)
   const ledger = trip.data?.ledger ?? NONE
   const rates = trip.data?.state.rates ?? NO_RATES
-  const rows = useMemo(() => matching(ledger, focus), [ledger, focus])
+  const state = trip.data?.state
+  // A day between stops: on the journey, and no stop's (a travel day is the next stop's).
+  const rows = useMemo(
+    () => matching(ledger, focus, (d) => !!state && !!tripStart && d >= tripStart && !ownerOf(state, d)),
+    [ledger, focus, state, tripStart],
+  )
   const { past, coming } = useMemo(() => splitRows(rows, ledger, today ?? ''), [rows, ledger, today])
   const days = useMemo(() => daySections(past, rates), [past, rates])
   const used = useMemo(() => usedCategories(ledger), [ledger])
@@ -134,7 +144,12 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
     <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[10px] text-tx">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <Link href="/money" className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep">
+          <Link
+            href="/money"
+            // Back when Money is the screen before this one: the browser restores it at once (lib/useCameFrom.ts).
+            onClick={(e) => { if (cameFrom.current === '/money') { e.preventDefault(); router.back() } }}
+            className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep"
+          >
             <ChevronLeft aria-hidden className="size-5" />Money
           </Link>
           <h1 className="truncate font-serif text-[25px] font-semibold leading-[1.15] tracking-[-.01em]">{focusTitle(focus)}</h1>
@@ -188,10 +203,11 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
               Before departure{focus.before && <X aria-hidden className="size-[11px]" strokeWidth={3} />}
             </button>
           )}
-          {(focus.family || focus.span) && (
-            <button type="button" onClick={() => setFocus({ family: null, span: null })} className={chip(true)} aria-label="Show every group and day">
+          {(focus.family || focus.span || focus.between) && (
+            <button type="button" onClick={() => setFocus({ family: null, span: null, between: false })} className={chip(true)} aria-label="Show every group and day">
               {focus.family && <>{swatch(GROUPS[focus.family].color)}{GROUPS[focus.family].label}</>}
               {focus.span && <span>{focus.family ? '· ' : ''}{spanText}</span>}
+              {focus.between && 'Between stops'}
               <X aria-hidden className="size-[11px]" strokeWidth={3} />
             </button>
           )}
@@ -264,7 +280,7 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
             // The menu promised a count over every entry, so the other chips go back to
             // All, and the row scrolls home so the state is in view (Petra, 14 Oct: a
             // category picked while "Beyond the everyday" was on, off-screen, showed nothing).
-            setFocus({ category: id, family: null, span: null, filter: 'all' })
+            setFocus({ category: id, family: null, span: null, between: false, filter: 'all' })
             setCatMenu(false)
             chips.current?.scrollTo({ left: 0, behavior: 'smooth' })
           }}
