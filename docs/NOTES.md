@@ -30,7 +30,9 @@ iOS: nothing new; the phone is the source. The web keeps Your trips, Name, Home,
 Alerts, Follow links and the deletion here until the phone has a home for them (the plan's
 line). The phone's "Design gallery" row has no web counterpart.
 
-### BUILT — Petra's finding on 4c: the amount small on the phone (14 Oct)
+### LIVE — #208: Petra's finding on 4c, the amount small on the phone (14 Oct)
+
+Merged with Petra's "yes" at 12:22 UTC; Vercel built `c0aa3d0` at once (`vc0aa3d0`).
 
 Petra's test of `8d422cc`: everything works; on the entry form the typed number was small,
 about 16 px, while the currency menu and the conversion sat right. Cause: `globals.css` forces
