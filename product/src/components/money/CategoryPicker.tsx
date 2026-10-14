@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { categoriesFor, isEverydayCategory, mostUsedCategories, categoryDef, type CategoryKind } from '@/lib/trips/categories'
 import type { LedgerEntry } from '@/lib/trips/types'
+import { CategoryTile } from './CategoryTile'
 
 // "All 19…" — the full registry as a searchable, grouped list. Grouped the way
 // the analytics think (everyday vs not in the daily average), the trip's most-used
@@ -70,16 +71,15 @@ export function CategoryPicker({
                   <button
                     key={title + id}
                     onClick={() => onPick(id)}
-                    className={
-                      'flex min-h-11 w-full items-center justify-between gap-3 border-t border-ln px-1 py-2.5 text-left text-base ' +
-                      (on ? 'font-semibold text-ac' : '')
-                    }
+                    aria-pressed={on}
+                    className="flex min-h-[52px] w-full items-center gap-3 border-t border-ln py-2 text-left"
                   >
-                    <span>
-                      {c.label}
-                      {c.hint && <span className="text-[13px] text-tx3"> · {c.hint}</span>}
+                    <CategoryTile id={id} size={32} />
+                    <span className="min-w-0 flex-1">
+                      <span className={'block text-base ' + (on ? 'font-semibold text-ac' : 'font-medium text-tx')}>{c.label}</span>
+                      {c.hint && <span className="block text-[13px] text-tx2">{c.hint}</span>}
                     </span>
-                    <span className="text-tx3">{on ? '✓' : '›'}</span>
+                    <span className={'flex-none text-[15px] font-semibold ' + (on ? 'text-ac' : 'text-tx3')}>{on ? '✓' : '›'}</span>
                   </button>
                 )
               })}
