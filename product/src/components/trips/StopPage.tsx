@@ -1,9 +1,9 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { IconButton } from '@/components/ui/IconButton'
 import { Waiting } from '@/components/ui/TravelLoader'
+import { lockBodyScroll } from '@/lib/scrollLock'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useHomeBase } from '@/lib/trips/useHomeBase'
@@ -25,15 +25,22 @@ import { useTripEdits } from './useTripEdits'
 // in ("Getting here") and out ("Leaving for Hanoi", or "Onward" / "Going
 // home"), and the note. "Edit" in the corner opens the stop's form; every row
 // opens its own. Tapping a card on the timeline comes here.
+//
+// It is a layer over the timeline, not a page of its own (Petra, 14 Oct: the
+// first cut was a route, and each open and each back asked the server for the
+// page, a second or two from Vietnam). The timeline stays underneath, where it
+// was scrolled; the URL carries ?stop=<id> through history.pushState, which
+// Next's router follows, so the browser's back button closes it too and a
+// link to a stop still opens it. The journey is already in the cache, so the
+// layer paints at once.
 
 const sectionLabel = 'text-[11.5px] font-semibold uppercase tracking-[.113em] text-ac2'
 
-export function StopPage({ id }: { id: string }) {
+export function StopPage({ id, onBack }: { id: string; onBack: () => void }) {
   const { trip, cities, cityIdx } = useTripScreen()
   const { canEdit } = useTripRole()
   const { fmt } = useMoney()
   const edits = useTripEdits()
-  const router = useRouter()
   const [sheet, setSheet] = useState<SheetState>(null)
   const todayIso = localISODate()
   const state = trip.data?.state
@@ -41,16 +48,19 @@ export function StopPage({ id }: { id: string }) {
   const tl = useMemo(() => (state ? buildTimeline(state, homeFor(profileHome, state.meta)) : null), [state, profileHome])
   const seg = state?.segments.find((x) => x.id === id)
   const gone = !trip.isPending && !seg
+  // The timeline underneath keeps its place; the layer scrolls on its own (the sheets' lock).
+  useEffect(() => lockBodyScroll(), [])
   // Deleted, here or on another device: say so, then back to the timeline (the phone's StopScreen).
   useEffect(() => {
     if (!gone) return
-    const t = setTimeout(() => router.replace('/itinerary'), 900)
+    const t = setTimeout(onBack, 900)
     return () => clearTimeout(t)
-  }, [gone, router])
+  }, [gone, onBack])
 
-  if (trip.isPending) return <Waiting label="Getting your journey" />
+  const layer = 'fixed inset-0 z-30 overflow-y-auto overscroll-contain bg-canvas pb-[calc(76px+env(safe-area-inset-bottom))]'
+  if (trip.isPending) return <div className={layer}><Waiting label="Getting your journey" /></div>
   if (!state || !tl || !seg) {
-    return <p className="px-4 py-16 text-center text-base text-tx2">This stop is no longer on the journey.</p>
+    return <div className={layer}><p className="px-4 py-16 text-center text-base text-tx2">This stop is no longer on the journey.</p></div>
   }
   const s = state
   const inPlan = seg.include !== false
@@ -77,12 +87,12 @@ export function StopPage({ id }: { id: string }) {
   }
 
   return (
-    <>
+    <div className={layer} role="region" aria-label={city}>
       {/* The hero: the wash over its base colour, the canvas fading in from 45 % down, the words at the bottom. */}
-      <div className="relative -mt-[env(safe-area-inset-top)] h-[calc(340px+env(safe-area-inset-top))] overflow-hidden bg-[#f0efe7] bg-[url(/wash/light.jpg)] bg-cover bg-bottom dark:bg-[#161a18] dark:bg-[url(/wash/dark.jpg)]">
+      <div className="relative h-[calc(340px+env(safe-area-inset-top))] overflow-hidden bg-[#f0efe7] bg-[url(/wash/light.jpg)] bg-cover bg-bottom dark:bg-[#161a18] dark:bg-[url(/wash/dark.jpg)]">
         <div aria-hidden className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 45%, color-mix(in srgb, var(--canvas) 85%, transparent) 72%, var(--canvas) 100%)' }} />
         <div className="absolute inset-x-0 top-[env(safe-area-inset-top)] flex items-center justify-between px-4 pt-2">
-          <IconButton href={'/itinerary#stop-' + seg.id} label="Back to the timeline">
+          <IconButton onClick={onBack} label="Back to the timeline">
             <ChevronLeft aria-hidden className="size-5" strokeWidth={2.2} />
           </IconButton>
           {canEdit && (
@@ -118,7 +128,7 @@ export function StopPage({ id }: { id: string }) {
         )}
       </div>
 
-      <TripSheets sheet={sheet} setSheet={setSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} edits={edits} onStopDeleted={() => router.replace('/itinerary')} />
-    </>
+      <TripSheets sheet={sheet} setSheet={setSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} edits={edits} onStopDeleted={onBack} />
+    </div>
   )
 }
