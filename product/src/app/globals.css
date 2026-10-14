@@ -161,6 +161,19 @@ h3 {
   font-family: var(--font-serif);
 }
 
+/* Lora's tabular space is as wide as a figure (the cause of #139, and the
+   phone's Typography.swift says the same of monospacedDigit), so under body's
+   tabular-nums every space in a serif title came out two or three wide ("Where
+   next?", "Da Nang"; found 14 Oct, round 3a). Serif text never lines figures up:
+   normal figures, normal spaces. The rest of #140 (tabular-nums off body, on the
+   figures that need it) is still open. */
+h1,
+h2,
+h3,
+.font-serif {
+  font-variant-numeric: normal;
+}
+
 /* Shared enter animation — the handoff's screen/sheet vocabulary. */
 @keyframes lv-rise {
   from {

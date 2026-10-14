@@ -163,9 +163,12 @@ Petra is new to software work; Patrik is not. The product conventions are in
   photo thumbnails. Petra's correction the same day: on the phone, own check-ins will not go
   under Trip's stops; the Map page may become a feed page for them. Migration 47
   (`trip_travellers`, names on own rows) is live on staging and production since 12 Oct
-  (Petra, guided; #189). Next: Trip (3a, 3b the globe, 3c the stop page), Money (4a–c), settings (5),
-  motion (6), after the 31 Oct freeze unless Patrik moves them up. The source of the look is
-  `feat/ios-foundation`, not the `ios/` on `main`.
+  (Petra, guided; #189). Patrik moved the rest up on 14 Oct (through Petra): Trip (3a, 3b the
+  globe, 3c the stop page), Money (4a–c), settings (5), motion (6) go now, in that order. 3a,
+  Trip's timeline in the phone's look (the stop card without its tick box, "In the plan" in the
+  stop's form, "Onward" / "Journey ends", the "Where next?" card, the no-stops card with the
+  flight there first), was built on 14 Oct (#192). The source of the look is `feat/ios-foundation`,
+  not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.

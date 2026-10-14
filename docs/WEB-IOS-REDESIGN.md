@@ -173,10 +173,18 @@ The six questions this file first ended with, and the answers.
 5. **Trip settings** follow the phone: each field saves as you leave it, no Save button.
    Round 5.
 6. **Timing:** rounds 1 and 2 before 31 Oct, the rest after the freeze. Patrik: no new
-   features, but making the app clear and easy to use is the goal.
+   features, but making the app clear and easy to use is the goal. Changed on 14 Oct
+   (Patrik, through Petra): rounds 3–6 go now, in order.
 
 ## Record
 
+- 14 Oct: round 3a built, pull request #192, Trip's timeline as on the phone (the stop card, the dashed
+  "+ Add stop", "Onward" / "Journey ends", the "Where next?" card, the no-stops card with
+  "Or start with the flight there"); the "In the plan" switch moved from the card into the
+  stop's form, as on the phone. Kept until 3c: the money state on the card's stay rows.
+  Pictures in `docs/web-ios-redesign/round3a-*`.
+- 14 Oct, Patrik (through Petra): rounds 3–6 go now, not after the freeze. Trip, Money and
+  the settings were still in the web's old look; the wait had only been the timing.
 - 12 Oct, Petra: no glass on the web. Liquid Glass is Apple's material; Money's + is a solid
   surface, and so is everything the later rounds draw where the phone uses a material.
 - 12 Oct, Petra: the web keeps its own tab bar. The phone's floating capsule was tried solid

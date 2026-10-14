@@ -17,9 +17,11 @@ import Preview from './Preview'
 // its booked stay says "still in Bookings".
 // ?home=Vienna,%20Austria plays the viewer's own home from their profile (#58,
 // migration 43): the timeline starts and ends there instead of the journey's.
-export default async function TripPreviewPage({ searchParams }: { searchParams: Promise<{ maybe?: string; home?: string }> }) {
+// ?empty=1 is a journey with no stops yet (the no-stops card); ?end=2026-12-13
+// an end date the last stop reaches ("Going home" instead of "Onward").
+export default async function TripPreviewPage({ searchParams }: { searchParams: Promise<{ maybe?: string; home?: string; empty?: string; end?: string }> }) {
   if (process.env.NODE_ENV !== 'development') notFound()
-  const { maybe, home } = await searchParams
+  const { maybe, home, empty, end } = await searchParams
   const today = new Date().toISOString().slice(0, 10)
   const base = fixtureTrip(today)
   const trip: Trip = {
@@ -41,6 +43,8 @@ export default async function TripPreviewPage({ searchParams }: { searchParams: 
     },
   }
   if (maybe) trip.state.segments = trip.state.segments.map((s) => (s.id === maybe ? { ...s, include: false } : s))
+  if (empty) trip.state = { ...trip.state, segments: [], stays: [], transport: [] }
+  if (end) trip.state = { ...trip.state, meta: { ...trip.state.meta, endDate: end } }
   const qc = new QueryClient()
   qc.setQueryData(tk.trip('fixture'), trip)
   if (home) qc.setQueryData(tk.homeBase, home)
