@@ -31,6 +31,11 @@ when a decision needs to survive the conversation it was made in.
   with the place and the day filled in (`FlightThereSheet.tsx`). A flight there saved before
   its stop fills "Add the first stop" in.
 - The footer says "nights planned" (the phone's word, Patrik 29 Sep), not "placed".
+- Serif titles keep normal spaces: `h1, h2, h3, .font-serif { font-variant-numeric: normal }`
+  in `globals.css`. Lora's tabular space is a figure wide (the cause of #139), so under
+  body's `tabular-nums` "Where next?" and "Da Nang" came out with a double space, on every
+  screen with a serif title. The rest of #140 (tabular-nums off `body`, on the figures that
+  need it) stays open.
 
 Kept until 3c (the stop page): the money state on each stay row of the card, which the phone
 shows on the stop page only; tapping a card still opens the form. Dev preview: `?empty=1`
