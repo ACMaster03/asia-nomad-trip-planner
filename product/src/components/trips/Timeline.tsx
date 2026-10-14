@@ -1,6 +1,7 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Plus, Settings } from 'lucide-react'
 import NewCountryBanner from './NewCountryBanner'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -31,6 +32,7 @@ import { TripGlobeScaffold } from './TripGlobeScaffold'
 import { LegStrip } from './LegStrip'
 import { StayRows } from './StayRows'
 import { StopMenu } from './StopMenu'
+import { StopPage } from './StopPage'
 import { TripSheets, type SheetState } from './TripSheets'
 import { useLongPress } from './useLongPress'
 import { useTripEdits } from './useTripEdits'
@@ -54,9 +56,11 @@ import { fmtDay, kicker } from './sheetKit'
 //   the nights on the right, the stays underneath, one row per stay with its
 //   nights, its money state and its total. No tick box: "In the plan" is a
 //   switch in the stop's form, and a maybe shows faded. Tapping the card
-//   opens the stop's page (round 3c, decision 4: look first, then edit); a
-//   long press, or a right click, opens the menu (Edit stop, Add stay, Add
-//   transport, in or out of the plan, Delete).
+//   opens the stop's page (round 3c, decision 4: look first, then edit), a
+//   layer over the timeline with ?stop=<id> in the URL, so it opens at once
+//   and the timeline waits underneath where it was; a long press, or a right
+//   click, opens the menu (Edit stop, Add stay, Add transport, in or out of
+//   the plan, Delete).
 // - "No bed 30 Nov → 13 Dec" is the amber row inside a stop, a warning, and
 //   tapping it opens Add stay with those dates already in.
 // - "+ Add stop" is a dashed row after the last stop, before the way home.
@@ -130,13 +134,14 @@ function Rail({ line, node, clipTop, clipBottom, nodeTop = 20 }: {
  * right, the stays underneath. The whole card is the link to the stop's page; a long press
  * (or a right click) opens the menu instead, for an editor.
  */
-function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onMenu }: {
+function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onMenu }: {
   seg: Segment
   maybe: boolean
   state: TripState
   todayIso: string
   canEdit: boolean
   fmt: (n: number) => string
+  onOpen: () => void
   onMenu: () => void
 }) {
   const { handlers, firedRef } = useLongPress(onMenu, { enabled: canEdit })
@@ -147,10 +152,16 @@ function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onMenu }: {
   const isCurrent = inPlan && !!seg.arrive && !!seg.depart && seg.arrive <= todayIso && todayIso < seg.depart
   const prog = isCurrent && nn > 0 ? stopProgress(seg, todayIso) : null
   return (
-    <Link
-      href={`/itinerary/${seg.id}`}
+    <a
+      href={`?stop=${seg.id}`}
       {...handlers}
-      onClick={(e) => { if (firedRef.current) { e.preventDefault(); firedRef.current = false } }}
+      onClick={(e) => {
+        // A plain link for the browser (open in a new tab, copy the address); a tap opens the layer here.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+        e.preventDefault()
+        if (firedRef.current) { firedRef.current = false; return }
+        onOpen()
+      }}
       draggable={false}
       className={'lv-enter block select-none rounded-[var(--r)] bg-sf p-[18px] text-tx [-webkit-touch-callout:none] ' + (inPlan ? '' : 'opacity-60')}
     >
@@ -175,7 +186,7 @@ function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onMenu }: {
       <div className="mt-3 border-t border-ln">
         <StayRows seg={seg} state={state} todayIso={todayIso} fmt={fmt} inPlan={inPlan} />
       </div>
-    </Link>
+    </a>
   )
 }
 
@@ -231,6 +242,14 @@ export function Timeline() {
   const [sheet, setSheet] = useState<SheetState>(null)
   const [menuSeg, setMenuSeg] = useState<Segment | null>(null)
   const [wizardOpen, setWizardOpen] = useState(false)
+  // The open stop page, from the URL (?stop=<id>): pushed by a tap, so the browser's back closes it.
+  const openStopId = useSearchParams().get('stop')
+  const pushed = useRef(false)
+  const openStop = (id: string) => { pushed.current = true; window.history.pushState(null, '', `?stop=${id}`) }
+  const closeStop = useCallback(() => {
+    if (pushed.current) { pushed.current = false; window.history.back() }
+    else window.history.replaceState(null, '', window.location.pathname)
+  }, [])
   const todayIso = localISODate()
   const state = trip.data?.state
   // Home is the viewer's own (#58, migration 43), else the journey's.
@@ -280,6 +299,7 @@ export function Timeline() {
 
   return (
     <>
+    <div inert={!!openStopId}>
     <TripGlobeScaffold
       title={s.meta.tripName || 'Trip'}
       route={route}
@@ -370,6 +390,7 @@ export function Timeline() {
                   todayIso={todayIso}
                   canEdit={canEdit}
                   fmt={fmt}
+                  onOpen={() => openStop(seg.id)}
                   onMenu={() => setMenuSeg(seg)}
                 />
               </div>
@@ -417,6 +438,8 @@ export function Timeline() {
         </section>
       )}
     </TripGlobeScaffold>
+    </div>
+      {openStopId && <StopPage key={openStopId} id={openStopId} onBack={closeStop} />}
 
       <TripSheets sheet={sheet} setSheet={setSheet} state={s} tl={tl} cities={cities.data ?? []} cityIdx={cityIdx} edits={edits} />
       {menuSeg && (

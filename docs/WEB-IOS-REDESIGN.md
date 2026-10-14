@@ -178,6 +178,9 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
+- 14 Oct: round 3c live (#199, Petra's test on the phone). Her finding: the stop page slow to
+  open and to leave; it was a route, each way a trip to the server. It is a layer over the
+  timeline now, at `/itinerary?stop=<id>`, opened and closed without the server.
 - 14 Oct: round 3c built, the stop page as the phone's StopPage (the wash hero, the sections,
   "Edit" in the corner), Cancel and Save in the bar of every form with "Discard changes?", the
   long-press menu on a stop card (decision 4). The stop form lost its Stays list, as on the

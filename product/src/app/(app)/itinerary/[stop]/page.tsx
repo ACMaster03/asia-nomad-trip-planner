@@ -1,17 +1,9 @@
-import { dehydrate } from '@tanstack/react-query'
-import { HydrationBoundary } from '@/lib/query/HydrationBoundary'
-import { prefetchTripScreen } from '@/lib/trips/prefetch'
-import { StopPage } from '@/components/trips/StopPage'
+import { redirect } from 'next/navigation'
 
-// A stop's own page (round 3c, decision 4): /itinerary/<stop id>, opened by
-// tapping its card on the timeline. The same trip document as Trip, prefetched
-// the same way, so the page is there on the first paint.
+// The stop page was a route of its own for an hour on 14 Oct (#199); it is a
+// layer over the timeline now, at /itinerary?stop=<id>, so it opens without a
+// trip to the server. A link from then still lands on the stop.
 export default async function StopRoute({ params }: { params: Promise<{ stop: string }> }) {
   const { stop } = await params
-  const qc = await prefetchTripScreen()
-  return (
-    <HydrationBoundary state={dehydrate(qc)}>
-      <StopPage id={stop} />
-    </HydrationBoundary>
-  )
+  redirect(`/itinerary?stop=${encodeURIComponent(stop)}`)
 }
