@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import Globe from 'globe.gl'
 import type { RouteNode } from '@/lib/map/globeData'
 import { flightFor } from '@/lib/map/globeData'
-import { angDeg, journeyCamera, legDuration, worldCamera, MAX_ALTITUDE, type Camera } from '@/lib/map/journeyCamera'
+import { angDeg, geodesic, journeyCamera, legDuration, worldCamera, MAX_ALTITUDE, type Camera } from '@/lib/map/journeyCamera'
 import { globeTheme, type GlobeTheme } from '@/lib/map/globeTheme'
 import { CONTINENTS, continentOpacity, countryLabels, normCountry, pickCountryLabels, stopNamesShown, outerRings, type CountryLabel, type GeoFeature } from '@/lib/map/globeNames'
 import type { TransportLeg } from '@/lib/trips/types'
@@ -26,8 +26,9 @@ import type { TransportLeg } from '@/lib/trips/types'
 type Inst = InstanceType<typeof Globe>
 type When = 'home' | 'past' | 'now' | 'next'
 type Pt = RouteNode & { when: When; i: number }
-type Leg = { startLat: number; startLng: number; endLat: number; endLng: number; upcoming: boolean; ground: boolean; shown: boolean; i: number }
-type Arc = Leg
+type Leg = { pts: [number, number][]; upcoming: boolean; ground: boolean; shown: boolean; i: number }
+/** One line on the globe: a leg of the route, or a stretch of coast. */
+type Path = { kind: 'leg'; pts: [number, number][]; leg: Leg } | { kind: 'coast'; pts: number[][] }
 type Html =
   | { kind: 'stop'; lat: number; lng: number; pt: Pt }
   | { kind: 'country'; lat: number; lng: number; label: CountryLabel; mine: boolean }
@@ -57,9 +58,11 @@ interface Loose {
   pathPoints(a: string): Loose
   pathPointLat(f: (p: object) => number): Loose
   pathPointLng(f: (p: object) => number): Loose
-  pathPointAlt(a: number): Loose
-  pathColor(f: () => string): Loose
-  pathStroke(a: number): Loose
+  pathPointAlt(f: (p: object) => number): Loose
+  pathColor(f: (d: object) => string): Loose
+  pathStroke(f: (d: object) => number): Loose
+  pathDashLength(f: (d: object) => number): Loose
+  pathDashGap(f: (d: object) => number): Loose
   pathResolution(a: number): Loose
   pathTransitionDuration(ms: number): Loose
   polygonsTransitionDuration(ms: number): Loose
@@ -188,18 +191,20 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   }
 
   // ---- paint: the arcs, the land, the names; each reads the refs ----
-  const paintArcs = () => {
-    const g = instRef.current
-    if (!g) return
-    g.arcsData(legsRef.current.filter((l) => l.shown).map((l) => ({ ...l })) as object[])
-  }
-  const paintLand = () => {
+  // The lines on the globe, in one layer: the coasts' white rim under the route's legs.
+  const paintPaths = () => {
     const g = loose()
     if (!g) return
-    const feats = featsRef.current
-    ;(instRef.current as Inst).polygonsData(feats.slice() as object[])
-    // The white rim along every coast (the phone's globeShore), just over the land's edge.
-    g.pathsData(feats.flatMap((f) => outerRings(f).filter((r) => r.length > 8).map((r) => ({ pts: r }))) as object[])
+    const coasts: Path[] = featsRef.current.flatMap((f) => outerRings(f).filter((r) => r.length > 8).map((r) => ({ kind: 'coast' as const, pts: r })))
+    const legs: Path[] = legsRef.current.filter((l) => l.shown).map((l) => ({ kind: 'leg' as const, pts: l.pts, leg: l }))
+    g.pathsData([...coasts, ...legs] as object[])
+  }
+  const paintArcs = paintPaths
+  const paintLand = () => {
+    const g = instRef.current
+    if (!g) return
+    g.polygonsData(featsRef.current.slice() as object[])
+    paintPaths()
   }
   // Which names show at this height (the phone's drawNames): continents far out, fading as you
   // come closer; a country's name sized by how big the country is on screen and shown once it
@@ -288,16 +293,6 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor((() => t().border) as never)
       .polygonAltitude(0.005)
-      // the route: a line just over the land, dashed where it is still ahead, dotted on the ground.
-      // (The phone's canvas halo under it is left out: as a tube it swallowed the line.)
-      .arcsData([]).arcStartLat('startLat').arcStartLng('startLng').arcEndLat('endLat').arcEndLng('endLng')
-      .arcAltitude(0.012)
-      .arcColor(((d: object) => ((d as Arc).upcoming ? t().route + 'd9' : t().route)) as never)
-      .arcStroke(((d: object) => ((d as Arc).ground ? 1.3 : 1.0)) as never)
-      .arcDashLength(((d: object) => { const a = d as Arc; return a.ground ? 0.012 : a.upcoming ? 0.07 : 1 }) as never)
-      .arcDashGap(((d: object) => { const a = d as Arc; return a.ground ? 0.045 : a.upcoming ? 0.055 : 0 }) as never)
-      .arcDashAnimateTime(0)
-      .arcsTransitionDuration(0)
       .onGlobeReady(() => {
         readyRef.current = true
         g.pointOfView(target(cameraRef.current), 0)
@@ -307,8 +302,18 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     l.globeMaterial().color.set(t().ocean)
     l.globeMaterial().shininess = 0
     l.polygonsTransitionDuration(0)
-    l.pathsData([]).pathPoints('pts').pathPointLat((p) => (p as number[])[1]).pathPointLng((p) => (p as number[])[0]).pathPointAlt(0.0055)
-      .pathColor(() => t().shore).pathStroke(0.8).pathResolution(1).pathTransitionDuration(0)
+    // The lines: the coasts' white rim (the phone's globeShore) just over the land's edge, and the
+    // route's legs over it, along the great circle so they hug the globe: dashed where still
+    // ahead, dotted on the ground. (The phone's canvas halo under the route is left out: as a
+    // tube it swallowed the line.)
+    const path = (d: object) => d as Path
+    l.pathsData([]).pathPoints('pts').pathPointLat((p) => (p as number[])[1]).pathPointLng((p) => (p as number[])[0])
+      .pathPointAlt((d) => (path(d).kind === 'leg' ? 0.011 : 0.0055))
+      .pathColor((d) => { const p = path(d); return p.kind === 'coast' ? t().shore : p.leg.upcoming ? t().route + 'd9' : t().route })
+      .pathStroke((d) => { const p = path(d); return p.kind === 'coast' ? 0.8 : p.leg.ground ? 1.3 : 1.0 })
+      .pathDashLength((d) => { const p = path(d); return p.kind === 'coast' ? 1 : p.leg.ground ? 0.012 : p.leg.upcoming ? 0.07 : 1 })
+      .pathDashGap((d) => { const p = path(d); return p.kind === 'coast' ? 0 : p.leg.ground ? 0.045 : p.leg.upcoming ? 0.055 : 0 })
+      .pathResolution(1).pathTransitionDuration(0)
     l.htmlElementsData([]).htmlLat('lat').htmlLng('lng').htmlAltitude(0.012).htmlTransitionDuration(0)
       .htmlElement((d) => {
         const h = d as Html
@@ -372,7 +377,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       const t = flightFor(transport, a.city, b.city)
       const km = angDeg(a, b) * 111.2
       const flight = t ? (t.type || '').toLowerCase() === 'flight' : km > FLIGHT_KM
-      legs.push({ startLat: a.lat, startLng: a.lng, endLat: b.lat, endLng: b.lng, upcoming: b.when === 'next', ground: !flight, shown: true, i })
+      legs.push({ pts: geodesic(a, b), upcoming: b.when === 'next', ground: !flight, shown: true, i })
     }
     legsRef.current = legs
     if (!playingRef.current) paintArcs()
@@ -436,6 +441,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       if (aliveRef.current) { fly(target(cameraRef.current), 900); endRef.current?.() }
     }
     void run()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replayNonce])
 
   return <div ref={boxRef} className="h-full w-full" aria-label="The journey on a globe" />

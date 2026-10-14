@@ -69,6 +69,30 @@ export function stopCamera(p: LatLng): Camera {
   return { lat: p.lat, lng: p.lng, altitude: 0.9 }
 }
 
+/**
+ * The great circle from a to b as [lng, lat] points, one every `stepDeg` degrees at most,
+ * so a line drawn through them hugs the globe instead of cutting through it.
+ */
+export function geodesic(a: LatLng, b: LatLng, stepDeg = 2): [number, number][] {
+  const d = angDeg(a, b)
+  const n = Math.max(2, Math.ceil(d / stepDeg) + 1)
+  const toXyz = (p: LatLng) => [Math.cos(p.lat * R) * Math.cos(p.lng * R), Math.cos(p.lat * R) * Math.sin(p.lng * R), Math.sin(p.lat * R)]
+  const A = toXyz(a), B = toXyz(b)
+  const w = d * R
+  const out: [number, number][] = []
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1)
+    let x: number, y: number, z: number
+    if (w < 1e-9) { x = A[0]; y = A[1]; z = A[2] }
+    else {
+      const ka = Math.sin((1 - t) * w) / Math.sin(w), kb = Math.sin(t * w) / Math.sin(w)
+      x = ka * A[0] + kb * B[0]; y = ka * A[1] + kb * B[1]; z = ka * A[2] + kb * B[2]
+    }
+    out.push([Math.atan2(y, x) / R, Math.atan2(z, Math.sqrt(x * x + y * y)) / R])
+  }
+  return out
+}
+
 /** How long a leg takes to fly in a replay: longer legs take longer, within reason. */
 export function legDuration(a: LatLng, b: LatLng): number {
   return Math.min(2400, Math.max(900, Math.round(700 + angDeg(a, b) * 22)))

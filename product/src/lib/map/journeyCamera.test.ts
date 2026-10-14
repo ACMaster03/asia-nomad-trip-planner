@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { angDeg, centroid, journeyCamera, legDuration, peekText, spreadDeg, worldCamera, DEFAULT_CAMERA, MAX_ALTITUDE } from './journeyCamera.ts'
+import { angDeg, centroid, geodesic, journeyCamera, legDuration, peekText, spreadDeg, worldCamera, DEFAULT_CAMERA, MAX_ALTITUDE } from './journeyCamera.ts'
 
 const BUD = { lat: 47.4979, lng: 19.0402 }
 const BKK = { lat: 13.7563, lng: 100.5018 }
@@ -51,4 +51,16 @@ test('peekText: the stop you are in and the next one; before the journey the fir
   assert.deepEqual(peekText({ tripName: 'Asia' }, segs, '2026-10-14', short, nights), { title: 'Hanoi', line: 'Night 15 of 44 · Da Nang next, 13 Nov' })
   assert.deepEqual(peekText({ tripName: 'Asia' }, segs, '2026-08-20', short, nights), { title: 'Bangkok', line: 'Bangkok next, 01 Sep' })
   assert.deepEqual(peekText({ tripName: 'Asia' }, segs, '2027-01-01', short, nights), { title: 'Asia', line: '' })
+})
+
+test('geodesic: starts and ends at the places, one point every two degrees, on the great circle', () => {
+  const pts = geodesic(BUD, BKK)
+  assert.equal(pts.length, Math.ceil(angDeg(BUD, BKK) / 2) + 1)
+  assert.ok(Math.abs(pts[0][0] - BUD.lng) < 1e-6 && Math.abs(pts[0][1] - BUD.lat) < 1e-6)
+  const last = pts[pts.length - 1]
+  assert.ok(Math.abs(last[0] - BKK.lng) < 1e-6 && Math.abs(last[1] - BKK.lat) < 1e-6)
+  // the middle of Budapest → Bangkok passes north of a straight line in lat/lng, through Iran's latitudes
+  const mid = pts[Math.floor(pts.length / 2)]
+  assert.ok(mid[1] > 30 && mid[1] < 40, `mid lat ${mid[1]}`)
+  assert.equal(geodesic(HAN, HAN).length, 2)
 })
