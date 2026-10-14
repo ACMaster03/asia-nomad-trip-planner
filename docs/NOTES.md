@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — Trip's globe: the plane keeps step with the camera, the leg draws up to it (Petra, 14 Oct)
+### BUILT — Trip's globe: the plane keeps step with the camera, the leg draws up to it (Petra, 14 Oct; #197)
 
 #196 live (`3b607a2`, Petra's test): the plane faces the right way, but set off fast and
 slowed, and the leg's line came late and all at once. Two causes. The camera's flight eases in
