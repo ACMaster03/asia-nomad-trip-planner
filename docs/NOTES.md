@@ -7,6 +7,16 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### LIVE — round 3b of the redesign, the globe on top of Trip (Petra, 14 Oct; #193)
+
+#193 merged with Petra's "yes" after the validation step; Vercel built `37afcce`. Petra on her
+phone: everything works, the build number is right. Her two findings, fixed in the follow-up
+below: the countries' names crowded and overlapped towards the globe's edge and ghosted under
+the title (the web had no overlap check, the phone has one), and the replay should show the
+plane flying, as the phone's does.
+
+iOS: nothing new.
+
 ### BUILT — round 3b of the redesign: the globe on top of Trip (Petra, 14 Oct; #193)
 
 Patrik's 10 Oct decision A (#166, #63), on the web as the phone's `GlobeScaffold`:
