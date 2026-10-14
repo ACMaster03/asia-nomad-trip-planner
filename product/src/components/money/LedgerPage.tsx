@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { CalendarClock, ChevronDown, ChevronLeft, CircleX, Pencil, Plus, RotateCcw, Search, Trash2, X, type LucideIcon } from 'lucide-react'
 import { Sheet } from '@/app/(app)/live/Sheet'
@@ -78,6 +78,7 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)
   const [menu, setMenu] = useState<LedgerEntry | null>(null)
   const [pages, setPages] = useState(1)
+  const chips = useRef<HTMLDivElement>(null)
   const ledger = trip.data?.ledger ?? NONE
   const rates = trip.data?.state.rates ?? NO_RATES
   const rows = useMemo(() => matching(ledger, focus), [ledger, focus])
@@ -181,7 +182,7 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
         // The chips, as the phone's: always Category and the six filters; Before
         // departure once the journey has started (Patrik, 4 Oct: where he looked
         // for it); the family or the days a link asked for, with their ✕.
-        <div className="sticky top-0 z-10 -mx-4 flex gap-1.5 overflow-x-auto bg-canvas px-4 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div ref={chips} className="sticky top-0 z-10 -mx-4 flex gap-1.5 overflow-x-auto bg-canvas px-4 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {started && (
             <button type="button" aria-pressed={!!focus.before} onClick={() => setFocus({ before: focus.before ? null : tripStart! })} className={chip(!!focus.before)}>
               Before departure{focus.before && <X aria-hidden className="size-[11px]" strokeWidth={3} />}
@@ -231,7 +232,9 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
       )}
 
       {rows.length === 0 && (
-        <p role="status" className="px-1 py-2 text-[15px] text-tx2">{query ? `No entries match “${query}”.` : 'Nothing here yet.'}</p>
+        <p role="status" className="px-1 py-2 text-[15px] text-tx2">
+          {query ? `No entries match “${query}”.` : isFocused(focus) ? 'No entries match this choice of chips.' : 'Nothing here yet.'}
+        </p>
       )}
 
       {shownDays.map((d) => (
@@ -257,7 +260,14 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
       {catMenu && (
         <CategoryMenu
           used={used} current={focus.category}
-          onPick={(id) => { setFocus({ category: id, family: null, span: null }); setCatMenu(false) }}
+          onPick={(id) => {
+            // The menu promised a count over every entry, so the other chips go back to
+            // All, and the row scrolls home so the state is in view (Petra, 14 Oct: a
+            // category picked while "Beyond the everyday" was on, off-screen, showed nothing).
+            setFocus({ category: id, family: null, span: null, filter: 'all' })
+            setCatMenu(false)
+            chips.current?.scrollTo({ left: 0, behavior: 'smooth' })
+          }}
           onClose={() => setCatMenu(false)}
         />
       )}
