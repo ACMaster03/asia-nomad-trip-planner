@@ -180,8 +180,9 @@ The six questions this file first ended with, and the answers.
 
 - 14 Oct: round 3b built, the globe on top of Trip as the phone's GlobeScaffold (the header over
   the globe, the timeline as a sheet, the open globe with World/Journey and Replay, the card at
-  the bottom, the compact bar), with a new lean route globe (`TripGlobe.tsx`); the Map tab
-  empty, the planner globe kept for development. Pictures in `docs/web-ios-redesign/round3b-*`.
+  the bottom, the compact bar), with a new lean route globe (`TripGlobe.tsx`) in the phone's
+  look (Petra, 14 Oct: the first cut had the Map page's satellite picture); the Map tab empty,
+  the planner globe kept for development. Pictures in `docs/web-ios-redesign/round3b-*`.
 - 14 Oct: round 3a live (#192, Petra's test on the phone), Trip's timeline as on the phone (the stop card, the dashed
   "+ Add stop", "Onward" / "Journey ends", the "Where next?" card, the no-stops card with
   "Or start with the flight there"); the "In the plan" switch moved from the card into the

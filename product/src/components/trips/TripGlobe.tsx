@@ -310,7 +310,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     l.pathsData([]).pathPoints('pts').pathPointLat((p) => (p as number[])[1]).pathPointLng((p) => (p as number[])[0])
       .pathPointAlt((d) => (path(d).kind === 'leg' ? 0.011 : 0.0055))
       .pathColor((d) => { const p = path(d); return p.kind === 'coast' ? t().shore : p.leg.upcoming ? t().route + 'd9' : t().route })
-      .pathStroke((d) => { const p = path(d); return p.kind === 'coast' ? 0.8 : p.leg.ground ? 1.3 : 1.0 })
+      .pathStroke((d) => { const p = path(d); return p.kind === 'coast' ? 0.8 : p.leg.ground ? 1.7 : 1.4 })
       .pathDashLength((d) => { const p = path(d); return p.kind === 'coast' ? 1 : p.leg.ground ? 0.012 : p.leg.upcoming ? 0.07 : 1 })
       .pathDashGap((d) => { const p = path(d); return p.kind === 'coast' ? 0 : p.leg.ground ? 0.045 : p.leg.upcoming ? 0.055 : 0 })
       .pathResolution(1).pathTransitionDuration(0)
