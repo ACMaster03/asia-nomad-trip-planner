@@ -217,6 +217,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   const frameRef = useRef(0)
   const boxesRef = useRef<{ frame: number; boxes: { x: number; y: number; w: number; h: number }[] }>({ frame: -1, boxes: [] })
   const vehicleRef = useRef<HTMLDivElement | null>(null)
+  const pausedRef = useRef(false)
   const rulesFor = (alt: number) => {
     const cached = rulesRef.current
     if (cached && Math.abs(cached.alt - alt) < 0.03) return cached
@@ -255,10 +256,10 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
   }
   // The band under the kicker and the name, where no name on the globe should sit.
   const TOP_BAND = 118
-  const applyRules = (node: HTMLElement, visible: boolean) => {
-    const g = instRef.current, el = boxRef.current
-    if (!g || !el) return
-    const r = rulesFor(g.pointOfView().altitude ?? 2)
+  const applyRules = (node: HTMLElement, r: ReturnType<typeof rulesFor>) => {
+    const el = boxRef.current
+    if (!el) return
+    const visible = node.dataset.occluded !== '1'
     const kind = node.dataset.kind
     const at = screenXY(node)
     // Near the globe's edge the names bunch up and foreshorten: leave them out (the phone's `facing`).
@@ -277,7 +278,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
       const when = node.dataset.when
       if (name) {
         let named = r.stopNames || when === 'home' || when === 'now'
-        if (named && at && when !== 'now' && at.y < TOP_BAND) named = false
+        if (named && at && when !== 'now' && at.y < TOP_BAND - 24) named = false
         // The stop's name claims its place first, to the right of the mark.
         if (named && at) named = claim(at.x + 11 + (name.textContent?.length ?? 4) * 6.5 * 0.5, at.y, (name.textContent?.length ?? 4) * 6.5 + 4, 16)
         name.style.display = named ? '' : 'none'
@@ -356,7 +357,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
         if (h.kind === 'country') { const e = countryElement(h.label, h.mine, t()); e.dataset.name = h.label.name; return e }
         return continentElement(h.name, t())
       })
-      .htmlElementVisibilityModifier(applyRules)
+      .htmlElementVisibilityModifier((node, visible) => { node.dataset.occluded = visible ? '' : '1' })
     // Lit flat, as the phone's globe is: the even light alone, at full strength, every colour drawn as it is.
     const lights = g.lights() as unknown as { type: string; intensity: number; color: { set(c: number): void } }[]
     const ambient = lights.find((l) => l.type === 'AmbientLight')
@@ -367,9 +368,17 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     c.minDistance = MIN_DISTANCE
     c.maxDistance = MAX_DISTANCE
     instRef.current = g
-    // One tick per frame, so the names' boxes start afresh each frame.
+    // Once per frame: the names' boxes start afresh and every name is placed again, in the
+    // order they were given (the stops, the continents, then the countries, biggest first).
     let raf = 0
-    const tick = () => { frameRef.current++; raf = requestAnimationFrame(tick) }
+    const tick = () => {
+      frameRef.current++
+      if (!pausedRef.current && readyRef.current) {
+        const r = rulesFor(g.pointOfView().altitude ?? 2)
+        el.querySelectorAll<HTMLElement>('[data-kind]').forEach((node) => applyRules(node, r))
+      }
+      raf = requestAnimationFrame(tick)
+    }
     raf = requestAnimationFrame(tick)
     // The plane (or the dot on the ground) that flies the replay (the phone's drawVehicle).
     const vehicle = document.createElement('div')
@@ -451,6 +460,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     c.enableRotate = interactive
   }, [interactive])
   useEffect(() => {
+    pausedRef.current = paused
     const g = instRef.current
     if (!g) return
     if (paused) g.pauseAnimation()
