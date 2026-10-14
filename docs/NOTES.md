@@ -7,6 +7,15 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### LIVE — #200 (the stop page in place) and #201 (round 4a, Money as on the phone) (14 Oct)
+
+Merged with Petra's "yes"; Vercel built `a6cb9f3` after all at 08:47 UTC, so the WAITING
+entry below is over: the day's limit had freed enough for one build once the `kyh/*`
+branches stopped making deployments. The 15 Oct check-in was deleted. Petra's test on the
+phone follows. app.livhold.com runs `a6cb9f3`.
+
+iOS: nothing new.
+
 ### BUILT — Round 4a: Money's page as on the phone, and the #127 numbers (Petra, 14 Oct)
 
 Built in the workspace, pictures in `docs/web-ios-redesign/round4a-*` (before and after,

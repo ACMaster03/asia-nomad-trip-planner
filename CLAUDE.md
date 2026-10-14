@@ -180,12 +180,12 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Cancel/Save bars on every form, the long-press menu on a card), is live since 14 Oct (#199,
   Petra's test); her finding, the page slow to open and to leave (a route, each way a trip to
   the server), is fixed: the page is a layer over the timeline at `/itinerary?stop=<id>`,
-  merged 14 Oct (#200) but NOT LIVE: Vercel refused the build (the Hobby plan's 100
-  deployments a day, used up); app.livhold.com runs `9755bac` until main is deployed again
-  (a check-in on 15 Oct 08:10 UTC retries; the next merge would also do it). 4a, Money's page
+  merged 14 Oct (#200) and live since 14 Oct (`a6cb9f3`, with #201). 4a, Money's page
   as the phone's (the top card with the stop / Journey switch and the budget ring, Upcoming
   charges, Latest with category tiles, Bookings open, Subscriptions as Latest, the #127
-  numbers), was built on 14 Oct, on the branch with #200's fix, waiting for the same build. The source of the look is `feat/ios-foundation`,
+  numbers; the Track spending switch moved to Trip settings, Petra), is live since 14 Oct
+  (#201); Petra's phone test follows. Next: 4b (All entries with the chip row, the day
+  sections and the actions; the Subscriptions page), 4c (the entry form), 5, 6. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
