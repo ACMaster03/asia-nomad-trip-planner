@@ -48,7 +48,7 @@ import Preview from './Preview'
 export default async function MoneyPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; today?: string; show?: string; before?: string; from?: string; to?: string; filter?: string; cat?: string; fam?: string; coming?: string; subs?: string; oneoffs?: string; stay?: string; maybe?: string }>
+  searchParams: Promise<{ slow?: string; screen?: string; track?: string; logged?: string; day?: string; today?: string; show?: string; before?: string; from?: string; to?: string; filter?: string; cat?: string; fam?: string; coming?: string; between?: string; subs?: string; oneoffs?: string; stay?: string; maybe?: string }>
 }) {
   if (process.env.NODE_ENV !== 'development') notFound()
   // ?slow=<ms> streams the page that long after the shell, the way the real
@@ -113,7 +113,7 @@ export default async function MoneyPreviewPage({
     <HydrationBoundary state={dehydrate(qc)}>
       <Preview
         screen={params.screen === 'home' ? 'home' : params.screen === 'entries' ? 'entries' : params.screen === 'subscriptions' ? 'subscriptions' : 'money'}
-        entries={{ day: params.show, before: params.before, from: params.from, to: params.to, filter: params.filter, cat: params.cat, fam: params.fam, coming: params.coming }}
+        entries={{ day: params.show, before: params.before, from: params.from, to: params.to, filter: params.filter, cat: params.cat, fam: params.fam, coming: params.coming, between: params.between }}
       />
     </HydrationBoundary>
   )

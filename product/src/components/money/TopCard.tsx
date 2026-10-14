@@ -149,7 +149,7 @@ export function TopCard({ model, fmt, todayIso, projecting }: {
         {spentOpen && (
           <div className="ml-[17px] rounded-[10px] bg-canvas px-2.5 py-0.5">
             {parts.map((s) => (
-              <Link key={s.id} href={s.kind === 'before' ? '/money/entries?before=1' : s.from && s.to ? `/money/entries?from=${s.from}&to=${s.to}` : '/money/entries'} className="flex items-center gap-2 py-1.5 text-[13px]">
+              <Link key={s.id} href={s.kind === 'before' ? '/money/entries?before=1' : s.kind === 'between' ? '/money/entries?between=1' : s.from && s.to ? `/money/entries?from=${s.from}&to=${s.to}` : '/money/entries'} className="flex items-center gap-2 py-1.5 text-[13px]">
                 <span className="min-w-0 flex-1 truncate text-tx2">{spentTitle(s)}</span>
                 <span className="flex-none tabular-nums text-tx">{fmt(s.total)}</span>
                 <ChevronRight aria-hidden className="size-[10px] flex-none text-tx3" strokeWidth={2.6} />

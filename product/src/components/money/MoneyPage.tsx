@@ -11,6 +11,7 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useHomeBase } from '@/lib/trips/useHomeBase'
 import { useToday } from '@/lib/useToday'
+import { useCameFrom } from '@/lib/useCameFrom'
 import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
 import { hasLoggedSpending, isQuiet, type Tracking } from '@/lib/trips/tracking'
 import { usePlanSync } from '@/lib/trips/usePlanSync'
@@ -98,6 +99,7 @@ export default function MoneyPage() {
   const track = useTrackSpending()
   const setTrack = useSetTrackSpending()
   const profileHome = useHomeBase().data
+  useCameFrom('/money') // so All entries' and Subscriptions' "‹ Money" can come back at once
   const [questionClosed, setQuestionClosed] = useState(() => questionClosedThisVisit)
 
   const [sheet, setSheet] = useState<{ entry: LedgerEntry | null } | null>(null)

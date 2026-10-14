@@ -8,8 +8,8 @@ import LedgerPage from '@/components/money/LedgerPage'
 // ?day=YYYY-MM-DD scrolls to that day (the chart's "Open in All entries");
 // ?before=1 what was bought before departure; ?from&to a stop's days; ?filter=
 // one of the chips; ?cat= a category; ?fam= a family of Where it goes;
-// ?coming=1 opens Coming up.
-const KEYS = ['day', 'before', 'from', 'to', 'filter', 'cat', 'fam', 'coming'] as const
+// ?coming=1 opens Coming up; ?between=1 the days between stops.
+const KEYS = ['day', 'before', 'from', 'to', 'filter', 'cat', 'fam', 'coming', 'between'] as const
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const [qc, raw] = await Promise.all([prefetchTripScreen(), searchParams])

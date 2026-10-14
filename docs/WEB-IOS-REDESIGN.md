@@ -178,7 +178,7 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
-- 14 Oct: round 4b built, All entries and the Subscriptions page as the phone's (the chip row,
+- 14 Oct: round 4b live (#203, `96fb4f1`), All entries and the Subscriptions page as the phone's (the chip row,
   the day sections with their totals, Coming up, a row held down for Log again / Edit / Delete;
   the page with every subscription and what they add up to). Money's rows open All entries on
   what they show. Pictures in `docs/web-ios-redesign/round4b-*`.
