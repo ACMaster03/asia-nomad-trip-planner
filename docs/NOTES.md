@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
-### BUILT — round 3a of the redesign: Trip's timeline as on the phone (Petra, 14 Oct)
+### BUILT — round 3a of the redesign: Trip's timeline as on the phone (Petra, 14 Oct; #192)
 
 `components/trips/Timeline.tsx` redrawn after the phone's `TripScreens.swift`
 (`feat/ios-foundation`), look only; the rules stay the same:

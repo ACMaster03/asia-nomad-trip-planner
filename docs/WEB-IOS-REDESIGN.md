@@ -178,7 +178,7 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
-- 14 Oct: round 3a built, Trip's timeline as on the phone (the stop card, the dashed
+- 14 Oct: round 3a built, pull request #192, Trip's timeline as on the phone (the stop card, the dashed
   "+ Add stop", "Onward" / "Journey ends", the "Where next?" card, the no-stops card with
   "Or start with the flight there"); the "In the plan" switch moved from the card into the
   stop's form, as on the phone. Kept until 3c: the money state on the card's stay rows.
