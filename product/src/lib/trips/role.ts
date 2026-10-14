@@ -57,8 +57,19 @@ export async function fetchTripRole(
 ): Promise<TripRole> {
   let userId = uid ?? null
   if (!userId) {
-    const { data } = await sb.auth.getUser()
+    const { data, error } = await sb.auth.getUser()
     userId = data.user?.id ?? null
+    if (!userId) {
+      // The auth server could not say who you are (offline, a token mid-refresh
+      // on a phone back from the background): the session on this device still
+      // knows. Only a missing session means signed out. Petra, 14 Oct: the owner
+      // saw "You no longer have access to this trip" on Trip, because this read
+      // 'none' when getUser failed, and the hook then fails CLOSED on a cached
+      // answer that is wrong rather than open on a lookup that failed.
+      const { data: local } = await sb.auth.getSession()
+      userId = local.session?.user.id ?? null
+      if (!userId && error) throw error
+    }
   }
   if (!userId) return 'none'
 

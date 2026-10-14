@@ -7,6 +7,22 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-14
 
+### BUILT — "You no longer have access to this trip" shown to the owner (Petra, 14 Oct)
+
+Petra, testing `72d93de` on the phone: Trip showed "You no longer have access to this trip"
+(ViewerNotice's `hasNoAccess`) on the journey she created. The banner comes with the role
+`none` from `fetchTripRole` (`lib/trips/role.ts`); for an owner that read can only go wrong
+one way: `sb.auth.getUser()` is a call to the auth server, and when it fails (a phone back
+from the background with its token mid-refresh, a VPN blip) it returns no user, which the
+code took as "signed out" and turned into `none`. `useTripRole` then fails CLOSED on a cached
+wrong answer, where it fails open on a failed lookup. Fix: when the auth server gives no
+user, the session on the device answers (`getSession`, no network); with no session and an
+error the lookup throws, so the hook keeps what it knew. Tested with a fake client
+(`role.test.ts`). The role is re-read on every window focus and after a write refused as
+permission denied, which is how a blip could land at any moment of her test.
+
+iOS: nothing new; the phone resolves the role its own way.
+
 ### LIVE — Petra's two findings on #201: the cut "g", and the switch under "Save changes" (14 Oct; #202)
 
 Live since 14 Oct (`72d93de`, Petra's "yes"); her test on the phone follows.
