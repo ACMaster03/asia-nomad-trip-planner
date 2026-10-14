@@ -382,7 +382,7 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     raf = requestAnimationFrame(tick)
     // The plane (or the dot on the ground) that flies the replay (the phone's drawVehicle).
     const vehicle = document.createElement('div')
-    vehicle.style.cssText = 'position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;display:none;z-index:2'
+    vehicle.style.cssText = 'position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;display:none;z-index:2;will-change:transform'
     vehicle.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" style="position:absolute;left:-11px;top:-11px;overflow:visible;filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.22))" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" fill="${t().tx}" stroke="${t().sf}" stroke-width="1.6" stroke-linejoin="round"/></svg>`
     el.appendChild(vehicle)
     vehicleRef.current = vehicle
@@ -479,17 +479,22 @@ export default function TripGlobe({ route, transport, todayIso, interactive, pau
     let raf = 0
     let last: { x: number; y: number } | null = null
     const n = leg.pts.length - 1
-    const step = () => {
-      const t = Math.min(1, (performance.now() - start) / ms)
+    const place = (t: number) => {
       const f = t * n, i = Math.min(n - 1, Math.floor(f)), k = f - i
       const [lng0, lat0] = leg.pts[i], [lng1, lat1] = leg.pts[i + 1]
       const p = g.getScreenCoords(lat0 + (lat1 - lat0) * k, lng0 + (lng1 - lng0) * k, 0.02)
-      if (p) {
-        const heading = last ? (Math.atan2(p.y - last.y, p.x - last.x) * 180) / Math.PI : 0
-        // The plane's nose points up and to the right in the icon: turn it by 45° less.
-        v.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${heading - 45}deg)`
-        last = p
-      }
+      if (!p) return
+      // The heading from the last place; the first frame points the way the leg goes.
+      const ahead = last ?? g.getScreenCoords(leg.pts[Math.min(n, i + 1)][1], leg.pts[Math.min(n, i + 1)][0], 0.02)
+      const heading = last && ahead ? (Math.atan2(p.y - last.y, p.x - last.x) * 180) / Math.PI : ahead ? (Math.atan2(ahead.y - p.y, ahead.x - p.x) * 180) / Math.PI : 0
+      // The plane's nose points up and to the right in the icon: turn it by 45° less.
+      v.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${heading - 45}deg)`
+      last = p
+    }
+    place(0)
+    const step = () => {
+      const t = Math.min(1, (performance.now() - start) / ms)
+      place(t)
       if (t < 1 && aliveRef.current) raf = requestAnimationFrame(step)
     }
     raf = requestAnimationFrame(step)
