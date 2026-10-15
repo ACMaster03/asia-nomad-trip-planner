@@ -7,6 +7,12 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### LIVE — #211: Petra's finding on round 6, Safari quit on the first stop tap (15 Oct)
+
+Merged with Petra's "yes" at 11:45 UTC; Vercel built `70b4470` at once (`v70b4470`). On Apple's
+engine the zoom is off and a stop card opens its page at once; Petra's retest from step 1 follows.
+The cause stays open (the BUILT entry below says where to look).
+
 ### BUILT — Petra's finding on round 6: Safari quit on the first stop tap (15 Oct)
 
 Petra, on `v5ae40f3`, step 1 of the test: tapping a stop card on Trip "pushed me out" of Safari,
