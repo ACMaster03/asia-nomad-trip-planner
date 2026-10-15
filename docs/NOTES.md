@@ -7,6 +7,14 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### LIVE — #215: Alerts, the per-trip tick box in plain words (15 Oct)
+
+Merged with Petra's "yes" at 13:23 UTC; Vercel built `53f21ae` at once (`v53f21ae`). Petra saw the new
+line under her trips in Alerts. That closes the day: rounds 1–6 live and tested; the open items are
+Patrik's decisions (the two Safari crashes and the zoom on iPhones, pull to refresh on every
+screen, Home's four web extras, the entry form's wording and its Subscriptions question, and this
+line's words if he wants others).
+
 ### BUILT — Alerts: the per-trip tick box in plain words (Petra's finding, 15 Oct)
 
 Testing Account (5b), Petra did not understand the tick box under each of her trips in Alerts
