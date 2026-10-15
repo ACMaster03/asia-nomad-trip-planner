@@ -7,6 +7,58 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### BUILT — The settle off on Apple's engine where it has no rise: it is the settle on All entries (15 Oct)
+
+Petra on `v300171d` (#213: the zoom names off, the settle back on Apple's engine): the cards settle
+on Money again, and "All entries ›" quits Safari the moment it is tapped. Four builds, one domain,
+one variable each time:
+
+| build | zoom API | zoom names | settle | stop card | All entries |
+|---|---|---|---|---|---|
+| `5ae40f3` (#210) | on | on | on | quits Safari | not reached |
+| `70b4470` (#211) | off | on | on | opens | quits Safari |
+| `2f9c9c8` (#212) | off | off | off | opens | opens |
+| `300171d` (#213) | off | off | on | opens | quits Safari |
+
+So two separate things: the API's snapshot on the stop card (the first row), and the settle on All
+entries (the last). The settle on Money's and Trip's cards (`lv-enter lv-settle`, two animations,
+seven and three of them) never crashed; All entries has eleven settling parts with no rise
+(`.lv-settle` alone: the day sections and Coming up) under a sticky, sideways-scrolling chip row.
+Which of those WebKit trips on is not known. This build (Petra's choice, "narrow", over the safe
+version that would have taken the settle off every page on iPhones; Patrik had said "go" to the safe
+one first) puts off, on Apple's engine, only the one-animation form: `html.lv-no-vt
+.lv-settle:not(.lv-enter)` in `globals.css`. All entries and the Subscriptions page lose the settle
+entirely (every settling part there is of that form), as do Home's follow rows, the quiet page's
+cards and the no-stops card; Money's, Trip's and Home's cards keep it. The names and the API stay
+off there; Chrome and Android keep everything. If "All entries ›" quits Safari on this build too,
+the safe version goes in (the two rules of #212) and that is the last try.
+
+Patrik's question the same hour: could the domain play in, Petra testing on livhold.com while the
+app moves to app.livhold.com? No. Vercel's domain list for the app project holds `livhold.com`,
+`www.livhold.com` (308 to livhold.com), `app.livhold.com` and `rehearsal.livhold.com` all at once;
+the `landing` project does not hold livhold.com yet (step 5 of `docs/APP-MOVE-BRIEF.md` is still in
+review). Both addresses serve the same build from the same project, with no redirect between
+them, and the crash followed a CSS rule across four builds on one address.
+
+Where the cause can be found without Petra's phone: a Mac's Safari runs the same engine.
+`app.livhold.com/money/entries` on a build with the settle on (or `npm run dev` in `product/` and
+`/dev/money-preview?screen=entries`, where the CSS can be toggled in the Web Inspector) should
+crash the tab the same way; Console.app → Crash Reports then holds the WebContent or GPU
+process's stack, which names the WebKit code and makes a bug report to WebKit possible. Two
+things to try there, cheapest first: give the day sections `lv-enter` too (so every settling part
+has the two-animation form that never crashed), and take the sticky chip row out of the flow.
+
+Checked locally: tsc, eslint, 204 tests, `next build --webpack`.
+
+iOS: nothing; the phone's motion is its own.
+
+### LIVE — #213: the settle back on Apple's engine, the zoom names still off (15 Oct)
+
+Merged with Petra's "yes" at 12:53 UTC; Vercel built `300171d` at once (`v300171d`). Petra's one tap on
+"All entries ›" follows, then a scroll on Money for the settle. If Safari quits, the settle goes off
+on Apple's engine for good and the cause is the settle on All entries; if the page opens, the cause
+was the zoom names and the iPhone keeps the settle.
+
 ### BUILT — The settle back on Apple's engine, the zoom names still off (15 Oct)
 
 Petra's test of `v2f9c9c8`: All entries opens; the roll, the expand and pull to refresh work on
