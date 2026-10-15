@@ -7,6 +7,21 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### BUILT — The settle back on Apple's engine, the zoom names still off (15 Oct)
+
+Petra's test of `v2f9c9c8`: All entries opens; the roll, the expand and pull to refresh work on
+the iPhone; step 4, the settle, no longer shows, as #212 had switched it off there. Her clue: two
+builds earlier (`v5ae40f3` / `v70b4470`) she had seen the cards settle on Money, with no crash. So the
+settle on a page does not crash Safari by itself, and the zoom names are the likelier cause. This
+build turns the settle back on for Apple's engine (the `html.lv-no-vt .lv-settle` rules removed from
+`globals.css`); the names stay off. If "All entries ›" quits Safari on it, the settle goes off again
+and the cause is the settle on All entries (ten day sections, `.lv-settle` without `lv-enter`); if
+it opens, the names were the cause and the iPhone keeps the settle.
+
+Checked locally: tsc, eslint, 204 tests, `next build --webpack`.
+
+iOS: nothing; the phone's motion is its own.
+
 ### LIVE — #212: Petra's second finding on round 6, no zoom name and no settle on Apple's engine (15 Oct)
 
 Merged with Petra's "yes" at 12:08 UTC; Vercel built `2f9c9c8` at once (`v2f9c9c8`). Petra's retest:
