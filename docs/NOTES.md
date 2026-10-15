@@ -10,7 +10,8 @@ when a decision needs to survive the conversation it was made in.
 ### BUILT — Petra's finding on round 6: Safari quit on the first stop tap (15 Oct)
 
 Petra, on `v5ae40f3`, step 1 of the test: tapping a stop card on Trip "pushed me out" of Safari,
-which closed itself back to the phone's home screen. The browser crashed, not the page. The one
+which closed itself back to the phone's home screen; every time she tried, in Safari itself (not
+the home-screen app). The browser crashed, not the page. The one
 new thing on that tap is the zoom, the View Transitions API (`lib/motion/viewTransition.ts`), so
 that is the suspect; what in it trips WebKit (the named scroller the stop page is, the scroll-driven
 settle on the named card, the snapshot of the globe) is not known yet, and each guess costs Petra
