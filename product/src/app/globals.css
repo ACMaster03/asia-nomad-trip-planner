@@ -373,6 +373,23 @@ h3,
       animation-timeline: auto, view(block 0px 64px);
       animation-range: normal, cover 0% cover 100%;
     }
+    /* Apple's engine (html.lv-no-vt, the boot script in layout.tsx): no settle. With the
+       zoom names already off, All entries still quit Safari on Petra's iPhone the moment
+       it opened (15 Oct, v300171d), while Money's and Trip's cards settled without harm.
+       The difference is the page: eleven settling parts with no rise (`.lv-settle` alone,
+       the day sections and Coming up) under a sticky chip row. Which of those WebKit
+       trips on is for a Mac's Safari to show (docs/NOTES.md); until then the cards sit at
+       rest there and the rise on mount stays. */
+    html.lv-no-vt .lv-settle {
+      animation: none;
+      animation-timeline: auto;
+      animation-range: normal;
+    }
+    html.lv-no-vt .lv-enter.lv-settle {
+      animation: lv-rise var(--lv-settle) var(--lv-ease);
+      animation-timeline: auto;
+      animation-range: normal;
+    }
   }
 }
 
@@ -427,9 +444,9 @@ html.lv-vt .lv-sheet {
 /* Apple's engine (the boot script in layout.tsx): the zoom quit Safari on Petra's
    iPhone, with the API and then without it, on the pages that carry a zoom name
    (15 Oct). No name there at all, inline styles included, until the cause is found.
-   The settle went off with it in #212 and came back in the build after: Petra had
-   seen it work on Money two builds earlier, with no crash, and All entries opened
-   with both off; the names are the remaining suspect. */
+   The settle went off with it in #212, came back in #213 (Petra had seen it work on
+   Money), and All entries quit Safari again: the settle on that page is the cause,
+   so it is off again below. */
 html.lv-no-vt * {
   view-transition-name: none !important;
 }
