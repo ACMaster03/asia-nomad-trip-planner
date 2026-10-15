@@ -73,7 +73,7 @@ export function SubsOffer({ rows, todayIso, mut, stateMut, className = '' }: {
   }
 
   return (
-    <section aria-labelledby="subs-offer" className={'lv-enter rounded-[var(--r)] border-[1.5px] border-ac2-line bg-sf px-[18px] ' + className}>
+    <section aria-labelledby="subs-offer" className={'lv-enter lv-settle rounded-[var(--r)] border-[1.5px] border-ac2-line bg-sf px-[18px] ' + className}>
       <div className="border-b border-ln pb-2.5 pt-3">
         <div className="text-[12px] font-semibold uppercase tracking-[.11em] text-ac2-deep">Subscriptions</div>
         <h2 id="subs-offer" className="mt-0.5 font-serif text-[18px] font-semibold leading-snug">

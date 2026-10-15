@@ -14,6 +14,7 @@ import {
 } from '@/lib/trips/categories'
 import { nearestCharge, nextCharge, shortDate, subFromEntry, subNamed } from '@/lib/trips/subscriptions'
 import type { LedgerEntry, Subscription } from '@/lib/trips/types'
+import { useRollingValue } from '@/components/ui/Rolling'
 
 // Add / edit an entry, since round 4c in the phone's look (EntrySheet.swift,
 // Money mock round 2 §4): the amount large at the top with the currency as a
@@ -148,8 +149,11 @@ export function EntrySheet({
   const askEveryday = type === 'expense' && !imported && everydaySwitchable(catId)
   // The conversion, and why the currency is this one while it is still the
   // app's guess: once changed by hand the note would be a lie.
+  // It rolls as the amount is typed (round 6; the phone's numericText on this line).
+  const converted = valid && cur !== base ? toBase(amt, cur, rates) : null
+  const convertedShown = useRollingValue(converted ?? 0)
   const conversion: string[] = []
-  if (valid && cur !== base) conversion.push(`≈ ${fmt(toBase(amt, cur, rates))}`)
+  if (converted !== null) conversion.push(`≈ ${fmt(convertedShown)}`)
   if (!initial && !curTouched && defaultCurWhere && cur === defaultCur && cur !== base) conversion.push(`you’re in ${defaultCurWhere}`)
 
   const isSubCat = type === 'expense' && effective === RECURRING_CATEGORY && !imported

@@ -104,7 +104,7 @@ export function RemindersCard({ state, todayIso, mode }: { state: TripState; tod
   if (rows.length === 0) {
     const next = all.find((r) => r.due !== null && r.due >= todayIso)
     return (
-      <Link href="/reminders" className="lv-enter flex items-center gap-2.5 rounded-[var(--r)] bg-sf px-[18px] py-[15px] text-tx">
+      <Link href="/reminders" className="lv-enter lv-settle flex items-center gap-2.5 rounded-[var(--r)] bg-sf px-[18px] py-[15px] text-tx">
         <Bell aria-hidden className="size-[14px] flex-none text-ac2-deep" strokeWidth={2.4} />
         <span className="min-w-0 flex-1 truncate text-[15px] text-tx2">
           <span className="font-semibold text-tx">Reminders</span>
@@ -116,7 +116,7 @@ export function RemindersCard({ state, todayIso, mode }: { state: TripState; tod
   }
 
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-0.5 pt-4 text-tx">
+    <div className="lv-enter lv-settle rounded-[var(--r)] bg-sf px-[18px] pb-0.5 pt-4 text-tx">
       <div className="pb-1 text-[12.5px] font-semibold uppercase tracking-[.112em] text-ac2-deep">
         {mode === 'beforeYouFly' ? 'Before you fly' : 'Coming up'}
       </div>

@@ -12,6 +12,7 @@ import AccountClient from '@/app/(app)/account/AccountClient'
 import type { EntriesParams } from '@/lib/trips/ledgerFilters'
 import DashboardClient from '@/app/(app)/dashboard/DashboardClient'
 import { AppNav } from '@/components/AppNav'
+import { PullToRefresh } from '@/components/PullToRefresh'
 
 // The (app) layout's providers, minus auth. The query client is the root
 // Providers' one (see page.tsx), so the fixture trip is read from the same
@@ -36,6 +37,7 @@ export default function Preview({ screen, entries }: { screen: 'money' | 'home' 
                         : screen === 'account' ? <AccountClient email="petra@example.com" initialFirstName="Petra" />
                     : <MoneyPage />}
             </div>
+            <PullToRefresh />
             <AppNav showCheckIn pathname={screen === 'home' || screen === 'account' ? '/dashboard' : screen === 'settings' || screen === 'rates' ? '/settings' : '/money'} />
           </ToastProvider>
         </ConfirmProvider>

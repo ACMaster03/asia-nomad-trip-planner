@@ -62,7 +62,7 @@ export function DailySpendChart({
   const dayTotal = dayEntries.reduce((a, r) => a + r.base, 0)
 
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
+    <div className="lv-enter lv-settle rounded-[var(--r)] bg-sf p-[18px] text-tx">
       <div className="flex items-baseline justify-between">
         <span className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">Daily spend</span>
         <span className="text-[12px] text-tx3">

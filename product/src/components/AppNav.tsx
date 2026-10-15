@@ -75,6 +75,8 @@ export function AppNav({ showCheckIn, pathname: forced }: { showCheckIn: boolean
     <nav
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-ln bg-sf pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+      // Its own name in a view transition (round 6): the bar stays put while a screen zooms or cross-fades.
+      style={{ viewTransitionName: 'lv-nav' }}
     >
       <div className={'relative mx-auto max-w-lg ' + (showCheckIn ? 'grid grid-cols-5' : 'grid grid-cols-4')}>
         {tab(TABS[0])}
@@ -93,7 +95,8 @@ export function AppNav({ showCheckIn, pathname: forced }: { showCheckIn: boolean
               onClick={checkIn.open}
               className="absolute left-1/2 top-0 flex -translate-x-1/2 -translate-y-[26px] flex-col items-center whitespace-nowrap"
             >
-              <span className="flex size-[58px] items-center justify-center rounded-full bg-ac text-on shadow-lg ring-4 ring-sf">
+              {/* The zoom's source while the sheet is closed (the phone's ZoomSource "checkin"): the sheet grows out of the circle and shrinks back into it. */}
+              <span className="flex size-[58px] items-center justify-center rounded-full bg-ac text-on shadow-lg ring-4 ring-sf" style={checkIn.isOpen ? undefined : { viewTransitionName: 'lv-checkin' }}>
                 <MapPin aria-hidden className="size-6" strokeWidth={2.2} />
               </span>
               <span className="mt-0.5 text-[12px] font-semibold leading-4 text-ac">Check in</span>

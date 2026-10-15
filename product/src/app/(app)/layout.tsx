@@ -11,6 +11,7 @@ import { OfflineWarmup } from '@/components/OfflineWarmup'
 import { ToastProvider } from '@/components/Toast'
 import { PendingInvites } from '@/components/trips/PendingInvites'
 import { PendingFollow } from '@/components/social/PendingFollow'
+import { PullToRefresh } from '@/components/PullToRefresh'
 
 // Server-side auth guard. The shared catalogue RLS is `to authenticated`, so an
 // unauthenticated visitor would get zero rows; require a session here instead.
@@ -72,6 +73,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {/* Above every screen: an invite is to a trip you cannot navigate to
                 yet, so it has no page of its own to live on. Renders nothing
                 unless you actually have one. */}
+            {/* Pull down at the top of any screen to refresh what it reads (round 6). */}
+            <PullToRefresh />
             <PendingInvites />
             <PendingFollow />
             {children}

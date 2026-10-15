@@ -134,6 +134,7 @@ export function TripGlobeScaffold({ title, header, openHeader, peek, route, tran
         className={'fixed inset-x-0 top-0 ' + ease + (open ? ' z-30' : ' z-0 pointer-events-none')}
         style={{ bottom: ABOVE_BAR }}
         aria-hidden={!open}
+        data-no-pull
       >
         <TripGlobe
           route={route}

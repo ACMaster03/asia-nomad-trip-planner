@@ -5,6 +5,67 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-15
+
+### BUILT — Round 6: motion, the web moves as the phone does (15 Oct)
+
+Round 6 of `docs/WEB-IOS-REDESIGN.md`, the last of the plan. The phone's `Motion.swift` has two
+paces, quick (0.22 s, a pick or a menu) and settle (0.35 s, a screen or a card), and one curve;
+`globals.css` holds them as `--lv-quick`, `--lv-settle` and `--lv-ease`, and the screen, sheet and
+pick animations the web already had now run on them. The five pieces:
+
+- **The zoom from a card to its page** (`lib/motion/viewTransition.ts`, `lib/motion/useZoom.ts`;
+  the View Transitions API, the phone's `Shell/Zoom.swift`). On Trip a stop card grows into its
+  page and the page shrinks back into the card (`Timeline.tsx`, `StopPage.tsx`). On Money the
+  Latest card grows into All entries and the Subscriptions card into the Subscriptions page, and
+  "‹ Money" shrinks them back into the card they came from (`LatestCard`, `SubscriptionsCard`,
+  `LedgerPage`, `SubscriptionsPage`; the quiet page's All entries row the same). The Check in
+  circle on the bar grows into the check-in sheet and the sheet shrinks back into it
+  (`CheckInProvider`, `AppNav`, `live/Sheet.tsx`). The rest of the screen cross-fades, quick; the
+  bar carries its own name and stays put. The transition waits for the new screen to be in the
+  document (`until`, a MutationObserver, at most 0.7 s), because the router's change is not done
+  when its call returns; `html.lv-vt` holds the new screen's cards still for their snapshot.
+  Browsers without the API (Firefox) and Reduce Motion make the change at once, as before.
+- **Cards settle in as they scroll into view** (`.lv-settle`; the phone's `settlesOnScroll`): a
+  touch smaller (96 %) and lighter (60 %) at the screen's edges, full once in view, driven by the
+  scroll itself (a CSS view timeline, nothing runs while nothing moves; the tab bar's 64 px count
+  as the edge). On Home's cards, Trip's stop cards, every card on Money, All entries' days and the
+  Subscriptions page's groups. Safari 26 and Chrome 115 and up; older browsers show the cards at
+  rest. A "maybe" stop keeps its own dim through `--lv-dim`.
+- **Figures roll to their new value** (`components/ui/Rolling.tsx`; the phone's `numericText`,
+  0.45 s): Money's big figure and the two tiles under it (across the stop / Journey switch too:
+  a slot keeps what the last figure showed), the ring's percentage and its arcs, Where it goes'
+  figure, the entry form's "≈" line as the amount is typed.
+- **A card part that opens grows and fades in** (`components/ui/Expands.tsx`, `.lv-expand`; the
+  phone's `.expands()` in its Fade style): Spent so far's breakdown on the top card, a stop's row
+  on Plan, Coming up on All entries.
+- **Pull to refresh** (`components/PullToRefresh.tsx`, mounted once in the (app) layout; the
+  phone's `.refreshable`): at the top of a screen, pull down past a hand's width and let go; the
+  TravelLoader comes down from under the top edge and everything the screen reads is fetched
+  again (at least 0.65 s, at most 8 s). Not a pull: a touch in a sheet, a menu, a field, on the
+  globe (`data-no-pull`), in a part that scrolls on its own, a sideways swipe, or once the page
+  is scrolled. Offline nothing is fetched. `overscroll-behavior-y: none` on `html` keeps the
+  browser's own pull-to-reload out of the way.
+
+Not built, on purpose: haptics (nothing on the web does it) and Liquid Glass (Petra, 12 Oct).
+
+Checked locally: tsc, eslint, 204 tests, the redirects test, `next build --webpack`, and the
+previews by Playwright: the stop zoom opened and closed (frames of the transition paused part
+way), the settle's opacity and scale at the edge (0.67 / 0.967) and in view (1 / none), the
+roll's values mid-way, the expand's height mid-way, the pull's loader hidden once the page is
+scrolled and gone again after the cap. Pictures in `docs/web-ios-redesign/round6-*` (light only:
+frames of the motion, three or four to a picture).
+
+For Petra's test on the phone (Safari): tap a stop on Trip and ‹ back; on Money tap "All
+entries ›" and "‹ Money", the same with "All subscriptions ›"; Check in on the bar; scroll
+Money slowly and watch the cards at the bottom edge; tap Hanoi / Journey on the top card; type
+an amount in THB on the entry form; tap "Spent so far" on the Journey view; pull down at the
+top of Home, Trip and Money.
+
+iOS: nothing new; the phone is the source. One difference to decide: the web's pull to refresh
+works on every screen in the shell, the phone's on Home, Trip and Money only (its sub pages have
+none); Patrik keeps or narrows it.
+
 ## 2026-10-14
 
 ### LIVE — #209, round 5b: Account in the phone's groups (14 Oct)

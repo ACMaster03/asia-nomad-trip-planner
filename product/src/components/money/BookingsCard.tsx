@@ -48,7 +48,7 @@ export function BookingsCard({ bookings, fmt }: { bookings: ReturnType<typeof bo
     </div>
   )
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf px-4 py-3 text-tx">
+    <div className="lv-enter lv-settle rounded-[var(--r)] bg-sf px-4 py-3 text-tx">
       <div className="flex items-baseline justify-between gap-3 pb-1">
         <CardLabel mauve>Bookings</CardLabel>
         {all.length > 0 && <span className="text-[13px] font-medium text-tx2">{shortMoney(b.total, fmt)}</span>}

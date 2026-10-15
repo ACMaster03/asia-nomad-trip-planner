@@ -1,7 +1,6 @@
 'use client'
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { ChevronLeft, Plus } from 'lucide-react'
 import { useMoney } from '@/lib/trips/Money'
 import { useTripScreen } from '@/lib/trips/useTripScreen'
@@ -9,6 +8,7 @@ import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useToday } from '@/lib/useToday'
 import { useCameFrom } from '@/lib/useCameFrom'
+import { useZoom, useZoomName } from '@/lib/motion/useZoom'
 import { moneyModel } from '@/lib/trips/moneyModel'
 import { approxMoney } from '@/lib/trips/moneyText'
 import { activeSubs, cancelledSubs, monthlyRunRate, subsAhead } from '@/lib/trips/subscriptions'
@@ -31,8 +31,10 @@ export default function SubscriptionsPage() {
   const stateMut = useTripMutation()
   const { canEdit } = useTripRole()
   const today = useToday()
-  const router = useRouter()
   const cameFrom = useCameFrom('/money/subscriptions')
+  // The card this page grew out of, to shrink back into it (round 6).
+  const zoomName = useZoomName()
+  const zoom = useZoom()
   const edits = useSubscriptionEdits(stateMut)
   const model = useMemo(
     () => (trip.data && today ? moneyModel(trip.data.state, trip.data.ledger, cityIdx, today) : null),
@@ -57,12 +59,12 @@ export default function SubscriptionsPage() {
   )
 
   return (
-    <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[10px] text-tx">
+    <main data-screen="subscriptions" style={zoomName ? { viewTransitionName: zoomName } : undefined} className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[10px] text-tx">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <Link
             href="/money"
-            onClick={(e) => { if (cameFrom.current === '/money') { e.preventDefault(); router.back() } }}
+            onClick={zoom.back(() => cameFrom.current === '/money', '/money', 'money')}
             className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep"
           >
             <ChevronLeft aria-hidden className="size-5" />Money
@@ -84,12 +86,12 @@ export default function SubscriptionsPage() {
       <ViewerNotice />
       <SaveError show={stateMut.isError} error={stateMut.error} />
       {subs.length === 0 ? (
-        <div className="rounded-[var(--r)] bg-sf px-4 py-3">
+        <div className="lv-settle rounded-[var(--r)] bg-sf px-4 py-3">
           <SubscriptionsEmpty canEdit={canEdit} onAdd={() => edits.setSubSheet({ sub: null })} />
         </div>
       ) : (
         <>
-          <div className="rounded-[var(--r)] bg-sf px-4 py-3">
+          <div className="lv-settle rounded-[var(--r)] bg-sf px-4 py-3">
             {active.length === 0 && <p className="py-2.5 text-[14px] text-tx2">None active.</p>}
             <div className="divide-y divide-ln">{active.map(row)}</div>
             {active.length > 0 && (
@@ -108,7 +110,7 @@ export default function SubscriptionsPage() {
             )}
           </div>
           {cancelled.length > 0 && (
-            <div className="rounded-[var(--r)] bg-sf px-4 py-3">
+            <div className="lv-settle rounded-[var(--r)] bg-sf px-4 py-3">
               <div className="pb-1"><CardLabel>Cancelled</CardLabel></div>
               <div className="divide-y divide-ln">{cancelled.map(row)}</div>
             </div>

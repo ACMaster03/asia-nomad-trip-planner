@@ -10,6 +10,7 @@ import { useLedgerMutation } from '@/lib/trips/useLedgerMutation'
 import { useTripMutation } from '@/lib/trips/useTripMutation'
 import { useTripRole } from '@/lib/trips/useTripRole'
 import { useHomeBase } from '@/lib/trips/useHomeBase'
+import { useZoom } from '@/lib/motion/useZoom'
 import { useToday } from '@/lib/useToday'
 import { useCameFrom } from '@/lib/useCameFrom'
 import { useSetTrackSpending, useTrackSpending } from '@/lib/trips/useTrackSpending'
@@ -90,6 +91,7 @@ let questionClosedThisVisit = false
 export default function MoneyPage() {
   const { fmt, base } = useMoney()
   const router = useRouter()
+  const zoom = useZoom()
   const { trip, cities, cityIdx } = useTripScreen()
   const mut = useLedgerMutation()
   const stateMut = useTripMutation()
@@ -211,7 +213,7 @@ export default function MoneyPage() {
   }
 
   const allEntriesRow = ledger.length > 0 && (
-    <Link href="/money/entries" prefetch className="flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-4 py-4">
+    <Link href="/money/entries" prefetch onClick={zoom.link('money-entries-row', 'entries')} style={{ viewTransitionName: 'money-entries-row' }} className="lv-settle flex items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-4 py-4">
       <CardLabel>All entries</CardLabel>
       <span className="flex items-center gap-1.5 text-[13.5px] text-tx2">
         {ledger.length}
@@ -228,7 +230,7 @@ export default function MoneyPage() {
   )
 
   return (
-    <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[18px] text-tx min-[900px]:max-w-4xl min-[900px]:grid-cols-2">
+    <main data-screen="money" className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[18px] text-tx min-[900px]:max-w-4xl min-[900px]:grid-cols-2">
       {/* The phone's Money header: the name at 30, "Asia · day 45 · Hanoi, night 15" under it,
           and the + as a 42px circle with a hairline, the plus in mauve. Solid, not the
           phone's glass material (Petra, 2026-10-12). */}
@@ -268,7 +270,7 @@ export default function MoneyPage() {
           {bookingsCard}
           {subsCard}
           {allEntriesRow}
-          <div className={'rounded-[var(--r)] border-[1.5px] border-dashed border-ac-line bg-ac-soft p-4 ' + wide}>
+          <div className={'lv-settle rounded-[var(--r)] border-[1.5px] border-dashed border-ac-line bg-ac-soft p-4 ' + wide}>
             <div className="font-serif text-[19px] font-semibold">See what a day costs</div>
             <p className="mt-2 text-[14px] text-tx2">Log what you spend as you go, and Money adds your daily pace, where it goes, and where the journey lands.</p>
             <button type="button" onClick={() => setTrack.mutate(true)} disabled={setTrack.isPending} className="mt-3 w-full rounded-[var(--rCtl)] bg-ac py-3 text-base font-semibold text-on disabled:opacity-50">
@@ -293,7 +295,7 @@ export default function MoneyPage() {
       <LatestCard entries={ledger} rates={s.rates} base={base} fmt={fmt} todayIso={today} canEdit={canEdit} onEdit={(e) => setSheet({ entry: e })} />
 
       {canEdit && imp && imp.candidates.length > 0 && s.autoImport === false && (
-        <div className={'lv-enter rounded-[var(--r)] bg-sf p-4 ' + wide}>
+        <div className={'lv-enter lv-settle rounded-[var(--r)] bg-sf p-4 ' + wide}>
           <div className="text-base font-semibold">Import {imp.candidates.length} cost{imp.candidates.length > 1 ? 's' : ''} from the Trip page?</div>
           <p className="mt-1 text-base leading-normal text-tx2">Booked stays and transport with a charge date can be added to All entries and kept in sync with the Trip page.</p>
           <button onClick={importNow} disabled={mut.isPending} className="mt-3 rounded-[var(--rCtl)] bg-ac px-[18px] py-2.5 text-base font-semibold text-on disabled:opacity-50">

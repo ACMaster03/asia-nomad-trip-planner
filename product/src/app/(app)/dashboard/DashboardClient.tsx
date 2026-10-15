@@ -49,7 +49,7 @@ import FollowerHome from '@/components/social/FollowerHome'
 // your journey, and before your own journey otherwise, when theirs is under
 // way (Patrik, 3 Oct: whichever is live goes first).
 
-const card = 'rounded-[var(--r)] bg-sf p-[18px] text-tx'
+const card = 'lv-settle rounded-[var(--r)] bg-sf p-[18px] text-tx'
 const kicker = 'text-[12.5px] font-semibold uppercase tracking-[.104em]'
 
 function fmtDay(d: Date, withYear = false) {

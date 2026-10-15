@@ -2,13 +2,20 @@
 // every spinner: a 64×14 scene, a dashed line between two hollow circles, and a
 // dot that travels from one end to the other and rests at each, 2.4 s a lap.
 // Under prefers-reduced-motion it sits still in the middle (globals.css).
-export function TravelLoader({ className = '' }: { className?: string }) {
+// With `progress` (0–1) the dot stands where the pull has taken it instead of
+// travelling: pull to refresh (components/PullToRefresh.tsx) before it lets go.
+export function TravelLoader({ className = '', progress }: { className?: string; progress?: number }) {
+  const held = progress !== undefined
   return (
     <svg width="64" height="14" viewBox="0 0 64 14" aria-hidden className={'text-ac ' + className}>
       <line x1="7" y1="7" x2="57" y2="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 4" opacity="0.45" />
       <circle cx="7" cy="7" r="4.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="57" cy="7" r="4.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <circle className="lv-travel" cx="7" cy="7" r="4" fill="currentColor" />
+      <circle
+        className={held ? undefined : 'lv-travel'}
+        style={held ? { transform: `translateX(${Math.round(Math.min(1, Math.max(0, progress)) * 50)}px)` } : undefined}
+        cx="7" cy="7" r="4" fill="currentColor"
+      />
     </svg>
   )
 }
