@@ -202,9 +202,12 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Round 5 is complete. Round 6, motion, the last, is live since 15 Oct (#210, `5ae40f3`: the
   zoom from a card to its page by the View Transitions API, cards settling as they scroll in,
   figures that roll, card parts that grow open, pull to refresh; `docs/NOTES.md`). The zoom
-  quit Safari on Petra's iPhone every time (15 Oct), so since #211 (`70b4470`) it is off on
-  Apple's engine (Safari and every browser on iOS) until the cause is found; Chrome and
-  Android keep it. Petra's tests of 5b and 6 are next. The source of the look is `feat/ios-foundation`,
+  quit Safari on Petra's iPhone every time (15 Oct), so since #211 (`70b4470`) its API is off
+  on Apple's engine (Safari and every browser on iOS), and since Latest → All entries still
+  quit Safari without it, #212 (`2f9c9c8`) takes the zoom names and the settle off there too
+  (`html.lv-no-vt`, the boot script in `layout.tsx`); Chrome and Android keep everything. The
+  cause is still to find (a Mac's Safari, Web Inspector, Money → All entries). Petra's tests
+  of 5b and 6 are next. The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the

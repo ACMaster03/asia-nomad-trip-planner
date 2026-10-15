@@ -7,6 +7,12 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### LIVE — #212: Petra's second finding on round 6, no zoom name and no settle on Apple's engine (15 Oct)
+
+Merged with Petra's "yes" at 12:08 UTC; Vercel built `2f9c9c8` at once (`v2f9c9c8`). Petra's one tap on
+"All entries ›" follows: if Safari quits again, round 6 comes off Apple's engine entirely (Patrik's
+call). The cause stays open (the BUILT entry below says where to look).
+
 ### BUILT — Petra's second finding on round 6: All entries quit Safari with the zoom's API off (15 Oct)
 
 Petra, on `v70b4470` (#211, the API skipped on Apple's engine): step 1 works, the stop page opens;
