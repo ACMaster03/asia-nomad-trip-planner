@@ -7,6 +7,26 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### BUILT — Petra's finding on round 6: Safari quit on the first stop tap (15 Oct)
+
+Petra, on `v5ae40f3`, step 1 of the test: tapping a stop card on Trip "pushed me out" of Safari,
+which closed itself back to the phone's home screen. The browser crashed, not the page. The one
+new thing on that tap is the zoom, the View Transitions API (`lib/motion/viewTransition.ts`), so
+that is the suspect; what in it trips WebKit (the named scroller the stop page is, the scroll-driven
+settle on the named card, the snapshot of the globe) is not known yet, and each guess costs Petra
+a crash and a merge. The fix for now: `viewTransition()` makes the change at once, without the
+API, on Apple's engine (`navigator.vendor === 'Apple Computer, Inc.'`: Safari, and every browser on
+an iPhone or iPad). Chrome and Android keep the zoom; everything else of round 6 (the settle, the
+rolling figures, the expand, pull to refresh) stays on every browser.
+
+Open: the cause. Patrik's Mac runs the same engine; the dev preview (`/dev/trip-preview`, a stop
+card tapped) in Safari with the Web Inspector open, or Safari's crash log, would show it. Until
+then the zoom is the one piece of round 6 the phone does not get.
+
+Checked locally: tsc, eslint, 204 tests, `next build --webpack`.
+
+iOS: nothing; the phone's zoom is its own.
+
 ### LIVE — #210, round 6: motion, the web moves as the phone does (15 Oct)
 
 Merged with Petra's "yes" at 09:01 UTC; Vercel built `5ae40f3` at once (`v5ae40f3`). Petra's test

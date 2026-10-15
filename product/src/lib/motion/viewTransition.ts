@@ -24,10 +24,17 @@ type VTDocument = Document & {
 export const reduceMotion = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
+// Apple's engine: Safari, and every browser on an iPhone or iPad (they all run
+// on WebKit and report Apple as the vendor). On Petra's iPhone the first zoom
+// (a stop card on Trip, 15 Oct, v5ae40f3) quit Safari outright; a browser that
+// crashes is worse than a page that cuts, so until the cause is found these
+// browsers get the plain cut they had before. Chrome and Android keep the zoom.
+const appleWebKit = () => typeof navigator !== 'undefined' && navigator.vendor === 'Apple Computer, Inc.'
+
 /** Run `update` as a view transition where the browser can, at once where it cannot. */
 export function viewTransition(update: () => void | Promise<void>): void {
   const doc = document as VTDocument
-  if (!doc.startViewTransition || reduceMotion()) {
+  if (!doc.startViewTransition || reduceMotion() || appleWebKit()) {
     void update()
     return
   }
