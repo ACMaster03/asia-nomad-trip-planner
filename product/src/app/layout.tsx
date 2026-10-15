@@ -61,9 +61,12 @@ export default function RootLayout({
             'dark' | 'system' under lv-theme; unset behaves as system. Resolved
             to data-theme on <html> before first paint so tokens + dark:
             utilities never flash the wrong theme. suppressHydrationWarning on
-            <html> because this attribute is set outside React. */}
+            <html> because this attribute is set outside React. lv-no-vt marks
+            Apple's engine (Safari, every browser on iOS), where the zoom of
+            round 6 quit Safari (Petra, 15 Oct): globals.css drops every zoom
+            name there, lib/motion/viewTransition.ts skips the API. */}
         <Script id="lv-theme" strategy="beforeInteractive">
-          {"(function(){try{var t=localStorage.getItem('lv-theme');var d=t==='dark'||((!t||t==='system')&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');if(localStorage.getItem('lv-larger'))document.documentElement.setAttribute('data-large','')}catch(e){}})()"}
+          {"(function(){try{var t=localStorage.getItem('lv-theme');var d=t==='dark'||((!t||t==='system')&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');if(localStorage.getItem('lv-larger'))document.documentElement.setAttribute('data-large','');if(navigator.vendor==='Apple Computer, Inc.')document.documentElement.classList.add('lv-no-vt')}catch(e){}})()"}
         </Script>
         {/* Boot/update splash: SERVER-rendered so it paints before any JS
             (cold PWA starts, auto-update reloads); SWUpdate fades it out on
