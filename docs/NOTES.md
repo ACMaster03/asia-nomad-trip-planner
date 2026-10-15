@@ -7,6 +7,18 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### BUILT — Alerts: the per-trip tick box in plain words (Petra's finding, 15 Oct)
+
+Testing Account (5b), Petra did not understand the tick box under each of her trips in Alerts
+("Comments on every post of this trip, not only yours", `NotificationSettings.tsx`). What it does:
+unticked, alerts about comments on her own posts of that trip only; ticked, about comments on
+every traveller's posts there. The line now says what it adds: "Also tell me about comments on
+the other travellers’ posts". Petra's call to change it now; Patrik can reword it.
+
+Checked locally: tsc, eslint, 204 tests, `next build --webpack`.
+
+iOS: if the phone gets an Alerts screen with this choice, the same words.
+
 ### LIVE — #214: the settle off on Apple's engine where it has no rise (15 Oct)
 
 Merged with Petra's "yes" at 13:12 UTC; Vercel built `588991f` at once (`v588991f`). Petra's test:
