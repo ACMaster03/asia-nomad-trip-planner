@@ -373,6 +373,19 @@ h3,
       animation-timeline: auto, view(block 0px 64px);
       animation-range: normal, cover 0% cover 100%;
     }
+    /* Apple's engine (html.lv-no-vt, the boot script in layout.tsx): no settle either,
+       until the Safari crash of 15 Oct (Petra; All entries, the page with the most of
+       them) is understood. The cards sit at rest; the rise on mount stays. */
+    html.lv-no-vt .lv-settle {
+      animation: none;
+      animation-timeline: auto;
+      animation-range: normal;
+    }
+    html.lv-no-vt .lv-enter.lv-settle {
+      animation: lv-rise var(--lv-settle) var(--lv-ease);
+      animation-timeline: auto;
+      animation-range: normal;
+    }
   }
 }
 
