@@ -7,6 +7,15 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### LIVE — #214: the settle off on Apple's engine where it has no rise (15 Oct)
+
+Merged with Petra's "yes" at 13:12 UTC; Vercel built `588991f` at once (`v588991f`). Petra's test:
+All entries opens, and the cards settle on Money. Round 6 on the iPhone stands at: the roll, the
+expand, pull to refresh and the settle on Money, Trip and Home; no zoom (the API and its names off
+on Apple's engine), no settle on All entries and the Subscriptions page. Chrome and Android have all
+five pieces. The two WebKit crashes are documented in the BUILT entry below, with the way to their
+cause on a Mac; Patrik decides when, and whether the zoom returns to Apple's engine at all.
+
 ### BUILT — The settle off on Apple's engine where it has no rise: it is the settle on All entries (15 Oct)
 
 Petra on `v300171d` (#213: the zoom names off, the settle back on Apple's engine): the cards settle

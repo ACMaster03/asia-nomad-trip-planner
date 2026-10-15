@@ -182,8 +182,10 @@ The six questions this file first ended with, and the answers.
   its page (a stop card into the stop page, Latest into All entries, Subscriptions into its page,
   Check in into its sheet; the View Transitions API), cards settling in as they scroll into view,
   figures that roll to their new value, card parts that grow open, pull to refresh; the phone's
-  two paces for everything that moves. Petra's test next. Pictures in
-  `docs/web-ios-redesign/round6-*`.
+  two paces for everything that moves. Pictures in `docs/web-ios-redesign/round6-*`. Petra's
+  test the same day found two Safari crashes (the zoom's snapshot; the settle on All entries);
+  since #214 (`588991f`) Apple's engine has no zoom and no settle on the two list pages, and
+  keeps the rest (`docs/NOTES.md`, the four-build table). Chrome and Android have it all.
 - 14 Oct: round 5b live (#209, `c99f0a8`), Account in the phone's groups (Sign-in methods on its own page, "This
   journey" → Trip settings, "You" with Track spending, name, home and Appearance, Sign out as a
   row). Pictures in `docs/web-ios-redesign/round5b-*`. Round 6, motion, is next.
