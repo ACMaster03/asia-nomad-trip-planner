@@ -7,6 +7,16 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### LIVE — #210, round 6: motion, the web moves as the phone does (15 Oct)
+
+Merged with Petra's "yes" at 09:01 UTC; Vercel built `5ae40f3` at once (`v5ae40f3`). Petra's test
+on the phone follows (the list in the BUILT entry below). Round 6 was the last round of
+`docs/WEB-IOS-REDESIGN.md`; what is left of the redesign is Petra's tests of 5b and 6, and the
+decisions noted for Patrik (Home's four web extras, the entry form's wording and its Subscriptions
+question, the pull to refresh on every screen).
+
+iOS: nothing new; the phone is the source. The BUILT entry below carries the one difference to decide.
+
 ### BUILT — Round 6: motion, the web moves as the phone does (15 Oct)
 
 Round 6 of `docs/WEB-IOS-REDESIGN.md`, the last of the plan. The phone's `Motion.swift` has two
