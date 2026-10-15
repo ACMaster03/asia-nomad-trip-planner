@@ -146,7 +146,7 @@ export default function FollowingSection({
         </>
       )}
       {meetups.length > 0 && (
-        <ul className="flex flex-col rounded-[var(--r)] bg-sf px-3.5 py-1 text-tx">
+        <ul className="lv-settle flex flex-col rounded-[var(--r)] bg-sf px-3.5 py-1 text-tx">
           {meetups.map((o) => (
             <li key={meetupKey(o)} className="flex items-start gap-2.5 text-[15px] leading-snug">
               <Link href="/map" className="flex min-h-11 flex-1 items-start gap-2.5 py-2.5">
@@ -261,7 +261,7 @@ function JourneyCard({ card, summary, feed, today }: { card: FollowedTripCard; s
       )}
     </>
   )
-  const cls = 'block rounded-[var(--r)] bg-sf px-4 py-3.5 text-tx shadow-[0_1px_3px_rgba(0,0,0,.05)]'
+  const cls = 'lv-settle block rounded-[var(--r)] bg-sf px-4 py-3.5 text-tx shadow-[0_1px_3px_rgba(0,0,0,.05)]'
   if (paused) return <div className={cls + ' opacity-70'}>{body}</div>
   return (
     <Link href={`/journeys/${card.trip_id}`} className={cls}>

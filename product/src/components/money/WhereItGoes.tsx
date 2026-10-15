@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react'
 import { spendByCategory, everydayOnly } from '@/lib/trips/spending'
 import { GROUPS, GROUP_ORDER, groupOf, categoryLabel } from '@/lib/trips/categories'
 import type { LedgerEntry } from '@/lib/trips/types'
+import { useRollingValue } from '@/components/ui/Rolling'
 
 // Where it goes — donut by family + a two-column category table for the same
 // window as the chart. Everyday categories only: this is the figure the
@@ -23,6 +24,8 @@ export function WhereItGoes({ ledger, rates, from, to, fmt, rangeLabel }: {
   const [all, setAll] = useState(false)
   const cats = useMemo(() => spendByCategory(everydayOnly(ledger), rates, { from, to }), [ledger, rates, from, to])
   const total = cats.reduce((a, c) => a + c.total, 0)
+  // The figure in the middle rolls when the window moves (round 6; the phone's numericText on its reading).
+  const totalShown = useRollingValue(total)
   const groups = GROUP_ORDER.map((g) => ({
     g, ...GROUPS[g],
     total: cats.filter((c) => groupOf(c.category) === g).reduce((a, c) => a + c.total, 0),
@@ -37,7 +40,7 @@ export function WhereItGoes({ ledger, rates, from, to, fmt, rangeLabel }: {
     return [...acc, { g: x.g, color: x.color, len: (x.total / total) * C, offset }]
   }, [])
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf p-[18px] text-tx">
+    <div className="lv-enter lv-settle rounded-[var(--r)] bg-sf p-[18px] text-tx">
       <div className="flex items-baseline justify-between">
         <span className="text-[12px] font-semibold uppercase tracking-[.11em] text-tx2">Where it goes · {rangeLabel}</span>
         <span className="text-[12px] text-tx3">everyday costs</span>
@@ -52,7 +55,7 @@ export function WhereItGoes({ ledger, rates, from, to, fmt, rangeLabel }: {
               {arcs.map((x) => (
                 <circle key={x.g} cx={60} cy={60} r={R} fill="none" stroke={x.color} strokeWidth={18} strokeDasharray={`${x.len} ${C}`} strokeDashoffset={-x.offset} transform="rotate(-90 60 60)" />
               ))}
-              <text x={60} y={57} textAnchor="middle" fontSize={14} fontWeight={600} fill="var(--tx)">{fmt(total).replace(/\s?(Ft|USD|\$|€)$/, '')}</text>
+              <text x={60} y={57} textAnchor="middle" fontSize={14} fontWeight={600} fill="var(--tx)">{fmt(totalShown).replace(/\s?(Ft|USD|\$|€)$/, '')}</text>
               <text x={60} y={71} textAnchor="middle" fontSize={9} fill="var(--tx3)">in {rangeLabel}</text>
             </svg>
             <p className="flex-1 text-[13px] leading-relaxed text-tx2">

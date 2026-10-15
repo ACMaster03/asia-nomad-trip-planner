@@ -36,7 +36,7 @@ export function FoldedRow({ title, summary, onOpen, className = '' }: {
       type="button"
       onClick={onOpen}
       aria-expanded={false}
-      className={'lv-enter flex w-full items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-[18px] py-3.5 text-left text-tx ' + className}
+      className={'lv-enter lv-settle flex w-full items-center justify-between gap-3 rounded-[var(--r)] bg-sf px-[18px] py-3.5 text-left text-tx ' + className}
     >
       <span className="min-w-0">
         <span className="block text-base font-semibold">{title}</span>

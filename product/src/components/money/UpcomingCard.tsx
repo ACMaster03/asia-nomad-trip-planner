@@ -25,7 +25,7 @@ export function UpcomingCard({ rows, fmt, todayIso, canEdit, onOpen }: {
     return u.city ? `${day} · ${u.city}` : `${day} · ${inDays(nightsBetween(todayIso, u.date))}`
   }
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf px-4 py-3 text-tx">
+    <div className="lv-enter lv-settle rounded-[var(--r)] bg-sf px-4 py-3 text-tx">
       <div className="flex items-baseline justify-between gap-3 pb-1">
         <CardLabel mauve>Upcoming charges</CardLabel>
         <span className="text-[13px] font-medium text-tx2">{fmt(total)}</span>

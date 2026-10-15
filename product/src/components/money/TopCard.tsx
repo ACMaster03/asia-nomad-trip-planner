@@ -9,6 +9,8 @@ import { burnRate, isEverydayRow, type StopPlan } from '@/lib/trips/spending'
 import { shortDate } from '@/lib/trips/timeline'
 import { BudgetRing, type Arc } from './BudgetRing'
 import { CardLabel } from './CardLabel'
+import { Expands } from '@/components/ui/Expands'
+import { RollingNumber } from '@/components/ui/Rolling'
 
 // Money's top card (the phone's TopCard, MoneyScreen.swift): this stop or the
 // whole journey (Patrik, 27 Sep, #114); before departure the estimate alone
@@ -60,7 +62,11 @@ export function TopCard({ model, fmt, todayIso, projecting }: {
   const p = model.projection
   const capValue = model.cap
 
-  const big = (text: string) => <div className="truncate text-[34px] font-semibold leading-none tracking-[-.01em] text-ac2">{text}</div>
+  // The big figure rolls to its new value (round 6; the phone's numericText): the slot keeps
+  // it one figure across the stop / Journey switch, which draws it from another branch.
+  const big = (value: number, format: (n: number) => string) => (
+    <div className="truncate text-[34px] font-semibold leading-none tracking-[-.01em] text-ac2"><RollingNumber value={value} format={format} slot="money-big" /></div>
+  )
   const legendRow = (title: ReactNode, value: string, o: { swatch?: string; hatched?: boolean; bold?: boolean; small?: boolean; tone?: string; chevron?: boolean | null } = {}) => (
     <div className={'flex items-center gap-2 ' + (o.small ? 'text-[12.5px]' : 'text-[14px]') + (o.bold ? ' font-semibold' : '')}>
       {o.swatch && <span aria-hidden className="size-[9px] flex-none rounded-[2.5px]" style={{ background: o.hatched ? HATCH : o.swatch }} />}
@@ -119,7 +125,7 @@ export function TopCard({ model, fmt, todayIso, projecting }: {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <CardLabel>Estimated total</CardLabel>
-            <div className="mt-[3px]">{big(approxMoney(p.projected, fmt))}</div>
+            <div className="mt-[3px]">{big(p.projected, (n) => approxMoney(n, fmt))}</div>
             <p className="mt-[3px] text-[13px] text-tx2">
               {nights > 0 && model.planEnd ? `the ${nights} planned nights, to ${shortDate(model.planEnd)}` : 'Add stops on Trip and their nights are estimated here.'}
             </p>
@@ -147,15 +153,17 @@ export function TopCard({ model, fmt, todayIso, projecting }: {
           {legendRow(part.title, fmt(part.value), { swatch: part.color, chevron: parts.length ? spentOpen : null })}
         </button>
         {spentOpen && (
-          <div className="ml-[17px] rounded-[10px] bg-canvas px-2.5 py-0.5">
-            {parts.map((s) => (
-              <Link key={s.id} href={s.kind === 'before' ? '/money/entries?before=1' : s.kind === 'between' ? '/money/entries?between=1' : s.from && s.to ? `/money/entries?from=${s.from}&to=${s.to}` : '/money/entries'} className="flex items-center gap-2 py-1.5 text-[13px]">
-                <span className="min-w-0 flex-1 truncate text-tx2">{spentTitle(s)}</span>
-                <span className="flex-none tabular-nums text-tx">{fmt(s.total)}</span>
-                <ChevronRight aria-hidden className="size-[10px] flex-none text-tx3" strokeWidth={2.6} />
-              </Link>
-            ))}
-          </div>
+          <Expands>
+            <div className="ml-[17px] rounded-[10px] bg-canvas px-2.5 py-0.5">
+              {parts.map((s) => (
+                <Link key={s.id} href={s.kind === 'before' ? '/money/entries?before=1' : s.kind === 'between' ? '/money/entries?between=1' : s.from && s.to ? `/money/entries?from=${s.from}&to=${s.to}` : '/money/entries'} className="flex items-center gap-2 py-1.5 text-[13px]">
+                  <span className="min-w-0 flex-1 truncate text-tx2">{spentTitle(s)}</span>
+                  <span className="flex-none tabular-nums text-tx">{fmt(s.total)}</span>
+                  <ChevronRight aria-hidden className="size-[10px] flex-none text-tx3" strokeWidth={2.6} />
+                </Link>
+              ))}
+            </div>
+          </Expands>
         )}
       </div>
     )
@@ -200,7 +208,7 @@ export function TopCard({ model, fmt, todayIso, projecting }: {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <CardLabel>{projecting ? 'Lands near' : 'Spent so far'}</CardLabel>
-            <div className="mt-[3px]">{big(projecting ? approxMoney(p.projected, fmt) : shortMoney(p.spent, fmt))}</div>
+            <div className="mt-[3px]">{big(projecting ? p.projected : p.spent, (n) => (projecting ? approxMoney(n, fmt) : shortMoney(n, fmt)))}</div>
           </div>
           {ring([spentPart, ...parts], p.spent)}
         </div>
@@ -231,10 +239,10 @@ export function TopCard({ model, fmt, todayIso, projecting }: {
     const local = burnRate(model.ledger, model.rates, row.seg.arrive, to)
     const warnStay = row.stayLabel === 'draft' || row.stayLabel === 'none'
     const beyond = beyondEverydayAt(model.state, model.ledger, model.rates, todayIso, row.seg, isEverydayRow)
-    const tile = (label: string, value: string, detail: string, tone = 'text-tx2') => (
+    const tile = (label: string, value: number, format: (n: number) => string, detail: string, tone = 'text-tx2') => (
       <div className="min-w-0 flex-1">
         <CardLabel>{label}</CardLabel>
-        <div className="mt-0.5 truncate text-[19px] font-semibold text-tx">{value}</div>
+        <div className="mt-0.5 truncate text-[19px] font-semibold text-tx"><RollingNumber value={value} format={format} slot={'money-tile-' + label} /></div>
         <div className={'text-[12.5px] ' + tone}>{detail}</div>
       </div>
     )
@@ -242,12 +250,12 @@ export function TopCard({ model, fmt, todayIso, projecting }: {
       <div className="flex flex-col gap-3">
         <div>
           <CardLabel>{row.seg.city} · night {Math.max(1, row.nightsIn)} of {row.nights}</CardLabel>
-          <div className="mt-[3px]">{big(shortMoney(row.spent, fmt))}</div>
+          <div className="mt-[3px]">{big(row.spent, (n) => shortMoney(n, fmt))}</div>
           <p className="mt-[3px] text-[13px] text-tx2">everyday costs here so far</p>
         </div>
         <div className="flex items-start gap-3">
-          {tile('Per day here', fmt(local.perDay), `over ${local.days} days`)}
-          {tile('The stop comes to', approxMoney(row.projected, fmt), includedWords(row.stayLabel), warnStay ? 'text-warn' : 'text-tx2')}
+          {tile('Per day here', local.perDay, fmt, `over ${local.days} days`)}
+          {tile('The stop comes to', row.projected, (n) => approxMoney(n, fmt), includedWords(row.stayLabel), warnStay ? 'text-warn' : 'text-tx2')}
         </div>
         <StopBar row={row} />
         {beyond > 0 && (
@@ -266,7 +274,7 @@ export function TopCard({ model, fmt, todayIso, projecting }: {
   const city = model.currentPlan?.seg.city
   const hereTitle = city && city.length <= 12 ? city : 'This stop'
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf p-4 text-tx">
+    <div className="lv-enter lv-settle rounded-[var(--r)] bg-sf p-4 text-tx">
       {model.beforeDeparture ? estimate() : (
         <div className="flex flex-col gap-3">
           <div className="flex rounded-[14px] border-[1.5px] border-ln2 bg-inp p-[3px]" role="radiogroup" aria-label="Show">

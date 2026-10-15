@@ -178,7 +178,13 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
-- 14 Oct: round 5b built, Account in the phone's groups (Sign-in methods on its own page, "This
+- 15 Oct: round 6 built, motion, the last of the plan: the zoom from a card to its page (a stop
+  card into the stop page, Latest into All entries, Subscriptions into its page, Check in into
+  its sheet; the View Transitions API), cards settling in as they scroll into view, figures that
+  roll to their new value, card parts that grow open, pull to refresh; the phone's two paces for
+  everything that moves. Pull request next, then Petra's test. Pictures in
+  `docs/web-ios-redesign/round6-*`.
+- 14 Oct: round 5b live (#209, `c99f0a8`), Account in the phone's groups (Sign-in methods on its own page, "This
   journey" → Trip settings, "You" with Track spending, name, home and Appearance, Sign out as a
   row). Pictures in `docs/web-ios-redesign/round5b-*`. Round 6, motion, is next.
 - 14 Oct: round 5a live (#207, `8d422cc`), Trip settings as the phone's grouped list ("This journey", "Money"),

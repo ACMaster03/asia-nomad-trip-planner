@@ -35,6 +35,7 @@ import { StopMenu } from './StopMenu'
 import { StopPage } from './StopPage'
 import { TripSheets, type SheetState } from './TripSheets'
 import { useLongPress } from './useLongPress'
+import { untilGone, untilShown, viewTransition, vtName } from '@/lib/motion/viewTransition'
 import { useTripEdits } from './useTripEdits'
 import { fmtDay, kicker } from './sheetKit'
 
@@ -134,7 +135,7 @@ function Rail({ line, node, clipTop, clipBottom, nodeTop = 20 }: {
  * right, the stays underneath. The whole card is the link to the stop's page; a long press
  * (or a right click) opens the menu instead, for an editor.
  */
-function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onMenu }: {
+function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onMenu, named }: {
   seg: Segment
   maybe: boolean
   state: TripState
@@ -143,6 +144,8 @@ function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onMenu }:
   fmt: (n: number) => string
   onOpen: () => void
   onMenu: () => void
+  /** carries its zoom name: always, except while its own page is up, which carries it then (one name, one element) */
+  named: boolean
 }) {
   const { handlers, firedRef } = useLongPress(onMenu, { enabled: canEdit })
   const inPlan = !maybe
@@ -163,7 +166,10 @@ function StopCard({ seg, maybe, state, todayIso, canEdit, fmt, onOpen, onMenu }:
         onOpen()
       }}
       draggable={false}
-      className={'lv-enter block select-none rounded-[var(--r)] bg-sf p-[18px] text-tx [-webkit-touch-callout:none] ' + (inPlan ? '' : 'opacity-60')}
+      // The card grows into the stop page and the page shrinks back into it (round 6; the
+      // phone's ZoomSource per stop). The maybe's dim goes through the settle's factor.
+      style={{ ...(named ? { viewTransitionName: vtName('stop', seg.id) } : undefined), ...(inPlan ? undefined : { '--lv-dim': 0.6 }) } as React.CSSProperties}
+      className="lv-enter lv-settle block select-none rounded-[var(--r)] bg-sf p-[18px] text-tx [-webkit-touch-callout:none]"
     >
       <div className="flex items-start justify-between gap-2">
         <span className="min-w-0">
@@ -208,7 +214,7 @@ function FinishedJourneyCard({ name, state, canEdit, onPlanNext, onLookBack }: {
   const eyebrow = 'text-[12px] font-semibold uppercase tracking-[.1em] text-tx2'
   return (
     <div className="mb-6 flex flex-col gap-2.5">
-      <div className="lv-enter rounded-[var(--r)] px-[18px] py-[22px] text-tx lv-journey-wash">
+      <div className="lv-enter lv-settle rounded-[var(--r)] px-[18px] py-[22px] text-tx lv-journey-wash">
         <div className={eyebrow}>{name} · {fmtDay(state.meta.startDate)} – {fmtDay(state.meta.endDate)}</div>
         <div className="mt-1.5 font-serif text-[26px] font-semibold leading-tight">Where next?</div>
         <p className="mt-1.5 text-[15px] leading-snug text-tx2">{name} is behind you.{canEdit ? ' Start planning the next one.' : ''}</p>
@@ -245,10 +251,18 @@ export function Timeline() {
   // The open stop page, from the URL (?stop=<id>): pushed by a tap, so the browser's back closes it.
   const openStopId = useSearchParams().get('stop')
   const pushed = useRef(false)
-  const openStop = (id: string) => { pushed.current = true; window.history.pushState(null, '', `?stop=${id}`) }
+  // Opened and closed as a zoom (round 6): the card grows into the page, the page shrinks
+  // back into the card; the transition waits for the page to be in the document, or gone.
+  const openStop = (id: string) => {
+    pushed.current = true
+    viewTransition(() => { window.history.pushState(null, '', `?stop=${id}`); return untilShown('stop') })
+  }
   const closeStop = useCallback(() => {
-    if (pushed.current) { pushed.current = false; window.history.back() }
-    else window.history.replaceState(null, '', window.location.pathname)
+    viewTransition(() => {
+      if (pushed.current) { pushed.current = false; window.history.back() }
+      else window.history.replaceState(null, '', window.location.pathname)
+      return untilGone('stop')
+    })
   }, [])
   const todayIso = localISODate()
   const state = trip.data?.state
@@ -294,7 +308,7 @@ export function Timeline() {
 
   return (
     <>
-    <div inert={!!openStopId}>
+    <div inert={!!openStopId} data-screen="trip">
     <TripGlobeScaffold
       title={s.meta.tripName || 'Trip'}
       route={route}
@@ -387,6 +401,7 @@ export function Timeline() {
                   fmt={fmt}
                   onOpen={() => openStop(seg.id)}
                   onMenu={() => setMenuSeg(seg)}
+                  named={openStopId !== seg.id}
                 />
               </div>
             </li>
@@ -396,7 +411,7 @@ export function Timeline() {
 
       {noStops && (
         // State G (the phone's NoStopsCard): the frame stays, the card points to the first stop.
-        <div className="mt-2 rounded-[var(--r)] bg-sf p-[18px] text-tx">
+        <div className="lv-settle mt-2 rounded-[var(--r)] bg-sf p-[18px] text-tx">
           <p className="text-base text-tx2">{canEdit ? 'No stops yet. Add the first place you’re going.' : 'No stops yet.'}</p>
           {canEdit && (
             <>

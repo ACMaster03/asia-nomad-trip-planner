@@ -183,7 +183,7 @@ export function CheckInModal({
 
   if (mode === 'note' && onSaveNote) {
     return (
-      <Sheet label="Add a note" onClose={onClose}>
+      <Sheet label="Add a note" onClose={onClose} screen="checkin" vtName="lv-checkin">
         {modeSwitch}
         <div className="flex items-center gap-2 font-serif text-[21px] font-semibold">
           <NotebookPen aria-hidden className="size-5 flex-none" strokeWidth={2} /> Note
@@ -216,7 +216,7 @@ export function CheckInModal({
   }
 
   return (
-    <Sheet label="Check in" onClose={onClose}>
+    <Sheet label="Check in" onClose={onClose} screen="checkin" vtName="lv-checkin">
       {modeSwitch}
       <div className="flex items-center gap-2 font-serif text-[21px] font-semibold">
         <MapPin aria-hidden className="size-5 flex-none" strokeWidth={2} /> Check in

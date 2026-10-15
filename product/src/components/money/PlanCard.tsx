@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ChevronDown, Info } from 'lucide-react'
 import type { StopPlan, BookingRow, Projection } from '@/lib/trips/spending'
 import type { TripState } from '@/lib/trips/types'
+import { Expands } from '@/components/ui/Expands'
 
 // Plan — the forecast, led by its one number (mock 16 §5, 2026-09-23).
 //
@@ -57,7 +58,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
       : 'The stay, not booked'
 
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-4 text-tx">
+    <div className="lv-enter lv-settle rounded-[var(--r)] bg-sf px-[18px] pb-2 pt-4 text-tx">
       <div className="flex items-center gap-1.5">
         <span className="text-[12px] font-semibold uppercase tracking-[.12em] text-ac2-deep">Plan</span>
         {/* What this card IS, behind a tap (#65). Petra, 23 Sep, on the opened sums: "is
@@ -97,6 +98,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
                 </span>
               </button>
               {shown && (
+                <Expands>
                 <div className="mb-2.5 rounded-[var(--rCtl)] bg-inp px-3.5 py-2">
                   {p.spent > 0 && (
                     <div className={words}><span>Already spent here, {p.nightsIn} {p.nightsIn === 1 ? 'night' : 'nights'}</span><b className="text-tx">{fmt(p.spent)}</b></div>
@@ -116,6 +118,7 @@ export function PlanCard({ plan, transport, projection, state, fmt, todayIso, un
                   {/* The three lines above add up to this. */}
                   <div className={words + ' border-t border-ln'}><span>Together</span><b className="text-tx">{fmt(p.projected)}</b></div>
                 </div>
+                </Expands>
               )}
             </div>
           )

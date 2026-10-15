@@ -17,6 +17,7 @@ import { StayRows } from './StayRows'
 import { SaveError } from './SaveError'
 import { TripSheets, type SheetState } from './TripSheets'
 import { useTripEdits } from './useTripEdits'
+import { vtName } from '@/lib/motion/viewTransition'
 
 // The stop page (round 3c, the phone's StopPage; decision 4, look first, then
 // edit): the wash picture at the top with the city in the serif over it, "You're
@@ -57,10 +58,16 @@ export function StopPage({ id, onBack }: { id: string; onBack: () => void }) {
     return () => clearTimeout(t)
   }, [gone, onBack])
 
-  const layer = 'fixed inset-0 z-30 overflow-y-auto overscroll-contain bg-canvas pb-[calc(76px+env(safe-area-inset-bottom))]'
-  if (trip.isPending) return <div className={layer}><Waiting label="Getting your journey" /></div>
+  // The layer is the card's zoom destination (round 6): it carries the card's name while
+  // it is up, and data-screen for the transition to know it has arrived (Timeline.tsx).
+  const layer = {
+    className: 'fixed inset-0 z-30 overflow-y-auto overscroll-contain bg-canvas pb-[calc(76px+env(safe-area-inset-bottom))]',
+    style: { viewTransitionName: vtName('stop', id) } as React.CSSProperties,
+    'data-screen': 'stop',
+  }
+  if (trip.isPending) return <div {...layer}><Waiting label="Getting your journey" /></div>
   if (!state || !tl || !seg) {
-    return <div className={layer}><p className="px-4 py-16 text-center text-base text-tx2">This stop is no longer on the journey.</p></div>
+    return <div {...layer}><p className="px-4 py-16 text-center text-base text-tx2">This stop is no longer on the journey.</p></div>
   }
   const s = state
   const inPlan = seg.include !== false
@@ -87,7 +94,7 @@ export function StopPage({ id, onBack }: { id: string; onBack: () => void }) {
   }
 
   return (
-    <div className={layer} role="region" aria-label={city}>
+    <div {...layer} role="region" aria-label={city}>
       {/* The hero: the wash over its base colour, the canvas fading in from 45 % down, the words at the bottom. */}
       <div className="relative h-[calc(340px+env(safe-area-inset-top))] overflow-hidden bg-[#f0efe7] bg-[url(/wash/light.jpg)] bg-cover bg-bottom dark:bg-[#161a18] dark:bg-[url(/wash/dark.jpg)]">
         <div aria-hidden className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 45%, color-mix(in srgb, var(--canvas) 85%, transparent) 72%, var(--canvas) 100%)' }} />

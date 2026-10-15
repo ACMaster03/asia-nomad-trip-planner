@@ -5,6 +5,7 @@ import { activeSubs, monthlyRunRate } from '@/lib/trips/subscriptions'
 import type { Subscription } from '@/lib/trips/types'
 import { CardLabel } from './CardLabel'
 import { SubscriptionRow, SubscriptionsEmpty } from './SubscriptionRow'
+import { useZoom } from '@/lib/motion/useZoom'
 
 // Subscriptions (#37; the phone's SubscriptionsCard, Patrik, 29 Sep): Latest's
 // pattern, the three that charge next, always open, and "All subscriptions ›"
@@ -22,11 +23,13 @@ export function SubscriptionsCard({ subs, rates, fmt, todayIso, canEdit, onAdd, 
 }) {
   const active = activeSubs(subs, todayIso)
   const monthly = monthlyRunRate(active, rates)
+  const zoom = useZoom()
   return (
-    <div className="lv-enter rounded-[var(--r)] bg-sf px-4 py-3 text-tx">
+    // The card the Subscriptions page grows out of (round 6; the phone's ZoomSource "subscriptions").
+    <div className="lv-enter lv-settle rounded-[var(--r)] bg-sf px-4 py-3 text-tx" style={{ viewTransitionName: 'money-subs' }}>
       <div className="flex items-center justify-between gap-3 pb-1">
         <CardLabel mauve>Subscriptions</CardLabel>
-        {subs.length > 0 && <Link href="/money/subscriptions" prefetch className="text-[13.5px] font-medium text-ac">All subscriptions ›</Link>}
+        {subs.length > 0 && <Link href="/money/subscriptions" prefetch onClick={zoom.link('money-subs', 'subscriptions')} className="text-[13.5px] font-medium text-ac">All subscriptions ›</Link>}
       </div>
       {subs.length === 0 ? (
         <SubscriptionsEmpty canEdit={canEdit} onAdd={onAdd} />

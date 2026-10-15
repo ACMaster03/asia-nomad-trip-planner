@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { CalendarClock, ChevronDown, ChevronLeft, CircleX, Pencil, Plus, RotateCcw, Search, Trash2, X, type LucideIcon } from 'lucide-react'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { useConfirm } from '@/components/Confirm'
@@ -22,6 +21,8 @@ import {
 import { shortDate } from '@/lib/trips/subscriptions'
 import { ownerOf } from '@/lib/trips/moneyRows'
 import { useCameFrom } from '@/lib/useCameFrom'
+import { useZoom, useZoomName } from '@/lib/motion/useZoom'
+import { Expands } from '@/components/ui/Expands'
 import { SaveError } from '@/components/trips/SaveError'
 import { ViewerNotice } from '@/components/trips/ViewerNotice'
 import CreateTripEmptyState from '@/components/trips/CreateTripEmptyState'
@@ -70,8 +71,10 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
   const today = useToday()
   const confirm = useConfirm()
   const toast = useToast()
-  const router = useRouter()
   const cameFrom = useCameFrom('/money/entries')
+  // The card this page grew out of (Latest, or the quiet page's row), to shrink back into it (round 6).
+  const zoomName = useZoomName()
+  const zoom = useZoom()
   const tripStart = trip.data?.state.meta.startDate || undefined
   const initial = useMemo(() => focusFromParams(params, tripStart), [params, tripStart])
   // What the chips and the search hold; until something is tapped, what the link asked for.
@@ -141,13 +144,13 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
   )
 
   return (
-    <main className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[10px] text-tx">
+    <main data-screen="entries" style={zoomName ? { viewTransitionName: zoomName } : undefined} className="mx-auto grid w-full max-w-xl grid-cols-1 items-start gap-3 px-4 pb-6 pt-[10px] text-tx">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <Link
             href="/money"
-            // Back when Money is the screen before this one: the browser restores it at once (lib/useCameFrom.ts).
-            onClick={(e) => { if (cameFrom.current === '/money') { e.preventDefault(); router.back() } }}
+            // Back when Money is the screen before this one: the browser restores it at once (lib/useCameFrom.ts); drawn as the page shrinking into its card.
+            onClick={zoom.back(() => cameFrom.current === '/money', '/money', 'money')}
             className="-ml-1.5 inline-flex min-h-11 items-center text-base font-semibold text-ac2-deep"
           >
             <ChevronLeft aria-hidden className="size-5" />Money
@@ -231,7 +234,7 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
       )}
 
       {coming.length > 0 && (
-        <div className="-mt-1 rounded-[16px] border-[1.5px] border-dashed border-ln2 px-[14px]">
+        <div className="lv-settle -mt-1 rounded-[16px] border-[1.5px] border-dashed border-ln2 px-[14px]">
           <button type="button" onClick={() => setComingOpen((o) => !o)} aria-expanded={comingOpen} className="flex min-h-11 w-full items-center gap-2 py-2 text-left text-[14px] text-tx2">
             <CalendarClock aria-hidden className="size-[16px] flex-none" strokeWidth={2.2} />
             <span className="flex-1">Coming up · {coming.length} {coming.length === 1 ? 'payment' : 'payments'}</span>
@@ -239,10 +242,12 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
             <ChevronDown aria-hidden className={'size-4 flex-none transition-transform duration-[180ms]' + (comingOpen ? ' rotate-180' : '')} />
           </button>
           {comingOpen && (
-            <div className="pb-2">
-              <p className="pb-1 text-[12.5px] text-tx3">Dated after today, so not counted as spent yet.</p>
-              {coming.map(comingRow)}
-            </div>
+            <Expands>
+              <div className="pb-2">
+                <p className="pb-1 text-[12.5px] text-tx3">Dated after today, so not counted as spent yet.</p>
+                {coming.map(comingRow)}
+              </div>
+            </Expands>
           )}
         </div>
       )}
@@ -254,7 +259,7 @@ export default function LedgerPage({ params = {} }: { params?: EntriesParams }) 
       )}
 
       {shownDays.map((d) => (
-        <section key={d.date} id={`day-${d.date}`} aria-label={dayTitle(d.date, today!, tripStart)} className="scroll-mt-14">
+        <section key={d.date} id={`day-${d.date}`} aria-label={dayTitle(d.date, today!, tripStart)} className="lv-settle scroll-mt-14">
           <div className="flex items-baseline justify-between gap-3 px-1 pb-1.5 text-[11.5px] font-semibold tracking-[.05em] text-tx3">
             <span>{dayTitle(d.date, today!, tripStart)}</span>
             {d.spent > 0 && <span className="tabular-nums">{fmt(d.spent)}</span>}

@@ -11,6 +11,12 @@
    Radius LOCKED at 22px (cards/sheets 22, controls 20, pills/avatars round). */
 /* @generated:tokens start — edit design/tokens.json, then run `node tools/tokens.mjs` */
 :root {
+  /* Motion (round 6; the phone's Motion.swift): one pace for a pick or a menu,
+     one for a screen or a card, and the one curve. Everything that moves uses
+     these, so the whole app moves alike. */
+  --lv-quick: 220ms;
+  --lv-settle: 350ms;
+  --lv-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --canvas: #f0eee9;
   --pg: #e8f7ee;
   --sf: #ffffff;
@@ -205,7 +211,7 @@ h3,
   }
 }
 .lv-enter {
-  animation: lv-rise 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: lv-rise var(--lv-settle) var(--lv-ease);
 }
 
 /* Login arrival sequence (handoff frame 01): the brand stack sits alone at
@@ -250,7 +256,7 @@ h3,
   }
 }
 .lv-sheet {
-  animation: lv-sheet-up 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: lv-sheet-up var(--lv-settle) var(--lv-ease);
 }
 
 /* Option-pick pulse (rig's lvPick): key the class to the just-picked item so
@@ -267,7 +273,7 @@ h3,
   }
 }
 .lv-pick {
-  animation: lv-pick-pulse 0.28s cubic-bezier(0.3, 0.7, 0.3, 1);
+  animation: lv-pick-pulse var(--lv-quick) cubic-bezier(0.3, 0.7, 0.3, 1);
 }
 
 /* Star pop on the just-tapped rating star (rig's dcPop). */
@@ -331,6 +337,100 @@ h3,
   animation: lv-travel 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
+/* ---- Motion, round 6 (docs/WEB-IOS-REDESIGN.md; the phone's Motion.swift) ---- */
+
+/* Cards settle in as they scroll into view (the phone's settlesOnScroll): a touch
+   smaller and lighter at the screen's edges, full once in view, and out again the
+   same way at the top. Driven by the scroll itself (a view timeline), so nothing
+   runs while nothing moves; the tab bar's 64 px count as the bottom edge. Browsers
+   without view timelines, and Reduce Motion, show the cards at rest.
+   The lightness is a factor (--lv-vis), not the opacity itself, so a card that is
+   dim on its own (a "maybe" stop) keeps its dim through --lv-dim. `scale: none` at
+   rest: a scale of 1 would still make the card the box a fixed sheet inside it is
+   placed against. */
+@property --lv-vis {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes lv-settle {
+      0% { --lv-vis: 0.6; scale: 0.96; transform-origin: 50% 0; }
+      14% { --lv-vis: 1; scale: none; transform-origin: 50% 0; }
+      86% { --lv-vis: 1; scale: none; transform-origin: 50% 100%; }
+      100% { --lv-vis: 0.6; scale: 0.96; transform-origin: 50% 100%; }
+    }
+    .lv-settle {
+      opacity: calc(var(--lv-vis) * var(--lv-dim, 1));
+      animation: lv-settle linear both;
+      animation-timeline: view(block 0px 64px);
+      animation-range: cover 0% cover 100%;
+    }
+    /* A card that also rises on mount keeps both: the rise on the clock, the settle on the scroll. */
+    .lv-enter.lv-settle {
+      animation: lv-rise var(--lv-settle) var(--lv-ease), lv-settle linear both;
+      animation-timeline: auto, view(block 0px 64px);
+      animation-range: normal, cover 0% cover 100%;
+    }
+  }
+}
+
+/* A card part that opens (components/ui/Expands.tsx; the phone's .expands() in its
+   Fade style): the card grows and the content fades in where it stands. The grid
+   row grows from nothing, @starting-style gives the first frame. */
+.lv-expand {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition:
+    grid-template-rows var(--lv-quick) var(--lv-ease),
+    opacity var(--lv-quick) var(--lv-ease);
+}
+.lv-expand > * {
+  min-height: 0;
+  overflow: hidden;
+}
+@starting-style {
+  .lv-expand {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+/* The zoom from a card to its page (lib/motion/viewTransition.ts; the phone's
+   Shell/Zoom.swift): the tapped card and the page it opens share a name, and the
+   browser grows one into the other over the settle beat, the old image gone quick.
+   The rest of the screen cross-fades, quick. The tab bar carries its own name
+   (AppNav.tsx), so it stays put instead of fading with the screen. */
+::view-transition-group(*) {
+  animation-duration: var(--lv-settle);
+  animation-timing-function: var(--lv-ease);
+}
+::view-transition-old(*) {
+  animation-duration: var(--lv-quick);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--lv-quick);
+}
+::view-transition-group(lv-nav) {
+  animation: none;
+}
+/* While a transition is drawn: the cards of the new screen stand still for their
+   snapshot instead of rising into it, and a sheet the zoom lands on does not slide
+   up as well. Set and cleared by viewTransition(). */
+html.lv-vt .lv-enter,
+html.lv-vt .lv-sheet {
+  animation-duration: 0.01s;
+}
+
+/* Pull to refresh is the app's (components/PullToRefresh.tsx): the browser's own
+   pull-to-reload at the top of the page would fire with it. */
+html {
+  overscroll-behavior-y: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lv-travel { animation: none; transform: translateX(25px); }
   .lv-globe-now { animation: none; display: none; }
@@ -342,6 +442,14 @@ h3,
   .lv-pick,
   .lv-pop {
     animation: none;
+  }
+  .lv-expand {
+    transition: none;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 

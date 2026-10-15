@@ -6,6 +6,7 @@ import { useTripEvents } from '@/lib/trips/useTripEvents'
 import { checkInCity, localISODate } from '@/lib/trips/whereAmI'
 import { CheckInModal, type CheckInInput } from '@/app/(app)/live/CheckInModal'
 import { FollowerNudge } from '@/app/(app)/live/FollowerNudge'
+import { untilGone, untilShown, viewTransition } from '@/lib/motion/viewTransition'
 
 // The check-in sheet, mounted once above every screen.
 //
@@ -22,7 +23,7 @@ import { FollowerNudge } from '@/app/(app)/live/FollowerNudge'
 // a check-in is posted, by which time the sheet has unmounted and anything it
 // was holding would be gone with it.
 
-const CheckInCtx = createContext<{ open: () => void }>({ open: () => {} })
+const CheckInCtx = createContext<{ open: () => void; /** the sheet is up (the bar's circle drops its zoom name meanwhile) */ isOpen: boolean }>({ open: () => {}, isOpen: false })
 
 /** Open the check-in sheet from anywhere under the (app) layout. */
 export const useCheckIn = () => useContext(CheckInCtx)
@@ -31,6 +32,11 @@ export function CheckInProvider({ children }: { children: React.ReactNode }) {
   const { tripId } = useTripScope()
   const [open, setOpen] = useState(false)
   const [nudge, setNudge] = useState(false)
+  // The sheet grows out of the bar's Check in circle and shrinks back into it
+  // (round 6; the phone's GlassTabBar zooms the same way): a view transition
+  // around the flip, waited on until the sheet is in the document, or gone.
+  const show = () => viewTransition(() => { setOpen(true); return untilShown('checkin') })
+  const hide = () => viewTransition(() => { setOpen(false); return untilGone('checkin') })
 
   // NO ?checkin=1 SHIM HERE, deliberately. The brief version of this app
   // opened the sheet from that parameter, and the obvious thing was to keep
@@ -46,9 +52,9 @@ export function CheckInProvider({ children }: { children: React.ReactNode }) {
   // A stale URL costs one extra tap, once.
 
   return (
-    <CheckInCtx.Provider value={{ open: () => setOpen(true) }}>
+    <CheckInCtx.Provider value={{ open: show, isOpen: open }}>
       {children}
-      {open && <Sheet onClose={() => setOpen(false)} onNudge={setNudge} />}
+      {open && <Sheet onClose={hide} onNudge={setNudge} />}
       {nudge && tripId && <FollowerNudge tripId={tripId} onClose={() => setNudge(false)} />}
     </CheckInCtx.Provider>
   )
