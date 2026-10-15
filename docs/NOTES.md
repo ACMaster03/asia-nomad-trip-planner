@@ -9,9 +9,10 @@ when a decision needs to survive the conversation it was made in.
 
 ### LIVE — #212: Petra's second finding on round 6, no zoom name and no settle on Apple's engine (15 Oct)
 
-Merged with Petra's "yes" at 12:08 UTC; Vercel built `2f9c9c8` at once (`v2f9c9c8`). Petra's one tap on
-"All entries ›" follows: if Safari quits again, round 6 comes off Apple's engine entirely (Patrik's
-call). The cause stays open (the BUILT entry below says where to look).
+Merged with Petra's "yes" at 12:08 UTC; Vercel built `2f9c9c8` at once (`v2f9c9c8`). Petra's retest:
+All entries opens (12:20 UTC), so the crash lives in one of the two pieces now off on Apple's engine,
+the zoom names or the settle; which one is still open (the BUILT entry below says where to look).
+She went on with the rest of the list.
 
 ### BUILT — Petra's second finding on round 6: All entries quit Safari with the zoom's API off (15 Oct)
 
