@@ -7,6 +7,34 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### BUILT — Petra's second finding on round 6: All entries quit Safari with the zoom's API off (15 Oct)
+
+Petra, on `v70b4470` (#211, the API skipped on Apple's engine): step 1 works, the stop page opens;
+step 2, Latest's "All entries ›", quits Safari the moment it is tapped, every time. So the API was
+not the whole cause. What the two crashing taps share is the zoom's name on the page they open
+(`view-transition-name`, the stop page's layer and All entries' `<main>`), and All entries is also
+the page with the most settling cards (`.lv-settle`, a scroll-driven animation, new in Safari 26).
+Safari on Money and Trip, which carry both on their cards, did not crash, so neither is proven.
+
+The fix, both at once rather than one more crash each: on Apple's engine (`html.lv-no-vt`, set by
+the boot script in `layout.tsx` before first paint) there is now no zoom name on any element
+(`view-transition-name: none !important`; `setZoomFrom` hands out none) and no settle (the cards
+sit at rest; the rise on mount stays). Chrome and Android keep both. The rolling figures, the
+expand and pull to refresh stay everywhere. Petra asked whether to revert round 6 altogether; the
+answer was no: this keeps four of the five pieces on the phone and all five elsewhere, and if the
+crash survives this build, the round comes off Apple's engine entirely (Patrik's call, with the
+cause still to find on his Mac: Safari's Web Inspector on livhold.com, Money → All entries).
+
+Checked locally: tsc, eslint, 204 tests, `next build --webpack`.
+
+iOS: nothing; the phone's motion is its own.
+
+### LIVE — #211: Petra's finding on round 6, Safari quit on the first stop tap (15 Oct)
+
+Merged with Petra's "yes" at 11:45 UTC; Vercel built `70b4470` at once (`v70b4470`). On Apple's
+engine the zoom is off and a stop card opens its page at once; Petra's retest from step 1 follows.
+The cause stays open (the BUILT entry below says where to look).
+
 ### BUILT — Petra's finding on round 6: Safari quit on the first stop tap (15 Oct)
 
 Petra, on `v5ae40f3`, step 1 of the test: tapping a stop card on Trip "pushed me out" of Safari,
