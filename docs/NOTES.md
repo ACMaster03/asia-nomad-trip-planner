@@ -7,6 +7,27 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### BUILT — Alerts: the per-trip tick box in plain words (Petra's finding, 15 Oct)
+
+Testing Account (5b), Petra did not understand the tick box under each of her trips in Alerts
+("Comments on every post of this trip, not only yours", `NotificationSettings.tsx`). What it does:
+unticked, alerts about comments on her own posts of that trip only; ticked, about comments on
+every traveller's posts there. The line now says what it adds: "Also tell me about comments on
+the other travellers’ posts". Petra's call to change it now; Patrik can reword it.
+
+Checked locally: tsc, eslint, 204 tests, `next build --webpack`.
+
+iOS: if the phone gets an Alerts screen with this choice, the same words.
+
+### LIVE — #214: the settle off on Apple's engine where it has no rise (15 Oct)
+
+Merged with Petra's "yes" at 13:12 UTC; Vercel built `588991f` at once (`v588991f`). Petra's test:
+All entries opens, and the cards settle on Money. Round 6 on the iPhone stands at: the roll, the
+expand, pull to refresh and the settle on Money, Trip and Home; no zoom (the API and its names off
+on Apple's engine), no settle on All entries and the Subscriptions page. Chrome and Android have all
+five pieces. The two WebKit crashes are documented in the BUILT entry below, with the way to their
+cause on a Mac; Patrik decides when, and whether the zoom returns to Apple's engine at all.
+
 ### BUILT — The settle off on Apple's engine where it has no rise: it is the settle on All entries (15 Oct)
 
 Petra on `v300171d` (#213: the zoom names off, the settle back on Apple's engine): the cards settle
@@ -203,8 +224,9 @@ none); Patrik keeps or narrows it.
 
 ### LIVE — #209, round 5b: Account in the phone's groups (14 Oct)
 
-Merged with Petra's "yes" at 12:37 UTC; Vercel built `c99f0a8` at once (`vc99f0a8`). Petra's test
-follows. Round 5 is complete; round 6, motion, is next.
+Merged with Petra's "yes" at 12:37 UTC; Vercel built `c99f0a8` at once (`vc99f0a8`). Petra tested it
+on 15 Oct (on `v588991f`): everything works, no findings. Round 5 is complete; round 6, motion,
+followed the same day.
 
 Round 5 of `docs/WEB-IOS-REDESIGN.md`, part b. `/account` (`AccountClient.tsx`) in the phone's
 groups (`AccountView.swift`, the split Patrik agreed on 29 Sep), with the 5a kit: "Signed in as"

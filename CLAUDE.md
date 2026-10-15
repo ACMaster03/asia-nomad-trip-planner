@@ -204,11 +204,15 @@ Petra is new to software work; Patrik is not. The product conventions are in
   figures that roll, card parts that grow open, pull to refresh; `docs/NOTES.md`). The zoom
   quit Safari on Petra's iPhone every time (15 Oct), so since #211 (`70b4470`) its API is off
   on Apple's engine (Safari and every browser on iOS), and since Latest → All entries still
-  quit Safari without it, #212 (`2f9c9c8`) took the zoom names and the settle off there too
-  (`html.lv-no-vt`, the boot script in `layout.tsx`), which made All entries open; #213
-  (`300171d`) brings the settle back there, the names still off, as Petra had seen the settle
-  work on Money without a crash: her tap on All entries decides which of the two it was.
-  Chrome and Android keep everything. Petra's tests of 5b and 6 are next. The source of the look is `feat/ios-foundation`,
+  quit Safari without it, four builds (#211–#214, the table in `docs/NOTES.md`) narrowed it to
+  two WebKit failures: the API's snapshot on the stop card, and the scroll-driven settle on All
+  entries (the one-animation form, `.lv-settle` without `lv-enter`). Since #214 (`588991f`,
+  Petra's test clean) Apple's engine (`html.lv-no-vt`, the boot script in `layout.tsx`) has no
+  zoom (API and names off) and no settle on parts without a rise; Money, Trip and Home keep
+  the settle, and the roll, the expand and pull to refresh work everywhere. Chrome and Android
+  have all five pieces. The cause is for a Mac's Safari to show (`docs/NOTES.md`, 15 Oct);
+  Patrik decides whether the zoom returns to Apple's engine. Petra tested 5b on 15 Oct: no findings.
+  The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the

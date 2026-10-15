@@ -243,7 +243,7 @@ export function NotificationSettings() {
                         disabled={tripLocked}
                         onChange={(e) => saveTrip.mutate({ tripId: t.id, patch: { all_comments: e.target.checked } })}
                       />
-                      Comments on every post of this trip, not only yours
+                      Also tell me about comments on the other travellers’ posts
                     </label>
                   )}
                 </div>
