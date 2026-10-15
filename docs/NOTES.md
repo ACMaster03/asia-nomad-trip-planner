@@ -7,6 +7,13 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-15
 
+### LIVE — #213: the settle back on Apple's engine, the zoom names still off (15 Oct)
+
+Merged with Petra's "yes" at 12:53 UTC; Vercel built `300171d` at once (`v300171d`). Petra's one tap on
+"All entries ›" follows, then a scroll on Money for the settle. If Safari quits, the settle goes off
+on Apple's engine for good and the cause is the settle on All entries; if the page opens, the cause
+was the zoom names and the iPhone keeps the settle.
+
 ### BUILT — The settle back on Apple's engine, the zoom names still off (15 Oct)
 
 Petra's test of `v2f9c9c8`: All entries opens; the roll, the expand and pull to refresh work on
