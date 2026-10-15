@@ -211,7 +211,7 @@ Petra is new to software work; Patrik is not. The product conventions are in
   zoom (API and names off) and no settle on parts without a rise; Money, Trip and Home keep
   the settle, and the roll, the expand and pull to refresh work everywhere. Chrome and Android
   have all five pieces. The cause is for a Mac's Safari to show (`docs/NOTES.md`, 15 Oct);
-  Patrik decides whether the zoom returns to Apple's engine. Petra's test of 5b is still open.
+  Patrik decides whether the zoom returns to Apple's engine. Petra tested 5b on 15 Oct: no findings.
   The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under

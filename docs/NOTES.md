@@ -212,8 +212,9 @@ none); Patrik keeps or narrows it.
 
 ### LIVE — #209, round 5b: Account in the phone's groups (14 Oct)
 
-Merged with Petra's "yes" at 12:37 UTC; Vercel built `c99f0a8` at once (`vc99f0a8`). Petra's test
-follows. Round 5 is complete; round 6, motion, is next.
+Merged with Petra's "yes" at 12:37 UTC; Vercel built `c99f0a8` at once (`vc99f0a8`). Petra tested it
+on 15 Oct (on `v588991f`): everything works, no findings. Round 5 is complete; round 6, motion,
+followed the same day.
 
 Round 5 of `docs/WEB-IOS-REDESIGN.md`, part b. `/account` (`AccountClient.tsx`) in the phone's
 groups (`AccountView.swift`, the split Patrik agreed on 29 Sep), with the 5a kit: "Signed in as"
