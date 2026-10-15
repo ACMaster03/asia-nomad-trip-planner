@@ -373,20 +373,18 @@ h3,
       animation-timeline: auto, view(block 0px 64px);
       animation-range: normal, cover 0% cover 100%;
     }
-    /* Apple's engine (html.lv-no-vt, the boot script in layout.tsx): no settle. With the
-       zoom names already off, All entries still quit Safari on Petra's iPhone the moment
-       it opened (15 Oct, v300171d), while Money's and Trip's cards settled without harm.
-       The difference is the page: eleven settling parts with no rise (`.lv-settle` alone,
-       the day sections and Coming up) under a sticky chip row. Which of those WebKit
-       trips on is for a Mac's Safari to show (docs/NOTES.md); until then the cards sit at
-       rest there and the rise on mount stays. */
-    html.lv-no-vt .lv-settle {
+    /* Apple's engine (html.lv-no-vt, the boot script in layout.tsx): the settle only on a
+       card that also rises in. With the zoom names already off, All entries still quit
+       Safari on Petra's iPhone the moment it opened (15 Oct, v300171d), while Money's and
+       Trip's cards settled without harm. The difference: the parts that crashed settle
+       without a rise (`.lv-settle` alone: All entries' day sections and Coming up, the
+       Subscriptions page's groups, Home's follow rows), eleven of them under a sticky chip
+       row; the cards that never crashed have the two-animation form (`lv-enter lv-settle`).
+       So the one-animation form is off there (those parts sit at rest) and the two-animation
+       form stays, Money's settle with it (Petra's choice, 15 Oct). Which detail WebKit trips
+       on is for a Mac's Safari to show (docs/NOTES.md). */
+    html.lv-no-vt .lv-settle:not(.lv-enter) {
       animation: none;
-      animation-timeline: auto;
-      animation-range: normal;
-    }
-    html.lv-no-vt .lv-enter.lv-settle {
-      animation: lv-rise var(--lv-settle) var(--lv-ease);
       animation-timeline: auto;
       animation-range: normal;
     }
@@ -446,7 +444,7 @@ html.lv-vt .lv-sheet {
    (15 Oct). No name there at all, inline styles included, until the cause is found.
    The settle went off with it in #212, came back in #213 (Petra had seen it work on
    Money), and All entries quit Safari again: the settle on that page is the cause,
-   so it is off again below. */
+   so the form of it that page uses is off there, below. */
 html.lv-no-vt * {
   view-transition-name: none !important;
 }
