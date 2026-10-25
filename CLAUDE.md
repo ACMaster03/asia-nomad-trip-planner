@@ -215,8 +215,8 @@ Petra is new to software work; Patrik is not. The product conventions are in
   crashes Safari itself; the settle did that. The settle is rewritten without the hold and is
   back on Apple's engine on every page, live since 25 Oct (#216, `46c69b2`; no crash on an iPhone
   with the iOS 27 beta, an iOS 26 iPhone still to test).
-  The zoom then no longer crashes either; whether it returns to Apple's engine is Patrik's call
-  (branch `fix/webkit-zoom-back`; `docs/NOTES.md`, 25 Oct). Petra tested 5b on 15 Oct: no findings.
+  The zoom then no longer crashes either; Patrik decided on 25 Oct that it returns to Apple's
+  engine (branch `kyh/zoom-back`, not merged yet; `docs/NOTES.md`, 25 Oct). Petra tested 5b on 15 Oct: no findings.
   The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
