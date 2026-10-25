@@ -7,6 +7,38 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
+### BUILT — #150: a switch for the reminder emails (migration 50)
+
+Patrik, 25 Oct: the next item before the freeze. `/privacy` says reminders about your own bookings
+"go to your email; you can switch them off in your notification settings"; until now nothing could.
+
+- **Migration 50** (`50-reminder-email-switch.sql`): `notify_prefs.deadline_email`, boolean, default
+  true; additive, no row changes value; the row's own-row policies (37) cover it. Undo: drop the
+  column, after redeploying the two functions without it.
+- **The two Edge Functions** skip a traveller whose row says false: `stay-deadline-alerts` (stay
+  cancel-by dates and card charges) and `subscription-alerts`. Every email now ends with where the
+  switch is (`<SITE_URL>/account#alerts`, "Reminder emails"). Push, the per-trip mute and the push
+  switch are unchanged; a muted journey still gets its emails.
+- **Order matters:** 50 on production first, then the functions, then the web. Both functions and the
+  web read the new column; without it the functions' preference read fails and the push opt-outs are
+  lost with it, and the web's Alerts switches lock.
+- **The redeploy of `stay-deadline-alerts` also ships #60** (27 Sep: deadline emails for booked stays
+  only, not Ideas), waiting since the "NEXT MACHINE SESSION" entry. `supabase/config.toml` gets a
+  `[functions.stay-deadline-alerts] verify_jwt = false` block first, so the deploy cannot switch its
+  JWT check back on (it answered 403 to an unsigned probe on 20 Sep: off today). After the deploy:
+  curl it unsigned and expect 403.
+- **The web** (Account → Alerts): a group "Email" above the push rows, one switch, "Reminder emails ·
+  cancel-by dates and subscription charges on your trips". The intro line no longer says the emails
+  always go. `NotifyPrefs.deadlineEmail` rides the same whole-row save as the others.
+- **Checked:** tsc, eslint, 206 tests, the redirects test, `next build --webpack`; the dev preview at
+  phone width shows the switch. The functions were not type-checked (no Deno here); the deploy
+  bundles them. `50-TESTPLAN.sql` (default true, switch off, an upsert without the column keeps it,
+  another person can neither see nor change it) runs only in the dry run on production.
+
+iOS: the phone's notification settings should get the same switch, `notify_prefs.deadline_email`
+(default true). The phone's whole-row upsert, if it names only its own columns, leaves the switch as
+it is (50-TESTPLAN check 3).
+
 ### LIVE — #120: the goal made countable (migration 49, the marks, the Monday query)
 
 Patrik, 25 Oct: the first item before the freeze, on the recommended defaults.

@@ -29,7 +29,8 @@
 //
 // Push is gated on notify_prefs.deadline_push (migration 37; a missing row
 // means the defaults, i.e. on) and on the per-trip mute, and is best-effort.
-// Email is unconditional: a charge you forgot about is real money.
+// Email is on by default, since a charge you forgot about is real money; since
+// #150 (migration 50) a traveller can switch it off (notify_prefs.deadline_email).
 //
 // Auth: verify_jwt is disabled for cron invocation; the caller must present the
 // signed x-cron-ts / x-cron-sig pair (_shared/cronAuth.ts, migration 30).
@@ -49,6 +50,9 @@ type TripRow = {
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const FROM = Deno.env.get('ALERTS_FROM') ?? 'Livhold <hello@livhold.com>'
+// Where the switch for these emails lives (#150), as digest-send builds its links.
+const SITE = (Deno.env.get('SITE_URL') ?? 'https://app.livhold.com').replace(/\/+$/, '')
+const SWITCH_OFF = `To stop these reminder emails: ${SITE}/account#alerts, "Reminder emails".`
 const LEADS = new Set([1, 3, 7])
 
 function daysUntil(iso: string, today: Date): number {
@@ -94,17 +98,21 @@ Deno.serve(async (req) => {
     // still wants to know what is about to be taken). Emails via the admin API.
     const { data: members } = await admin.from('trip_members').select('user_id').eq('trip_id', trip.id)
     const userIds = [...new Set([trip.owner, ...(members ?? []).map((m: { user_id: string }) => m.user_id)])]
+    // Migration 37's matrix, where a MISSING row means the defaults, so
+    // opt-out is the only thing worth looking up. #150 (migration 50): a
+    // traveller who switched reminder emails off gets none.
+    const { data: prefs } = await admin
+      .from('notify_prefs').select('user_id,deadline_push,deadline_email').in('user_id', userIds)
+    const emailOff = new Set((prefs ?? []).filter((p) => p.deadline_email === false).map((p) => p.user_id))
     const emails: string[] = []
     for (const uid of userIds) {
+      if (emailOff.has(uid)) continue
       const { data: u } = await admin.auth.admin.getUserById(uid)
       if (u?.user?.email) emails.push(u.user.email)
     }
 
-    // Push targets: migration 37's matrix, where a MISSING row means the
-    // defaults — so opt-out is the only thing worth looking up. A trip muted
-    // under Account → Alerts buzzes for nothing; the email still goes.
-    const { data: prefs } = await admin
-      .from('notify_prefs').select('user_id,deadline_push').in('user_id', userIds)
+    // Push targets. A trip muted under Account → Alerts buzzes for nothing;
+    // the email still goes.
     const optedOut = new Set((prefs ?? []).filter((p) => p.deadline_push === false).map((p) => p.user_id))
     const { data: mutes } = await admin
       .from('trip_notify').select('user_id').eq('trip_id', trip.id).eq('muted', true).in('user_id', userIds)
@@ -147,6 +155,8 @@ Deno.serve(async (req) => {
             ``,
             `It is one of the recurring costs you are carrying from home. Open the`,
             `planner to change the amount, move the date, or mark it cancelled.`,
+            ``,
+            SWITCH_OFF,
           ].join('\n'),
         })
         if (res.ok) {

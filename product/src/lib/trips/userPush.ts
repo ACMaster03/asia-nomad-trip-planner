@@ -115,6 +115,8 @@ export type NotifyPrefs = {
   replies: boolean
   /** reactions on my posts — the one that defaults off */
   reactions: boolean
+  /** reminder EMAILS for stay deadlines and subscription charges (#150, migration 50) */
+  deadlineEmail: boolean
 }
 
 export const DEFAULT_NOTIFY_PREFS: NotifyPrefs = {
@@ -124,6 +126,7 @@ export const DEFAULT_NOTIFY_PREFS: NotifyPrefs = {
   commentsOnMine: true,
   replies: true,
   reactions: false,
+  deadlineEmail: true,
 }
 
 type PrefsRow = {
@@ -133,6 +136,7 @@ type PrefsRow = {
   comments_on_mine: boolean
   replies: boolean
   reactions: boolean
+  deadline_email: boolean
 }
 const PREF_COLS: Record<keyof NotifyPrefs, keyof PrefsRow> = {
   deadlinePush: 'deadline_push',
@@ -141,6 +145,7 @@ const PREF_COLS: Record<keyof NotifyPrefs, keyof PrefsRow> = {
   commentsOnMine: 'comments_on_mine',
   replies: 'replies',
   reactions: 'reactions',
+  deadlineEmail: 'deadline_email',
 }
 
 export async function fetchNotifyPrefs(sb: SupabaseClient): Promise<NotifyPrefs> {
@@ -149,7 +154,7 @@ export async function fetchNotifyPrefs(sb: SupabaseClient): Promise<NotifyPrefs>
   if (!uid) throw new Error('Not signed in')
   const { data, error } = await sb
     .from('notify_prefs')
-    .select('deadline_push,own_trip_posts,follow_posts,comments_on_mine,replies,reactions')
+    .select('deadline_push,own_trip_posts,follow_posts,comments_on_mine,replies,reactions,deadline_email')
     .eq('user_id', uid)
     .maybeSingle()
   if (error) throw error
@@ -162,6 +167,7 @@ export async function fetchNotifyPrefs(sb: SupabaseClient): Promise<NotifyPrefs>
     commentsOnMine: row.comments_on_mine,
     replies: row.replies,
     reactions: row.reactions,
+    deadlineEmail: row.deadline_email,
   }
 }
 
