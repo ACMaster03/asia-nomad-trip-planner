@@ -7,7 +7,13 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
-### BUILT — Round 6's two Safari crashes have one cause: the settle's `scale: none` hold (25 Oct)
+### LIVE — Round 6's two Safari crashes have one cause: the settle's `scale: none` hold (25 Oct)
+
+**Live since 25 Oct** (#216, `46c69b2`; Vercel's production build green, app.livhold.com and
+livhold.com serve the new CSS). Tested the same day in the chat on an iPhone with the iOS 27 beta:
+All entries and Subscriptions open and scroll, no crash. Not yet tested on an iPhone with iOS 26,
+the version that crashed; Petra's iPhone is that check (Money → All entries, then Subscriptions,
+scrolled slowly both ways). If Safari quits there, the way back is a revert of `46c69b2`.
 
 Found on Patrik's Mac, in the iOS 26.5 Simulator's Safari, with the gate of #211–#214 lifted. Both
 crashes reproduced at once (All entries on opening it, the stop card on the tap) and gave the same
