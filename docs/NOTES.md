@@ -16,7 +16,18 @@ Patrik, 25 Oct: the first item before the freeze, on the recommended defaults.
 policies; `anon` cannot read `feed_open_days`, `authenticated` cannot read `account_sources` or call
 `_note_signup_source`; `anon` can call `mark_feed_open`; both triggers exist; the job runs `5 3 * * *`
 and is active; 0 marks and 0 sources. The app side goes live with #221's merge. Undo: the SQL in
-49's header. Still to do: one real open of a follow link on a phone, then the Monday query shows it.
+49's header.
+
+**Tested end to end, 25 Oct:** Patrik made a test follow link in Account → Follow links, opened it
+in a private window signed out (no button pressed), then revoked it. `tools/goal-numbers.sql` then
+showed "Everyone: feed opened this week, accounts / links" = `0 / 1`; the run before it was `0 / 0`.
+A first try opened a partner invitation by mistake ("Accept & sign in" is the invitation page); it
+left no mark, as it should. The follower-account path has its first real test when Petra's mother or
+grandmother opens Home; the next Monday query shows it.
+
+**Decided by Patrik, 25 Oct: creating a follow link stays in Account** → Follow links (the bottom of
+the page, below Alerts), the only way in on the web; the iPhone app gets one with #219 (the Feed tab).
+Recorded on #122: the walk with a fresh account watches whether a stranger finds it there.
 
 **Dry run on production, 25 Oct (Patrik's go): clean, nothing persisted.** Three runs, each one
 transaction that ended in rollback: (1) `begin;` + 49 + the goal query + `49-TESTPLAN.sql`: no error,
