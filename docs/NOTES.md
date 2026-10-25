@@ -7,6 +7,67 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
+### BUILT — #121: followers stay signed in on the web (the code, the follow page's email, /follow refreshed)
+
+Patrik, 25 Oct: the last development item before the freeze, to production today; he tests on the
+phone on 26 Oct. No database change.
+
+**What was wrong**, found while reading the code (the server side was fine: `config.toml` sets no
+session time limit, refresh tokens live until sign-out):
+1. **The follow page's account form still used PKCE.** `AccountSheet` in `FollowClient.tsx` sent
+   its email through the session client, so the link only worked in the browser that asked for it.
+   Tapped in Mail or Gmail, it opened their in-app browser and failed as "link invalid or
+   expired": the 27 Aug bug that `lib/supabase/otp.ts` fixed for `/login`, and never here. Every
+   follower who made an account from a link took this road. [Likely Granny's bug, with the 4 Oct
+   move to app.livhold.com, which signed everyone out once.]
+2. **No page took the code.** The sign-in email carries an 8-digit code (`{{ .Token }}`, for the
+   iPhone app since 26 Sep), but the web only had the link, and the link signs in whichever browser
+   opens it. On an iPhone the home-screen icon keeps its own cookies, which no link reaches, so an
+   installed follow page could never be signed in.
+3. **`/follow` skipped the server-side refresh** (`proxy.ts`'s matcher). A follower who only opens
+   her link or its icon had her session cookies rewritten only by the page's script, and Safari
+   keeps a cookie written by script for at most seven days.
+
+**What changes:**
+- `/login`: once the email is sent, a Code field and Sign in next to it; Enter checks the code (it
+  does not send the email again). `lib/auth/emailCode.ts` verifies with the session client
+  (`verifyOtp`, type `email`, which covers a new address's confirmation email too); spaces and
+  dashes are dropped; a refused code reads "That code didn't work. Use the newest email: each one
+  replaces the last one's code."
+- The follow page's sheet: the email goes through the send-only client (no PKCE, the link works in
+  any browser), and the sheet takes the code: "Follow" signs in here and reloads the page with
+  `?auto=`, which finishes the follow and opens the journey, as the link does.
+- `proxy.ts`: `/follow` runs through the refresh again, and `updateSession` returns at once when
+  there is no `sb-…-auth-token` cookie (`lib/supabase/sessionCookie.ts`), so a signed-out viewer
+  costs no call to the Auth server, there or anywhere.
+
+**Checked:** tsc, eslint, 211 tests (5 new: the code's shape and error text, the session cookie
+test), the redirects test, `next build --webpack`. In the dev server at phone width against a local
+mock of the Supabase API: `/login` sends, shows the field, sends `{token: "12345678", type:
+"email"}` for "1234 5678" and shows the sentence on a refusal; the follow sheet sends
+`code_challenge: null` (it sent a PKCE challenge before) and the same verify; a signed-out
+`/follow` made 0 calls to `/auth/v1/user`; with an expired session cookie, `/follow` refreshed on
+the server (`grant_type=refresh_token`).
+
+**Not done:**
+- The email's label for the code still says "In the Livhold app? Type this code instead". The
+  wording for both ("Or type this code where you asked for it") waits for a template push, and
+  `tools/auth-config.sh --prod diff` answered 401: `supabase/.mgmt-token` has expired. A new token
+  first (the script's header says how), then the push, so the read-back can prove what moved.
+- #160 (forget a device after 90 days idle, migration 42) stays open, after the freeze: it signs
+  out only a device unused for 90 days, so it does not work against #121. Its `/privacy` line goes
+  with #156.
+
+**To test on the phone (Patrik, 26 Oct):** on the iPhone, Safari: open a follow link, Follow, an
+address, then type the code from the email (not the link): the journey opens, followed. Add it to
+the home screen, open the icon: still signed in. Then the same with the link tapped in Mail: it
+should now sign in (in Mail's browser) rather than fail.
+
+**Undo:** revert the pull request; nothing on the database or in Supabase's settings changed.
+
+iOS: no change. The app signs in with the same code already (`otp_length` 8); the web now does what
+the app does.
+
 ### LIVE — #150: a switch for the reminder emails (migration 50)
 
 Patrik, 25 Oct: the next item before the freeze. `/privacy` says reminders about your own bookings
@@ -55,6 +116,7 @@ reminder switch (22 Sep, #60's stay sheet), booked stays only (27 Sep, #60).
    answers **403** (the cron signature check, not the platform's JWT check, which would be 401).
    So the three older `stay-deadline-alerts` changes (above) are live too.
 3. Pull request #223 merged (the web switch), the Vercel build watched.
+4. Patrik on the phone, 25 Oct: Account → Alerts shows the switch, and it holds its setting.
 
 Undo, in reverse: revert #223; redeploy both functions from `d6ec991` (the commit before #150);
 then `alter table public.notify_prefs drop column if exists deadline_email;`.

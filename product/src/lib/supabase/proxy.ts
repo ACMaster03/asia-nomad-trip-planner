@@ -1,8 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { hasSessionCookie } from './sessionCookie'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
+  // Signed out: no call to the Auth server (#121, the follow page's viewers).
+  // The (app) layout's own check still sends them to /login.
+  if (!hasSessionCookie(request.cookies.getAll().map((c) => c.name))) return supabaseResponse
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
