@@ -35,6 +35,18 @@ Patrik, 25 Oct: the next item before the freeze. `/privacy` says reminders about
   bundles them. `50-TESTPLAN.sql` (default true, switch off, an upsert without the column keeps it,
   another person can neither see nor change it) runs only in the dry run on production.
 
+**Dry run on production, 25 Oct (Patrik's go): clean.** `begin;` + 50 + `50-TESTPLAN.sql` + a
+control that fails on purpose: it came back as `TP50 CONTROL: reached the end`, so the 5 checks ran
+and passed, and the error rolled it all back. Then a read: no `deadline_email` column, 0 `tp50` users.
+
+**Edge Functions on production, 25 Oct** (`supabase functions list`), all ACTIVE with
+`verify_jwt: false`: `stay-deadline-alerts` v12 (deployed 18 Sep 05:58 UTC), `push-fanout` v10
+(18 Sep), `digest` v11 and `digest-send` v12 (10 Oct), `fx-refresh` v6 (18 Sep),
+`subscription-alerts` v2 (20 Sep). So `subscription-alerts` is deployed, which answers half of the
+NEXT MACHINE SESSION's item 1 (its cron job is not checked here). `stay-deadline-alerts` predates
+three changes that the #150 redeploy ships with it: "no em dashes" in its copy (18 Sep), the per-stay
+reminder switch (22 Sep, #60's stay sheet), booked stays only (27 Sep, #60).
+
 iOS: the phone's notification settings should get the same switch, `notify_prefs.deadline_email`
 (default true). The phone's whole-row upsert, if it names only its own columns, leaves the switch as
 it is (50-TESTPLAN check 3).
