@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronRight, MessageCircle, Users, X } from 'lucide-react'
@@ -11,6 +11,7 @@ import { followMediaUrl } from '@/lib/follow/api'
 import { fetchFollowingFeed, fetchMyFollowing, type FollowedEvent, type FollowedSummary, type FollowedTripCard } from '@/lib/follow/follows'
 import { fetchFeedSocial, react as sendReaction, REACTION_KINDS, type PostSocial } from '@/lib/follow/social'
 import { mergeFeeds } from '@/lib/follow/merge'
+import { markFeedOpen } from '@/lib/follow/opens'
 import { anyLive, firstSentence, fromLabel, isLive, journeyCards, journeyLine, legInto, names, stopIndexOf, whenLabel } from '@/lib/follow/home'
 import { useFollowedRoutes } from '@/lib/follow/useFollowedRoutes'
 import { allOverlaps, formatOverlap, meetupKey, meetupQueue, overlappingNow } from '@/lib/map/people'
@@ -74,6 +75,11 @@ export default function FollowingSection({
   const confirm = useConfirm()
   const [editEvent, setEditEvent] = useState<TripEvent | null>(null)
   const [shown, setShown] = useState(PREVIEW)
+  // One mark a day for the follower (#120), once Home shows people they follow.
+  const followsSomeone = people.length > 0
+  useEffect(() => {
+    if (followsSomeone) markFeedOpen(sb)
+  }, [followsSomeone, sb])
 
   const followed = useQuery({
     queryKey: tk.followingFeed,

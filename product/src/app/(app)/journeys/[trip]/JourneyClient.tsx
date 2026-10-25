@@ -8,6 +8,7 @@ import { ChevronLeft, CirclePause, Compass, SlidersHorizontal } from 'lucide-rea
 import { createClient } from '@/lib/supabase/client'
 import { fetchFollowedSummary, fetchFollowingFeed, unfollow, type FollowedEvent } from '@/lib/follow/follows'
 import { fetchFeedSocial, react as sendReaction, type PostSocial } from '@/lib/follow/social'
+import { markFeedOpen } from '@/lib/follow/opens'
 import { SocialRow } from '@/components/social/SocialRow'
 import { Sheet } from '@/app/(app)/live/Sheet'
 import { Toggle } from '@/components/trips/NotificationSettings'
@@ -43,6 +44,11 @@ export default function JourneyClient({ tripId }: { tripId: string }) {
     staleTime: 5 * 60_000,
     refetchInterval: 5 * 60_000,
   })
+  // One mark a day for the follower (#120), once the journey is open to them.
+  const open = !!summary.data && !summary.data.paused
+  useEffect(() => {
+    if (open) markFeedOpen(sb)
+  }, [open, sb])
   // following_feed is cross-trip (Home reads it too); this page keeps its
   // rows for one trip. The cache entry is shared with Home on purpose.
   const feed = useQuery({
