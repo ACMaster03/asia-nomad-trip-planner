@@ -7,8 +7,9 @@
 //   - chargeDate (card charged): email T-1
 //   - PUSH mirrors the email on T-7 and T-1 only (gap 4 decision) — a phone
 //     buzz for the endpoints of the window, email for everything. Push is
-//     gated on profiles.notify_deadline_push and is best-effort; email stays
-//     unconditional because a cancel-by date is real money.
+//     gated on profiles.notify_deadline_push and is best-effort. Email is on by
+//     default because a cancel-by date is real money; since #150 (migration 50)
+//     a traveller can switch it off (notify_prefs.deadline_email), as /privacy says.
 // Dedupe: public.alert_log (migration 08) — one row per (trip, stay, kind,
 // recipient); an alert is sent at most once, ever. Push rows use
 // sent_to = 'push:<user_id>' so the two channels dedupe independently.
@@ -41,6 +42,9 @@ type TripRow = {
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const FROM = Deno.env.get('ALERTS_FROM') ?? 'Livhold <hello@livhold.com>'
+// Where the switch for these emails lives (#150), as digest-send builds its links.
+const SITE = (Deno.env.get('SITE_URL') ?? 'https://app.livhold.com').replace(/\/+$/, '')
+const SWITCH_OFF = `To stop these reminder emails: ${SITE}/account#alerts, "Reminder emails".`
 
 // kind → how many days before the date the alert fires
 const CANCEL_OFFSETS: Record<string, number> = { 'cancel-7': 7, 'cancel-3': 3, 'cancel-1': 1 }
@@ -102,8 +106,14 @@ Deno.serve(async (req) => {
     // still wants the warning). Emails come from auth.users via the admin API.
     const { data: members } = await admin.from('trip_members').select('user_id').eq('trip_id', trip.id)
     const userIds = [...new Set([trip.owner, ...(members ?? []).map((m: { user_id: string }) => m.user_id)])]
+    // #150 (migration 50): a traveller who switched reminder emails off in
+    // Account → Alerts gets none. No notify_prefs row means the default, on.
+    const { data: emailPrefs } = await admin
+      .from('notify_prefs').select('user_id,deadline_email').in('user_id', userIds)
+    const emailOff = new Set((emailPrefs ?? []).filter((p) => p.deadline_email === false).map((p) => p.user_id))
     const emails: string[] = []
     for (const uid of userIds) {
+      if (emailOff.has(uid)) continue
       const { data: u } = await admin.auth.admin.getUserById(uid)
       if (u?.user?.email) emails.push(u.user.email)
     }
@@ -153,6 +163,8 @@ Deno.serve(async (req) => {
             `Deadline: ${item.date}, ${item.label}.`,
             ``,
             `Open the planner to review or act on it.`,
+            ``,
+            SWITCH_OFF,
           ].join('\n'),
         })
         if (res.ok) {

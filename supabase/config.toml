@@ -196,6 +196,12 @@ max_frequency = "5s"
 [functions.subscription-alerts]
 verify_jwt = false
 
+# Added 25 Oct 2026 for its #150 redeploy: pg_cron calls it with the signed
+# x-cron-ts / x-cron-sig pair and no JWT (migration 38), and it answered 403 to
+# an unsigned probe on 2026-09-20, so its JWT check is off today.
+[functions.stay-deadline-alerts]
+verify_jwt = false
+
 # Added 4 Oct 2026 for their step 3 redeploy (#163): digest-send is called by pg_cron
 # with x-cron-secret (it answered 403 to an unsigned probe on 2026-09-20, so its JWT
 # check is off today); digest takes one-click unsubscribe POSTs from mail clients,

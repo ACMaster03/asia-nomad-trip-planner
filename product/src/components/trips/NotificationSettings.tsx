@@ -55,6 +55,11 @@ type Group = { title: string; rows: Row[] }
 
 const GROUPS: Group[] = [
   {
+    // #150: the one switch that is about email, not push. /privacy promises it.
+    title: 'Email',
+    rows: [{ key: 'deadlineEmail', title: 'Reminder emails', desc: 'cancel-by dates and subscription charges on your trips' }],
+  },
+  {
     title: 'Your trips',
     rows: [
       { key: 'deadlinePush', title: 'Free-cancellation deadline', desc: 'and card charges · push 7 and 1 days before' },
@@ -153,8 +158,8 @@ export function NotificationSettings() {
       <h2 className="font-serif text-[19px] font-semibold">Alerts</h2>
       <p className="text-base leading-normal text-tx2">
         {pushState === 'subscribed'
-          ? 'Push is allowed on this phone. Deadline warnings also go to your email, whatever is set here.'
-          : 'Deadline warnings always go to your email. Push adds a buzz on this device.'}
+          ? 'Push is allowed on this phone. Reminders about your bookings also come by email, unless you switch that off.'
+          : 'Reminders about your bookings come by email, unless you switch that off. Push adds a buzz on this device.'}
       </p>
 
       {/* P5b mirror — the amber system-level notice, copy and markup shared
@@ -200,7 +205,7 @@ export function NotificationSettings() {
                     <div className="text-base font-semibold">{r.title}</div>
                     <div className="mt-0.5 text-base leading-normal text-tx2">
                       {r.desc}
-                      {denied && on ? ' · by email for now' : ''}
+                      {denied && on && r.key !== 'deadlineEmail' ? ' · by email for now' : ''}
                     </div>
                   </div>
                   <Toggle on={on} disabled={prefsLocked} label={r.title} onChange={(v) => savePrefs.mutate({ ...current, [r.key]: v })} />

@@ -442,14 +442,6 @@ html.lv-vt .lv-enter,
 html.lv-vt .lv-sheet {
   animation-duration: 0.01s;
 }
-/* Apple's engine (the boot script in layout.tsx): the zoom quit Safari on Petra's
-   iPhone (15 Oct). The cause was the settle's `scale: none` hold, above, not the
-   zoom (25 Oct, the iOS Simulator: with the settle rewritten the stop card zooms
-   without harm), but the zoom stays off there until Patrik decides it comes back:
-   no name at all, inline styles included. */
-html.lv-no-vt * {
-  view-transition-name: none !important;
-}
 
 /* Pull to refresh is the app's (components/PullToRefresh.tsx): the browser's own
    pull-to-reload at the top of the page would fire with it. */

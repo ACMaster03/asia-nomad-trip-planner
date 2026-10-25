@@ -213,11 +213,17 @@ Petra is new to software work; Patrik is not. The product conventions are in
   have all five pieces. 25 Oct, the cause, found in the iOS Simulator: one WebKit bug
   (323307), not two. A scroll-driven animation that holds `scale: none` between two keyframes
   crashes Safari itself; the settle did that. The settle is rewritten without the hold and is
-  back on Apple's engine on every page (branch `fix/webkit-motion-crashes`, not merged yet).
-  The zoom then no longer crashes either; whether it returns to Apple's engine is Patrik's call
-  (branch `fix/webkit-zoom-back`; `docs/NOTES.md`, 25 Oct). Petra tested 5b on 15 Oct: no findings.
+  back on Apple's engine on every page, live since 25 Oct (#216, `46c69b2`; no crash on an iPhone
+  with the iOS 27 beta, an iOS 26 iPhone still to test).
+  The zoom then no longer crashes either; Patrik decided on 25 Oct that it returns to Apple's
+  engine, live since 25 Oct (#218, `6d2d7eb`; `docs/NOTES.md`, 25 Oct). Petra tested 5b on 15 Oct: no findings.
   The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
+- 25 Oct, before the 31 Oct freeze (the milestone "Pre-freeze check"): #120, the goal made
+  countable, is live (migration 49 on production, #221): follower opens, one mark a day, and each
+  new account's source, read every Monday with `tools/goal-numbers.sql` (Patrik's go). Next on the
+  list: #150 (the reminder-email switch `/privacy` promises), #121 (followers stay signed in), the
+  #122 walk with a fresh account, then #156 (the policy read once more).
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
@@ -226,6 +232,35 @@ Petra is new to software work; Patrik is not. The product conventions are in
   per thread under `sources/`, the needs in `needs.md`, the apps in `competitors.md`, and
   what it means for Livhold in `takeaways.md`, where Patrik decides. Reddit is blocked from
   Claude's container; Petra pastes the text or a screenshot and Claude types it out.
+
+## The database: production only (Patrik, 25 Oct)
+
+Staging (`asia-nomad-staging`, ref `fdcncqnklscbztcydtye`) is paused to free the free plan's
+project slot: do not use it, unpause it or deploy to it. The only database is production
+(`Nomad_Trip_Planner`, ref `wvmnudcwcqktcugouqoe`), and every call to it, read or write, needs
+Patrik's explicit "go" in the chat.
+
+- **Migrations:** `NN-name.sql` and `NN-TESTPLAN.sql` as before; the test plan makes its own
+  throwaway users and rows (a `tpNN` prefix) and ends in `rollback;`. First a rolled-back dry
+  run on production: `begin;`, the migration, then the test plan without its own `begin;`, in
+  one scratch file outside the repo, run with `echo PROD | tools/db.sh --prod sql <file>`. Clean
+  is `"rows": []`; then check that nothing persisted. Only then, with a go,
+  `echo PROD | tools/db.sh --prod apply NN`.
+- **Changing or deleting existing rows** (update, delete, drop, alter type): copy the rows into
+  `backup.<table>_<yyyymmdd>` first, write the undo SQL next to the migration, and run it in the
+  same rolled-back dry run. Supabase's daily backups restore the whole project: the last resort.
+- **Tests never touch real people's rows**: only rows made inside the transaction, which always
+  rolls back. Reads of real data are for checking, and need a go too.
+- **iOS:** Debug builds used staging (`ios/Livhold/Auth/Backend.swift`); switch Debug to
+  production before signing in, do UI work on the fixtures (`-tripFixture YES -skipSignIn YES
+  -followFixture YES`) and sign in for real only to look.
+- **Tools:** `tools/db.sh` still defaults to staging, so always pass `--prod`.
+  `tools/auth-config.sh --staging` and the staging lines in `rotate-cron-secret.sh` are retired;
+  Edge Functions deploy to the production ref only.
+- **Web:** local dev and the build use placeholder Supabase values and the `/dev/*` previews;
+  a local dev server points at production only when Patrik asks.
+- **Record** every production change in `docs/NOTES.md`: the date, the dry-run result, how to
+  undo it, and an "iOS:" line when behaviour changes.
 
 ## Running the checks
 

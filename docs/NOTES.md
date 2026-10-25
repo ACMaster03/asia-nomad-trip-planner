@@ -7,6 +7,159 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
+### LIVE — #150: a switch for the reminder emails (migration 50)
+
+Patrik, 25 Oct: the next item before the freeze. `/privacy` says reminders about your own bookings
+"go to your email; you can switch them off in your notification settings"; until now nothing could.
+
+- **Migration 50** (`50-reminder-email-switch.sql`): `notify_prefs.deadline_email`, boolean, default
+  true; additive, no row changes value; the row's own-row policies (37) cover it. Undo: drop the
+  column, after redeploying the two functions without it.
+- **The two Edge Functions** skip a traveller whose row says false: `stay-deadline-alerts` (stay
+  cancel-by dates and card charges) and `subscription-alerts`. Every email now ends with where the
+  switch is (`<SITE_URL>/account#alerts`, "Reminder emails"). Push, the per-trip mute and the push
+  switch are unchanged; a muted journey still gets its emails.
+- **Order matters:** 50 on production first, then the functions, then the web. Both functions and the
+  web read the new column; without it the functions' preference read fails and the push opt-outs are
+  lost with it, and the web's Alerts switches lock.
+- **The redeploy of `stay-deadline-alerts` also ships #60** (27 Sep: deadline emails for booked stays
+  only, not Ideas), waiting since the "NEXT MACHINE SESSION" entry. `supabase/config.toml` gets a
+  `[functions.stay-deadline-alerts] verify_jwt = false` block first, so the deploy cannot switch its
+  JWT check back on (it answered 403 to an unsigned probe on 20 Sep: off today). After the deploy:
+  curl it unsigned and expect 403.
+- **The web** (Account → Alerts): a group "Email" above the push rows, one switch, "Reminder emails ·
+  cancel-by dates and subscription charges on your trips". The intro line no longer says the emails
+  always go. `NotifyPrefs.deadlineEmail` rides the same whole-row save as the others.
+- **Checked:** tsc, eslint, 206 tests, the redirects test, `next build --webpack`; the dev preview at
+  phone width shows the switch. The functions were not type-checked (no Deno here); the deploy
+  bundles them. `50-TESTPLAN.sql` (default true, switch off, an upsert without the column keeps it,
+  another person can neither see nor change it) runs only in the dry run on production.
+
+**Dry run on production, 25 Oct (Patrik's go): clean.** `begin;` + 50 + `50-TESTPLAN.sql` + a
+control that fails on purpose: it came back as `TP50 CONTROL: reached the end`, so the 5 checks ran
+and passed, and the error rolled it all back. Then a read: no `deadline_email` column, 0 `tp50` users.
+
+**Edge Functions on production, 25 Oct** (`supabase functions list`), all ACTIVE with
+`verify_jwt: false`: `stay-deadline-alerts` v12 (deployed 18 Sep 05:58 UTC), `push-fanout` v10
+(18 Sep), `digest` v11 and `digest-send` v12 (10 Oct), `fx-refresh` v6 (18 Sep),
+`subscription-alerts` v2 (20 Sep). So `subscription-alerts` is deployed, which answers half of the
+NEXT MACHINE SESSION's item 1 (its cron job is not checked here). `stay-deadline-alerts` predates
+three changes that the #150 redeploy ships with it: "no em dashes" in its copy (18 Sep), the per-stay
+reminder switch (22 Sep, #60's stay sheet), booked stays only (27 Sep, #60).
+
+**Live on production, 25 Oct (Patrik's go), in the order above:**
+1. `echo PROD | tools/db.sh --prod apply 50`: applied. Read after: `deadline_email` boolean, not
+   null, default true; the one `notify_prefs` row on production reads true, none false.
+2. `supabase functions deploy` from `1ec7530`: `stay-deadline-alerts` v12 → **v13**,
+   `subscription-alerts` v2 → **v3**, both ACTIVE, `verify_jwt: false`. An unsigned POST to each
+   answers **403** (the cron signature check, not the platform's JWT check, which would be 401).
+   So the three older `stay-deadline-alerts` changes (above) are live too.
+3. Pull request #223 merged (the web switch), the Vercel build watched.
+
+Undo, in reverse: revert #223; redeploy both functions from `d6ec991` (the commit before #150);
+then `alter table public.notify_prefs drop column if exists deadline_email;`.
+
+iOS: the phone's notification settings should get the same switch, `notify_prefs.deadline_email`
+(default true). The phone's whole-row upsert, if it names only its own columns, leaves the switch as
+it is (50-TESTPLAN check 3).
+
+### LIVE — #120: the goal made countable (migration 49, the marks, the Monday query)
+
+Patrik, 25 Oct: the first item before the freeze, on the recommended defaults.
+
+**Migration 49 applied on production, 25 Oct** (Patrik's go, `echo PROD | tools/db.sh --prod apply
+49`; the purge job is cron job 13). Checked right after: both tables exist with RLS on and no
+policies; `anon` cannot read `feed_open_days`, `authenticated` cannot read `account_sources` or call
+`_note_signup_source`; `anon` can call `mark_feed_open`; both triggers exist; the job runs `5 3 * * *`
+and is active; 0 marks and 0 sources. The app side goes live with #221's merge. Undo: the SQL in
+49's header.
+
+**Tested end to end, 25 Oct:** Patrik made a test follow link in Account → Follow links, opened it
+in a private window signed out (no button pressed), then revoked it. `tools/goal-numbers.sql` then
+showed "Everyone: feed opened this week, accounts / links" = `0 / 1`; the run before it was `0 / 0`.
+A first try opened a partner invitation by mistake ("Accept & sign in" is the invitation page); it
+left no mark, as it should. The follower-account path has its first real test when Petra's mother or
+grandmother opens Home; the next Monday query shows it.
+
+**Decided by Patrik, 25 Oct: creating a follow link stays in Account** → Follow links (the bottom of
+the page, below Alerts), the only way in on the web; the iPhone app gets one with #219 (the Feed tab).
+Recorded on #122: the walk with a fresh account watches whether a stranger finds it there.
+
+**Dry run on production, 25 Oct (Patrik's go): clean, nothing persisted.** Three runs, each one
+transaction that ended in rollback: (1) `begin;` + 49 + the goal query + `49-TESTPLAN.sql`: no error,
+and the goal query ran against 49 (all zeros, as expected before the apply); (2) 49 + the test plan
+alone: no error; (3) the same with a control at the end that fails on purpose: it came back as
+`TP49 CONTROL: reached the end; newfan source=follow_link, live-link marks=1`, which proves all 11
+checks ran and passed, and the error rolled everything back. Then a read: no `feed_open_days`, no
+`account_sources`, no `mark_feed_open` or `_note_signup_source`, neither trigger, no
+`feed-open-days-purge-daily` job, and 0 `tp49` users, journeys or links. Lesson for the next dry run:
+`tools/db.sh --prod sql` shows the last statement that returned rows (here `cron.schedule`), never
+the empty result of the final `rollback;`, so "no error" is the pass, and a deliberate failing
+control at the end is the proof the checks ran. Undo after the apply: the SQL in 49's header.
+
+- **Migration 49** (`49-usage-counts.sql`; 48 is `journey_feed`, applied today from
+  `docs/follower-built`). `feed_open_days`: one mark per follower account, or per follow link, per
+  day, deleted after 12 months (`feed-open-days-purge-daily`, 03:05 UTC) and with the account or the
+  link. `account_sources`: `follow_link` or `partner_invite` with the journey, noted by triggers on
+  `user_follows` (a follow with `via_share_id`) and `trip_invites` (an acceptance), only in the
+  account's first 24 hours; the first door wins. The sign-in email always lands on `/dashboard` and is
+  often opened in another browser, so the source is taken from what the database already records,
+  not from the link. No row: the query splits it into the journey.livhold.com list (the email is in
+  `journey_signups`) and "direct". Both tables: RLS on, no policies, no grants. `mark_feed_open(token)`
+  (anon and signed in) is the only way in: a follower who follows anyone is marked as themselves, a
+  journey's own travellers and viewers on their link are not marked, anyone else on a link is marked
+  as the link; an unknown, revoked or paused link marks nothing. Matches /privacy's "Usage counts"
+  (#123, 3 Oct). Undo SQL is in the file's header; it changes no existing row or function.
+- **The marks** (`lib/follow/opens.ts`): the follow link page, Home's people section and a followed
+  journey call it once a day per browser, from the page (link previews in WhatsApp or Telegram hit the
+  server render, so the server never marks). Fire and forget.
+- **`tools/goal-numbers.sql`**, read-only, every Monday with Patrik's go:
+  `echo PROD | tools/db.sh --prod sql tools/goal-numbers.sql`. A stranger is an account created on or
+  after 31 Oct; a stranger journey is one they created; a couple counts once; a follow link opened
+  counts once however many phones share it.
+- **Checked:** tsc, eslint, 206 tests (2 new for the day), the redirects test, `next build --webpack`;
+  in the dev preview (placeholder Supabase values, not `.env.local`, which points at production) the
+  three pages each set their once-a-day note. `49-TESTPLAN.sql` (11 checks: sources, the 24-hour
+  window, the first door, one mark a day, paused and unknown links, travellers not marked, no access
+  through the public key, the purge job) runs only in the dry run on production.
+
+iOS: the phone's follower screens (Home's journeys you follow, a followed journey's Trip, the Feed tab
+of #130) should call `mark_feed_open()` with no argument once a day when they show a followed
+journey; the source needs nothing on the phone (the database's triggers note it).
+
+### DECIDED — Patrik, 25 Oct: staging is paused; we test on production, with rollbacks
+
+The staging project (`asia-nomad-staging`, `fdcncqnklscbztcydtye`) is paused to free the free
+plan's project slot. Nobody uses it, unpauses it or deploys to it; production
+(`Nomad_Trip_Planner`, `wvmnudcwcqktcugouqoe`) is the only database, and every call to it needs
+Patrik's "go" in the chat. The working rules (migrations dry-run on production inside a rolled-back
+transaction, backups of changed rows in a `backup` schema with the undo SQL beside the migration,
+tests only on their own `tpNN` rows, a record here for every production change) are in CLAUDE.md,
+"The database: production only". Claude had advised keeping staging until 30 Nov (Claude's only
+database, the iOS Debug builds, strangers' data from 31 Oct); Patrik chose the free slot and
+rollbacks.
+
+iOS: Debug builds pointed at staging (`ios/Livhold/Auth/Backend.swift`, `#if DEBUG`), so they fail
+until Debug is switched to production. With it switched, a Debug build acts on real accounts: UI work
+on the fixtures (`-tripFixture YES -skipSignIn YES -followFixture YES`), sign in for real only to look.
+
+### LIVE — Patrik, 25 Oct: the zoom comes back on Apple's engine
+
+**Live since 25 Oct** (#218, `6d2d7eb`; Vercel's build green, the served pages no longer carry
+`lv-no-vt`). Patrik's iPhone test follows.
+
+Patrik, in the chat, once #216 held on his iPhone (iOS 27 beta): "Let's bring it back." The gate of
+#211–#212 goes (the boot script no longer marks Apple's engine with `lv-no-vt`, `globals.css` no
+longer drops the zoom names, `viewTransition.ts` no longer skips the API there), so iPhones and
+Safari get the zoom as Chrome and Android do. Checked in the iOS 26.5 Simulator: the stop card into
+its page and back twice, All entries, no crash. Not checked there: Latest → All entries,
+Subscriptions into its page, Check in into its sheet (the previews have no sign-in and no check-in
+sheet); those need a phone on livhold.com after the merge, an iOS 26 one above all. What could go
+wrong: a second WebKit bug in the View Transitions API itself, which the settle's crash hid; the way
+back is this commit reverted.
+
+iOS: nothing; the phone's zoom is its own.
+
 ### DECIDED — Petra, 25 Oct: the Feed tab, round 2 of the feed mock (#130)
 
 Mock: https://claude.ai/artifact/25yPrENkKBxUpMwCQXEn3w (round 2, the traveller's own tab; round 1,
@@ -52,7 +205,13 @@ call it, authenticated can; Asia's 18 posts and 27 reactions and comments in 32 
 iOS: the Feed tab reads `journey_feed` (built next, on `feat/ios-feed`). Web: nothing yet; the
 web's Map page could become the same Feed.
 
-### BUILT — Round 6's two Safari crashes have one cause: the settle's `scale: none` hold (25 Oct)
+### LIVE — Round 6's two Safari crashes have one cause: the settle's `scale: none` hold (25 Oct)
+
+**Live since 25 Oct** (#216, `46c69b2`; Vercel's production build green, app.livhold.com and
+livhold.com serve the new CSS). Tested the same day in the chat on an iPhone with the iOS 27 beta:
+All entries and Subscriptions open and scroll, no crash. Not yet tested on an iPhone with iOS 26,
+the version that crashed; Petra's iPhone is that check (Money → All entries, then Subscriptions,
+scrolled slowly both ways). If Safari quits there, the way back is a revert of `46c69b2`.
 
 Found on Patrik's Mac, in the iOS 26.5 Simulator's Safari, with the gate of #211–#214 lifted. Both
 crashes reproduced at once (All entries on opening it, the stop card on the tap) and gave the same
@@ -2215,9 +2374,10 @@ Patrik's machine was out of reach on 27 Sep. Three jobs wait for it, best done t
 1. **Subscription alerts:** is `subscription-alerts` deployed on production, and is its cron
    job scheduled? Nothing records it since "TO DEPLOY" of 20 Sep (below). Production →
    Edge Functions, and `supabase/checks/cron-jobs.sql` in the SQL editor, answer it. If not:
-   the steps in that entry, function first, cron second.
-2. **Redeploy `stay-deadline-alerts`** (27 Sep fix below: booked stays only). No redeploy
-   is recorded since the switch of 22 Sep either.
+   the steps in that entry, function first, cron second. **25 Oct: deployed** (v2 since 20 Sep,
+   v3 with #150, above); its cron job is still unchecked.
+2. ~~**Redeploy `stay-deadline-alerts`**~~ (27 Sep fix below: booked stays only). **Done 25 Oct**
+   with #150 (v13), which shipped the 22 Sep switch and the 27 Sep rule with it.
 3. **Rotate the JWT secret** (OPEN since 18 Sep, below). [Likely] It replaces the anon key,
    so Vercel's environment and the iOS app (#98) need the new one in the same sitting.
 
