@@ -7,7 +7,26 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
-### DECIDED — Patrik, 25 Oct: the zoom comes back on Apple's engine
+### DECIDED — Patrik, 25 Oct: staging is paused; we test on production, with rollbacks
+
+The staging project (`asia-nomad-staging`, `fdcncqnklscbztcydtye`) is paused to free the free
+plan's project slot. Nobody uses it, unpauses it or deploys to it; production
+(`Nomad_Trip_Planner`, `wvmnudcwcqktcugouqoe`) is the only database, and every call to it needs
+Patrik's "go" in the chat. The working rules (migrations dry-run on production inside a rolled-back
+transaction, backups of changed rows in a `backup` schema with the undo SQL beside the migration,
+tests only on their own `tpNN` rows, a record here for every production change) are in CLAUDE.md,
+"The database: production only". Claude had advised keeping staging until 30 Nov (Claude's only
+database, the iOS Debug builds, strangers' data from 31 Oct); Patrik chose the free slot and
+rollbacks.
+
+iOS: Debug builds pointed at staging (`ios/Livhold/Auth/Backend.swift`, `#if DEBUG`), so they fail
+until Debug is switched to production. With it switched, a Debug build acts on real accounts: UI work
+on the fixtures (`-tripFixture YES -skipSignIn YES -followFixture YES`), sign in for real only to look.
+
+### LIVE — Patrik, 25 Oct: the zoom comes back on Apple's engine
+
+**Live since 25 Oct** (#218, `6d2d7eb`; Vercel's build green, the served pages no longer carry
+`lv-no-vt`). Patrik's iPhone test follows.
 
 Patrik, in the chat, once #216 held on his iPhone (iOS 27 beta): "Let's bring it back." The gate of
 #211–#212 goes (the boot script no longer marks Apple's engine with `lv-no-vt`, `globals.css` no
