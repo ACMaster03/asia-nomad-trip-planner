@@ -7,6 +7,62 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
+### LIVE — #150: a switch for the reminder emails (migration 50)
+
+Patrik, 25 Oct: the next item before the freeze. `/privacy` says reminders about your own bookings
+"go to your email; you can switch them off in your notification settings"; until now nothing could.
+
+- **Migration 50** (`50-reminder-email-switch.sql`): `notify_prefs.deadline_email`, boolean, default
+  true; additive, no row changes value; the row's own-row policies (37) cover it. Undo: drop the
+  column, after redeploying the two functions without it.
+- **The two Edge Functions** skip a traveller whose row says false: `stay-deadline-alerts` (stay
+  cancel-by dates and card charges) and `subscription-alerts`. Every email now ends with where the
+  switch is (`<SITE_URL>/account#alerts`, "Reminder emails"). Push, the per-trip mute and the push
+  switch are unchanged; a muted journey still gets its emails.
+- **Order matters:** 50 on production first, then the functions, then the web. Both functions and the
+  web read the new column; without it the functions' preference read fails and the push opt-outs are
+  lost with it, and the web's Alerts switches lock.
+- **The redeploy of `stay-deadline-alerts` also ships #60** (27 Sep: deadline emails for booked stays
+  only, not Ideas), waiting since the "NEXT MACHINE SESSION" entry. `supabase/config.toml` gets a
+  `[functions.stay-deadline-alerts] verify_jwt = false` block first, so the deploy cannot switch its
+  JWT check back on (it answered 403 to an unsigned probe on 20 Sep: off today). After the deploy:
+  curl it unsigned and expect 403.
+- **The web** (Account → Alerts): a group "Email" above the push rows, one switch, "Reminder emails ·
+  cancel-by dates and subscription charges on your trips". The intro line no longer says the emails
+  always go. `NotifyPrefs.deadlineEmail` rides the same whole-row save as the others.
+- **Checked:** tsc, eslint, 206 tests, the redirects test, `next build --webpack`; the dev preview at
+  phone width shows the switch. The functions were not type-checked (no Deno here); the deploy
+  bundles them. `50-TESTPLAN.sql` (default true, switch off, an upsert without the column keeps it,
+  another person can neither see nor change it) runs only in the dry run on production.
+
+**Dry run on production, 25 Oct (Patrik's go): clean.** `begin;` + 50 + `50-TESTPLAN.sql` + a
+control that fails on purpose: it came back as `TP50 CONTROL: reached the end`, so the 5 checks ran
+and passed, and the error rolled it all back. Then a read: no `deadline_email` column, 0 `tp50` users.
+
+**Edge Functions on production, 25 Oct** (`supabase functions list`), all ACTIVE with
+`verify_jwt: false`: `stay-deadline-alerts` v12 (deployed 18 Sep 05:58 UTC), `push-fanout` v10
+(18 Sep), `digest` v11 and `digest-send` v12 (10 Oct), `fx-refresh` v6 (18 Sep),
+`subscription-alerts` v2 (20 Sep). So `subscription-alerts` is deployed, which answers half of the
+NEXT MACHINE SESSION's item 1 (its cron job is not checked here). `stay-deadline-alerts` predates
+three changes that the #150 redeploy ships with it: "no em dashes" in its copy (18 Sep), the per-stay
+reminder switch (22 Sep, #60's stay sheet), booked stays only (27 Sep, #60).
+
+**Live on production, 25 Oct (Patrik's go), in the order above:**
+1. `echo PROD | tools/db.sh --prod apply 50`: applied. Read after: `deadline_email` boolean, not
+   null, default true; the one `notify_prefs` row on production reads true, none false.
+2. `supabase functions deploy` from `1ec7530`: `stay-deadline-alerts` v12 → **v13**,
+   `subscription-alerts` v2 → **v3**, both ACTIVE, `verify_jwt: false`. An unsigned POST to each
+   answers **403** (the cron signature check, not the platform's JWT check, which would be 401).
+   So the three older `stay-deadline-alerts` changes (above) are live too.
+3. Pull request #223 merged (the web switch), the Vercel build watched.
+
+Undo, in reverse: revert #223; redeploy both functions from `d6ec991` (the commit before #150);
+then `alter table public.notify_prefs drop column if exists deadline_email;`.
+
+iOS: the phone's notification settings should get the same switch, `notify_prefs.deadline_email`
+(default true). The phone's whole-row upsert, if it names only its own columns, leaves the switch as
+it is (50-TESTPLAN check 3).
+
 ### LIVE — #120: the goal made countable (migration 49, the marks, the Monday query)
 
 Patrik, 25 Oct: the first item before the freeze, on the recommended defaults.
@@ -2242,9 +2298,10 @@ Patrik's machine was out of reach on 27 Sep. Three jobs wait for it, best done t
 1. **Subscription alerts:** is `subscription-alerts` deployed on production, and is its cron
    job scheduled? Nothing records it since "TO DEPLOY" of 20 Sep (below). Production →
    Edge Functions, and `supabase/checks/cron-jobs.sql` in the SQL editor, answer it. If not:
-   the steps in that entry, function first, cron second.
-2. **Redeploy `stay-deadline-alerts`** (27 Sep fix below: booked stays only). No redeploy
-   is recorded since the switch of 22 Sep either.
+   the steps in that entry, function first, cron second. **25 Oct: deployed** (v2 since 20 Sep,
+   v3 with #150, above); its cron job is still unchecked.
+2. ~~**Redeploy `stay-deadline-alerts`**~~ (27 Sep fix below: booked stays only). **Done 25 Oct**
+   with #150 (v13), which shipped the 22 Sep switch and the 27 Sep rule with it.
 3. **Rotate the JWT secret** (OPEN since 18 Sep, below). [Likely] It replaces the anon key,
    so Vercel's environment and the iOS app (#98) need the new one in the same sitting.
 
