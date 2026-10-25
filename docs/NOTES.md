@@ -7,6 +7,36 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
+### DECIDED — Petra, 25 Oct: the Feed tab, round 2 of the feed mock (#130)
+
+Mock: https://claude.ai/artifact/25yPrENkKBxUpMwCQXEn3w (round 2, the traveller's own tab; round 1,
+a family member's Home). Her answers to its four questions:
+
+- **The tab is called Feed** (not Posts, People or Family): it replaces Map, last on the bar.
+- **Reaction counts go to the post's travellers only.** On your own posts you see "❤️ 3 😮 1" and
+  who; a follower sees only their own reaction, never a count (as 34 already serves it).
+- **Reply straight from the "New" list**, as in the mock.
+- **Posts look like round 1's B, the big photo first, with one reaction button** (A's): a tap
+  gives ❤️, holding it opens the six. A **double tap on the post likes it**: a heart appears where
+  the finger was and flies to the reaction button, which then shows it. **Optimistic**: the
+  heart, the haptic and the button change before the server answers; a failed send puts it back
+  and says so.
+
+### LIVE — Migration 48: `journey_feed`, the traveller's side of the feed (25 Oct)
+
+One read-only call for the Feed tab (`48-journey-feed.sql`): for a journey's travellers and
+viewers, its check-ins, arrivals and notes (the follower feed's shape plus visibility, your own
+reaction, the comment count and the tally), and the 40 newest reactions and comments by others,
+with names and the post they are on. Anyone else gets null; blocked accounts and deleted comments
+are left out. When you last looked is kept on the phone. Changes no table.
+
+Staging: applied, `48-TESTPLAN.sql` passes (and fails when one expectation is flipped), no
+leftovers, 8 ms on staging's journey. Production: applied 25 Oct with Patrik's go; anon cannot
+call it, authenticated can; Asia's 18 posts and 27 reactions and comments in 32 ms.
+
+iOS: the Feed tab reads `journey_feed` (built next, on `feat/ios-feed`). Web: nothing yet; the
+web's Map page could become the same Feed.
+
 ### BUILT — Round 6's two Safari crashes have one cause: the settle's `scale: none` hold (25 Oct)
 
 Found on Patrik's Mac, in the iOS 26.5 Simulator's Safari, with the gate of #211–#214 lifted. Both
