@@ -13,6 +13,7 @@ import { followByToken } from '@/lib/follow/follows'
 import { fetchSharedFeedSocial } from '@/lib/follow/social'
 import { clearPendingFollow, readPendingFollow, savePendingFollow } from '@/lib/follow/pending'
 import { disablePush, enablePush, getPushState, type PushState } from '@/lib/follow/push'
+import { markFeedOpen } from '@/lib/follow/opens'
 import { SocialRow } from '@/components/social/SocialRow'
 import { tk } from '@/lib/trips/keys'
 import { localISODate, nightsBetween, timeAgo } from '@/lib/trips/format'
@@ -87,6 +88,11 @@ export default function FollowClient({
     staleTime: 5 * 60_000,
     refetchInterval: 5 * 60_000, // route/dates change rarely; also picks up revocation
   })
+  // One mark a day for this link, or for the signed-in follower (#120).
+  const shown = !!summary.data
+  useEffect(() => {
+    if (shown) markFeedOpen(sb, token)
+  }, [shown, sb, token])
   const feed = useQuery({
     queryKey: ['shared-feed', token],
     queryFn: () => fetchSharedFeed(sb, token),

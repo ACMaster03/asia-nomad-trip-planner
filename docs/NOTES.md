@@ -7,6 +7,59 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
+### LIVE — #120: the goal made countable (migration 49, the marks, the Monday query)
+
+Patrik, 25 Oct: the first item before the freeze, on the recommended defaults.
+
+**Migration 49 applied on production, 25 Oct** (Patrik's go, `echo PROD | tools/db.sh --prod apply
+49`; the purge job is cron job 13). Checked right after: both tables exist with RLS on and no
+policies; `anon` cannot read `feed_open_days`, `authenticated` cannot read `account_sources` or call
+`_note_signup_source`; `anon` can call `mark_feed_open`; both triggers exist; the job runs `5 3 * * *`
+and is active; 0 marks and 0 sources. The app side goes live with #221's merge. Undo: the SQL in
+49's header. Still to do: one real open of a follow link on a phone, then the Monday query shows it.
+
+**Dry run on production, 25 Oct (Patrik's go): clean, nothing persisted.** Three runs, each one
+transaction that ended in rollback: (1) `begin;` + 49 + the goal query + `49-TESTPLAN.sql`: no error,
+and the goal query ran against 49 (all zeros, as expected before the apply); (2) 49 + the test plan
+alone: no error; (3) the same with a control at the end that fails on purpose: it came back as
+`TP49 CONTROL: reached the end; newfan source=follow_link, live-link marks=1`, which proves all 11
+checks ran and passed, and the error rolled everything back. Then a read: no `feed_open_days`, no
+`account_sources`, no `mark_feed_open` or `_note_signup_source`, neither trigger, no
+`feed-open-days-purge-daily` job, and 0 `tp49` users, journeys or links. Lesson for the next dry run:
+`tools/db.sh --prod sql` shows the last statement that returned rows (here `cron.schedule`), never
+the empty result of the final `rollback;`, so "no error" is the pass, and a deliberate failing
+control at the end is the proof the checks ran. Undo after the apply: the SQL in 49's header.
+
+- **Migration 49** (`49-usage-counts.sql`; 48 is `journey_feed`, applied today from
+  `docs/follower-built`). `feed_open_days`: one mark per follower account, or per follow link, per
+  day, deleted after 12 months (`feed-open-days-purge-daily`, 03:05 UTC) and with the account or the
+  link. `account_sources`: `follow_link` or `partner_invite` with the journey, noted by triggers on
+  `user_follows` (a follow with `via_share_id`) and `trip_invites` (an acceptance), only in the
+  account's first 24 hours; the first door wins. The sign-in email always lands on `/dashboard` and is
+  often opened in another browser, so the source is taken from what the database already records,
+  not from the link. No row: the query splits it into the journey.livhold.com list (the email is in
+  `journey_signups`) and "direct". Both tables: RLS on, no policies, no grants. `mark_feed_open(token)`
+  (anon and signed in) is the only way in: a follower who follows anyone is marked as themselves, a
+  journey's own travellers and viewers on their link are not marked, anyone else on a link is marked
+  as the link; an unknown, revoked or paused link marks nothing. Matches /privacy's "Usage counts"
+  (#123, 3 Oct). Undo SQL is in the file's header; it changes no existing row or function.
+- **The marks** (`lib/follow/opens.ts`): the follow link page, Home's people section and a followed
+  journey call it once a day per browser, from the page (link previews in WhatsApp or Telegram hit the
+  server render, so the server never marks). Fire and forget.
+- **`tools/goal-numbers.sql`**, read-only, every Monday with Patrik's go:
+  `echo PROD | tools/db.sh --prod sql tools/goal-numbers.sql`. A stranger is an account created on or
+  after 31 Oct; a stranger journey is one they created; a couple counts once; a follow link opened
+  counts once however many phones share it.
+- **Checked:** tsc, eslint, 206 tests (2 new for the day), the redirects test, `next build --webpack`;
+  in the dev preview (placeholder Supabase values, not `.env.local`, which points at production) the
+  three pages each set their once-a-day note. `49-TESTPLAN.sql` (11 checks: sources, the 24-hour
+  window, the first door, one mark a day, paused and unknown links, travellers not marked, no access
+  through the public key, the purge job) runs only in the dry run on production.
+
+iOS: the phone's follower screens (Home's journeys you follow, a followed journey's Trip, the Feed tab
+of #130) should call `mark_feed_open()` with no argument once a day when they show a followed
+journey; the source needs nothing on the phone (the database's triggers note it).
+
 ### DECIDED — Patrik, 25 Oct: staging is paused; we test on production, with rollbacks
 
 The staging project (`asia-nomad-staging`, `fdcncqnklscbztcydtye`) is paused to free the free
