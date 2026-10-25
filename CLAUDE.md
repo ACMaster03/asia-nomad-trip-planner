@@ -219,6 +219,11 @@ Petra is new to software work; Patrik is not. The product conventions are in
   engine, live since 25 Oct (#218, `6d2d7eb`; `docs/NOTES.md`, 25 Oct). Petra tested 5b on 15 Oct: no findings.
   The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
+- 25 Oct, before the 31 Oct freeze (the milestone "Pre-freeze check"): #120, the goal made
+  countable, is live (migration 49 on production, #221): follower opens, one mark a day, and each
+  new account's source, read every Monday with `tools/goal-numbers.sql` (Patrik's go). Next on the
+  list: #150 (the reminder-email switch `/privacy` promises), #121 (followers stay signed in), the
+  #122 walk with a fresh account, then #156 (the policy read once more).
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.
