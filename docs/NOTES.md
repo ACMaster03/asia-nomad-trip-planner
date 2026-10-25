@@ -7,10 +7,16 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
-### BUILT — #120: the goal made countable (migration 49, the marks, the Monday query)
+### LIVE — #120: the goal made countable (migration 49, the marks, the Monday query)
 
-Patrik, 25 Oct: the first item before the freeze, on the recommended defaults. Migration 49 is not
-applied yet; the apply waits for Patrik's go.
+Patrik, 25 Oct: the first item before the freeze, on the recommended defaults.
+
+**Migration 49 applied on production, 25 Oct** (Patrik's go, `echo PROD | tools/db.sh --prod apply
+49`; the purge job is cron job 13). Checked right after: both tables exist with RLS on and no
+policies; `anon` cannot read `feed_open_days`, `authenticated` cannot read `account_sources` or call
+`_note_signup_source`; `anon` can call `mark_feed_open`; both triggers exist; the job runs `5 3 * * *`
+and is active; 0 marks and 0 sources. The app side goes live with #221's merge. Undo: the SQL in
+49's header. Still to do: one real open of a follow link on a phone, then the Monday query shows it.
 
 **Dry run on production, 25 Oct (Patrik's go): clean, nothing persisted.** Three runs, each one
 transaction that ended in rollback: (1) `begin;` + 49 + the goal query + `49-TESTPLAN.sql`: no error,
@@ -54,7 +60,6 @@ iOS: the phone's follower screens (Home's journeys you follow, a followed journe
 of #130) should call `mark_feed_open()` with no argument once a day when they show a followed
 journey; the source needs nothing on the phone (the database's triggers note it).
 
-### DECIDED — Patrik, 25 Oct: the zoom comes back on Apple's engine
 ### DECIDED — Patrik, 25 Oct: staging is paused; we test on production, with rollbacks
 
 The staging project (`asia-nomad-staging`, `fdcncqnklscbztcydtye`) is paused to free the free
