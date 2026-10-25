@@ -178,6 +178,10 @@ The six questions this file first ended with, and the answers.
 
 ## Record
 
+- 25 Oct: the cause of round 6's two Safari crashes, found in the iOS Simulator: one WebKit bug
+  (323307), the settle's `scale: none` held between two keyframes of a scroll-driven animation.
+  The settle is rewritten without that hold and is back on Apple's engine on every page; the
+  zoom still waits on Patrik (`docs/NOTES.md`, 25 Oct).
 - 15 Oct: round 6 live (#210, `5ae40f3`), motion, the last of the plan: the zoom from a card to
   its page (a stop card into the stop page, Latest into All entries, Subscriptions into its page,
   Check in into its sheet; the View Transitions API), cards settling in as they scroll into view,

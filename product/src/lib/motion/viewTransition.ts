@@ -27,9 +27,10 @@ export const reduceMotion = () =>
 // Apple's engine: Safari, and every browser on an iPhone or iPad (they all run
 // on WebKit and report Apple as the vendor). On Petra's iPhone the first zoom
 // (a stop card on Trip, 15 Oct, v5ae40f3) quit Safari outright, and with the
-// API off (v70b4470) Latest → All entries still did; a browser that crashes is
-// worse than a page that cuts, so until the cause is found these browsers get
-// the plain cut they had before: no API, and no zoom name on any element
+// API off (v70b4470) Latest → All entries still did. The cause was the
+// settle's keyframes, not the zoom (globals.css, .lv-settle; docs/NOTES.md,
+// 25 Oct), but until Patrik decides the zoom comes back these browsers get the
+// plain cut they had before: no API, and no zoom name on any element
 // (globals.css drops them under html.lv-no-vt, set by layout.tsx's boot script;
 // the hooks below hand out none). Chrome and Android keep the zoom.
 export const appleWebKit = () => typeof navigator !== 'undefined' && navigator.vendor === 'Apple Computer, Inc.'

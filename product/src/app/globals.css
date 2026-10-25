@@ -347,7 +347,13 @@ h3,
    The lightness is a factor (--lv-vis), not the opacity itself, so a card that is
    dim on its own (a "maybe" stop) keeps its dim through --lv-dim. `scale: none` at
    rest: a scale of 1 would still make the card the box a fixed sheet inside it is
-   placed against. */
+   placed against.
+   The scale is two animations, in at the bottom edge and out at the top, never one
+   that holds `scale: none` between two keyframes: Safari 26 runs scroll-driven
+   animations in its own process, and blending `none` into `none` for `scale`,
+   `translate` or `rotate` there crashes Safari itself (the zoom and All entries,
+   15 Oct; docs/NOTES.md, 25 Oct). Between the edges neither is active and the card
+   is at rest. */
 @property --lv-vis {
   syntax: '<number>';
   inherits: false;
@@ -356,37 +362,34 @@ h3,
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     @keyframes lv-settle {
-      0% { --lv-vis: 0.6; scale: 0.96; transform-origin: 50% 0; }
-      14% { --lv-vis: 1; scale: none; transform-origin: 50% 0; }
-      86% { --lv-vis: 1; scale: none; transform-origin: 50% 100%; }
-      100% { --lv-vis: 0.6; scale: 0.96; transform-origin: 50% 100%; }
+      0% { --lv-vis: 0.6; }
+      14% { --lv-vis: 1; }
+      86% { --lv-vis: 1; }
+      100% { --lv-vis: 0.6; }
+    }
+    @keyframes lv-settle-in {
+      from { scale: 0.96; transform-origin: 50% 0; }
+      to { scale: none; transform-origin: 50% 0; }
+    }
+    @keyframes lv-settle-out {
+      from { scale: none; transform-origin: 50% 100%; }
+      to { scale: 0.96; transform-origin: 50% 100%; }
     }
     .lv-settle {
       opacity: calc(var(--lv-vis) * var(--lv-dim, 1));
-      animation: lv-settle linear both;
-      animation-timeline: view(block 0px 64px);
-      animation-range: cover 0% cover 100%;
+      animation: lv-settle linear both, lv-settle-in linear backwards, lv-settle-out linear forwards;
+      animation-timeline: view(block 0px 64px), view(block 0px 64px), view(block 0px 64px);
+      animation-range: cover 0% cover 100%, cover 0% cover 14%, cover 86% cover 100%;
     }
     /* A card that also rises on mount keeps both: the rise on the clock, the settle on the scroll. */
     .lv-enter.lv-settle {
-      animation: lv-rise var(--lv-settle) var(--lv-ease), lv-settle linear both;
-      animation-timeline: auto, view(block 0px 64px);
-      animation-range: normal, cover 0% cover 100%;
-    }
-    /* Apple's engine (html.lv-no-vt, the boot script in layout.tsx): the settle only on a
-       card that also rises in. With the zoom names already off, All entries still quit
-       Safari on Petra's iPhone the moment it opened (15 Oct, v300171d), while Money's and
-       Trip's cards settled without harm. The difference: the parts that crashed settle
-       without a rise (`.lv-settle` alone: All entries' day sections and Coming up, the
-       Subscriptions page's groups, Home's follow rows), eleven of them under a sticky chip
-       row; the cards that never crashed have the two-animation form (`lv-enter lv-settle`).
-       So the one-animation form is off there (those parts sit at rest) and the two-animation
-       form stays, Money's settle with it (Petra's choice, 15 Oct). Which detail WebKit trips
-       on is for a Mac's Safari to show (docs/NOTES.md). */
-    html.lv-no-vt .lv-settle:not(.lv-enter) {
-      animation: none;
-      animation-timeline: auto;
-      animation-range: normal;
+      animation:
+        lv-rise var(--lv-settle) var(--lv-ease),
+        lv-settle linear both,
+        lv-settle-in linear backwards,
+        lv-settle-out linear forwards;
+      animation-timeline: auto, view(block 0px 64px), view(block 0px 64px), view(block 0px 64px);
+      animation-range: normal, cover 0% cover 100%, cover 0% cover 14%, cover 86% cover 100%;
     }
   }
 }
@@ -440,11 +443,10 @@ html.lv-vt .lv-sheet {
   animation-duration: 0.01s;
 }
 /* Apple's engine (the boot script in layout.tsx): the zoom quit Safari on Petra's
-   iPhone, with the API and then without it, on the pages that carry a zoom name
-   (15 Oct). No name there at all, inline styles included, until the cause is found.
-   The settle went off with it in #212, came back in #213 (Petra had seen it work on
-   Money), and All entries quit Safari again: the settle on that page is the cause,
-   so the form of it that page uses is off there, below. */
+   iPhone (15 Oct). The cause was the settle's `scale: none` hold, above, not the
+   zoom (25 Oct, the iOS Simulator: with the settle rewritten the stop card zooms
+   without harm), but the zoom stays off there until Patrik decides it comes back:
+   no name at all, inline styles included. */
 html.lv-no-vt * {
   view-transition-name: none !important;
 }
