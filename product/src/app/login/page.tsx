@@ -5,6 +5,7 @@ import { createOtpClient } from '@/lib/supabase/otp'
 import { DEFAULT_NEXT, safeNextPath } from '@/lib/auth/safeNext'
 import { createClient } from '@/lib/supabase/client'
 import { humanAuthError, looksLikeNoPasswordSet } from '@/lib/auth/authError'
+import { codeErrorText, looksLikeCode, verifyEmailCode } from '@/lib/auth/emailCode'
 
 // Login — handoff frame 01 (the only screen on the 2a "valley morning" wash;
 // invite-accept shares it in Phase 4). Behavior follows the rig: sending stays
@@ -24,6 +25,11 @@ import { humanAuthError, looksLikeNoPasswordSet } from '@/lib/auth/authError'
 // way in on the road: no email round trip means no waiting on a mail server and
 // no in-app-browser handoff (see lib/supabase/otp.ts for what that handoff
 // cost us once already).
+//
+// THE CODE (2026-10-25, #121). The same email carries a code, and once it is
+// sent this screen takes it. The link signs in whichever browser opens it (a
+// mail app's own, often); the code signs in THIS one, which is the only way a
+// home-screen icon on an iPhone ever gets a session (lib/auth/emailCode.ts).
 type Mode = 'link' | 'password'
 
 export default function Login() {
@@ -38,6 +44,7 @@ export default function Login() {
   // server anyway. Better to show the wait than to earn a 429.
   const [cooldown, setCooldown] = useState(0)
   const [error, setError] = useState('')
+  const [code, setCode] = useState('')
 
   // Where to land after sign-in. A follow link sends people here with
   // ?next=/follow/<token> so the follow they started can finish; anything
@@ -58,6 +65,25 @@ export default function Login() {
     setSent(false)
     setResetSent(false)
     setPassword('')
+    setCode('')
+  }
+
+  async function signInWithCode() {
+    if (!email || !looksLikeCode(code) || sending) return
+    setSending(true)
+    // Session-owning client, as signIn below: the code must leave a cookie here.
+    const { error } = await verifyEmailCode(createClient(), email, code)
+    setSending(false)
+    if (error) {
+      setError(
+        codeErrorText(error.message) ??
+          humanAuthError(error, "We couldn't check the code just now. Please try again in a moment."),
+      )
+      return
+    }
+    setError('')
+    // Full navigation, for the same reason as signIn.
+    window.location.href = nextPath()
   }
 
   async function send(e: React.FormEvent) {
@@ -223,7 +249,37 @@ export default function Login() {
 
             {sent && mode === 'link' && (
               <div className="lv-enter rounded-[22px] bg-tag px-4 py-3.5 text-base font-medium leading-normal text-tag-ink">
-                ✓ Check your email for the sign-in link.
+                ✓ Check your email. Tap the link, or type the code from it here.
+              </div>
+            )}
+            {sent && mode === 'link' && (
+              <div className="lv-enter flex gap-2">
+                <label className="min-w-0 flex-1 rounded-[22px] border-[1.5px] border-ln2 bg-sf/90 px-4 py-3.5 text-tx transition-[border-color,box-shadow] duration-[180ms] focus-within:border-ac focus-within:shadow-[0_0_0_4px_var(--acSoft)]">
+                  <span className="block text-base uppercase tracking-[.1em] text-tx2">Code</span>
+                  <input
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Enter here means the code, not "send the email again".
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        signInWithCode()
+                      }
+                    }}
+                    placeholder="12345678"
+                    className="mt-[5px] w-full bg-transparent text-base font-medium tracking-[.12em] tabular-nums outline-none placeholder:text-tx3"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={signInWithCode}
+                  disabled={sending || !looksLikeCode(code)}
+                  className="flex-none rounded-[22px] bg-ac px-5 text-[17px] font-semibold text-on disabled:opacity-55"
+                >
+                  Sign in
+                </button>
               </div>
             )}
             {resetSent && mode === 'password' && (

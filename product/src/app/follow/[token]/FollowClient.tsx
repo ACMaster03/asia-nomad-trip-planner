@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { Bell, CirclePause, Compass, Mail, UserPlus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { createOtpClient } from '@/lib/supabase/otp'
+import { codeErrorText, looksLikeCode, verifyEmailCode } from '@/lib/auth/emailCode'
 import { fetchSharedFeed, fetchSharedSummary, subscribeDigest, type SharedEvent, type SharedSummary, type Traveller } from '@/lib/follow/api'
 import { followByToken } from '@/lib/follow/follows'
 import { fetchSharedFeedSocial } from '@/lib/follow/social'
@@ -603,6 +605,13 @@ function FollowCard({
 
 // Magic-link sign-in that comes back HERE. The pending follow is saved before
 // the email goes out, so the return trip finishes it without a second tap.
+//
+// #121 (25 Oct): the email went out through the PKCE client until now, so its
+// link only worked in this same browser: tapped in Mail or Gmail, it opened
+// their in-app browser and failed as "invalid or expired", the 27 Aug bug that
+// lib/supabase/otp.ts fixed for /login and never here. It goes through the
+// send-only client now, and the code in the same email signs in THIS browser,
+// which is the one that matters for a follower's home-screen icon.
 function AccountSheet({
   token, travellers, names, onClose,
 }: { token: string; travellers: string[] | null; names: string[]; onClose: () => void }) {
@@ -610,23 +619,42 @@ function AccountSheet({
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'busy' | 'sent' | 'error'>('idle')
   const [error, setError] = useState('')
+  const [code, setCode] = useState('')
+  const [checking, setChecking] = useState(false)
+  const [codeError, setCodeError] = useState('')
+  const back = `/follow/${token}?auto=${travellers ? travellers.join(',') : 'all'}`
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('busy')
     savePendingFollow(token, travellers)
-    const { error } = await sb.auth.signInWithOtp({
+    const { error } = await createOtpClient().auth.signInWithOtp({
       email: email.trim(),
       options: {
         // The redirect carries the choice too, so a link opened in another
         // browser (no localStorage) still finishes the follow on arrival.
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/follow/${token}?auto=${travellers ? travellers.join(',') : 'all'}`)}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(back)}`,
       },
     })
     if (error) {
       setError(error.message)
       setStatus('error')
     } else setStatus('sent')
+  }
+
+  const checkCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!looksLikeCode(code) || checking) return
+    setChecking(true)
+    const { error } = await verifyEmailCode(sb, email, code)
+    if (error) {
+      setCodeError(codeErrorText(error.message) ?? error.message)
+      setChecking(false)
+      return
+    }
+    // A full load of this page with ?auto=: the session is read on mount, and
+    // the pending-follow effect above finishes the follow and opens the journey.
+    window.location.href = back
   }
 
   return (
@@ -645,9 +673,31 @@ function AccountSheet({
         <div aria-hidden className="mx-auto h-[5px] w-11 flex-none rounded-full bg-ln3" />
         <h2 className="font-serif text-[21px] font-semibold">Follow {names.join(' & ')}</h2>
         {status === 'sent' ? (
-          <p className="text-base leading-[1.55]">
-            Check <strong>{email}</strong> and tap the link in the email. It brings you back here, already following.
-          </p>
+          <>
+            <p className="text-base leading-[1.55]">
+              Check <strong>{email}</strong>. Type the code from the email here, or tap its link. Either way you come back here, already following.
+            </p>
+            <form onSubmit={checkCode} className="flex gap-2">
+              <input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus
+                aria-label="Code from the email"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="12345678"
+                className="min-w-0 flex-1 rounded-[calc(var(--r)-3px)] border-[1.5px] border-ln2 bg-inp px-3 py-3 text-base tracking-[.12em] tabular-nums outline-none focus:border-ac"
+              />
+              <button
+                type="submit"
+                disabled={checking || !looksLikeCode(code)}
+                className="flex-none rounded-[calc(var(--r)-3px)] bg-ac px-4 text-base font-semibold text-on disabled:opacity-50"
+              >
+                {checking ? '…' : 'Follow'}
+              </button>
+            </form>
+            {codeError && <p className="text-base text-warn">{codeError}</p>}
+          </>
         ) : (
           <>
             <p className="-mt-2 text-base leading-[1.5] text-tx2">
