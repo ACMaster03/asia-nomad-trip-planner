@@ -7,6 +7,20 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
+### DECIDED — Patrik, 25 Oct: the zoom comes back on Apple's engine
+
+Patrik, in the chat, once #216 held on his iPhone (iOS 27 beta): "Let's bring it back." The gate of
+#211–#212 goes (the boot script no longer marks Apple's engine with `lv-no-vt`, `globals.css` no
+longer drops the zoom names, `viewTransition.ts` no longer skips the API there), so iPhones and
+Safari get the zoom as Chrome and Android do. Checked in the iOS 26.5 Simulator: the stop card into
+its page and back twice, All entries, no crash. Not checked there: Latest → All entries,
+Subscriptions into its page, Check in into its sheet (the previews have no sign-in and no check-in
+sheet); those need a phone on livhold.com after the merge, an iOS 26 one above all. What could go
+wrong: a second WebKit bug in the View Transitions API itself, which the settle's crash hid; the way
+back is this commit reverted.
+
+iOS: nothing; the phone's zoom is its own.
+
 ### LIVE — Round 6's two Safari crashes have one cause: the settle's `scale: none` hold (25 Oct)
 
 **Live since 25 Oct** (#216, `46c69b2`; Vercel's production build green, app.livhold.com and

@@ -24,21 +24,10 @@ type VTDocument = Document & {
 export const reduceMotion = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
-// Apple's engine: Safari, and every browser on an iPhone or iPad (they all run
-// on WebKit and report Apple as the vendor). On Petra's iPhone the first zoom
-// (a stop card on Trip, 15 Oct, v5ae40f3) quit Safari outright, and with the
-// API off (v70b4470) Latest → All entries still did. The cause was the
-// settle's keyframes, not the zoom (globals.css, .lv-settle; docs/NOTES.md,
-// 25 Oct), but until Patrik decides the zoom comes back these browsers get the
-// plain cut they had before: no API, and no zoom name on any element
-// (globals.css drops them under html.lv-no-vt, set by layout.tsx's boot script;
-// the hooks below hand out none). Chrome and Android keep the zoom.
-export const appleWebKit = () => typeof navigator !== 'undefined' && navigator.vendor === 'Apple Computer, Inc.'
-
 /** Run `update` as a view transition where the browser can, at once where it cannot. */
 export function viewTransition(update: () => void | Promise<void>): void {
   const doc = document as VTDocument
-  if (!doc.startViewTransition || reduceMotion() || appleWebKit()) {
+  if (!doc.startViewTransition || reduceMotion()) {
     void update()
     return
   }
@@ -90,7 +79,7 @@ export const vtName = (prefix: string, id: string) => `${prefix}-${id.replace(/[
 let zoomFrom: { name: string; at: number } | null = null
 const ZOOM_FROM_TTL = 3000
 
-export const setZoomFrom = (name: string) => { if (!appleWebKit()) zoomFrom = { name, at: Date.now() } }
+export const setZoomFrom = (name: string) => { zoomFrom = { name, at: Date.now() } }
 export const peekZoomFrom = (): string | undefined =>
   zoomFrom && Date.now() - zoomFrom.at < ZOOM_FROM_TTL ? zoomFrom.name : undefined
 export const clearZoomFrom = () => { zoomFrom = null }
