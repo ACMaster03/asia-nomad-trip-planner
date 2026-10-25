@@ -13,6 +13,8 @@ struct FollowedTripScreen: View {
     let tripId: String
     /// The post it was opened from, if any.
     var focus: String?
+    /// The tab it was opened on: Home, or Feed for a traveller who follows someone.
+    var from: AppTab = .home
 
     @Environment(FollowStore.self) private var follows
     @Environment(\.dismiss) private var dismiss
@@ -31,7 +33,7 @@ struct FollowedTripScreen: View {
                 GlobeScaffold(
                     journey: globe,
                     title: j.name,
-                    tab: .home,
+                    tab: from,
                     play: $play,
                     refresh: { await follows.refresh() },
                     header: { open in header(j, open: open) },
@@ -49,6 +51,9 @@ struct FollowedTripScreen: View {
         .sheet(item: $commentsFor) { e in
             CommentsSheet(event: e).environment(follows)
         }
+        .onChange(of: follows.notice) { _, n in
+            if let n { toast = n; follows.notice = nil }
+        }
         .toast($toast)
     }
 
@@ -61,7 +66,7 @@ struct FollowedTripScreen: View {
                     Button { dismiss() } label: {
                         HStack(spacing: 3) {
                             Image(systemName: "chevron.left").font(.system(size: 14, weight: .semibold))
-                            Text("Home")
+                            Text(verbatim: from.title)
                         }
                         .font(.sans(15, weight: .medium))
                         .foregroundStyle(Palette.ac)
@@ -391,7 +396,8 @@ private struct FollowedStopRow: View {
 
 // MARK: - one check-in
 
-/// A check-in: the place, who and when, the stars, their words, and its comments.
+/// A check-in under its stop: the Feed's post without its card (the photo, who and when,
+/// the stars, their words), with your reaction and its comments.
 struct CheckInItem: View {
     let event: FollowedEvent
     /// Comment count; nil reads it from the store.
@@ -400,33 +406,11 @@ struct CheckInItem: View {
     @Environment(FollowStore.self) private var follows
 
     var body: some View {
-        let n = count ?? follows.commentCounts[event.id] ?? 0
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                (Text(verbatim: event.place.isEmpty ? String(localized: "Checked in") : event.place)
-                    .font(.sans(15, weight: .semibold)).foregroundColor(Palette.tx)
-                 + Text(verbatim: " · \(event.authorName ?? "") · \(FollowDates.when(event.at))")
-                    .font(.sans(13)).foregroundColor(Palette.tx3))
-                Spacer(minLength: 4)
-                if let r = event.rating, r > 0 { Stars(rating: r) }
-            }
-            if let words = event.comment, !words.isEmpty {
-                Text(verbatim: "“\(words)”").font(.sans(15)).foregroundStyle(Palette.tx2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Button { comment(event) } label: {
-                Group {
-                    if n == 0 { Text("Comment") }
-                    else if n == 1 { Text("1 comment · Comment") }
-                    else { Text("\(n) comments · Comment") }
-                }
-                .font(.sans(13, weight: .medium))
-                .foregroundStyle(Palette.ac)
-                .frame(minHeight: 30)
-                .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-        }
+        PostCard(
+            event: event, mine: follows.mine[event.id], commentCount: count ?? follows.commentCounts[event.id] ?? 0,
+            style: .embedded,
+            react: { follows.react(event.id, $0) },
+            comments: { comment(event) })
     }
 }
 
@@ -445,12 +429,19 @@ struct Stars: View {
 
 struct CommentsSheet: View {
     let event: FollowedEvent
+    /// Opened from Reply in the Feed's "New": the comment answered.
+    var replyTo: FollowComment.Target?
+    /// The live count once loaded, and each comment sent: the Feed keeps its counts.
+    var onLoaded: ((Int) -> Void)?
+    var onAdded: (() -> Void)?
     @Environment(FollowStore.self) private var follows
     @State private var comments: [FollowComment] = []
     @State private var loading = true
     @State private var error: String?
     @State private var draft = ""
     @State private var sending = false
+    @State private var replying: FollowComment.Target?
+    @FocusState private var typing: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -470,8 +461,20 @@ struct CommentsSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             if let error { Notice(verbatim: error, kind: .warn) }
+            if let r = replying {
+                HStack(spacing: 6) {
+                    Text("Replying to \(r.name)").font(.sans(13, weight: .medium)).foregroundStyle(Palette.tx2)
+                    Button { replying = nil } label: {
+                        Image(systemName: "xmark.circle.fill").font(.system(size: 15)).foregroundStyle(Palette.tx3)
+                            .frame(minWidth: 30, minHeight: 30)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Stop replying")
+                }
+            }
             HStack(spacing: 10) {
-                Field(placeholder: "Write a comment", text: $draft)
+                Field(placeholder: replying == nil ? "Write a comment" : "Write a reply", text: $draft)
+                    .focused($typing)
                     .submitLabel(.send)
                     .onSubmit(send)
                 Button(action: send) {
@@ -486,8 +489,12 @@ struct CommentsSheet: View {
         .padding(.top, 8)
         .livholdSheet()
         .task {
-            do { comments = try await follows.comments(event.id) }
-            catch { self.error = AuthStore.message(for: error) ?? String(localized: "Couldn’t load the comments.") }
+            replying = replyTo
+            if replyTo != nil { typing = true }
+            do {
+                comments = try await follows.comments(event.id)
+                onLoaded?(comments.filter { $0.deleted != true }.count)
+            } catch { self.error = AuthStore.message(for: error) ?? String(localized: "Couldn’t load the comments.") }
             loading = false
         }
     }
@@ -507,6 +514,15 @@ struct CommentsSheet: View {
                     if let at = FollowDates.instant(c.created_at) {
                         Text(verbatim: FollowDates.when(at)).font(.sans(12)).foregroundStyle(Palette.tx3)
                     }
+                    Spacer(minLength: 0)
+                    Button {
+                        replying = .init(id: c.id, thread: c.parent_id ?? c.id, name: c.authorName ?? "")
+                        typing = true
+                    } label: {
+                        Text("Reply").font(.sans(12.5, weight: .semibold)).foregroundStyle(Palette.ac)
+                            .frame(minHeight: 28).contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
                 }
                 Text(verbatim: c.body).font(.sans(15)).foregroundStyle(Palette.tx2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -522,8 +538,18 @@ struct CommentsSheet: View {
         error = nil
         Task {
             do {
-                if let c = try await follows.addComment(text, to: event.id) { comments.append(c) }
+                let parent = replying?.thread
+                if let c = try await follows.addComment(text, to: event.id, parent: parent) {
+                    // A reply goes after the last one in its thread; a comment at the end.
+                    if let parent, let last = comments.lastIndex(where: { $0.id == parent || $0.parent_id == parent }) {
+                        comments.insert(c, at: last + 1)
+                    } else {
+                        comments.append(c)
+                    }
+                    onAdded?()
+                }
                 draft = ""
+                replying = nil
             } catch {
                 self.error = AuthStore.message(for: error) ?? String(localized: "Couldn’t send the comment. Please try again.")
             }

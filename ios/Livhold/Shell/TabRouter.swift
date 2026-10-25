@@ -46,6 +46,11 @@ final class TabRouter {
         }
     }
 
+    /// Opens a screen on a tab's stack, from code (a button that isn't a link).
+    func push(_ route: Route, on tab: AppTab) {
+        paths[tab, default: []].append(route)
+    }
+
     func path(_ tab: AppTab) -> Binding<[Route]> {
         Binding { self.paths[tab, default: []] } set: { self.paths[tab] = $0 }
     }
@@ -57,13 +62,13 @@ final class TabRouter {
     }
 }
 
-/// The four tabs, as on the web's `AppNav`. Check in is not a tab: it is an action
-/// in the middle of the bar that opens a sheet.
+/// The four tabs. Check in is not a tab: it is an action in the middle of the bar that
+/// opens a sheet. Feed took Map's place on 25 Oct (Petra, #130): the globe lives on Trip.
 ///
-/// Icons are SF Symbols stand-ins for the web's Lucide set (House, Route, Wallet,
-/// Map) until the Lucide-vs-SF-Symbols decision is made.
+/// Icons are SF Symbols stand-ins for the web's Lucide set until the Lucide-vs-SF-Symbols
+/// decision is made.
 enum AppTab: String, CaseIterable, Identifiable {
-    case home, trip, money, map
+    case home, trip, money, feed
     var id: Self { self }
 
     var title: String {
@@ -71,7 +76,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .home: String(localized: "Home")
         case .trip: String(localized: "Trip")
         case .money: String(localized: "Money")
-        case .map: String(localized: "Map")
+        case .feed: String(localized: "Feed")
         }
     }
 
@@ -80,7 +85,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .home: "house"
         case .trip: "point.topleft.down.to.point.bottomright.curvepath"
         case .money: "wallet.bifold"
-        case .map: "map"
+        case .feed: "heart.text.square"
         }
     }
 }

@@ -1,59 +1,8 @@
 import SwiftUI
 
-// STAND-INS. These exist so the spine (tabs, stacks, Check in, re-tap) can be felt
-// on a phone before any real screen is built. Each is replaced by the real Home,
-// Trip, Money and Map in its own round; the figures are the mock's, not your data.
-
-/// A tab's first screen: its own header, a long scroll, and scroll-to-top when the
-/// tab is tapped again at its root.
-private struct TabPage<Header: View, Content: View>: View {
-    let tab: AppTab
-    @ViewBuilder var header: Header
-    @ViewBuilder var content: Content
-    @Environment(TabRouter.self) private var router
-
-    var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    header.id("top")
-                    content
-                    Text("Stand-in screen — the real \(tab.title) comes in its own round.")
-                        .font(.sans(13))
-                        .foregroundStyle(Palette.tx3)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 24)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-            }
-            .background(Palette.canvas.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
-            .onChange(of: router.scrollToTop[tab]) {
-                withAnimation(.smooth) { proxy.scrollTo("top", anchor: .top) }
-            }
-        }
-    }
-}
-
-// MARK: - Map
-
-struct MapScreen: View {
-    var body: some View {
-        TabPage(tab: .map) {
-            Text("Map").font(.serif(26)).foregroundStyle(Palette.tx)
-        } content: {
-            RoundedRectangle(cornerRadius: Radius.r)
-                .fill(Palette.ph)
-                .frame(height: 420)
-                .overlay {
-                    Label("The globe goes here", systemImage: "globe.asia.australia")
-                        .font(.sans(16, weight: .medium))
-                        .foregroundStyle(Palette.tx2)
-                }
-        }
-    }
-}
+// STAND-INS. These exist so the spine (tabs, stacks, Check in) can be felt on a phone
+// before the real screen is built. Check in is the last one; it is replaced in its own
+// round.
 
 // MARK: - Check in
 

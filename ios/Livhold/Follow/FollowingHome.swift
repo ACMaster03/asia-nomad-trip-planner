@@ -1,14 +1,19 @@
 import SwiftUI
 
-// Your people on Home (#130; Patrik, 3 Oct): one card per journey you follow (who, where,
-// what's next, the latest post), then the latest posts across them. A card or a post
-// opens that journey's Trip, read-only (#166). Without a journey of your own this is
-// Home; with one, the cards stay, after your stop card during your journey and before
-// your own journey otherwise, when theirs is under way.
+// Your people (#130; Patrik, 3 Oct): one card per journey you follow (who, where, what's
+// next, the latest post), then the latest posts across them, as the Feed draws posts
+// (Petra, 25 Oct: the big photo, one reaction, double tap to like). A card or a post's
+// "Open" opens that journey's Trip, read-only (#166). Without a journey of your own this
+// is Home; with one, it sits at the foot of the Feed tab.
 
 struct FollowingSection: View {
     let today: String
+    /// The tab it is on, where its journeys open.
+    let tab: AppTab
     @Environment(FollowStore.self) private var follows
+    @Environment(TabRouter.self) private var router
+    @State private var commentsFor: FollowedEvent?
+    @State private var toast: String?
 
     var body: some View {
         let list = follows.journeys(today: today)
@@ -29,13 +34,20 @@ struct FollowingSection: View {
                 if !latest.isEmpty {
                     SectionLabel(text: Text("Latest")).padding(.top, 6)
                     ForEach(latest) { e in
-                        NavigationLink(value: Route.followed(e.trip_id, e.id)) {
-                            FeedItem(event: e, journey: follows.journey(e.trip_id), count: follows.commentCounts[e.id] ?? 0)
+                        FeedItem(event: e, journey: follows.journey(e.trip_id)) { commentsFor = e } open: {
+                            router.push(.followed(e.trip_id, e.id), on: tab)
                         }
-                        .buttonStyle(.plain)
+                        .settlesOnScroll()
                     }
                 }
             }
+            .sheet(item: $commentsFor) { e in
+                CommentsSheet(event: e).environment(follows)
+            }
+            .onChange(of: follows.notice) { _, n in
+                if let n { toast = n; follows.notice = nil }
+            }
+            .toast($toast)
         }
     }
 }
@@ -144,43 +156,34 @@ private struct JourneyCard: View {
     }
 }
 
+/// One post of a journey you follow: the Feed's card, with your reaction only (no
+/// counts for followers) and "Open ›" to the journey.
 private struct FeedItem: View {
     let event: FollowedEvent
     let journey: FollowedJourney?
-    let count: Int
+    let comments: () -> Void
+    let open: () -> Void
+    @Environment(FollowStore.self) private var follows
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if event.isArrival {
-                head(journey?.who ?? event.authorName ?? "", Text(verbatim: FollowDates.when(event.at)))
-                Text("Arrived in \(event.city)").font(.serif(16)).foregroundStyle(Palette.ac2Deep)
-                if let j = journey, let i = j.stopIndex(of: event), i > 0 {
-                    Text(verbatim: Self.from(j.stops[i - 1].city, mode: j.leg(into: i)?.mode))
-                        .font(.sans(14)).foregroundStyle(Palette.tx2)
-                }
-            } else {
-                head(event.authorName ?? "", Text("checked in · \(FollowDates.when(event.at))"))
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    let city = journey.flatMap { j in j.stopIndex(of: event).map { j.stops[$0].city } } ?? ""
-                    Text(verbatim: city.isEmpty ? event.place : "\(event.place), \(city)")
-                        .font(.serif(16)).foregroundStyle(Palette.tx)
-                    if let r = event.rating, r > 0 { Stars(rating: r) }
-                }
-                if let words = event.comment, !words.isEmpty {
-                    Text(verbatim: "“\(words)”").font(.sans(14)).foregroundStyle(Palette.tx2).lineLimit(3)
-                }
-                if count > 0 {
-                    (count == 1 ? Text("1 comment") : Text("\(count) comments"))
-                        .font(.sans(12.5, weight: .medium)).foregroundStyle(Palette.ac)
-                }
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(event.isArrival ? Palette.ac2Soft : Palette.sf, in: .rect(cornerRadius: Radius.r - 4))
-        .shadow(color: .black.opacity(event.isArrival ? 0 : 0.05), radius: 3, y: 1)
-        .accessibilityElement(children: .combine)
+        PostCard(
+            event: event, mine: follows.mine[event.id], commentCount: follows.commentCounts[event.id] ?? 0,
+            placeLine: placeLine, arrivalLine: arrivalLine,
+            authorLabel: event.isArrival ? journey?.who : nil,
+            react: { follows.react(event.id, $0) },
+            comments: comments,
+            open: open)
+    }
+
+    private var placeLine: String? {
+        guard event.isCheckIn, let j = journey, let i = j.stopIndex(of: event) else { return nil }
+        let city = j.stops[i].city
+        return city.isEmpty || Journey.sameCity(city, event.place) ? nil : "\(event.place), \(city)"
+    }
+
+    private var arrivalLine: String? {
+        guard event.isArrival, let j = journey, let i = j.stopIndex(of: event), i > 0 else { return nil }
+        return Self.from(j.stops[i - 1].city, mode: j.leg(into: i)?.mode)
     }
 
     /// "By train from Hanoi"
@@ -192,10 +195,5 @@ private struct FeedItem: View {
         case "ferry": String(localized: "By ferry from \(city)")
         default: String(localized: "From \(city)")
         }
-    }
-
-    private func head(_ who: String, _ rest: Text) -> some View {
-        (Text(verbatim: who).fontWeight(.semibold).foregroundColor(Palette.tx) + Text(verbatim: " ") + rest)
-            .font(.sans(13)).foregroundStyle(Palette.tx3)
     }
 }

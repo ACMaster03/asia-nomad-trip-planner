@@ -176,6 +176,22 @@
         }
       }
     },
+    "%@ and %lld others": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ and %2$lld others"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ és még %2$lld ember"
+          }
+        }
+      }
+    },
     "%@ average, %@ a day": {
       "localizations": {
         "en": {
@@ -576,6 +592,48 @@
         }
       }
     },
+    "%@’s %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@’s %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ bejegyzése"
+          }
+        }
+      }
+    },
+    "%@’s arrival in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@’s arrival in %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ érkezése: %2$@"
+          }
+        }
+      }
+    },
+    "%@’s note": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ megjegyzése"
+          }
+        }
+      }
+    },
     "%lld": {
       "shouldTranslate": false
     },
@@ -627,6 +685,7 @@
       }
     },
     "%lld comments · Comment": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -941,6 +1000,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "még %lld…"
+          }
+        }
+      }
+    },
+    "%lld new": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld új"
           }
         }
       }
@@ -1271,6 +1340,16 @@
         }
       }
     },
+    "%lld reactions. See who": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld reakció. Nézd meg, kiktől"
+          }
+        }
+      }
+    },
     "%lld stops": {
       "localizations": {
         "en": {
@@ -1507,6 +1586,7 @@
       }
     },
     "1 comment · Comment": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -1969,6 +2049,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Az összeg és a dátum az Útiterv oldalon lévő foglalást követi."
+          }
+        }
+      }
+    },
+    "Anyone with the link can watch. To leave a heart or a comment, they sign in.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A linkkel bárki nézheti. Szívhez vagy hozzászóláshoz be kell lépnie."
           }
         }
       }
@@ -2833,12 +2923,42 @@
         }
       }
     },
+    "Couldn’t load who reacted.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült betölteni, ki reagált."
+          }
+        }
+      }
+    },
     "Couldn’t load your journey.": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Nem sikerült betölteni az utazásodat."
+          }
+        }
+      }
+    },
+    "Couldn’t load your posts.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült betölteni a bejegyzéseidet."
+          }
+        }
+      }
+    },
+    "Couldn’t make a follow link. Please try again.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült követési linket készíteni. Próbáld újra."
           }
         }
       }
@@ -2879,6 +2999,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nem sikerült menteni a módosítást. Próbáld újra."
+          }
+        }
+      }
+    },
+    "Couldn’t save your reaction. Please try again.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült menteni a reakciódat. Próbáld újra."
           }
         }
       }
@@ -3680,6 +3810,26 @@
         }
       }
     },
+    "Family": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Család"
+          }
+        }
+      }
+    },
+    "Feed": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hírfolyam"
+          }
+        }
+      }
+    },
     "Fees & cash": {
       "localizations": {
         "hu": {
@@ -3726,6 +3876,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Repülő"
+          }
+        }
+      }
+    },
+    "Followed by %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Követnek: %@"
           }
         }
       }
@@ -4069,6 +4229,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Elrejti, hol költöttétek"
+          }
+        }
+      }
+    },
+    "Hold for more reactions": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tartsd nyomva a többi reakcióért"
           }
         }
       }
@@ -4457,6 +4627,16 @@
         }
       }
     },
+    "Like": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tetszik"
+          }
+        }
+      }
+    },
     "Linh Phuoc Pagoda · 2h ago": {},
     "Live": {
       "localizations": {
@@ -4550,6 +4730,7 @@
     },
     "Lora / Work Sans not bundled yet — showing the system fallback.": {},
     "Map": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -4726,6 +4907,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Név, dátumok, otthon, költségkeret és árfolyamok."
+          }
+        }
+      }
+    },
+    "New": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Új"
           }
         }
       }
@@ -4999,6 +5190,16 @@
         }
       }
     },
+    "No reactions yet": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs reakció"
+          }
+        }
+      }
+    },
     "No stay yet": {
       "localizations": {
         "hu": {
@@ -5106,6 +5307,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Még nincs közlekedés"
+          }
+        }
+      }
+    },
+    "Nobody follows %@ yet": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még senki sem követi: %@"
+          }
+        }
+      }
+    },
+    "Nobody follows you yet": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még senki sem követ"
           }
         }
       }
@@ -5251,6 +5472,16 @@
         }
       }
     },
+    "Nothing yet. Check in from the bar and it shows here, for you and your followers.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még semmi. Jelentkezz be a sávról, és itt megjelenik neked és a követőidnek."
+          }
+        }
+      }
+    },
     "Notifications on again for %@": {
       "localizations": {
         "hu": {
@@ -5363,12 +5594,42 @@
         }
       }
     },
+    "Only the travellers see this": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezt csak az utazók látják"
+          }
+        }
+      }
+    },
+    "Only the travellers see who reacted.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak az utazók látják, ki reagált."
+          }
+        }
+      }
+    },
     "Onward": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Tovább"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megnyitás"
           }
         }
       }
@@ -5616,6 +5877,16 @@
         }
       }
     },
+    "Photos of %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotók: %@"
+          }
+        }
+      }
+    },
     "Plan a journey": {
       "localizations": {
         "hu": {
@@ -5712,6 +5983,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Az árfolyamok minden reggel frissülnek. A pénznem akkor lesz módosítható, amikor minden költés a saját napjának árfolyamát őrzi."
+          }
+        }
+      }
+    },
+    "React": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reagálok"
+          }
+        }
+      }
+    },
+    "Reactions": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reakciók"
           }
         }
       }
@@ -5887,6 +6178,26 @@
         }
       }
     },
+    "Reply": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válasz"
+          }
+        }
+      }
+    },
+    "Replying to %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válasz neki: %@"
+          }
+        }
+      }
+    },
     "Resume this subscription": {
       "localizations": {
         "hu": {
@@ -6036,6 +6347,26 @@
         }
       }
     },
+    "Send the follow link": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldd el a követési linket"
+          }
+        }
+      }
+    },
+    "Send your family the follow link. They see your stops and dates, how you travel, and your check-ins with their photos. Never what you spend, where you stay or your bookings.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldd el a családodnak a követési linket. Látják a megállóidat és a dátumokat, hogyan utazol, és a bejelentkezéseidet a fotóikkal. Azt soha, mennyit költesz, hol szállsz meg, és mit foglaltál."
+          }
+        }
+      }
+    },
     "Set": {
       "localizations": {
         "hu": {
@@ -6103,6 +6434,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kevesebb"
+          }
+        }
+      }
+    },
+    "Show older posts": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Régebbi bejegyzések"
           }
         }
       }
@@ -6371,6 +6712,7 @@
     },
     "Spent ₫640,000 of ₫900,000": {},
     "Stand-in screen — the real %@ comes in its own round.": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -6518,6 +6860,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Megálló"
+          }
+        }
+      }
+    },
+    "Stop replying": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mégse válaszolok"
           }
         }
       }
@@ -6754,6 +7106,7 @@
       }
     },
     "The globe goes here": {
+      "extractionState": "stale",
       "localizations": {
         "hu": {
           "stringUnit": {
@@ -6899,6 +7252,16 @@
         }
       }
     },
+    "They follow you, so they see every journey you open to followers.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Téged követnek, így látják minden utazásodat, amit megnyitsz a követőknek."
+          }
+        }
+      }
+    },
     "This is your only way in, so it can’t be removed.": {
       "localizations": {
         "hu": {
@@ -6975,6 +7338,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hová"
+          }
+        }
+      }
+    },
+    "Today": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ma"
           }
         }
       }
@@ -7495,6 +7868,16 @@
         }
       }
     },
+    "Write a reply": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Írj választ"
+          }
+        }
+      }
+    },
     "Yearly": {
       "localizations": {
         "hu": {
@@ -7521,6 +7904,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Igen, követem"
+          }
+        }
+      }
+    },
+    "Yesterday": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tegnap"
           }
         }
       }
@@ -7575,12 +7968,32 @@
         }
       }
     },
+    "Your followers": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Követőid"
+          }
+        }
+      }
+    },
     "Your journey": {
       "localizations": {
         "hu": {
           "stringUnit": {
             "state": "translated",
             "value": "Az utazásod"
+          }
+        }
+      }
+    },
+    "Your journey’s posts": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az utazásod bejegyzései"
           }
         }
       }
@@ -7646,6 +8059,16 @@
         }
       }
     },
+    "Your reaction: %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reakciód: %@"
+          }
+        }
+      }
+    },
     "You’re here · night %lld of %lld": {
       "localizations": {
         "en": {
@@ -7696,6 +8119,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "magától került be"
+          }
+        }
+      }
+    },
+    "affection": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "szeretet"
           }
         }
       }
@@ -7770,6 +8203,16 @@
         }
       }
     },
+    "astonishing": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "elképesztő"
+          }
+        }
+      }
+    },
     "avg %@ a day": {
       "localizations": {
         "hu": {
@@ -7786,6 +8229,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "hátizsák, elektronika, adapterek, úti felszerelés"
+          }
+        }
+      }
+    },
+    "beautiful": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gyönyörű"
           }
         }
       }
@@ -7923,6 +8376,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "kávé, sör, gyümölcslé"
+          }
+        }
+      }
+    },
+    "commented on %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hozzászólt: %@"
+          }
+        }
+      }
+    },
+    "day %lld": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld. nap"
           }
         }
       }
@@ -8110,6 +8583,16 @@
         }
       }
     },
+    "funny": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vicces"
+          }
+        }
+      }
+    },
     "gifts, keepsakes, postcards": {
       "localizations": {
         "hu": {
@@ -8264,6 +8747,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "mérés…"
+          }
+        }
+      }
+    },
+    "milestone": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mérföldkő"
           }
         }
       }
@@ -8693,6 +9186,16 @@
         }
       }
     },
+    "since %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ óta"
+          }
+        }
+      }
+    },
     "spent": {
       "localizations": {
         "hu": {
@@ -8844,6 +9347,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "a %1$lld tervezett éjszaka, %2$@-ig"
+          }
+        }
+      }
+    },
+    "the grind": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kitartás"
           }
         }
       }
@@ -9054,6 +9567,16 @@
         }
       }
     },
+    "wrote · %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "írta · %@"
+          }
+        }
+      }
+    },
     "yearly": {
       "localizations": {
         "hu": {
@@ -9076,6 +9599,36 @@
     },
     "you@example.com": {
       "shouldTranslate": false
+    },
+    "your %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ bejegyzésed"
+          }
+        }
+      }
+    },
+    "your arrival in %@": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "érkezésed: %@"
+          }
+        }
+      }
+    },
+    "your note": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "megjegyzésed"
+          }
+        }
+      }
     },
     "you’re in %@": {
       "localizations": {
