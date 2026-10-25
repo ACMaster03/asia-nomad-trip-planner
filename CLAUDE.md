@@ -210,8 +210,12 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Petra's test clean) Apple's engine (`html.lv-no-vt`, the boot script in `layout.tsx`) has no
   zoom (API and names off) and no settle on parts without a rise; Money, Trip and Home keep
   the settle, and the roll, the expand and pull to refresh work everywhere. Chrome and Android
-  have all five pieces. The cause is for a Mac's Safari to show (`docs/NOTES.md`, 15 Oct);
-  Patrik decides whether the zoom returns to Apple's engine. Petra tested 5b on 15 Oct: no findings.
+  have all five pieces. 25 Oct, the cause, found in the iOS Simulator: one WebKit bug
+  (323307), not two. A scroll-driven animation that holds `scale: none` between two keyframes
+  crashes Safari itself; the settle did that. The settle is rewritten without the hold and is
+  back on Apple's engine on every page (branch `fix/webkit-motion-crashes`, not merged yet).
+  The zoom then no longer crashes either; whether it returns to Apple's engine is Patrik's call
+  (branch `fix/webkit-zoom-back`; `docs/NOTES.md`, 25 Oct). Petra tested 5b on 15 Oct: no findings.
   The source of the look is `feat/ios-foundation`,
   not the `ios/` on `main`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under

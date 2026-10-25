@@ -5,6 +5,58 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-25
+
+### BUILT — Round 6's two Safari crashes have one cause: the settle's `scale: none` hold (25 Oct)
+
+Found on Patrik's Mac, in the iOS 26.5 Simulator's Safari, with the gate of #211–#214 lifted. Both
+crashes reproduced at once (All entries on opening it, the stop card on the tap) and gave the same
+crash log: it is Safari itself (MobileSafari, the UI process) that dies, not the page, which is why
+it closed to the home screen on Petra's iPhone. The stack: `EXC_BAD_ACCESS` at `0xc` in
+`WebCore::blend(TransformOperation)`, called from `WebKit::RemoteAnimationStack::computeValues`.
+That is Safari 26's new way of running scroll-driven animations in its own process.
+
+The trigger, narrowed in plain pages one property at a time: a scroll-driven animation whose
+keyframe interval has `none` at both ends for `scale` (or `translate`, or `rotate`). Our settle held
+`scale: none` from 14 % to 86 %, so every card in view sat in such an interval. Two keyframes,
+`from { scale: none } to { scale: none }`, crash Safari on their own
+(`docs/webkit/scale-none-crash.html`). Not a crash: the same keyframes on a clock (time-based),
+`0.96 → none`, `scale: 1`, `transform: scale()`, opacity alone. The zoom was never the cause: with
+the settle fixed, the stop card zooms in and back with the API and its names on, and with the old
+keyframes put back once, the same tap crashed again with the same stack. Why the two-animation form
+(`lv-enter lv-settle`) escaped on Money and Trip until a view transition ran is not known [likely
+how WebKit picks which elements it runs in its own process]; the fix does not depend on it.
+
+**The fix** (`globals.css`, `.lv-settle`): the scale is two animations, in at the bottom edge
+(`0.96 → none` over the first 14 % of the card's way through the screen) and out at the top (`none →
+0.96` over the last 14 %), never one that holds `none`; in between neither is active and the card is
+at rest. The lightness stays one animation (`--lv-vis`). In Chromium the new form gives the same
+scale, lightness and origin as the old one at 500 scroll positions on All entries, Money, Trip and
+Home (312 of them mid-settle). So the settle is back on Apple's engine everywhere: the
+`html.lv-no-vt .lv-settle:not(.lv-enter)` rule of #214 is gone, and All entries, the Subscriptions
+page, Home's follow rows, the quiet page's cards and the no-stops card settle on iPhones again.
+
+**The zoom stays off on Apple's engine** in this build (`html.lv-no-vt`, the API skipped, no names):
+whether it comes back is Patrik's decision. Ready for it: branch `fix/webkit-zoom-back`, which lifts
+that gate, checked in the Simulator (the stop card into its page and back, no crash). Not checked
+there: Latest → All entries and Subscriptions (the preview has no sign-in, so those zooms land on
+the sign-in page) and Check in into its sheet (not wired in the preview).
+
+**WebKit** already has this crash: bug 323307 ("Safari UI process crashes in
+WebCore::blend(TransformOperation) applying accelerated scroll-driven animations", opened 3 Sep,
+NEW, in Apple's tracker as rdar 186636886). Its reductions are large, and the WebKit engineer on it
+could not reproduce his own test on 26.6. Ours is two keyframes and crashes every time; it goes to
+that bug as a comment rather than a new bug. Comment drafted, not posted yet (it is public, under
+Patrik's account).
+
+Checked locally: tsc, eslint, 204 tests, the redirects test, `next build --webpack`; the Simulator
+on All entries, Subscriptions, Money, Home and Trip with the final code, and the Simulator's crash
+log after each.
+
+iOS: nothing; the phone's motion is SwiftUI, not WebKit. The rule for anyone writing web motion:
+in a scroll-driven animation, never let `scale`, `translate` or `rotate` sit at `none` across two
+keyframes.
+
 ## 2026-10-15
 
 ### BUILT — Alerts: the per-trip tick box in plain words (Petra's finding, 15 Oct)
