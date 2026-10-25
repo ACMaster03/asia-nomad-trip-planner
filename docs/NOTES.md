@@ -22,6 +22,21 @@ a family member's Home). Her answers to its four questions:
   heart, the haptic and the button change before the server answers; a failed send puts it back
   and says so.
 
+### BUILT — iOS: the Feed tab, in review (#219, 25 Oct)
+
+The Map tab is Feed now, as Petra decided: "New" (reactions and comments by others since you
+last looked, a badge on the tab, Reply on each comment row), then your journey's posts by day,
+the big photo first. One heart; hold it for the six reactions. A double tap throws a heart that
+lands on the button, and the count moves only when it lands. Every reaction is optimistic: it
+goes back, with a notice, if the server refuses. Counts and who reacted show to the travellers
+only. "Followed by …" lists your followers, with "Send the follow link". With a journey, Home
+drops the follow feed; without one it keeps it. Hungarian for every new string ("Hírfolyam"),
+for Petra to check. Checked in the simulator on fixtures; not yet on a device (haptics, a real
+follower) or in dark mode. Merge with a go, then TestFlight.
+
+iOS: `ios/Livhold/Feed/` (FeedScreen, PostCard, JourneyFeedStore); the reaction button is a
+plain view with a tap and a hold gesture, because a Button in a scroll view swallows the hold.
+
 ### LIVE — Migration 48: `journey_feed`, the traveller's side of the feed (25 Oct)
 
 One read-only call for the Feed tab (`48-journey-feed.sql`): for a journey's travellers and
