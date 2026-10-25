@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
-### BUILT — #150: a switch for the reminder emails (migration 50)
+### LIVE — #150: a switch for the reminder emails (migration 50)
 
 Patrik, 25 Oct: the next item before the freeze. `/privacy` says reminders about your own bookings
 "go to your email; you can switch them off in your notification settings"; until now nothing could.
@@ -46,6 +46,18 @@ and passed, and the error rolled it all back. Then a read: no `deadline_email` c
 NEXT MACHINE SESSION's item 1 (its cron job is not checked here). `stay-deadline-alerts` predates
 three changes that the #150 redeploy ships with it: "no em dashes" in its copy (18 Sep), the per-stay
 reminder switch (22 Sep, #60's stay sheet), booked stays only (27 Sep, #60).
+
+**Live on production, 25 Oct (Patrik's go), in the order above:**
+1. `echo PROD | tools/db.sh --prod apply 50`: applied. Read after: `deadline_email` boolean, not
+   null, default true; the one `notify_prefs` row on production reads true, none false.
+2. `supabase functions deploy` from `1ec7530`: `stay-deadline-alerts` v12 → **v13**,
+   `subscription-alerts` v2 → **v3**, both ACTIVE, `verify_jwt: false`. An unsigned POST to each
+   answers **403** (the cron signature check, not the platform's JWT check, which would be 401).
+   So the three older `stay-deadline-alerts` changes (above) are live too.
+3. Pull request #223 merged (the web switch), the Vercel build watched.
+
+Undo, in reverse: revert #223; redeploy both functions from `d6ec991` (the commit before #150);
+then `alter table public.notify_prefs drop column if exists deadline_email;`.
 
 iOS: the phone's notification settings should get the same switch, `notify_prefs.deadline_email`
 (default true). The phone's whole-row upsert, if it names only its own columns, leaves the switch as
@@ -2286,9 +2298,10 @@ Patrik's machine was out of reach on 27 Sep. Three jobs wait for it, best done t
 1. **Subscription alerts:** is `subscription-alerts` deployed on production, and is its cron
    job scheduled? Nothing records it since "TO DEPLOY" of 20 Sep (below). Production →
    Edge Functions, and `supabase/checks/cron-jobs.sql` in the SQL editor, answer it. If not:
-   the steps in that entry, function first, cron second.
-2. **Redeploy `stay-deadline-alerts`** (27 Sep fix below: booked stays only). No redeploy
-   is recorded since the switch of 22 Sep either.
+   the steps in that entry, function first, cron second. **25 Oct: deployed** (v2 since 20 Sep,
+   v3 with #150, above); its cron job is still unchecked.
+2. ~~**Redeploy `stay-deadline-alerts`**~~ (27 Sep fix below: booked stays only). **Done 25 Oct**
+   with #150 (v13), which shipped the 22 Sep switch and the 27 Sep rule with it.
 3. **Rotate the JWT secret** (OPEN since 18 Sep, below). [Likely] It replaces the anon key,
    so Vercel's environment and the iOS app (#98) need the new one in the same sitting.
 
