@@ -221,9 +221,13 @@ Petra is new to software work; Patrik is not. The product conventions are in
   not the `ios/` on `main`.
 - 25 Oct, before the 31 Oct freeze (the milestone "Pre-freeze check"): #120, the goal made
   countable, is live (migration 49 on production, #221): follower opens, one mark a day, and each
-  new account's source, read every Monday with `tools/goal-numbers.sql` (Patrik's go). Next on the
-  list: #150 (the reminder-email switch `/privacy` promises), #121 (followers stay signed in), the
-  #122 walk with a fresh account, then #156 (the policy read once more).
+  new account's source, read every Monday with `tools/goal-numbers.sql` (Patrik's go). #150, the
+  reminder-email switch `/privacy` promises, is live (migration 50, both alert functions redeployed,
+  #223; Patrik's phone test clean). #121, followers stay signed in, goes out on 25 Oct: the code
+  from the email typed on `/login` and on the follow page, that page's email without PKCE, `/follow`
+  refreshed on the server (`docs/NOTES.md`); Patrik tests on the phone on 26 Oct. Left: the #122
+  walk with a fresh account, then #156 (the policy read once more); the email's code label waits
+  for a new `supabase/.mgmt-token`.
 - Supabase jobs that need Patrik's machine (the CLI) wait in NOTES under
   "NEXT MACHINE SESSION": the subscription-alerts deploy check, the
   `stay-deadline-alerts` redeploy, and the JWT secret rotation.

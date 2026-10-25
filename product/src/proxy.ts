@@ -25,8 +25,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // `follow` is the public no-account page — an auth-refresh roundtrip
-    // would be pure latency for followers who never have a session. Same for
+    // `follow` was excluded here until 25 Oct (#121): the public link page has
+    // no use for a session, but a follower WITH an account who only ever opens
+    // her link, or its home-screen icon, then had her session refreshed only by
+    // the page's script. Safari keeps a cookie written by script for at most
+    // seven days; one sent by the server keeps its full lifetime. So /follow
+    // runs through here again, and updateSession returns at once for a visitor
+    // with no session cookie, so the signed-out viewer pays nothing for it.
     // `digest` (confirm/unsubscribe landings) and `api/digest` — the one-click
     // POST arrives from a mail provider's servers, which have no cookies at all.
     // `privacy`, `terms` and `delete-account` join them: a Play reviewer and a
@@ -34,6 +39,6 @@ export const config = {
     // session for. Play REQUIRES the deletion page to work with no sign-in.
     // `api/journey-signup` too: the landing page's list form (landing/) posts
     // there cross-origin, from a visitor with no account and no cookies.
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|follow|digest|api/digest|api/journey-signup|privacy|terms|delete-account|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw\\.js|manifest\\.webmanifest|offline\\.html|digest|api/digest|api/journey-signup|privacy|terms|delete-account|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
