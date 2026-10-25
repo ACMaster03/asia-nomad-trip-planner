@@ -9,8 +9,20 @@ when a decision needs to survive the conversation it was made in.
 
 ### BUILT — #120: the goal made countable (migration 49, the marks, the Monday query)
 
-Patrik, 25 Oct: the first item before the freeze, on the recommended defaults. Nothing is on
-production yet: migration 49 waits for its rolled-back dry run there (Patrik's go), then the apply.
+Patrik, 25 Oct: the first item before the freeze, on the recommended defaults. Migration 49 is not
+applied yet; the apply waits for Patrik's go.
+
+**Dry run on production, 25 Oct (Patrik's go): clean, nothing persisted.** Three runs, each one
+transaction that ended in rollback: (1) `begin;` + 49 + the goal query + `49-TESTPLAN.sql`: no error,
+and the goal query ran against 49 (all zeros, as expected before the apply); (2) 49 + the test plan
+alone: no error; (3) the same with a control at the end that fails on purpose: it came back as
+`TP49 CONTROL: reached the end; newfan source=follow_link, live-link marks=1`, which proves all 11
+checks ran and passed, and the error rolled everything back. Then a read: no `feed_open_days`, no
+`account_sources`, no `mark_feed_open` or `_note_signup_source`, neither trigger, no
+`feed-open-days-purge-daily` job, and 0 `tp49` users, journeys or links. Lesson for the next dry run:
+`tools/db.sh --prod sql` shows the last statement that returned rows (here `cron.schedule`), never
+the empty result of the final `rollback;`, so "no error" is the pass, and a deliberate failing
+control at the end is the proof the checks ran. Undo after the apply: the SQL in 49's header.
 
 - **Migration 49** (`49-usage-counts.sql`; 48 is `journey_feed`, applied today from
   `docs/follower-built`). `feed_open_days`: one mark per follower account, or per follow link, per
