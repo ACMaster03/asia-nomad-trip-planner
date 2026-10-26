@@ -34,6 +34,29 @@ Livhold's sake.
 
 iOS: no change.
 
+## 2026-10-26
+
+### BUILT — No Vercel deployments from the iOS branches (Patrik, 26 Oct)
+
+Every push to a `feat/ios-*` branch mailed "The specified Root Directory "landing" does not
+exist": the iOS branches were cut before `landing/` existed (3 Oct), and Vercel's `landing`
+project builds every branch. The app's project started a deployment on them too, only for its
+ignore step to cancel it. The 14 Oct switch (`"kyh/*": false`) could not help, because Vercel
+reads `git.deploymentEnabled` from the pushed commit's own `vercel.json`, and the iOS branches
+have none for `landing` and an older one for `product`.
+
+- **On `feat/ios-foundation`** (its own pull request): `landing/vercel.json` with only the switch,
+  and `product/vercel.json` with it added; both `"feat/ios-*": false`.
+- **On `main`** (this pull request): the same pattern in both files, so a later merge either way
+  keeps it. It can never match `main`.
+- **Proof:** the push of `feat/ios-vercel-quiet` (a `feat/ios-*` branch carrying the switch) made
+  no deployment in either project; see the pull request.
+- **When `feat/ios-foundation` merges into `main` one day:** `landing/vercel.json` conflicts
+  (added on both sides); keep `main`'s, which has the redirects.
+
+iOS: nothing in the app; TestFlight builds are local (`fastlane beta`) and never went through
+Vercel.
+
 ## 2026-10-25
 
 ### LIVE — #121: followers stay signed in on the web (the code, the follow page's email, /follow refreshed)
