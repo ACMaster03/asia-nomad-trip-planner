@@ -255,10 +255,12 @@ Patrik's explicit "go" in the chat.
   same rolled-back dry run. Supabase's daily backups restore the whole project: the last resort.
 - **Tests never touch real people's rows**: only rows made inside the transaction, which always
   rolls back. Reads of real data are for checking, and need a go too.
-- **iOS:** Debug builds used staging (`ios/Livhold/Auth/Backend.swift`); switch Debug to
-  production before signing in, do UI work on the fixtures (`-tripFixture YES -skipSignIn YES
-  -followFixture YES`) and sign in for real only to look.
-- **Tools:** `tools/db.sh` still defaults to staging, so always pass `--prod`.
+- **iOS:** every build uses production since 26 Oct (`ios/Livhold/Auth/Backend.swift`, Debug
+  too, on `main` and `feat/ios-foundation`), so a signed-in Debug build acts on real accounts: do
+  UI work on the fixtures (`-tripFixture YES -skipSignIn YES -followFixture YES`) and sign in
+  for real only to look.
+- **Tools:** `tools/db.sh` has no default since 26 Oct: without `--prod` (or `--staging`, which
+  fails while it is paused) it refuses to run.
   `tools/auth-config.sh --staging` and the staging lines in `rotate-cron-secret.sh` are retired;
   Edge Functions deploy to the production ref only.
 - **Web:** local dev and the build use placeholder Supabase values and the `/dev/*` previews;

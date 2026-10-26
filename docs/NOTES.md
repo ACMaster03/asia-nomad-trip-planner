@@ -222,6 +222,73 @@ back is this commit reverted.
 
 iOS: nothing; the phone's zoom is its own.
 
+### DECIDED — Petra, 25 Oct: the Feed tab, round 2 of the feed mock (#130)
+
+Mock: https://claude.ai/artifact/25yPrENkKBxUpMwCQXEn3w (round 2, the traveller's own tab; round 1,
+a family member's Home). Her answers to its four questions:
+
+- **The tab is called Feed** (not Posts, People or Family): it replaces Map, last on the bar.
+- **Reaction counts go to the post's travellers only.** On your own posts you see "❤️ 3 😮 1" and
+  who; a follower sees only their own reaction, never a count (as 34 already serves it).
+- **Reply straight from the "New" list**, as in the mock.
+- **Posts look like round 1's B, the big photo first, with one reaction button** (A's): a tap
+  gives ❤️, holding it opens the six. A **double tap on the post likes it**: a heart appears where
+  the finger was and flies to the reaction button, which then shows it. **Optimistic**: the
+  heart, the haptic and the button change before the server answers; a failed send puts it back
+  and says so.
+
+### LIVE — iOS: the Feed tab, TestFlight build 26 (#219, 26 Oct)
+
+**On TestFlight since 26 Oct:** #219 merged into `feat/ios-foundation` (`de0d60e`, Patrik's go),
+build 26 uploaded from there with `fastlane beta` (Release, production). It carries #184's
+follower screens and Trip's globe as build 25 did, plus the Feed and Debug-on-production.
+
+The Map tab is Feed now, as Petra decided: "New" (reactions and comments by others since you
+last looked, a badge on the tab, Reply on each comment row), then your journey's posts by day,
+the big photo first. One heart; hold it for the six reactions. A double tap throws a heart that
+lands on the button, and the count moves only when it lands. Every reaction is optimistic: it
+goes back, with a notice, if the server refuses. Counts and who reacted show to the travellers
+only. "Followed by …" lists your followers, with "Send the follow link". With a journey, Home
+drops the follow feed; without one it keeps it. Hungarian for every new string ("Hírfolyam"),
+for Petra to check. Checked in the simulator on fixtures, light and dark: the badge, the
+double-tap flight, the hold picker, Reply from New, the followers sheet, the photo viewer, the
+follower's Home without counts.
+
+**Patrik's device test, 27 Oct morning (build 26, signed in to Asia; everything is real data):**
+1. The Feed tab's badge shows the reactions and comments since the last look, and clears when
+   Feed opens.
+2. Double tap a photo: the heart flies to the button, with a haptic when it lands; the count
+   follows. Tap again to take it off.
+3. Hold the heart: the six open; pick one, then pick it again to remove it.
+4. Reply from a comment row in "New": it lands in that thread (it is a real comment; delete it
+   after if it was only a test).
+5. "Followed by …" → "Send the follow link": the share sheet opens with a link. This creates a
+   real share link labelled "Family" on the journey; revoke it on the web if it was only a test.
+6. A follower's phone or account (Petra's, if she follows Asia from her own login): the heart,
+   no counts, no "who".
+7. Settings → Language → Hungarian, if Petra checks the words.
+If Feed misbehaves, build 25 stays installable in TestFlight.
+
+iOS: `ios/Livhold/Feed/` (FeedScreen, PostCard, JourneyFeedStore); the reaction button is a
+plain view with a tap and a hold gesture, because a Button in a scroll view swallows the hold.
+`Backend.swift` uses production in Debug too since 26 Oct (staging paused), on `main` and on
+`feat/ios-foundation`.
+
+### LIVE — Migration 48: `journey_feed`, the traveller's side of the feed (25 Oct)
+
+One read-only call for the Feed tab (`48-journey-feed.sql`): for a journey's travellers and
+viewers, its check-ins, arrivals and notes (the follower feed's shape plus visibility, your own
+reaction, the comment count and the tally), and the 40 newest reactions and comments by others,
+with names and the post they are on. Anyone else gets null; blocked accounts and deleted comments
+are left out. When you last looked is kept on the phone. Changes no table.
+
+Staging: applied, `48-TESTPLAN.sql` passes (and fails when one expectation is flipped), no
+leftovers, 8 ms on staging's journey. Production: applied 25 Oct with Patrik's go; anon cannot
+call it, authenticated can; Asia's 18 posts and 27 reactions and comments in 32 ms.
+
+iOS: the Feed tab reads `journey_feed` (built next, on `feat/ios-feed`). Web: nothing yet; the
+web's Map page could become the same Feed.
+
 ### LIVE — Round 6's two Safari crashes have one cause: the settle's `scale: none` hold (25 Oct)
 
 **Live since 25 Oct** (#216, `46c69b2`; Vercel's production build green, app.livhold.com and
@@ -1066,6 +1133,30 @@ iOS: nothing to change.
 
 ## 2026-10-12
 
+### DECIDED — Petra (continuing for Patrik), 12 Oct: no following of strangers at launch; the last tab becomes your posts and what family said (#130)
+
+Feed mock, round 1: https://claude.ai/artifact/25yPrENkKBxUpMwCQXEn3w (A, quiet, or B, photo
+first: not answered yet).
+
+- **Following stays family and friends.** You follow someone only through the follow link they
+  send you. No search, no list of other nomads, no public profiles, no suggestions: that is how it
+  is built today, and nothing beyond it goes in for launch. #167 (the people you follow on your
+  globe) stays parked after 30 Nov; whether it ever reaches past family is Petra's and Patrik's
+  call.
+- **The Map tab (a placeholder since 10 Oct) becomes your own side of the feed:** your posts,
+  with the reactions and comments your followers left, and who follows you. Anyone you follow
+  sits there too, if you follow someone. Petra's first idea was a Feed tab of the people you
+  follow; most travellers follow nobody, so it would have been empty for them.
+- This changes 3 Oct (#130) for followers who have a journey of their own: their people move off
+  Home into this tab. A follower with no journey of their own still has Home only, and Home is
+  the feed (unchanged).
+- Next: round 2 of the mock, then the build. "What is new on my posts since I last looked" needs
+  one new server call (a migration); everything else exists (`my_followers`, `event_reactors`,
+  `feed_social`, the comment RPCs).
+
+iOS: nothing built yet; #184's Home section for people you follow moves into the new tab when
+round 2 is decided.
+
 ### DECIDED — Petra, 12 Oct: the open questions of round 2 (#187, #188)
 
 Petra's answers; Patrik can overrule.
@@ -1335,6 +1426,13 @@ Mock: https://claude.ai/artifact/RRpEeKaQa3Yk2MEugfMLdU (round 1).
 iOS: the follower's Trip is `TripWithGlobe` fed by `followed_trip_summary()` (route, legs between
 stops, travellers) and the feed's check-ins. Places come from the summary's `lat`/`lng`, then
 GlobePlaces. "Once" per arrival is kept per journey on the phone (the last `arrived` event id).
+
+Built: #184 (merged into `feat/ios-foundation` 10 Oct), TestFlight build 25, with Home's feed (#130).
+The globe frame is `GlobeScaffold`, shared by both Trips. As built (my readings, Patrik can change
+them): a check-in sits under the stop whose dates hold its day, and on a travel day one posted before
+that day's arrival goes to the stop before; a new arrival replays only within a week of it; without
+a journey of your own the tab bar goes. Not yet: photos on check-ins, a real follower account on a
+phone, Petra's check of the Hungarian.
 
 ### IN REVIEW — app.livhold.com, step 5a: the landing project ready for livhold.com (#163)
 

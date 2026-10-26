@@ -3,12 +3,17 @@
 # db.sh — apply migrations and run the assertion scripts against a database,
 # without pasting anything into the SQL Editor by hand.
 #
-#   tools/db.sh apply 25 26 27     apply migrations by number
-#   tools/db.sh test  25 26 27     run their TESTPLANs (each rolls itself back)
-#   tools/db.sh check              audit every SECURITY DEFINER function + grants
-#   tools/db.sh trips              inventory every trip (find the dogfood leftovers)
-#   tools/db.sh sql <file>         run any .sql file
-#   tools/db.sh shell              interactive psql
+# Every call names its database: --prod or --staging. There is no default.
+# Staging (asia-nomad-staging) is paused since 25 Oct 2026 to free the free
+# plan's project slot, so --prod it is; CLAUDE.md, "The database: production
+# only", has the dry-run-then-apply routine.
+#
+#   tools/db.sh --prod apply 25 26 27     apply migrations by number
+#   tools/db.sh --prod test  25 26 27     run their TESTPLANs (each rolls itself back)
+#   tools/db.sh --prod check              audit every SECURITY DEFINER function + grants
+#   tools/db.sh --prod trips              inventory every trip (find the dogfood leftovers)
+#   tools/db.sh --prod sql <file>         run any .sql file
+#   tools/db.sh --prod shell              interactive psql
 #
 # Two ways to reach the database. Nothing to remember for the first one:
 #
@@ -19,8 +24,8 @@
 #
 #   --psql — direct psql, when a connection-string file exists (or on demand):
 #
-#   supabase/.staging-conn   default target        (already gitignored)
-#   supabase/.prod-conn      requires --prod       (also gitignored)
+#   supabase/.prod-conn      with --prod           (gitignored)
+#   supabase/.staging-conn   with --staging        (also gitignored)
 #
 # `shell` is psql-only (the API has no interactive session). Get the string
 # from Supabase → Project Settings → Database → Connection string:
@@ -66,7 +71,7 @@ need_psql() {
   exit 1
 }
 
-TARGET=staging
+TARGET=
 MODE=auto            # auto → psql when a real conn file exists, else the CLI
 ARGS=()
 for a in "$@"; do
@@ -95,6 +100,15 @@ usage() {
 # Usage before credentials: asking for a connection string in order to be told
 # how to use the script would be a silly first experience.
 case "${1:-}" in ''|help|-h|--help) usage; exit 0 ;; esac
+
+# No default database: it used to be staging, which is paused since 25 Oct.
+if [[ -z "$TARGET" ]]; then
+  echo "✗ name the database: --prod (staging is paused since 25 Oct; --staging only once it is restored)" >&2
+  exit 1
+fi
+if [[ "$TARGET" == staging ]]; then
+  echo "ℹ staging (asia-nomad-staging) is paused since 25 Oct 2026; this fails until it is restored." >&2
+fi
 
 CONN_FILE="$ROOT/supabase/.$TARGET-conn"
 CONN=""
