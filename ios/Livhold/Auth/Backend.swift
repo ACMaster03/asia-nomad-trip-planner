@@ -1,9 +1,11 @@
 import Foundation
 import Supabase
 
-/// Which Supabase project the app talks to. Debug builds (Xcode, simulator) use
-/// staging; Release builds (TestFlight, App Store) use production — the same split
-/// the web has between its preview and live deployments.
+/// Which Supabase project the app talks to: production, in every build. Debug builds
+/// used staging until it was paused on 25 Oct 2026 (CLAUDE.md, "The database:
+/// production only"), so a Debug build signed in acts on real accounts: do UI work on
+/// the fixtures (-tripFixture YES -skipSignIn YES -followFixture YES) and sign in for
+/// real only to look.
 ///
 /// Both keys are the projects' PUBLISHABLE keys: public by design, shipped in the
 /// web bundle too. Row-Level Security is the boundary, not their secrecy. Never put
@@ -32,11 +34,7 @@ enum Backend {
         web: URL(string: "https://www.livhold.com")!
     )
 
-    #if DEBUG
-    static let current = staging
-    #else
     static let current = production
-    #endif
 
     /// One client for the whole app. The session is kept in the Keychain by the SDK
     /// and refreshed automatically, so a traveller stays signed in across launches.
