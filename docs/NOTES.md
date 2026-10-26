@@ -237,7 +237,11 @@ a family member's Home). Her answers to its four questions:
   heart, the haptic and the button change before the server answers; a failed send puts it back
   and says so.
 
-### BUILT — iOS: the Feed tab, in review (#219, 25 Oct)
+### LIVE — iOS: the Feed tab, TestFlight build 26 (#219, 26 Oct)
+
+**On TestFlight since 26 Oct:** #219 merged into `feat/ios-foundation` (`de0d60e`, Patrik's go),
+build 26 uploaded from there with `fastlane beta` (Release, production). It carries #184's
+follower screens and Trip's globe as build 25 did, plus the Feed and Debug-on-production.
 
 The Map tab is Feed now, as Petra decided: "New" (reactions and comments by others since you
 last looked, a badge on the tab, Reply on each comment row), then your journey's posts by day,
@@ -246,11 +250,29 @@ lands on the button, and the count moves only when it lands. Every reaction is o
 goes back, with a notice, if the server refuses. Counts and who reacted show to the travellers
 only. "Followed by …" lists your followers, with "Send the follow link". With a journey, Home
 drops the follow feed; without one it keeps it. Hungarian for every new string ("Hírfolyam"),
-for Petra to check. Checked in the simulator on fixtures; not yet on a device (haptics, a real
-follower) or in dark mode. Merge with a go, then TestFlight.
+for Petra to check. Checked in the simulator on fixtures, light and dark: the badge, the
+double-tap flight, the hold picker, Reply from New, the followers sheet, the photo viewer, the
+follower's Home without counts.
+
+**Patrik's device test, 27 Oct morning (build 26, signed in to Asia; everything is real data):**
+1. The Feed tab's badge shows the reactions and comments since the last look, and clears when
+   Feed opens.
+2. Double tap a photo: the heart flies to the button, with a haptic when it lands; the count
+   follows. Tap again to take it off.
+3. Hold the heart: the six open; pick one, then pick it again to remove it.
+4. Reply from a comment row in "New": it lands in that thread (it is a real comment; delete it
+   after if it was only a test).
+5. "Followed by …" → "Send the follow link": the share sheet opens with a link. This creates a
+   real share link labelled "Family" on the journey; revoke it on the web if it was only a test.
+6. A follower's phone or account (Petra's, if she follows Asia from her own login): the heart,
+   no counts, no "who".
+7. Settings → Language → Hungarian, if Petra checks the words.
+If Feed misbehaves, build 25 stays installable in TestFlight.
 
 iOS: `ios/Livhold/Feed/` (FeedScreen, PostCard, JourneyFeedStore); the reaction button is a
 plain view with a tap and a hold gesture, because a Button in a scroll view swallows the hold.
+`Backend.swift` uses production in Debug too since 26 Oct (staging paused), on `main` and on
+`feat/ios-foundation`.
 
 ### LIVE — Migration 48: `journey_feed`, the traveller's side of the feed (25 Oct)
 
