@@ -99,6 +99,9 @@ Petra is new to software work; Patrik is not. The product conventions are in
   Vercel builds only merges. Claude's `kyh/*` branches create no Vercel deployment
   (`git.deploymentEnabled` in `product/vercel.json` and `landing/vercel.json`), because the
   Hobby plan allows 100 deployments a day and 14 Oct used them all. One merge per round.
+  The iOS branches (`feat/ios-*`) create none either since 26 Oct: Vercel reads the switch from
+  the pushed branch's own files, so `feat/ios-foundation` carries it too (with a
+  `landing/vercel.json` holding only the switch, as it has no landing page).
 - Since 27 Sep another agent builds the iOS app (`ios/`) on Patrik's machine:
   Trip now, Money next. Web bugs on Home and Trip go first, and every web
   change to behaviour gets an "iOS:" line in its `docs/NOTES.md` entry (the

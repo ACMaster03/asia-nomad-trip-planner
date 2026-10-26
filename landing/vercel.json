@@ -2,7 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "kyh/*": false
+      "kyh/*": false,
+      "feat/ios-*": false
     }
   },
   "framework": null,
