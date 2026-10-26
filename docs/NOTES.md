@@ -5,6 +5,35 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-26
+
+### DECIDED — Patrik, 26 Oct: Livhold keeps its list in Supabase; Resend only sends
+
+Patrik had created a Segment in Resend and saved `RESEND_SEGMENT_ID` and a full-access
+`RESEND_API_KEY` to the Vercel project `asia-nomad-trip-planner` (Production), meaning to put the
+landing form's signups on it. Reading how the code works settled it the other way:
+- Every Livhold email leaves from a Supabase Edge Function, with the send-only key in Supabase's
+  secrets: sign-in, the follower digest, the reminders. The web app sends nothing and had no Resend
+  variable at all.
+- Supabase already holds the list and what `/privacy` promises about it: `journey_signups` with the
+  consent wording's version, the digest subscriptions, the "do not email" note, the 12-month purge.
+  A Resend list would be a second copy to keep in step (unsubscribes back by webhook, deletions and
+  the purge out to Resend), a change to the policy, and it would share contacts with the quiz brand,
+  which lives in the same Resend account (a contact and its "unsubscribed" are per account).
+
+**Decision:** Livhold uses no Resend Contacts or Segments. Resend stays the sender. Update emails to
+the list come later (months, Patrik's estimate) and get built in-house from the Supabase list: the
+send API, our own unsubscribe link, as the digest does. The Resend account and its Segments are for
+the quiz business (quiz-workbooks), which goes first because it is quicker to sell; Livhold needs
+validation.
+
+**Left for Patrik:** revoke the full-access key in Resend and delete `RESEND_API_KEY` and
+`RESEND_SEGMENT_ID` from the Vercel project: nothing reads them, and the key could send as every
+domain in the account. Moving the quiz brand to its own Resend team is no longer needed for
+Livhold's sake.
+
+iOS: no change.
+
 ## 2026-10-25
 
 ### LIVE — #121: followers stay signed in on the web (the code, the follow page's email, /follow refreshed)
