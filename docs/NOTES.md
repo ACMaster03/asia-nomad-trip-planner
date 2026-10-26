@@ -7,7 +7,7 @@ when a decision needs to survive the conversation it was made in.
 
 ## 2026-10-25
 
-### BUILT — #121: followers stay signed in on the web (the code, the follow page's email, /follow refreshed)
+### LIVE — #121: followers stay signed in on the web (the code, the follow page's email, /follow refreshed)
 
 Patrik, 25 Oct: the last development item before the freeze, to production today; he tests on the
 phone on 26 Oct. No database change.
@@ -58,10 +58,14 @@ the server (`grant_type=refresh_token`).
   out only a device unused for 90 days, so it does not work against #121. Its `/privacy` line goes
   with #156.
 
-**To test on the phone (Patrik, 26 Oct):** on the iPhone, Safari: open a follow link, Follow, an
+**To test on the phone (Patrik, the same morning as build 26's test below):** on the iPhone, Safari: open a follow link, Follow, an
 address, then type the code from the email (not the link): the journey opens, followed. Add it to
 the home screen, open the icon: still signed in. Then the same with the link tapped in Mail: it
 should now sign in (in Mail's browser) rather than fail.
+
+**Live since 25 Oct** (#224, `9b10866`, Patrik's go; the Vercel build ready). Checked signed out on
+app.livhold.com: `/login`, `/follow/<token>` and `/privacy` answer 200, `/dashboard` sends to `/login`.
+Not yet checked on a phone with a real email: Patrik's test above, with build 26's below.
 
 **Undo:** revert the pull request; nothing on the database or in Supabase's settings changed.
 
