@@ -101,6 +101,13 @@ struct FollowComment: Codable, Hashable, Identifiable, Sendable {
     let body: String
     let deleted: Bool?
     let created_at: String
+
+    /// The comment being answered: replies hang under its thread's top-level comment.
+    struct Target: Hashable, Sendable {
+        let id: String
+        let thread: String
+        let name: String
+    }
 }
 
 enum FollowDates {
@@ -152,7 +159,7 @@ enum FollowDates {
             f.unitsStyle = .full
             return f.localizedString(for: d, relativeTo: now)
         }
-        if Calendar.current.isDateInYesterday(d) { return String(localized: "yesterday") }
+        if day(d) == Days.add(day(now), -1) { return String(localized: "yesterday") }
         return Days.short(day(d))
     }
 }

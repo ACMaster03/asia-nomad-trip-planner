@@ -6,6 +6,8 @@ import SwiftUI
 /// bar from the same glass material (iOS 26+; a frosted material on older iOS).
 struct GlassTabBar: View {
     @Binding var selection: AppTab
+    /// A number on a tab's icon: Feed's new reactions and comments.
+    var badges: [AppTab: Int] = [:]
     var onCheckIn: () -> Void = {}
 
     @Namespace private var highlight
@@ -23,7 +25,7 @@ struct GlassTabBar: View {
             tab(.trip)
             checkIn
             tab(.money)
-            tab(.map)
+            tab(.feed)
         }
         .padding(.horizontal, 6)
         .frame(height: 64)
@@ -55,6 +57,18 @@ struct GlassTabBar: View {
                 Image(systemName: t.symbol)
                     .font(.system(size: 20, weight: active ? .semibold : .regular))
                     .frame(height: 24)
+                    .overlay(alignment: .topTrailing) {
+                        if let n = badges[t], n > 0 {
+                            Text(verbatim: n > 9 ? "9+" : "\(n)")
+                                .font(.sans(10.5, weight: .semibold, relativeTo: .caption2))
+                                .foregroundStyle(Palette.on)
+                                .padding(.horizontal, 4)
+                                .frame(minWidth: 17, minHeight: 17)
+                                .background(Palette.ac2, in: .capsule)
+                                .offset(x: 11, y: -5)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
                 Text(t.title).font(.sans(11, weight: active ? .semibold : .medium, relativeTo: .caption2))
             }
             .foregroundStyle(active ? Palette.ac : Palette.tx2)
@@ -73,6 +87,7 @@ struct GlassTabBar: View {
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: active) { _, now in now }
         .accessibilityAddTraits(active ? .isSelected : [])
+        .accessibilityValue(badges[t].map { $0 > 0 ? Text("\($0) new") : Text(verbatim: "") } ?? Text(verbatim: ""))
     }
 
     private var checkIn: some View {

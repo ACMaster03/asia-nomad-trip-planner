@@ -26,22 +26,25 @@ enum FollowFixture {
             travellers: [patrik, petra])
 
         var feed: [FollowedEvent] = []
-        func post(_ id: String, _ day: String, _ hour: Int, _ who: Traveller, _ place: String, _ stars: Int, _ text: String) {
+        func post(_ id: String, _ day: String, _ hour: Int, _ who: Traveller, _ place: String, _ stars: Int, _ text: String,
+                  photos: [String] = []) {
             guard day <= today else { return }
             feed.append(FollowedEvent(id: id, kind: "checkin", occurred_at: "\(day)T\(String(format: "%02d", hour)):00:00Z",
                                       author: who.id, authorName: who.name,
-                                      payload: .init(placeName: place), rating: stars, comment: text,
+                                      payload: .init(placeName: place, photos: photos), rating: stars, comment: text,
                                       trip_id: tripId, tripName: "Asia"))
         }
         post("f0110000-0000-4000-8000-0000000000c1", "2026-09-03", 9, patrik, "Chatuchak Market", 4, "Bring water, and cash for the snacks.")
         post("f0110000-0000-4000-8000-0000000000c2", "2026-09-06", 12, petra, "Jim Thompson House", 5, "The garden alone is worth it.")
         post("f0110000-0000-4000-8000-0000000000c3", "2026-09-09", 11, patrik, "Lumphini Park", 4, "Monitor lizards everywhere, and nobody minds.")
         post("f0110000-0000-4000-8000-0000000000c4", "2026-09-10", 13, petra, "Chinatown", 4, "Dinner on the street, twice.")
-        post("f0110000-0000-4000-8000-0000000000c5", "2026-09-12", 3, petra, "Wat Pho", 4, "Go early, before the tour buses.")
-        post("f0110000-0000-4000-8000-0000000000c6", "2026-10-02", 10, petra, "Hoan Kiem Lake", 5, "Walked round it twice before breakfast.")
+        post("f0110000-0000-4000-8000-0000000000c5", "2026-09-12", 3, petra, "Wat Pho", 4, "Go early, before the tour buses.", photos: ["fixture:wat"])
+        post("f0110000-0000-4000-8000-0000000000c6", "2026-10-02", 10, petra, "Hoan Kiem Lake", 5, "Walked round it twice before breakfast.",
+             photos: ["fixture:lake", "fixture:lake2", "fixture:lake3"])
         post("f0110000-0000-4000-8000-0000000000c7", "2026-10-05", 11, patrik, "Temple of Literature", 4, "Quiet inside, loud outside.")
         let yesterday = Days.add(min(today, "2026-11-12"), -1)
-        post("f0110000-0000-4000-8000-0000000000c8", yesterday, 12, patrik, "Train Street", 5, "Rainy and perfect. The train came through at seven.")
+        post("f0110000-0000-4000-8000-0000000000c8", yesterday, 12, patrik, "Train Street", 5, "Rainy and perfect. The train came through at seven.",
+             photos: ["fixture:train", "fixture:train2"])
         if today >= "2026-11-13" {
             feed.append(FollowedEvent(id: "f0110000-0000-4000-8000-0000000000e1", kind: "arrived",
                                       occurred_at: "2026-11-13T09:30:00Z", author: patrik.id, authorName: patrik.name,
@@ -50,7 +53,8 @@ enum FollowFixture {
         }
         feed.sort { $0.at > $1.at }
         let counts = ["f0110000-0000-4000-8000-0000000000c5": 1, "f0110000-0000-4000-8000-0000000000c8": 2]
-        return .init(cards: [card], feed: feed, summaries: [tripId: summary], counts: counts, muted: [])
+        return .init(cards: [card], feed: feed, summaries: [tripId: summary], counts: counts, muted: [],
+                     mine: ["f0110000-0000-4000-8000-0000000000c5": "heart"])
     }
 
     static let comments: [String: [FollowComment]] = [

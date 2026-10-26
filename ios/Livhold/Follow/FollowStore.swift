@@ -15,6 +15,10 @@ final class FollowStore {
     private(set) var summaries: [String: FollowedSummary] = [:]
     /// Comment counts by post.
     private(set) var commentCounts: [String: Int] = [:]
+    /// Your own reaction by post (a follower sees no counts, 34).
+    private(set) var mine: [String: String] = [:]
+    /// Why a reaction didn't save; the screen shows it once.
+    var notice: String?
     /// Journeys muted on this account (`trip_notify.muted`).
     private(set) var muted: Set<String> = []
     /// The list loaded at least once (from the server or the saved copy).
@@ -64,11 +68,6 @@ final class FollowStore {
         return 2
     }
 
-    /// Whether any followed journey is under way today.
-    func anyLive(today: String) -> Bool {
-        cards.contains { Self.rank($0, today) == 0 }
-    }
-
     // MARK: loading
 
     func start(userId: String) async {
@@ -112,8 +111,11 @@ final class FollowStore {
                     summaries[c.trip_id] = FollowedSummary(tripName: c.tripName, paused: true)
                 }
             }
+            let social = await fetchSocial(feed)
+            var mine = social.mine
+            for (id, kind) in pending { mine[id] = kind }
             let saved = FollowCache.Saved(cards: cards, feed: feed, summaries: summaries,
-                                          counts: await fetchCounts(feed), muted: await fetchMuted())
+                                          counts: social.counts, muted: await fetchMuted(), mine: mine)
             apply(saved)
             loaded = true
             failed = false
@@ -141,16 +143,21 @@ final class FollowStore {
         return out
     }
 
-    private func fetchCounts(_ feed: [FollowedEvent]) async -> [String: Int] {
-        struct Row: Decodable { let event_id: String; let commentCount: Int? }
-        var out: [String: Int] = [:]
-        let ids = feed.filter(\.isCheckIn).map(\.id)
+    /// Comment counts and your own reactions, per post (`feed_social`, 100 a call).
+    private func fetchSocial(_ feed: [FollowedEvent]) async -> (counts: [String: Int], mine: [String: String]) {
+        struct Row: Decodable { let event_id: String; let commentCount: Int?; let mine: String? }
+        var counts: [String: Int] = [:]
+        var mine: [String: String] = [:]
+        let ids = feed.filter { $0.isCheckIn || $0.isArrival }.map(\.id)
         for chunk in stride(from: 0, to: ids.count, by: 100).map({ Array(ids[$0..<min($0 + 100, ids.count)]) }) {
             guard let rows: [Row] = try? await client.rpc("feed_social", params: ["p_events": chunk]).execute().value
             else { continue }
-            for r in rows { out[r.event_id] = r.commentCount ?? 0 }
+            for r in rows {
+                counts[r.event_id] = r.commentCount ?? 0
+                if let m = r.mine { mine[r.event_id] = m }
+            }
         }
-        return out
+        return (counts, mine)
     }
 
     private func fetchMuted() async -> Set<String> {
@@ -165,11 +172,40 @@ final class FollowStore {
         summaries = s.summaries
         commentCounts = s.counts
         muted = s.muted
+        mine = s.mine ?? [:]
     }
 
     private func persist() {
         guard let userId, !Self.usesFixture else { return }
-        FollowCache.save(.init(cards: cards, feed: feed, summaries: summaries, counts: commentCounts, muted: muted), userId: userId)
+        FollowCache.save(.init(cards: cards, feed: feed, summaries: summaries, counts: commentCounts, muted: muted, mine: mine),
+                         userId: userId)
+    }
+
+    // MARK: reactions
+
+    /// Reactions sent and not answered yet: a refresh landing meanwhile keeps them.
+    private var pending: [String: String?] = [:]
+
+    /// Optimistic, as on the Feed: yours changes at once, the server follows, a refusal
+    /// puts it back. Nil takes yours back.
+    func react(_ eventId: String, _ kind: ReactionKind?) {
+        let before = mine[eventId]
+        guard before != kind?.rawValue else { return }
+        mine[eventId] = kind?.rawValue
+        if Self.usesFixture { return }
+        pending[eventId] = kind?.rawValue
+        Task {
+            do {
+                let row = try await Reactions.send(eventId, kind, client: client)
+                pending[eventId] = nil
+                mine[eventId] = row?.mine
+                persist()
+            } catch {
+                pending[eventId] = nil
+                mine[eventId] = before
+                notice = AuthStore.message(for: error) ?? String(localized: "Couldn’t save your reaction. Please try again.")
+            }
+        }
     }
 
     // MARK: mute
@@ -196,9 +232,9 @@ final class FollowStore {
     // MARK: comments
 
     func comments(_ eventId: String) async throws -> [FollowComment] {
-        if Self.usesFixture {
+        if Self.usesFixture || TripStore.isFixture {
             #if DEBUG
-            return FollowFixture.comments[eventId] ?? []
+            return FollowFixture.comments[eventId] ?? FeedFixture.comments[eventId] ?? []
             #else
             return []
             #endif
@@ -210,18 +246,21 @@ final class FollowStore {
         return list ?? []
     }
 
-    func addComment(_ body: String, to eventId: String) async throws -> FollowComment? {
+    /// A comment, or with `parent` a reply under that top-level comment (replies go one
+    /// level deep, 34).
+    func addComment(_ body: String, to eventId: String, parent: String? = nil) async throws -> FollowComment? {
         let text = body.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
-        if Self.usesFixture {
+        if Self.usesFixture || TripStore.isFixture {
             commentCounts[eventId, default: 0] += 1
-            return FollowComment(id: UUID().uuidString, parent_id: nil, author: "fixture", authorName: String(localized: "You"),
-                                 isTraveller: false, body: text, deleted: false, created_at: ISO8601DateFormatter().string(from: .now))
+            return FollowComment(id: UUID().uuidString, parent_id: parent, author: "fixture", authorName: String(localized: "You"),
+                                 isTraveller: TripStore.isFixture, body: text, deleted: false,
+                                 created_at: ISO8601DateFormatter().string(from: .now))
         }
-        struct Params: Encodable, Sendable { let p_event: String; let p_body: String }
+        struct Params: Encodable, Sendable { let p_event: String; let p_body: String; let p_parent: String? }
         try await Connectivity.shared.waitUntilOnline()
         let c: FollowComment? = try await TripStore.oneMoreTry {
-            try await client.rpc("add_comment", params: Params(p_event: eventId, p_body: text)).execute().value
+            try await client.rpc("add_comment", params: Params(p_event: eventId, p_body: text, p_parent: parent)).execute().value
         }
         commentCounts[eventId, default: 0] += 1
         persist()
@@ -237,6 +276,8 @@ enum FollowCache {
         var summaries: [String: FollowedSummary]
         var counts: [String: Int]
         var muted: Set<String>
+        /// Your reactions; absent in copies saved before 25 Oct.
+        var mine: [String: String]?
     }
 
     private static func url(userId: String) -> URL? {

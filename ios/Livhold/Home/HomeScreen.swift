@@ -11,7 +11,8 @@ import Supabase
 //   no journey          → Where to?
 // Left out on purpose: the big Check in button (the tab bar has it), the money
 // card on the road (the stop card's line instead), the off-route card (#134),
-// "Next" (the stop card opens Trip), your people (their own round).
+// "Next" (the stop card opens Trip), your people: with a journey of your own they are on
+// the Feed tab (Petra, 25 Oct); without one, Home is their feed.
 
 struct HomeScreen: View {
     @Environment(AuthStore.self) private var auth
@@ -66,7 +67,7 @@ struct HomeScreen: View {
             if follows.hasAny {
                 header(eyebrow: Self.longDate(today), title: greeting,
                        sub: String(localized: "The people you follow, as they go."))
-                FollowingSection(today: today)
+                FollowingSection(today: today, tab: .home)
                 PlanOwnRow { planning = true }
             } else {
                 header(eyebrow: Self.longDate(today), title: greeting, sub: nil)
@@ -77,10 +78,7 @@ struct HomeScreen: View {
                 let state = trip.state
                 let before = state.meta.startDate.map { !$0.isEmpty && today < $0 } ?? false
                 let after = Journey.isFinished(state, today: today)
-                // Whichever is live goes first (Patrik, 3 Oct): your stop card during your
-                // journey's dates, your people before and after it while theirs is under way.
-                let peopleFirst = (before || after) && follows.anyLive(today: today)
-                let top: HomeHeader = peopleFirst ? headerWithPeople(today) : header
+                let top: HomeHeader = header
                 if before {
                     BeforeJourney(trip: trip, today: today, header: top)
                 } else if after {
@@ -88,21 +86,7 @@ struct HomeScreen: View {
                 } else {
                     OnTheRoad(trip: trip, today: today, events: $events, header: top)
                 }
-                if !peopleFirst {
-                    FollowingSection(today: today).padding(.top, 8)
-                }
             }
-        }
-    }
-
-    /// The header, then the journeys you follow right under it.
-    private func headerWithPeople(_ today: String) -> HomeHeader {
-        { eyebrow, title, sub in
-            AnyView(VStack(alignment: .leading, spacing: 12) {
-                header(eyebrow: eyebrow, title: title, sub: sub)
-                FollowingSection(today: today)
-                    .padding(.bottom, 8)
-            })
         }
     }
 
