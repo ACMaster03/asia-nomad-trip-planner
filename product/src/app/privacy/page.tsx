@@ -24,9 +24,13 @@ import { LEGAL } from '@/lib/legal/entity'
 //                                      (but itinerary cities and check-ins ARE the
 //                                      user's location at city level: said so)
 //   (absent) any analytics SDK         no third party measures the reader
-//   #120 (usage counts, own database)  follower opens per day, sign-up source,
-//                                      setup steps; described here ahead of the
-//                                      code by Patrik's decision (3 Oct 2026)
+//   migration 49 + tools/goal-numbers  follower opens per day, sign-up source
+//                                      (#120); the list counts as the source when
+//                                      the account's email is in journey_signups.
+//                                      Setup steps were described on 3 Oct and
+//                                      never built, so the page no longer says so
+//   [auth.external.apple] + ios/Auth   Sign in with Apple, iPhone app only: an
+//                                      email (maybe a relay) and, once, a first name
 //   auth.sessions (Supabase Auth)      IP and user agent per signed-in session
 //   migration 44 + api/journey-signup  the list form on journey.livhold.com:
 //                                      what it stores, insert-only, 12-month purge
@@ -64,6 +68,11 @@ export default function PrivacyPage() {
             is never visible to us or to you again.
           </li>
           <li>A first name, if you give one, so your name rather than your address appears to people you plan with.</li>
+          <li>
+            If you sign in with Apple in the iPhone app, Apple gives us an email address (yours, or
+            a private relay address that forwards to it) and, the first time only, your first name,
+            which we keep as the name above.
+          </li>
           <li>
             When you sign in, the address your connection comes from and the kind of browser or app
             you use, kept while you stay signed in. The services we run on also keep ordinary request
@@ -110,20 +119,20 @@ export default function PrivacyPage() {
         </p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            The days a journey&apos;s feed was opened by its followers: one mark per follower, or per
+            The days followers opened what they follow: one mark per follower account, or per
             follow link, per day, never each tap or what was looked at.
           </li>
           <li>
-            How you found {LEGAL.product} when you signed up: a follow link (and the journey it led to),
-            an invitation from a travel partner, the list on journey.livhold.com, or none of these.
+            How you found {LEGAL.product} when you signed up: a follow link or an invitation from a
+            travel partner (and the journey it led to), the list on journey.livhold.com (your email
+            is on it), or none of these.
           </li>
-          <li>Which steps of setting up a journey you have completed.</li>
         </ul>
         <p>
           If you open a follow link without an account, the mark belongs to the link, not to you:
           it records that the link was opened that day, and nothing that identifies who opened it.
-          The daily marks are deleted after 12 months. How you signed up and your setup steps stay
-          with your account and go when it is deleted. None of it is sold, shared, or sent to an
+          The daily marks are deleted after 12 months. How you signed up stays with your account
+          and goes when it is deleted. None of it is sold, shared, or sent to an
           analytics company.
         </p>
       </Section>
@@ -135,9 +144,10 @@ export default function PrivacyPage() {
           that you&apos;re happy to have a 20-minute call.
         </p>
         <p>
-          We use this for three things only: to email you updates on how Livhold is developing
+          We use this for these things only: to email you updates on how Livhold is developing
           and what each next phase brings, including when it opens; to understand how people plan
-          long trips; and, only if you ticked the box, to get in touch about a call. We don&apos;t use it for advertising, we don&apos;t sell it, and we
+          long trips; only if you ticked the box, to get in touch about a call; and, if you later
+          create a Livhold account with the same email, to count the list as how you found us. We don&apos;t use it for advertising, we don&apos;t sell it, and we
           don&apos;t add you to anything else.
         </p>
         <p>
@@ -209,9 +219,13 @@ export default function PrivacyPage() {
             Dublin, Ireland.
           </li>
           <li>
-            <b className="font-semibold text-tx">Resend</b>: sends the emails: sign-in links, the
-            follower digests and reminders about your own bookings. It handles the address the mail
+            <b className="font-semibold text-tx">Resend</b>: sends the emails: sign-in emails (a link
+            and a code), the follower digests and reminders about your own bookings. It handles the address the mail
             is going to.
+          </li>
+          <li>
+            <b className="font-semibold text-tx">Apple</b>: if you sign in with Apple in the iPhone
+            app, Apple confirms it is you and passes on the email address you choose to share.
           </li>
           <li>
             <b className="font-semibold text-tx">Push services</b>: if you turn push on, the
@@ -266,7 +280,7 @@ export default function PrivacyPage() {
           it.
         </p>
         <p>
-          Deleting your account, from <span className="font-medium text-tx">Account → Delete account</span>,
+          Deleting your account, from <span className="font-medium text-tx">Account → Delete my account</span>,
           removes the trips you own along with their photos, removes your place on trips you had
           joined, and removes your sign-in. <b className="font-semibold text-tx">There is no undo, no grace period and no backup copy we can restore from.</b> We
           say so plainly because the button means it.

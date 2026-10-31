@@ -41,7 +41,7 @@ group and excluded from the proxy matcher in `src/proxy.ts`, so they do.
 | App info and performance → *(nothing)* | — | — | no crash SDK, no performance SDK |
 | Device or other IDs → **Device or other IDs** | App functionality | Optional | `user_push_subscriptions.endpoint` — see the judgment call below |
 | Location → **Approximate location** | App functionality | Required | itinerary cities (`segments`) and check-in places, typed by the traveller; the IP in `auth.sessions`. Never from the device. |
-| App activity → **App interactions** | Analytics | Required | #120: one mark per follower (or follow link) per day the feed was opened, kept 12 months; sign-up source and setup steps per account. Own database, no SDK. |
+| App activity → **App interactions** | Analytics | Required | #120: one mark per follower (or follow link) per day the feed was opened, kept 12 months; sign-up source per account (setup steps dropped 31 Oct: never built). Own database, no SDK. |
 
 ### The one judgment call: push endpoints
 

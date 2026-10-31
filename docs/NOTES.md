@@ -5,6 +5,50 @@ when a decision needs to survive the conversation it was made in.
 
 ---
 
+## 2026-10-31
+
+### CHECKED — #156, /privacy against the code once more (Patrik's "Start #156", 31 Oct)
+
+The same method as 2 Oct ("CHECKED", below): claim by claim against `product/src`, migrations
+45–50, the Edge Functions, `tools/goal-numbers.sql` and the iPhone app on `feat/ios-foundation`.
+
+**Still true:** the reminder switch (#150, migration 50; Account → Alerts on the web); the "do not
+email" note is still 17's soft delete, and a new subscription after it needs a fresh double opt-in;
+`delete_my_account` (29) still erases at once, and every table made since points at the person with
+`on delete cascade` or `set null` (49's two included), so nothing blocks it; the follower projection
+(45, 46) gives the mode of a leg between two stops and nothing else; the Feed (48) and the names (47)
+go to travellers and viewers only; no location call, no analytics SDK in the web or the iPhone app;
+Resend only sends (26 Oct); app.livhold.com/privacy and livhold.com/privacy both serve the page.
+
+**Reworded in the pull request (what the code does, nothing new):**
+- "Which steps of setting up a journey you have completed": described on 3 Oct ahead of #120 and
+  never built (49 has opens and sources only). Dropped, also from `APP-STORE-PRIVACY.md` and
+  `PLAY-DATA-SAFETY.md`; it comes back if it is ever built.
+- The feed mark: an account's mark is per follower per day, not tied to a journey. Now "the days
+  followers opened what they follow".
+- The sign-up source keeps the journey for an invitation too, not only for a follow link (49).
+- The list on journey.livhold.com: the Monday query counts it as the source when the account's
+  email is in `journey_signups`. That is a use of the list's answers, so the list section names it.
+- Sign in with Apple (the iPhone app, since 26 Sep) was missing: Apple gives an email, maybe a relay
+  address, and the first name once (`AuthStore.saveFirstNameIfMissing`). Named under "Your account"
+  and as a provider.
+- Resend sends "sign-in emails (a link and a code)" since #121.
+- The button is "Delete my account" (`DangerZone.tsx`), on `/privacy` and `/delete-account`.
+- "Last updated" is 31 October 2026 (it is shared, so `/terms` shows it too).
+
+**Not wording, before a public release of the iPhone app:**
+- **No account deletion in the iPhone app.** Apple requires it in any app that creates accounts
+  (App Review 5.1.1(v)); Sign in with Apple creates them. The page's "Account → Delete my account"
+  is the web's.
+- **No notification settings in the iPhone app**, so the reminder-email switch is on the web only.
+  The page holds (the switch exists), but #156 asked for both.
+- **#119:** the iPhone app speaks Hungarian; the policy is English only. The item stays open on #156.
+- **Data requests by hand:** support@ works (Patrik, 3 Oct); nothing in code to check.
+
+iOS: two features to build before the App Store release (account deletion, the reminder switch);
+no change to the app's behaviour from this pull request. Rule and file: `/privacy`,
+`docs/APP-STORE-PRIVACY.md`.
+
 ## 2026-10-26
 
 ### DECIDED — Patrik, 26 Oct: Livhold keeps its list in Supabase; Resend only sends
