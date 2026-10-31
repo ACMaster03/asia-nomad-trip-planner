@@ -47,7 +47,7 @@ export default function DeleteAccountPage() {
             Open <span className="font-medium text-tx">Account</span>.
           </li>
           <li>
-            Scroll to <span className="font-medium text-tx">Delete account</span> and type the
+            Scroll to <span className="font-medium text-tx">Delete my account</span> and type the
             confirmation phrase it asks for.
           </li>
         </ol>

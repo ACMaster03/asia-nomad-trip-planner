@@ -30,7 +30,7 @@ below is No.
 | User Content → **Photos or Videos** | App Functionality | photos attached to check-ins |
 | User Content → **Other User Content** | App Functionality | itinerary, stays/transport (incl. booking links, notes), check-in comments, post comments, reactions |
 | Location → **Coarse Location** (new) | App Functionality | itinerary cities and check-in places the traveller types, and the session IP (see Logs); never from the device |
-| Usage Data → **Product Interaction** (new) | Analytics | #120: the days a follower opened the feed (one mark a day, kept 12 months), sign-up source, setup steps completed; own database, no SDK |
+| Usage Data → **Product Interaction** (new) | Analytics | #120: the days a follower opened the feed (one mark a day, kept 12 months), sign-up source (setup steps dropped 31 Oct: never built); own database, no SDK |
 
 ## Data NOT collected
 
